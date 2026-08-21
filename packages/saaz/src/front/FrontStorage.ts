@@ -78,7 +78,7 @@ class FrontStorageTransactionImpl {
   }
 
   async getAllExistingSessionIds(): Promise<string[]> {
-    const all = await this._adapterTransaction.getAll('session')
+    const all = await this._adapterTransaction.getAll('sessionState')
     return Object.keys(all)
   }
 
