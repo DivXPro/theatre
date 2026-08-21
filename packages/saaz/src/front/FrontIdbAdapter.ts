@@ -20,15 +20,13 @@ type ListItem<V> = {
 }
 
 export class FrontIDBAdapter implements FrontStorageAdapter {
-  constructor(
-    private _idbName: string,
-    private _currentSessionName: string,
-  ) {}
+  constructor(private _idbName: string | Promise<string>) {}
 
   private _dbPromise = this._initializeDB()
 
   async _initializeDB() {
-    return openDB(this._idbName, 1, {
+    const name = await this._idbName
+    return openDB(name, 1, {
       upgrade(db) {
         const singularValueStore = db.createObjectStore('singularValues', {
           keyPath: 'sessionAndKey',

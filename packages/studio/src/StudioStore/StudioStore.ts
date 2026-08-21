@@ -18,6 +18,7 @@ import type {
   StateEditorsAPI,
 } from '@toy-box/sync-server/state/schema'
 import createTransactionPrivateApi from './createTransactionPrivateApi'
+import {deriveSaazNames} from './saazNames'
 import {SaazBack} from '@toy-box/saaz'
 import type {Studio} from '@toy-box/studio/Studio'
 import getStudio from '@toy-box/studio/getStudio'
@@ -53,24 +54,40 @@ export default class StudioStore {
   >
 
   constructor(readonly studio: Studio) {
-    const backend =
+    const optsPromise = this.studio._optsPromise
+
+    const backend: Saaz.SaazBackInterface =
       typeof window === 'undefined'
         ? new SaazBack({
             storageAdapter: new Saaz.BackMemoryAdapter(),
             dbName: 'test',
             schema,
           })
-        : createTrpcBackend(
-            this.studio._optsPromise.then((opts) => opts.persistenceKey),
+        : Saaz.createDeferredBackend(
+            optsPromise.then((opts) =>
+              (opts as $IntentionalAny).serverUrl === undefined
+                ? new SaazBack({
+                    dbName: opts.persistenceKey,
+                    storageAdapter: new Saaz.BackIDBAdapter(
+                      deriveSaazNames(opts.persistenceKey).backDbName,
+                    ),
+                    schema,
+                  })
+                : createTrpcBackend(Promise.resolve(opts.persistenceKey)),
+            ),
           )
 
     const saaz = new Saaz.SaazFront({
       schema,
-      dbName: 'test',
+      dbName: 'studio',
       storageAdapter:
-        typeof window === 'undefined' || process.env.NODE_ENV === 'test' || true
+        typeof window === 'undefined' || process.env.NODE_ENV === 'test'
           ? new Saaz.FrontMemoryAdapter()
-          : new Saaz.FrontIDBAdapter('blah', 'test'),
+          : new Saaz.FrontIDBAdapter(
+              optsPromise.then(
+                (o) => deriveSaazNames(o.persistenceKey).frontDbName,
+              ),
+            ),
       backend,
     })
     this._saaz = saaz as $IntentionalAny

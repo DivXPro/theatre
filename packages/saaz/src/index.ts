@@ -10,4 +10,5 @@ export type {
 } from './types'
 export {BackMemoryAdapter} from './back/BackMemoryAdapter'
 export {BackIDBAdapter} from './back/BackIDBAdapter'
+export {createDeferredBackend} from './deferredBackend'
 export {current} from './rogue'
