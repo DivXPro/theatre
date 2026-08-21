@@ -49,7 +49,22 @@
 - updateChecker 死 UI 残留 → P2/P4 清理
 - clearPersistentStorageFor 的 deleteDB 无 blocked 处理 → 文档注明调用时机
 
-## 手动冒烟(用户执行)
+## 手动冒烟结果(2026-08-22,Playwright 端到端真实浏览器)
+
+原计划用 playground 的 dom-basic 场景,但该场景(及 dom、three-basic)**从不导入 `@toy-box/studio`**(上游既有缺陷)——studio 从不注册,项目 1 秒后触发 `Project.ts:164` 报错、场景无法编辑。已修复(commit `1cd5917`),冒烟改用修复后的 playground dom-basic。
+
+| 标准 | 结果 | 证据 |
+|---|---|---|
+| 1. 刷新不丢状态 | ✅ | 属性面板改 originX 25 → 重载 → 仍 25;再改 30 → undo→25 → redo→30 → 重载 → 仍 30 |
+| 2. 零网络 | ✅ | Network 面板过滤外部域名(theatrejs/google/CDN)零匹配;全部请求均指向 localhost:8082(vite) |
+| 3. undo/redo | ✅ | 焦点不在值编辑器时 Cmd+Z → 还原,Cmd+Shift+Z → 重做(焦点在 INPUT 时快捷键按设计让位原生文本 undo) |
+| 4. 无 console 错误 | ✅ | 修复两个 bug 后零 error(见下) |
+
+**冒烟发现并修复的两个真实 bug(均非 P1 核心回归):**
+1. **`FrontIdbAdapter.pluckFromList` 用无效 key 删除**(commit `78d494f`):`store.delete(item)` 传整条记录,而 `lists` 存储的 keyPath 是 `sessionAndKeyAndId`。fake-indexeddb 对无效 key 静默 no-op → jest 全绿;真实 IndexedDB 抛 `DataError`,每次乐观更新 ack 都中止 storage 反射事务,acked 更新残留在 IDB。改为 `store.delete(item.sessionAndKeyAndId)`,新增回归测试(红绿实证)。**Task 7 实现时引入,真实浏览器才暴露——fake-indexeddb 与真实 IDB 的 key 校验差异。**
+2. **playground 基础场景缺 studio import**(commit `1cd5917`):dom-basic/dom/three-basic 三场景的入口调 `theatre.init({studio:true})` 却不导入 `@toy-box/studio`。上游既有,非 fork 回归;但直接阻塞冒烟,且使 fork 主 demo 无法编辑。已补 `import '@toy-box/studio'`。
+
+## 手动冒烟(原始指引,已执行)
 
 ```
 yarn playground
