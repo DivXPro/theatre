@@ -44,7 +44,9 @@ class FrontStorageTransactionImpl {
     SessionState<unknown> | undefined
   > {
     const allSessionStates =
-      this._adapterTransaction.getAll<SessionState<unknown>>('sessionState')
+      await this._adapterTransaction.getAll<SessionState<unknown>>(
+        'sessionState',
+      )
     let latest: SessionState<unknown> | undefined
     for (const [peerId, sessionState] of Object.entries(allSessionStates)) {
       if (

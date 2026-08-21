@@ -396,8 +396,28 @@ export class SaazFront<
         })
       } else {
         if (initialSnapshot) {
-          // TODO
-          throw new Error(`Not implemented`)
+          const cachedClock = cachedBackendState.backendClock ?? -1
+          if (initialSnapshot.clock > cachedClock) {
+            // the user explicitly provided a newer save file: restore from it
+            this._setSessionState({
+              backendClock: initialSnapshot.clock,
+              lastIncorporatedPeerClock: null,
+              lastSyncTime: null,
+              snapshot: initialSnapshot.snapshot,
+              peerId: this._peerId,
+            })
+          } else {
+            this._atom.setByPointer((p) => p.sessionState, {
+              lastSyncTime: null,
+              backendClock: cachedBackendState.backendClock ?? null,
+              lastIncorporatedPeerClock: null,
+              peerId: this._peerId,
+              snapshot: ensureStateIsUptodate<OpSnapshot>(
+                cachedBackendState.snapshot as $IntentionalAny,
+                this._schema,
+              ),
+            })
+          }
         } else {
           this._atom.setByPointer((p) => p.sessionState, {
             lastSyncTime: null,
@@ -436,12 +456,24 @@ export class SaazFront<
         await Promise.all(
           closedSessionsLocks.map(
             async (closedSessionLock): Promise<ClosedSession> => {
+              // updates the backend has already confirmed (according to the
+              // session's cached state) must not be re-applied or re-pushed —
+              // they may still sit in storage waiting to be garbage collected
+              const storedState = await t.getSessionState(
+                closedSessionLock.peerId,
+              )
+              const lastIncorporatedPeerClock =
+                storedState?.lastIncorporatedPeerClock ?? null
+              const optimisticUpdates = (
+                await t.getOptimisticUpdates(closedSessionLock.peerId)
+              ).filter(
+                (update) =>
+                  update.peerClock > (lastIncorporatedPeerClock ?? -1),
+              )
               return {
-                optimisticUpdates: await t.getOptimisticUpdates(
-                  closedSessionLock.peerId,
-                ),
+                optimisticUpdates,
                 peerId: closedSessionLock.peerId,
-                lastIncorporatedPeerClock: null,
+                lastIncorporatedPeerClock,
               }
             },
           ),

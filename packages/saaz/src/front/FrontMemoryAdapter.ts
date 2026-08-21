@@ -96,7 +96,9 @@ class Transaction implements FrontStorageAdapterTransaction {
     for (const [sessionId, v] of Object.entries(this._draft.sessions)) {
       if (!v) continue
       if (Object.hasOwn(v.keyval, key)) {
-        const value: T | undefined = v.keyval[key] as $IntentionalAny
+        // take an immutable snapshot (like get()/getList() do) so the value
+        // stays readable after the draft is finalized
+        const value: T | undefined = current(v.keyval)[key] as T | undefined
         if (value === undefined) continue
         vals[sessionId] = value
       }
