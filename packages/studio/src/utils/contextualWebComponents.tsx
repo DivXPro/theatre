@@ -1,4 +1,4 @@
-import type {$IntentionalAny} from '@theatre/core/types/public'
+import type {$IntentionalAny} from '@toy-box/core/types/public'
 import type React from 'react'
 import {getMounter} from './renderInPortalInContext'
 

@@ -1,6 +1,6 @@
-import {basicFSM} from '@theatre/utils/basicFSM'
+import {basicFSM} from '@toy-box/utils/basicFSM'
 import type {MaybeChodrialEl, ChodrialElement} from './chordialInternals'
-import {prism, val} from '@theatre/dataverse'
+import {prism, val} from '@toy-box/dataverse'
 import {contextActor} from './contextActor'
 import {hoverActor} from './hoverActor'
 import {mousedownActor} from './mousedownActor'

@@ -1,6 +1,6 @@
-import {Atom} from '@theatre/dataverse'
-import {useVal} from '@theatre/react'
-import type {$FixMe, $IntentionalAny} from '@theatre/core/types/public'
+import {Atom} from '@toy-box/dataverse'
+import {useVal} from '@toy-box/react'
+import type {$FixMe, $IntentionalAny} from '@toy-box/core/types/public'
 import React from 'react'
 import {createPortal} from 'react-dom'
 

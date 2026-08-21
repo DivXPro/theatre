@@ -1,24 +1,24 @@
-import {usePrism} from '@theatre/react'
-import type {Pointer} from '@theatre/dataverse'
-import {val} from '@theatre/dataverse'
+import {usePrism} from '@toy-box/react'
+import type {Pointer} from '@toy-box/dataverse'
+import {val} from '@toy-box/dataverse'
 import React, {useMemo, useRef} from 'react'
 import styled from 'styled-components'
-import type {SequenceEditorPanelLayout} from '@theatre/studio/panels/SequenceEditorPanel/layout/layout'
-import {zIndexes} from '@theatre/studio/panels/SequenceEditorPanel/SequenceEditorPanel'
-import {topStripHeight} from '@theatre/studio/panels/SequenceEditorPanel/RightOverlay/TopStrip'
-import useRefAndState from '@theatre/studio/utils/useRefAndState'
-import type {CommitOrDiscardOrRecapture} from '@theatre/studio/StudioStore/StudioStore'
-import useDrag from '@theatre/studio/uiComponents/useDrag'
-import getStudio from '@theatre/studio/getStudio'
-import usePopover from '@theatre/studio/uiComponents/Popover/usePopover'
+import type {SequenceEditorPanelLayout} from '@toy-box/studio/panels/SequenceEditorPanel/layout/layout'
+import {zIndexes} from '@toy-box/studio/panels/SequenceEditorPanel/SequenceEditorPanel'
+import {topStripHeight} from '@toy-box/studio/panels/SequenceEditorPanel/RightOverlay/TopStrip'
+import useRefAndState from '@toy-box/studio/utils/useRefAndState'
+import type {CommitOrDiscardOrRecapture} from '@toy-box/studio/StudioStore/StudioStore'
+import useDrag from '@toy-box/studio/uiComponents/useDrag'
+import getStudio from '@toy-box/studio/getStudio'
+import usePopover from '@toy-box/studio/uiComponents/Popover/usePopover'
 import {
   includeLockFrameStampAttrs,
   useLockFrameStampPosition,
-} from '@theatre/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
+} from '@toy-box/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
 import {GoChevronLeft, GoChevronRight} from 'react-icons/go'
 import LengthEditorPopover from './LengthEditorPopover'
-import {pointerEventsAutoInNormalMode} from '@theatre/studio/css'
-import BasicPopover from '@theatre/studio/uiComponents/Popover/BasicPopover'
+import {pointerEventsAutoInNormalMode} from '@toy-box/studio/css'
+import BasicPopover from '@toy-box/studio/uiComponents/Popover/BasicPopover'
 
 const coverWidth = 1000
 

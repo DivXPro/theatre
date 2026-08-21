@@ -1,19 +1,19 @@
 import type {
   DopeSheetSelection,
   SequenceEditorPanelLayout,
-} from '@theatre/studio/panels/SequenceEditorPanel/layout/layout'
+} from '@toy-box/studio/panels/SequenceEditorPanel/layout/layout'
 import type {
   SequenceEditorTree_PropWithChildren,
   SequenceEditorTree_Sheet,
   SequenceEditorTree_SheetObject,
-} from '@theatre/studio/panels/SequenceEditorPanel/layout/tree'
-import {usePrism, useVal} from '@theatre/react'
-import type {Prism, Pointer} from '@theatre/dataverse'
-import {prism, val, pointerToPrism} from '@theatre/dataverse'
+} from '@toy-box/studio/panels/SequenceEditorPanel/layout/tree'
+import {usePrism, useVal} from '@toy-box/react'
+import type {Prism, Pointer} from '@toy-box/dataverse'
+import {prism, val, pointerToPrism} from '@toy-box/dataverse'
 import React, {useMemo, Fragment} from 'react'
 import styled from 'styled-components'
-import useContextMenu from '@theatre/studio/uiComponents/simpleContextMenu/useContextMenu'
-import useRefAndState from '@theatre/studio/utils/useRefAndState'
+import useContextMenu from '@toy-box/studio/uiComponents/simpleContextMenu/useContextMenu'
+import useRefAndState from '@toy-box/studio/utils/useRefAndState'
 import type {
   IAggregateKeyframesAtPosition,
   IAggregateKeyframeEditorProps,
@@ -22,41 +22,41 @@ import AggregateKeyframeEditor from './AggregateKeyframeEditor/AggregateKeyframe
 import type {
   AggregatedKeyframes,
   KeyframeWithTrack,
-} from '@theatre/studio/panels/SequenceEditorPanel/DopeSheet/Right/collectAggregateKeyframes'
-import {collectAggregateSnapPositionsObjectOrCompound} from '@theatre/studio/panels/SequenceEditorPanel/DopeSheet/Right/collectAggregateKeyframes'
-import {useLogger} from '@theatre/studio/uiComponents/useLogger'
+} from '@toy-box/studio/panels/SequenceEditorPanel/DopeSheet/Right/collectAggregateKeyframes'
+import {collectAggregateSnapPositionsObjectOrCompound} from '@toy-box/studio/panels/SequenceEditorPanel/DopeSheet/Right/collectAggregateKeyframes'
+import {useLogger} from '@toy-box/studio/uiComponents/useLogger'
 import {getAggregateKeyframeEditorUtilsPrismFn} from './AggregateKeyframeEditor/useAggregateKeyframeEditorUtils'
-import DopeSnap from '@theatre/studio/panels/SequenceEditorPanel/RightOverlay/DopeSnap'
-import type {DragOpts} from '@theatre/studio/uiComponents/useDrag'
-import type {CommitOrDiscardOrRecapture} from '@theatre/studio/StudioStore/StudioStore'
-import useDrag from '@theatre/studio/uiComponents/useDrag'
-import {useLockFrameStampPositionRef} from '@theatre/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
-import {useCssCursorLock} from '@theatre/studio/uiComponents/PointerEventsHandler'
-import getStudio from '@theatre/studio/getStudio'
-import type {SheetObjectAddress} from '@theatre/core/types/public'
+import DopeSnap from '@toy-box/studio/panels/SequenceEditorPanel/RightOverlay/DopeSnap'
+import type {DragOpts} from '@toy-box/studio/uiComponents/useDrag'
+import type {CommitOrDiscardOrRecapture} from '@toy-box/studio/StudioStore/StudioStore'
+import useDrag from '@toy-box/studio/uiComponents/useDrag'
+import {useLockFrameStampPositionRef} from '@toy-box/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
+import {useCssCursorLock} from '@toy-box/studio/uiComponents/PointerEventsHandler'
+import getStudio from '@toy-box/studio/getStudio'
+import type {SheetObjectAddress} from '@toy-box/core/types/public'
 import {
   decodePathToProp,
   encodePathToProp,
   doesPathStartWith,
-} from '@theatre/utils/pathToProp'
+} from '@toy-box/utils/pathToProp'
 import type {
   ObjectAddressKey,
   SequenceTrackId,
-} from '@theatre/core/types/public'
-import type Sequence from '@theatre/core/sequences/Sequence'
+} from '@toy-box/core/types/public'
+import type Sequence from '@toy-box/core/sequences/Sequence'
 import KeyframeSnapTarget, {
   snapPositionsStateD,
-} from '@theatre/studio/panels/SequenceEditorPanel/DopeSheet/Right/KeyframeSnapTarget'
-import {emptyObject} from '@theatre/utils'
-import type {KeyframeWithPathToPropFromCommonRoot} from '@theatre/core/types/private'
+} from '@toy-box/studio/panels/SequenceEditorPanel/DopeSheet/Right/KeyframeSnapTarget'
+import {emptyObject} from '@toy-box/utils'
+import type {KeyframeWithPathToPropFromCommonRoot} from '@toy-box/core/types/private'
 import {
   collectKeyframeSnapPositions,
   snapToNone,
   snapToSome,
-} from '@theatre/studio/panels/SequenceEditorPanel/DopeSheet/Right/KeyframeSnapTarget'
-import {collectAggregateSnapPositionsSheet} from '@theatre/studio/panels/SequenceEditorPanel/DopeSheet/Right/collectAggregateKeyframes'
-import type {BasicKeyframe} from '@theatre/core/types/public'
-import type {ContextMenuItem} from '@theatre/studio/uiComponents/chordial/chordialInternals'
+} from '@toy-box/studio/panels/SequenceEditorPanel/DopeSheet/Right/KeyframeSnapTarget'
+import {collectAggregateSnapPositionsSheet} from '@toy-box/studio/panels/SequenceEditorPanel/DopeSheet/Right/collectAggregateKeyframes'
+import type {BasicKeyframe} from '@toy-box/core/types/public'
+import type {ContextMenuItem} from '@toy-box/studio/uiComponents/chordial/chordialInternals'
 
 const AggregatedKeyframeTrackContainer = styled.div`
   position: relative;

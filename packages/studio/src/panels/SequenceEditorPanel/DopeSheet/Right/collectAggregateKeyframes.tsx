@@ -1,19 +1,19 @@
-import getStudio from '@theatre/studio/getStudio'
-import {val} from '@theatre/dataverse'
+import getStudio from '@toy-box/studio/getStudio'
+import {val} from '@toy-box/dataverse'
 import type {
   SequenceEditorTree_PrimitiveProp,
   SequenceEditorTree_PropWithChildren,
   SequenceEditorTree_Sheet,
   SequenceEditorTree_SheetObject,
-} from '@theatre/studio/panels/SequenceEditorPanel/layout/tree'
-import type {BasicKeyframe, SequenceTrackId} from '@theatre/core/types/public'
-import type {TrackData} from '@theatre/core/types/private/core'
-import {encodePathToProp} from '@theatre/utils/pathToProp'
+} from '@toy-box/studio/panels/SequenceEditorPanel/layout/tree'
+import type {BasicKeyframe, SequenceTrackId} from '@toy-box/core/types/public'
+import type {TrackData} from '@toy-box/core/types/private/core'
+import {encodePathToProp} from '@toy-box/utils/pathToProp'
 import {uniq} from 'lodash-es'
-import type SheetObject from '@theatre/core/sheetObjects/SheetObject'
-import type {StudioSheetItemKey} from '@theatre/core/types/private'
-import {createStudioSheetItemKey} from '@theatre/studio/utils/createStudioSheetItemKey'
-import {__private} from '@theatre/core'
+import type SheetObject from '@toy-box/core/sheetObjects/SheetObject'
+import type {StudioSheetItemKey} from '@toy-box/core/types/private'
+import {createStudioSheetItemKey} from '@toy-box/studio/utils/createStudioSheetItemKey'
+import {__private} from '@toy-box/core'
 
 const {keyframeUtils} = __private
 

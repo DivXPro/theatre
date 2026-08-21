@@ -3,10 +3,10 @@ import type {
   ColorModel,
   AnyColor,
   HsvaColor,
-} from '@theatre/studio/uiComponents/colorPicker/types'
-import {equalColorObjects} from '@theatre/studio/uiComponents/colorPicker/utils/compare'
+} from '@toy-box/studio/uiComponents/colorPicker/types'
+import {equalColorObjects} from '@toy-box/studio/uiComponents/colorPicker/utils/compare'
 import {useEventCallback} from './useEventCallback'
-import {useEditing} from '@theatre/studio/uiComponents/colorPicker/components/EditingProvider'
+import {useEditing} from '@toy-box/studio/uiComponents/colorPicker/components/EditingProvider'
 
 export function useColorManipulation<T extends AnyColor>(
   colorModel: ColorModel<T>,

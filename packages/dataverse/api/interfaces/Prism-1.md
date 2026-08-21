@@ -1,4 +1,4 @@
-[@theatre/dataverse](../README.md) / Prism
+[@toy-box/dataverse](../README.md) / Prism
 
 # Interface: Prism<V\>
 

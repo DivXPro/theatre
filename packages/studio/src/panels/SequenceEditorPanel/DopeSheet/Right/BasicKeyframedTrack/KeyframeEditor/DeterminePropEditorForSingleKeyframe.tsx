@@ -1,16 +1,16 @@
 import React from 'react'
 import styled from 'styled-components'
 
-import type {PropTypeConfig_AllSimples} from '@theatre/core/types/public'
-import type {ISimplePropEditorReactProps} from '@theatre/studio/propEditors/simpleEditors/ISimplePropEditorReactProps'
-import {simplePropEditorByPropType} from '@theatre/studio/propEditors/simpleEditors/simplePropEditorByPropType'
+import type {PropTypeConfig_AllSimples} from '@toy-box/core/types/public'
+import type {ISimplePropEditorReactProps} from '@toy-box/studio/propEditors/simpleEditors/ISimplePropEditorReactProps'
+import {simplePropEditorByPropType} from '@toy-box/studio/propEditors/simpleEditors/simplePropEditorByPropType'
 import type {
   EditingOptionsTree,
   PrimitivePropEditingOptions,
 } from './useSingleKeyframeInlineEditorPopover'
 import last from 'lodash-es/last'
 import {useTempTransactionEditingTools} from './useTempTransactionEditingTools'
-import {__private} from '@theatre/core'
+import {__private} from '@toy-box/core'
 const {valueInProp} = __private.propTypeUtils
 
 const SingleKeyframePropEditorContainer = styled.div`

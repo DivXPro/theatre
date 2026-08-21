@@ -1,6 +1,6 @@
-import type {PropTypeConfig} from '@theatre/core/types/public'
-import type SheetObject from '@theatre/core/sheetObjects/SheetObject'
-import {getPointerParts} from '@theatre/dataverse'
+import type {PropTypeConfig} from '@toy-box/core/types/public'
+import type SheetObject from '@toy-box/core/sheetObjects/SheetObject'
+import {getPointerParts} from '@toy-box/dataverse'
 
 /**
  * @deprecated because it uses obj.template.staticConfig

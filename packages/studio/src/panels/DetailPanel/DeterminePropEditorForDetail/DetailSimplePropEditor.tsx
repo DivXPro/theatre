@@ -1,15 +1,15 @@
 import type {
   IBasePropType,
   PropTypeConfig_AllSimples,
-} from '@theatre/core/types/public'
+} from '@toy-box/core/types/public'
 import React, {useMemo} from 'react'
-import {useEditingToolsForSimplePropInDetailsPanel} from '@theatre/studio/propEditors/useEditingToolsForSimpleProp'
-import {SingleRowPropEditor} from '@theatre/studio/panels/DetailPanel/DeterminePropEditorForDetail/SingleRowPropEditor'
-import type {Pointer} from '@theatre/dataverse'
-import {getPointerParts} from '@theatre/dataverse'
-import type SheetObject from '@theatre/core/sheetObjects/SheetObject'
-import type {ISimplePropEditorReactProps} from '@theatre/studio/propEditors/simpleEditors/ISimplePropEditorReactProps'
-import {whatPropIsHighlighted} from '@theatre/studio/panels/SequenceEditorPanel/whatPropIsHighlighted'
+import {useEditingToolsForSimplePropInDetailsPanel} from '@toy-box/studio/propEditors/useEditingToolsForSimpleProp'
+import {SingleRowPropEditor} from '@toy-box/studio/panels/DetailPanel/DeterminePropEditorForDetail/SingleRowPropEditor'
+import type {Pointer} from '@toy-box/dataverse'
+import {getPointerParts} from '@toy-box/dataverse'
+import type SheetObject from '@toy-box/core/sheetObjects/SheetObject'
+import type {ISimplePropEditorReactProps} from '@toy-box/studio/propEditors/simpleEditors/ISimplePropEditorReactProps'
+import {whatPropIsHighlighted} from '@toy-box/studio/panels/SequenceEditorPanel/whatPropIsHighlighted'
 
 export type IDetailSimplePropEditorProps<
   TPropTypeConfig extends IBasePropType<string, any>,

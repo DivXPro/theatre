@@ -1,12 +1,12 @@
-import type Sheet from '@theatre/core/sheets/Sheet'
-import {usePrism} from '@theatre/react'
-import {val} from '@theatre/dataverse'
+import type Sheet from '@toy-box/core/sheets/Sheet'
+import {usePrism} from '@toy-box/react'
+import {val} from '@toy-box/dataverse'
 import React from 'react'
 import styled from 'styled-components'
 import {ObjectItem} from './ObjectItem'
-import type SheetObject from '@theatre/core/sheetObjects/SheetObject'
-import BaseItem from '@theatre/studio/panels/OutlinePanel/BaseItem'
-import {useCollapseStateInOutlinePanel} from '@theatre/studio/panels/OutlinePanel/outlinePanelUtils'
+import type SheetObject from '@toy-box/core/sheetObjects/SheetObject'
+import BaseItem from '@toy-box/studio/panels/OutlinePanel/BaseItem'
+import {useCollapseStateInOutlinePanel} from '@toy-box/studio/panels/OutlinePanel/outlinePanelUtils'
 
 export const Li = styled.li<{isSelected: boolean}>`
   color: ${(props) => (props.isSelected ? 'white' : 'hsl(1, 1%, 80%)')};

@@ -1,16 +1,16 @@
-import type {SequenceEditorPanelLayout} from '@theatre/studio/panels/SequenceEditorPanel/layout/layout'
-import {usePrism, useVal} from '@theatre/react'
-import type {Pointer} from '@theatre/dataverse'
-import {val} from '@theatre/dataverse'
+import type {SequenceEditorPanelLayout} from '@toy-box/studio/panels/SequenceEditorPanel/layout/layout'
+import {usePrism, useVal} from '@toy-box/react'
+import type {Pointer} from '@toy-box/dataverse'
+import {val} from '@toy-box/dataverse'
 import React from 'react'
 import styled from 'styled-components'
-import {stampsGridTheme} from '@theatre/studio/panels/SequenceEditorPanel/FrameGrid/StampsGrid'
-import {zIndexes} from '@theatre/studio/panels/SequenceEditorPanel/SequenceEditorPanel'
+import {stampsGridTheme} from '@toy-box/studio/panels/SequenceEditorPanel/FrameGrid/StampsGrid'
+import {zIndexes} from '@toy-box/studio/panels/SequenceEditorPanel/SequenceEditorPanel'
 import {topStripTheme} from './TopStrip'
 import {
   FrameStampPositionType,
   useFrameStampPositionD,
-} from '@theatre/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
+} from '@toy-box/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
 
 const Container = styled.div`
   position: absolute;

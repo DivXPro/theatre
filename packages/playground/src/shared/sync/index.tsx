@@ -1,5 +1,5 @@
-import theatre from '@theatre/core'
-import {getProject} from '@theatre/core'
+import theatre from '@toy-box/core'
+import {getProject} from '@toy-box/core'
 
 void theatre.init({
   studio: true,

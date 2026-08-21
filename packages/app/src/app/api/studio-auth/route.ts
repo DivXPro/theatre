@@ -5,7 +5,7 @@ import prisma from 'src/prisma'
 import {getAppSession, studioAuth} from 'src/utils/authUtils'
 import {userCodeLength} from '~/server/studio-api/routes/studioAuthRouter'
 import {studioAccessScopes} from '~/types'
-import {type $IntentionalAny} from '@theatre/utils/types'
+import {type $IntentionalAny} from '@toy-box/utils/types'
 
 export const dynamic = 'force-dynamic'
 

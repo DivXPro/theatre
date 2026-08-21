@@ -1,4 +1,4 @@
-import type {ProjectState_Historic} from '@theatre/core/types/private/core'
+import type {ProjectState_Historic} from '@toy-box/core/types/private/core'
 import type {
   ProjectAddress,
   SheetAddress,
@@ -6,20 +6,20 @@ import type {
   WithoutSheetInstance,
   PaneInstanceId,
   SequenceMarkerId,
-} from '@theatre/core/types/public'
-import type {PathToProp_Encoded} from '@theatre/utils/pathToProp'
-import type {StrictRecord} from '@theatre/core/types/public'
-import type {PointableSet} from '@theatre/utils/PointableSet'
+} from '@toy-box/core/types/public'
+import type {PathToProp_Encoded} from '@toy-box/utils/pathToProp'
+import type {StrictRecord} from '@toy-box/core/types/public'
+import type {PointableSet} from '@toy-box/utils/PointableSet'
 import type {
   ObjectAddressKey,
   ProjectId,
   SheetId,
   SheetInstanceId,
-} from '@theatre/core/types/public'
+} from '@toy-box/core/types/public'
 import type {
   UIPanelId,
   GraphEditorColors,
-} from '@theatre/core/types/private/studio'
+} from '@toy-box/core/types/private/studio'
 
 export type PanelPosition = {
   edges: {

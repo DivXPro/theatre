@@ -1,15 +1,15 @@
-import type {PointableSet} from '@theatre/utils/PointableSet'
-import type {PathToProp_Encoded} from '@theatre/utils/pathToProp'
+import type {PointableSet} from '@toy-box/utils/PointableSet'
+import type {PathToProp_Encoded} from '@toy-box/utils/pathToProp'
 
-import type {SerializableMap} from '@theatre/core/types/public'
+import type {SerializableMap} from '@toy-box/core/types/public'
 import type {
   BasicKeyframe,
   KeyframeId,
   ObjectAddressKey,
   SequenceTrackId,
   SheetId,
-} from '@theatre/core/types/public'
-import type {StrictRecord} from '@theatre/core/types/public'
+} from '@toy-box/core/types/public'
+import type {StrictRecord} from '@toy-box/core/types/public'
 
 export interface SheetState_Historic {
   /**
@@ -107,7 +107,7 @@ export interface ProjectEphemeralState {
 }
 
 /**
- * This is the state of each project that is consumable by `@theatre/core`.
+ * This is the state of each project that is consumable by `@toy-box/core`.
  * If the studio is present, this part of the state joins the studio's historic state,
  * at {@link StudioHistoricState.coreByProject}
  */

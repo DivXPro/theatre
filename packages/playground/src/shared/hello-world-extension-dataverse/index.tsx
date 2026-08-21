@@ -1,11 +1,11 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
-import type {ToolsetConfig} from '@theatre/core'
-import theatre from '@theatre/core'
-import extension from '@theatre/r3f/dist/extension'
-import {Atom, prism, val} from '@theatre/dataverse'
-import {onChange} from '@theatre/core'
+import type {ToolsetConfig} from '@toy-box/core'
+import theatre from '@toy-box/core'
+import extension from '@toy-box/r3f/dist/extension'
+import {Atom, prism, val} from '@toy-box/dataverse'
+import {onChange} from '@toy-box/core'
 
 /**
  * Let's take a look at how we can use `prism`, `Ticker`, and `val` from Theatre.js's Dataverse library
@@ -25,7 +25,7 @@ import {onChange} from '@theatre/core'
 void theatre.getStudio().then((studio) => {
   studio.extend(extension)
   studio.extend({
-    id: '@theatre/hello-world-extension',
+    id: '@toy-box/hello-world-extension',
     toolbars: {
       global(set, studio) {
         const exampleBox = new Atom('mobile')

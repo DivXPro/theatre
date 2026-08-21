@@ -3,24 +3,24 @@ import type {
   StudioEphemeralState,
   StudioHistoricState,
   StudioState,
-} from '@theatre/core/types/private'
-import type {$FixMe, $IntentionalAny, VoidFn} from '@theatre/core/types/public'
-import {Atom} from '@theatre/dataverse'
-import type {Pointer} from '@theatre/dataverse'
+} from '@toy-box/core/types/private'
+import type {$FixMe, $IntentionalAny, VoidFn} from '@toy-box/core/types/public'
+import {Atom} from '@toy-box/dataverse'
+import type {Pointer} from '@toy-box/dataverse'
 import type {Draft} from 'immer'
-import type {OnDiskState} from '@theatre/core/types/private'
-import * as Saaz from '@theatre/saaz'
-import type {ProjectId} from '@theatre/core/types/public'
-import {schema} from '@theatre/sync-server/state/schema'
+import type {OnDiskState} from '@toy-box/core/types/private'
+import * as Saaz from '@toy-box/saaz'
+import type {ProjectId} from '@toy-box/core/types/public'
+import {schema} from '@toy-box/sync-server/state/schema'
 import type {
   IInvokableDraftEditors,
   IStateEditors,
   StateEditorsAPI,
-} from '@theatre/sync-server/state/schema'
+} from '@toy-box/sync-server/state/schema'
 import createTransactionPrivateApi from './createTransactionPrivateApi'
-import {SaazBack} from '@theatre/saaz'
-import type {Studio} from '@theatre/studio/Studio'
-import getStudio from '@theatre/studio/getStudio'
+import {SaazBack} from '@toy-box/saaz'
+import type {Studio} from '@toy-box/studio/Studio'
+import getStudio from '@toy-box/studio/getStudio'
 
 export type Drafts = {
   historic: Draft<StudioHistoricState>

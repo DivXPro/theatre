@@ -1,21 +1,21 @@
-import type {BasicKeyframe} from '@theatre/core/types/public'
+import type {BasicKeyframe} from '@toy-box/core/types/public'
 import type {
   DopeSheetSelection,
   SequenceEditorPanelLayout,
-} from '@theatre/studio/panels/SequenceEditorPanel/layout/layout'
+} from '@toy-box/studio/panels/SequenceEditorPanel/layout/layout'
 import type {
   SequenceEditorTree_PropWithChildren,
   SequenceEditorTree_Sheet,
   SequenceEditorTree_SheetObject,
-} from '@theatre/studio/panels/SequenceEditorPanel/layout/tree'
-import type {Pointer} from '@theatre/dataverse'
-import {val} from '@theatre/dataverse'
+} from '@toy-box/studio/panels/SequenceEditorPanel/layout/tree'
+import type {Pointer} from '@toy-box/dataverse'
+import {val} from '@toy-box/dataverse'
 import React from 'react'
 import styled from 'styled-components'
-import type {SequenceTrackId} from '@theatre/core/types/public'
-import type {AggregateKeyframePositionIsSelected} from '@theatre/studio/panels/SequenceEditorPanel/DopeSheet/Right/AggregatedKeyframeTrack/AggregatedKeyframeTrack'
-import type {KeyframeWithTrack} from '@theatre/studio/panels/SequenceEditorPanel/DopeSheet/Right/collectAggregateKeyframes'
-import type {SheetObjectAddress} from '@theatre/core/types/public'
+import type {SequenceTrackId} from '@toy-box/core/types/public'
+import type {AggregateKeyframePositionIsSelected} from '@toy-box/studio/panels/SequenceEditorPanel/DopeSheet/Right/AggregatedKeyframeTrack/AggregatedKeyframeTrack'
+import type {KeyframeWithTrack} from '@toy-box/studio/panels/SequenceEditorPanel/DopeSheet/Right/collectAggregateKeyframes'
+import type {SheetObjectAddress} from '@toy-box/core/types/public'
 import {AggregateKeyframeConnector} from './AggregateKeyframeConnector'
 import {useAggregateKeyframeEditorUtils} from './useAggregateKeyframeEditorUtils'
 import {AggregateKeyframeDot} from './AggregateKeyframeDot'

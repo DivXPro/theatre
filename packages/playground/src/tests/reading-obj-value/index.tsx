@@ -1,5 +1,5 @@
-import theatre from '@theatre/core'
-import {getProject, types} from '@theatre/core'
+import theatre from '@toy-box/core'
+import {getProject, types} from '@toy-box/core'
 import state from './reading obj value.theatre-project-state.json'
 
 void theatre.init({studio: true, usePersistentStorage: false})

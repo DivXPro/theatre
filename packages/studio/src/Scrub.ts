@@ -1,10 +1,10 @@
-import type {$FixMe} from '@theatre/core/types/public'
-import type {Pointer} from '@theatre/dataverse'
-import {getPointerParts} from '@theatre/dataverse'
+import type {$FixMe} from '@toy-box/core/types/public'
+import type {Pointer} from '@toy-box/dataverse'
+import {getPointerParts} from '@toy-box/dataverse'
 import type {Studio} from './Studio'
 import type {CommitOrDiscardOrRecapture} from './StudioStore/StudioStore'
-import type {IScrub, IScrubApi} from '@theatre/core'
-import {__private} from '@theatre/core'
+import type {IScrub, IScrubApi} from '@toy-box/core'
+import {__private} from '@toy-box/core'
 const {forEachPropDeep} = __private.propTypeUtils
 const {isSheetObject} = __private.instanceTypes
 

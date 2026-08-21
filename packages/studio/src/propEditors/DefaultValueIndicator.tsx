@@ -1,12 +1,12 @@
 import {transparentize} from 'polished'
 import React from 'react'
 import styled from 'styled-components'
-import getStudio from '@theatre/studio/getStudio'
-import type {PathToProp} from '@theatre/utils/pathToProp'
-import type SheetObject from '@theatre/core/sheetObjects/SheetObject'
-import type {PropTypeConfig} from '@theatre/core/types/public'
+import getStudio from '@toy-box/studio/getStudio'
+import type {PathToProp} from '@toy-box/utils/pathToProp'
+import type SheetObject from '@toy-box/core/sheetObjects/SheetObject'
+import type {PropTypeConfig} from '@toy-box/core/types/public'
 import {nextPrevCursorsTheme} from './NextPrevKeyframeCursors'
-import {__private} from '@theatre/core'
+import {__private} from '@toy-box/core'
 const {isPropConfigComposite, iteratePropType} = __private.propTypeUtils
 
 const theme = {

@@ -1,9 +1,9 @@
-import type {PropTypeConfig_File} from '@theatre/core/types/public'
-import {Package, Trash} from '@theatre/studio/uiComponents/icons'
+import type {PropTypeConfig_File} from '@toy-box/core/types/public'
+import {Package, Trash} from '@toy-box/studio/uiComponents/icons'
 import React, {useCallback, useEffect} from 'react'
 import styled, {css} from 'styled-components'
 import type {ISimplePropEditorReactProps} from './ISimplePropEditorReactProps'
-import type {$FixMe} from '@theatre/core/types/public'
+import type {$FixMe} from '@toy-box/core/types/public'
 
 const Container = styled.div<{empty: boolean}>`
   display: flex;

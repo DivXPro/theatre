@@ -1,13 +1,13 @@
 import {useEffect} from 'react'
-import getStudio from '@theatre/studio/getStudio'
-import {cmdIsDown} from '@theatre/utils/keyboardUtils'
-import {getSelectedSequence} from '@theatre/studio/selectors'
-import type {$IntentionalAny} from '@theatre/core/types/public'
-import type {Prism} from '@theatre/dataverse'
-import {Atom, prism, val} from '@theatre/dataverse'
-import type Sequence from '@theatre/core/sequences/Sequence'
-import memoizeFn from '@theatre/utils/memoizeFn'
-import type {IPlaybackRange} from '@theatre/core/types/public'
+import getStudio from '@toy-box/studio/getStudio'
+import {cmdIsDown} from '@toy-box/utils/keyboardUtils'
+import {getSelectedSequence} from '@toy-box/studio/selectors'
+import type {$IntentionalAny} from '@toy-box/core/types/public'
+import type {Prism} from '@toy-box/dataverse'
+import {Atom, prism, val} from '@toy-box/dataverse'
+import type Sequence from '@toy-box/core/sequences/Sequence'
+import memoizeFn from '@toy-box/utils/memoizeFn'
+import type {IPlaybackRange} from '@toy-box/core/types/public'
 
 let playPauseKeyboardShortcutIsEnabled = true
 export function __experimental_disablePlayPauseKeyboardShortcut() {

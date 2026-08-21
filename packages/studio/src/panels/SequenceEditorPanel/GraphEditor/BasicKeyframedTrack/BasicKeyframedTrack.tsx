@@ -1,24 +1,24 @@
-import type {TrackData} from '@theatre/core/types/private/core'
-import type SheetObject from '@theatre/core/sheetObjects/SheetObject'
-import type {PathToProp} from '@theatre/utils/pathToProp'
-import {createStudioSheetItemKey} from '@theatre/studio/utils/createStudioSheetItemKey'
+import type {TrackData} from '@toy-box/core/types/private/core'
+import type SheetObject from '@toy-box/core/sheetObjects/SheetObject'
+import type {PathToProp} from '@toy-box/utils/pathToProp'
+import {createStudioSheetItemKey} from '@toy-box/studio/utils/createStudioSheetItemKey'
 import type {
   $IntentionalAny,
   BasicKeyframe,
   VoidFn,
-} from '@theatre/core/types/public'
-import type {Pointer} from '@theatre/dataverse'
+} from '@toy-box/core/types/public'
+import type {Pointer} from '@toy-box/dataverse'
 import React, {useMemo, useRef, useState} from 'react'
-import type {SequenceEditorPanelLayout} from '@theatre/studio/panels/SequenceEditorPanel/layout/layout'
+import type {SequenceEditorPanelLayout} from '@toy-box/studio/panels/SequenceEditorPanel/layout/layout'
 import KeyframeEditor from './KeyframeEditor/KeyframeEditor'
-import {__private} from '@theatre/core'
+import {__private} from '@toy-box/core'
 import type {
   PropTypeConfig_AllSimples,
   SequenceTrackId,
-} from '@theatre/core/types/public'
-import {useVal} from '@theatre/react'
-import type {GraphEditorColors} from '@theatre/core/types/private'
-import {graphEditorColors} from '@theatre/sync-server/state/schema'
+} from '@toy-box/core/types/public'
+import {useVal} from '@toy-box/react'
+import type {GraphEditorColors} from '@toy-box/core/types/private'
+import {graphEditorColors} from '@toy-box/sync-server/state/schema'
 
 const {getPropConfigByPath, isPropConfigComposite, valueInProp} =
   __private.propTypeUtils

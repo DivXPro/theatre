@@ -1,5 +1,5 @@
 {
-  "name": "@theatre/app",
+  "name": "@toy-box/app",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -29,7 +29,7 @@
     "@radix-ui/react-slot": "^1.0.2",
     "@radix-ui/react-toast": "^1.1.5",
     "@tanstack/react-query": "^4.36.1",
-    "@theatre/utils": "workspace:*",
+    "@toy-box/utils": "workspace:*",
     "@trpc/client": "^10.43.0",
     "@trpc/next": "^10.43.0",
     "@trpc/react-query": "^10.43.0",

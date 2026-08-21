@@ -1,5 +1,5 @@
 {
-  "name": "@theatre/studio",
+  "name": "@toy-box/studio",
   "version": "0.7.0",
   "license": "AGPL-3.0-only",
   "description": "Motion design editor for the web",
@@ -26,19 +26,19 @@
   },
   "sideEffects": true,
   "peerDependencies": {
-    "@theatre/core": "*"
+    "@toy-box/core": "*"
   },
   "dependencies": {
-    "@theatre/dataverse": "workspace:*"
+    "@toy-box/dataverse": "workspace:*"
   },
   "devDependencies": {
     "@react-spring/web": "^9.7.3",
     "@styled/typescript-styled-plugin": "^1.0.1",
-    "@theatre/app": "workspace:*",
-    "@theatre/react": "workspace:*",
-    "@theatre/saaz": "workspace:*",
-    "@theatre/sync-server": "workspace:*",
-    "@theatre/utils": "workspace:*",
+    "@toy-box/app": "workspace:*",
+    "@toy-box/react": "workspace:*",
+    "@toy-box/saaz": "workspace:*",
+    "@toy-box/sync-server": "workspace:*",
+    "@toy-box/utils": "workspace:*",
     "@trpc/client": "^10.43.0",
     "@types/jest": "^26.0.24",
     "@types/marked": "^4.0.7",

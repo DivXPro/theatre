@@ -1,5 +1,5 @@
 {
-  "name": "@theatre/sync-server",
+  "name": "@toy-box/sync-server",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -14,10 +14,10 @@
   "dependencies": {
     "@cspotcode/zx": "^6.1.2",
     "@prisma/client": "^4.12.0",
-    "@theatre/app": "workspace:*",
-    "@theatre/core": "workspace:*",
-    "@theatre/saaz": "workspace:*",
-    "@theatre/utils": "workspace:*",
+    "@toy-box/app": "workspace:*",
+    "@toy-box/core": "workspace:*",
+    "@toy-box/saaz": "workspace:*",
+    "@toy-box/utils": "workspace:*",
     "@trpc/client": "^10.43.0",
     "@trpc/server": "^10.43.0",
     "@types/node": "20.10.5",

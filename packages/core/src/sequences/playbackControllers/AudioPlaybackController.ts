@@ -1,17 +1,17 @@
-import {defer} from '@theatre/utils/defer'
-import {InvalidArgumentError} from '@theatre/utils/errors'
-import noop from '@theatre/utils/noop'
-import type {Prism, Pointer, Ticker} from '@theatre/dataverse'
-import {Atom} from '@theatre/dataverse'
+import {defer} from '@toy-box/utils/defer'
+import {InvalidArgumentError} from '@toy-box/utils/errors'
+import noop from '@toy-box/utils/noop'
+import type {Prism, Pointer, Ticker} from '@toy-box/dataverse'
+import {Atom} from '@toy-box/dataverse'
 import type {
   IPlaybackController,
   IPlaybackState,
 } from './DefaultPlaybackController'
-import {notify} from '@theatre/core/utils/notify'
+import {notify} from '@toy-box/core/utils/notify'
 import type {
   IPlaybackDirection,
   IPlaybackRange,
-} from '@theatre/core/types/public'
+} from '@toy-box/core/types/public'
 
 export default class AudioPlaybackController implements IPlaybackController {
   _mainGain: GainNode

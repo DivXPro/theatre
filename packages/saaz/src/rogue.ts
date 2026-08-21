@@ -1,8 +1,8 @@
-import deepEqual from '@theatre/utils/deepEqual'
+import deepEqual from '@toy-box/utils/deepEqual'
 import type {$IntentionalAny} from './types'
 import * as immer from 'immer'
 import setDeep from 'lodash-es/set'
-import memoizeFn from '@theatre/utils/memoizeFn'
+import memoizeFn from '@toy-box/utils/memoizeFn'
 
 type BranchName = 'base' | string
 
@@ -25,8 +25,8 @@ type CellToJSON<T extends Cell> = T extends {
 }
   ? CellBoxedToJSON<T>
   : T extends {$type: ['map']}
-  ? MapCellToJSON<T>
-  : never
+    ? MapCellToJSON<T>
+    : never
 
 type CellBoxedToJSON<T extends Cell> = T['$branches'] extends {
   [key: string]: {$boxedValue: infer V}

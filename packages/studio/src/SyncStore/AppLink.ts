@@ -1,4 +1,4 @@
-import type {StudioTRPCRouter} from '@theatre/app/server/studio-api/root'
+import type {StudioTRPCRouter} from '@toy-box/app/server/studio-api/root'
 import type {CreateTRPCProxyClient} from '@trpc/client'
 import {
   createTRPCProxyClient,

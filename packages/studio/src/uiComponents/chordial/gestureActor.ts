@@ -1,13 +1,13 @@
-import {basicFSM} from '@theatre/utils/basicFSM'
-import type {DragHandlers, DragOpts} from '@theatre/studio/uiComponents/useDrag'
+import {basicFSM} from '@toy-box/utils/basicFSM'
+import type {DragHandlers, DragOpts} from '@toy-box/studio/uiComponents/useDrag'
 import {
   DRAG_DETECTION_DISTANCE_THRESHOLD,
   MouseButton,
   didPointerLockCauseMovement,
-} from '@theatre/studio/uiComponents/useDrag'
-import {isSafari} from '@theatre/studio/uiComponents/isSafari'
-import type {CapturedPointer} from '@theatre/studio/UIRoot/PointerCapturing'
-import {createPointerCapturing} from '@theatre/studio/UIRoot/PointerCapturing'
+} from '@toy-box/studio/uiComponents/useDrag'
+import {isSafari} from '@toy-box/studio/uiComponents/isSafari'
+import type {CapturedPointer} from '@toy-box/studio/UIRoot/PointerCapturing'
+import {createPointerCapturing} from '@toy-box/studio/UIRoot/PointerCapturing'
 import type {
   ChodrialElement,
   ChordialOpts,

@@ -1,38 +1,38 @@
-import type Project from '@theatre/core/projects/Project'
-import type Sheet from '@theatre/core/sheets/Sheet'
-import type SheetTemplate from '@theatre/core/sheets/SheetTemplate'
-import {emptyArray} from '@theatre/utils'
+import type Project from '@toy-box/core/projects/Project'
+import type Sheet from '@toy-box/core/sheets/Sheet'
+import type SheetTemplate from '@toy-box/core/sheets/SheetTemplate'
+import {emptyArray} from '@toy-box/utils'
 import type {
   SheetObjectAddress,
   WithoutSheetInstance,
   SerializableMap,
   SerializablePrimitive,
   SerializableValue,
-} from '@theatre/core/types/public'
-import type {PathToProp} from '@theatre/utils/pathToProp'
-import getDeep from '@theatre/utils/getDeep'
+} from '@toy-box/core/types/public'
+import type {PathToProp} from '@toy-box/utils/pathToProp'
+import getDeep from '@toy-box/utils/getDeep'
 import type {
   ObjectAddressKey,
   SequenceTrackId,
-} from '@theatre/core/types/public'
-import SimpleCache from '@theatre/utils/SimpleCache'
-import type {$FixMe, $IntentionalAny} from '@theatre/core/types/public'
-import type {Prism, Pointer} from '@theatre/dataverse'
-import {Atom, getPointerParts, prism, val} from '@theatre/dataverse'
+} from '@toy-box/core/types/public'
+import SimpleCache from '@toy-box/utils/SimpleCache'
+import type {$FixMe, $IntentionalAny} from '@toy-box/core/types/public'
+import type {Prism, Pointer} from '@toy-box/dataverse'
+import {Atom, getPointerParts, prism, val} from '@toy-box/dataverse'
 import set from 'lodash-es/set'
 import getPropDefaultsOfSheetObject from './getPropDefaultsOfSheetObject'
 import SheetObject from './SheetObject'
 import {
   getPropConfigByPath,
   isPropConfSequencable,
-} from '@theatre/core/propTypes/utils'
+} from '@toy-box/core/propTypes/utils'
 import getOrderingOfPropTypeConfig from './getOrderingOfPropTypeConfig'
-import type {SheetState_Historic} from '@theatre/core/types/private/core'
+import type {SheetState_Historic} from '@toy-box/core/types/private/core'
 import {cloneDeep, unset} from 'lodash-es'
 import type {
   SheetObjectActionsConfig,
   SheetObjectPropTypeConfig,
-} from '@theatre/core/types/public'
+} from '@toy-box/core/types/public'
 
 function isObjectEmpty(obj: unknown): boolean {
   return (

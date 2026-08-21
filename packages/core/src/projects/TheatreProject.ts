@@ -1,15 +1,15 @@
-import {privateAPI, setPrivateAPI} from '@theatre/core/privateAPIs'
-import Project from '@theatre/core/projects/Project'
-import type {Asset, ProjectAddress} from '@theatre/core/types/public'
+import {privateAPI, setPrivateAPI} from '@toy-box/core/privateAPIs'
+import Project from '@toy-box/core/projects/Project'
+import type {Asset, ProjectAddress} from '@toy-box/core/types/public'
 import type {
   ProjectId,
   SheetId,
   SheetInstanceId,
-} from '@theatre/core/types/public'
-import {validateInstanceId} from '@theatre/utils/sanitizers'
-import {validateAndSanitiseSlashedPathOrThrow} from '@theatre/utils/slashedPaths'
-import type {IProject, IProjectConfig, ISheet} from '@theatre/core/types/public'
-import {notify} from '@theatre/core/coreExports'
+} from '@toy-box/core/types/public'
+import {validateInstanceId} from '@toy-box/utils/sanitizers'
+import {validateAndSanitiseSlashedPathOrThrow} from '@toy-box/utils/slashedPaths'
+import type {IProject, IProjectConfig, ISheet} from '@toy-box/core/types/public'
+import {notify} from '@toy-box/core/coreExports'
 
 // export type IProjectConfigExperiments = {
 //   /**

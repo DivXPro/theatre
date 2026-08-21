@@ -1,13 +1,13 @@
-import type {Pointer} from '@theatre/dataverse'
+import type {Pointer} from '@toy-box/dataverse'
 import React, {useLayoutEffect, useMemo, useRef} from 'react'
 import styled from 'styled-components'
-import type {SequenceEditorPanelLayout} from '@theatre/studio/panels/SequenceEditorPanel/layout/layout'
-import {usePrism, useVal} from '@theatre/react'
-import getStudio from '@theatre/studio/getStudio'
-import type {BasicNumberInputNudgeFn} from '@theatre/studio/uiComponents/form/BasicNumberInput'
-import BasicNumberInput from '@theatre/studio/uiComponents/form/BasicNumberInput'
-import type {CommitOrDiscardOrRecapture} from '@theatre/studio/StudioStore/StudioStore'
-import {propNameTextCSS} from '@theatre/studio/propEditors/utils/propNameTextCSS'
+import type {SequenceEditorPanelLayout} from '@toy-box/studio/panels/SequenceEditorPanel/layout/layout'
+import {usePrism, useVal} from '@toy-box/react'
+import getStudio from '@toy-box/studio/getStudio'
+import type {BasicNumberInputNudgeFn} from '@toy-box/studio/uiComponents/form/BasicNumberInput'
+import BasicNumberInput from '@toy-box/studio/uiComponents/form/BasicNumberInput'
+import type {CommitOrDiscardOrRecapture} from '@toy-box/studio/StudioStore/StudioStore'
+import {propNameTextCSS} from '@toy-box/studio/propEditors/utils/propNameTextCSS'
 
 const greaterThanZero = (v: number) => isFinite(v) && v > 0
 

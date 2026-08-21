@@ -1,7 +1,7 @@
-import type {PropTypeConfig_Boolean} from '@theatre/core/types/public'
+import type {PropTypeConfig_Boolean} from '@toy-box/core/types/public'
 import React, {useCallback} from 'react'
 import styled from 'styled-components'
-import BasicCheckbox from '@theatre/studio/uiComponents/form/BasicCheckbox'
+import BasicCheckbox from '@toy-box/studio/uiComponents/form/BasicCheckbox'
 import type {ISimplePropEditorReactProps} from './ISimplePropEditorReactProps'
 
 const Input = styled(BasicCheckbox)`

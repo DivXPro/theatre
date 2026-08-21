@@ -1,5 +1,5 @@
-import {outlineSelection} from '@theatre/studio/selectors'
-import {usePrism, useVal} from '@theatre/react'
+import {outlineSelection} from '@toy-box/studio/selectors'
+import {usePrism, useVal} from '@toy-box/react'
 import React, {
   createContext,
   useContext,
@@ -12,17 +12,17 @@ import {
   panelZIndexes,
   TitleBar_Piece,
   TitleBar_Punctuation,
-} from '@theatre/studio/panels/BasePanel/common'
-import {pointerEventsAutoInNormalMode} from '@theatre/studio/css'
+} from '@toy-box/studio/panels/BasePanel/common'
+import {pointerEventsAutoInNormalMode} from '@toy-box/studio/css'
 import ObjectDetails from './ObjectDetails'
 import ProjectDetails from './ProjectDetails'
-import getStudio from '@theatre/studio/getStudio'
-import useHotspot from '@theatre/studio/uiComponents/useHotspot'
-import {Atom, prism, val} from '@theatre/dataverse'
+import getStudio from '@toy-box/studio/getStudio'
+import useHotspot from '@toy-box/studio/uiComponents/useHotspot'
+import {Atom, prism, val} from '@toy-box/dataverse'
 import EmptyState from './EmptyState'
-import useLockSet from '@theatre/studio/uiComponents/useLockSet'
-import {usePresenceListenersOnRootElement} from '@theatre/studio/uiComponents/usePresence'
-import {__private} from '@theatre/core'
+import useLockSet from '@toy-box/studio/uiComponents/useLockSet'
+import {usePresenceListenersOnRootElement} from '@toy-box/studio/uiComponents/usePresence'
+import {__private} from '@toy-box/core'
 const {isProject, isSheetObject} = __private.instanceTypes
 
 const headerHeight = `32px`

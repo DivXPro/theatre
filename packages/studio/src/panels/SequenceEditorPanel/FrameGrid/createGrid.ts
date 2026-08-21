@@ -1,4 +1,4 @@
-import type {IRange} from '@theatre/core/types/public'
+import type {IRange} from '@toy-box/core/types/public'
 import {memoize} from 'lodash-es'
 
 const getFactorsOfNumber = memoize((divisionsPerUnit: number): number[] => {

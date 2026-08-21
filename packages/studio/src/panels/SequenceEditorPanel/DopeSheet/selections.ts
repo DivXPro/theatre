@@ -1,5 +1,5 @@
-import type {Prism} from '@theatre/dataverse'
-import {prism, val} from '@theatre/dataverse'
+import type {Prism} from '@toy-box/dataverse'
+import {prism, val} from '@toy-box/dataverse'
 import type {
   KeyframeId,
   ObjectAddressKey,
@@ -7,16 +7,16 @@ import type {
   SequenceTrackId,
   SheetId,
   BasicKeyframe,
-} from '@theatre/core/types/public'
-import getStudio from '@theatre/studio/getStudio'
-import type {DopeSheetSelection} from '@theatre/studio/panels/SequenceEditorPanel/layout/layout'
+} from '@toy-box/core/types/public'
+import getStudio from '@toy-box/studio/getStudio'
+import type {DopeSheetSelection} from '@toy-box/studio/panels/SequenceEditorPanel/layout/layout'
 import {
   commonRootOfPathsToProps,
   decodePathToProp,
-} from '@theatre/utils/pathToProp'
-import type {StrictRecord} from '@theatre/core/types/public'
-import type {KeyframeWithPathToPropFromCommonRoot} from '@theatre/core/types/private'
-import {__private} from '@theatre/core'
+} from '@toy-box/utils/pathToProp'
+import type {StrictRecord} from '@toy-box/core/types/public'
+import type {KeyframeWithPathToPropFromCommonRoot} from '@toy-box/core/types/private'
+import {__private} from '@toy-box/core'
 
 const {keyframeUtils} = __private
 

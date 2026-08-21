@@ -1,12 +1,12 @@
-import type {VoidFn} from '@theatre/core/types/public'
-import {pointerEventsAutoInNormalMode} from '@theatre/studio/css'
+import type {VoidFn} from '@toy-box/core/types/public'
+import {pointerEventsAutoInNormalMode} from '@toy-box/studio/css'
 import {transparentize} from 'polished'
 import React from 'react'
 import styled, {css} from 'styled-components'
-import {PresenceFlag} from '@theatre/studio/uiComponents/usePresence'
-import usePresence from '@theatre/studio/uiComponents/usePresence'
-import type {StudioSheetItemKey} from '@theatre/core/types/private'
-import type {BasicKeyframe} from '@theatre/core'
+import {PresenceFlag} from '@toy-box/studio/uiComponents/usePresence'
+import usePresence from '@toy-box/studio/uiComponents/usePresence'
+import type {StudioSheetItemKey} from '@toy-box/core/types/private'
+import type {BasicKeyframe} from '@toy-box/core'
 
 export type NearbyKeyframesControls = {
   prev?: Pick<BasicKeyframe, 'position'> & {

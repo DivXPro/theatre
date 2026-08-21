@@ -1,11 +1,11 @@
-import {defer} from '@theatre/utils/defer'
-import noop from '@theatre/utils/noop'
-import type {Prism, Pointer, Ticker} from '@theatre/dataverse'
-import {Atom} from '@theatre/dataverse'
+import {defer} from '@toy-box/utils/defer'
+import noop from '@toy-box/utils/noop'
+import type {Prism, Pointer, Ticker} from '@toy-box/dataverse'
+import {Atom} from '@toy-box/dataverse'
 import type {
   IPlaybackDirection,
   IPlaybackRange,
-} from '@theatre/core/types/public'
+} from '@toy-box/core/types/public'
 
 export interface IPlaybackState {
   position: number

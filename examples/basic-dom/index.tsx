@@ -1,6 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import theatre, {getProject} from '@theatre/core'
+import theatre, {getProject} from '@toy-box/core'
+import '@toy-box/studio'
 import {Scene} from './Scene'
 
 void theatre.init({studio: true})

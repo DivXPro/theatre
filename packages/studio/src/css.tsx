@@ -3,7 +3,7 @@ import {css} from 'styled-components'
 import styled, {createGlobalStyle, StyleSheetManager} from 'styled-components'
 import React, {useLayoutEffect, useState} from 'react'
 import ReactDOM from 'react-dom'
-import type {$IntentionalAny} from '@theatre/core/types/public'
+import type {$IntentionalAny} from '@toy-box/core/types/public'
 import {PortalContext} from 'reakit'
 import useRefAndState from './utils/useRefAndState'
 

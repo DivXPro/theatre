@@ -1,11 +1,11 @@
-import type Project from '@theatre/core/projects/Project'
-import SheetObjectTemplate from '@theatre/core/sheetObjects/SheetObjectTemplate'
+import type Project from '@toy-box/core/projects/Project'
+import SheetObjectTemplate from '@toy-box/core/sheetObjects/SheetObjectTemplate'
 import type {
   SheetAddress,
   WithoutSheetInstance,
-} from '@theatre/core/types/public'
-import {Atom} from '@theatre/dataverse'
-import type {Pointer} from '@theatre/dataverse'
+} from '@toy-box/core/types/public'
+import {Atom} from '@toy-box/dataverse'
+import type {Pointer} from '@toy-box/dataverse'
 import Sheet from './Sheet'
 import type {ObjectNativeObject} from './Sheet'
 
@@ -13,12 +13,12 @@ import type {
   ObjectAddressKey,
   SheetId,
   SheetInstanceId,
-} from '@theatre/core/types/public'
-import type {StrictRecord} from '@theatre/core/types/public'
+} from '@toy-box/core/types/public'
+import type {StrictRecord} from '@toy-box/core/types/public'
 import type {
   SheetObjectActionsConfig,
   SheetObjectPropTypeConfig,
-} from '@theatre/core/types/public'
+} from '@toy-box/core/types/public'
 
 type SheetTemplateObjectTemplateMap = StrictRecord<
   ObjectAddressKey,

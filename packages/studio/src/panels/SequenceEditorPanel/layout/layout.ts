@@ -1,16 +1,16 @@
-import type Sheet from '@theatre/core/sheets/Sheet'
-import getStudio from '@theatre/studio/getStudio'
-import type useDrag from '@theatre/studio/uiComponents/useDrag'
-import type {SheetAddress} from '@theatre/core/types/public'
-import subPrism from '@theatre/utils/subPrism'
+import type Sheet from '@toy-box/core/sheets/Sheet'
+import getStudio from '@toy-box/studio/getStudio'
+import type useDrag from '@toy-box/studio/uiComponents/useDrag'
+import type {SheetAddress} from '@toy-box/core/types/public'
+import subPrism from '@toy-box/utils/subPrism'
 import type {
   IRange,
   PositionInScreenSpace,
   StrictRecord,
-} from '@theatre/core/types/public'
-import {valToAtom} from '@theatre/utils/valToAtom'
-import type {Prism, Pointer} from '@theatre/dataverse'
-import {Atom, prism, val} from '@theatre/dataverse'
+} from '@toy-box/core/types/public'
+import {valToAtom} from '@toy-box/utils/valToAtom'
+import type {Prism, Pointer} from '@toy-box/dataverse'
+import {Atom, prism, val} from '@toy-box/dataverse'
 import type {SequenceEditorTree} from './tree'
 import {calculateSequenceEditorTree} from './tree'
 import {clamp} from 'lodash-es'
@@ -18,7 +18,7 @@ import type {
   KeyframeId,
   ObjectAddressKey,
   SequenceTrackId,
-} from '@theatre/core/types/public'
+} from '@toy-box/core/types/public'
 
 // A Side is either the left side of the panel or the right side
 type DimsOfPanelPart = {

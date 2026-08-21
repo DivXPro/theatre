@@ -1,4 +1,4 @@
-import {tightJsonStringify} from '@theatre/utils/tightJsonStringify'
+import {tightJsonStringify} from '@toy-box/utils/tightJsonStringify'
 
 /**
  * Stringifies any value given. If an object is given and `indentJSON` is true,
@@ -10,10 +10,10 @@ export function devStringify(input: any, indentJSON: boolean = true): string {
     return typeof input === 'string'
       ? input
       : typeof input === 'function' || input instanceof Error
-      ? input.toString()
-      : indentJSON
-      ? tightJsonStringify(input)
-      : JSON.stringify(input)
+        ? input.toString()
+        : indentJSON
+          ? tightJsonStringify(input)
+          : JSON.stringify(input)
   } catch (err) {
     return input?.name || String(input)
   }

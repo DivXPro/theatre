@@ -2,7 +2,7 @@ import React from 'react'
 import styled from 'styled-components'
 import type KeyframeEditor from './KeyframeEditor'
 import {transformBox} from './Curve'
-import {__private} from '@theatre/core'
+import {__private} from '@toy-box/core'
 
 const {keyframeUtils} = __private
 

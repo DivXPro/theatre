@@ -1,4 +1,4 @@
-[@theatre/dataverse](../README.md) / PointerToPrismProvider
+[@toy-box/dataverse](../README.md) / PointerToPrismProvider
 
 # Interface: PointerToPrismProvider
 

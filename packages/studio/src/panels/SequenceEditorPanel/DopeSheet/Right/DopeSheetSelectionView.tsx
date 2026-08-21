@@ -1,31 +1,31 @@
-import getStudio from '@theatre/studio/getStudio'
-import type {CommitOrDiscardOrRecapture} from '@theatre/studio/StudioStore/StudioStore'
-import useDrag from '@theatre/studio/uiComponents/useDrag'
-import useKeyDown from '@theatre/studio/uiComponents/useKeyDown'
-import useValToAtom from '@theatre/studio/uiComponents/useValToAtom'
-import mutableSetDeep from '@theatre/utils/mutableSetDeep'
-import useRefAndState from '@theatre/studio/utils/useRefAndState'
-import {usePrism} from '@theatre/react'
-import type {$IntentionalAny} from '@theatre/core/types/public'
-import type {Pointer} from '@theatre/dataverse'
-import {val} from '@theatre/dataverse'
+import getStudio from '@toy-box/studio/getStudio'
+import type {CommitOrDiscardOrRecapture} from '@toy-box/studio/StudioStore/StudioStore'
+import useDrag from '@toy-box/studio/uiComponents/useDrag'
+import useKeyDown from '@toy-box/studio/uiComponents/useKeyDown'
+import useValToAtom from '@toy-box/studio/uiComponents/useValToAtom'
+import mutableSetDeep from '@toy-box/utils/mutableSetDeep'
+import useRefAndState from '@toy-box/studio/utils/useRefAndState'
+import {usePrism} from '@toy-box/react'
+import type {$IntentionalAny} from '@toy-box/core/types/public'
+import type {Pointer} from '@toy-box/dataverse'
+import {val} from '@toy-box/dataverse'
 import React, {useMemo, useRef} from 'react'
 import styled from 'styled-components'
 import type {
   DopeSheetSelection,
   SequenceEditorPanelLayout,
-} from '@theatre/studio/panels/SequenceEditorPanel/layout/layout'
+} from '@toy-box/studio/panels/SequenceEditorPanel/layout/layout'
 import type {
   SequenceEditorTree_AllRowTypes,
   SequenceEditorTree_PropWithChildren,
   SequenceEditorTree_Sheet,
   SequenceEditorTree_SheetObject,
-} from '@theatre/studio/panels/SequenceEditorPanel/layout/tree'
-import DopeSnap from '@theatre/studio/panels/SequenceEditorPanel/RightOverlay/DopeSnap'
+} from '@toy-box/studio/panels/SequenceEditorPanel/layout/tree'
+import DopeSnap from '@toy-box/studio/panels/SequenceEditorPanel/RightOverlay/DopeSnap'
 import {collectAggregateKeyframesInPrism} from './collectAggregateKeyframes'
-import type {ILogger, IUtilLogger} from '@theatre/utils/logger'
-import {useLogger} from '@theatre/studio/uiComponents/useLogger'
-import {__private} from '@theatre/core'
+import type {ILogger, IUtilLogger} from '@toy-box/utils/logger'
+import {useLogger} from '@toy-box/studio/uiComponents/useLogger'
+import {__private} from '@toy-box/core'
 
 const {keyframeUtils} = __private
 

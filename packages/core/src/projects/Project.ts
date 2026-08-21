@@ -2,32 +2,32 @@ import type {
   OnDiskState,
   ProjectEphemeralState,
   ProjectState,
-} from '@theatre/core/types/private/core'
-import type TheatreProject from '@theatre/core/projects/TheatreProject'
-import type Sheet from '@theatre/core/sheets/Sheet'
-import SheetTemplate from '@theatre/core/sheets/SheetTemplate'
-// import type {Studio} from '@theatre/studio/Studio'
-import type {ProjectAddress} from '@theatre/core/types/public'
-import type {Pointer} from '@theatre/dataverse'
-import {PointerProxy} from '@theatre/dataverse'
-import {Atom} from '@theatre/dataverse'
+} from '@toy-box/core/types/private/core'
+import type TheatreProject from '@toy-box/core/projects/TheatreProject'
+import type Sheet from '@toy-box/core/sheets/Sheet'
+import SheetTemplate from '@toy-box/core/sheets/SheetTemplate'
+// import type {Studio} from '@toy-box/studio/Studio'
+import type {ProjectAddress} from '@toy-box/core/types/public'
+import type {Pointer} from '@toy-box/dataverse'
+import {PointerProxy} from '@toy-box/dataverse'
+import {Atom} from '@toy-box/dataverse'
 import initialiseProjectState from './initialiseProjectState'
 import projectsSingleton from './projectsSingleton'
-import type {Deferred} from '@theatre/utils/defer'
-import {defer} from '@theatre/utils/defer'
-import {globals} from '@theatre/core/globals'
+import type {Deferred} from '@toy-box/utils/defer'
+import {defer} from '@toy-box/utils/defer'
+import {globals} from '@toy-box/core/globals'
 import type {
   ProjectId,
   SheetId,
   SheetInstanceId,
-} from '@theatre/core/types/public'
+} from '@toy-box/core/types/public'
 
 import type {
   $IntentionalAny,
   $____FixmeStudio,
-} from '@theatre/core/types/public'
-import {InvalidArgumentError} from '@theatre/utils/errors'
-import userReadableTypeOfValue from '@theatre/utils/userReadableTypeOfValue'
+} from '@toy-box/core/types/public'
+import {InvalidArgumentError} from '@toy-box/utils/errors'
+import userReadableTypeOfValue from '@toy-box/utils/userReadableTypeOfValue'
 
 type Studio = $____FixmeStudio
 
@@ -141,7 +141,7 @@ export default class Project {
 
     if (config.state) {
       setTimeout(() => {
-        // The user has provided config.state but in case @theatre/studio is loaded,
+        // The user has provided config.state but in case @toy-box/studio is loaded,
         // let's give it one tick to attach itself
         if (!this._studio) {
           this._studioReadyDeferred.resolve(undefined)
@@ -163,9 +163,9 @@ export default class Project {
           if (!this._studio) {
             throw new Error(
               `Argument config.state in Theatre.getProject("${id}", config) is empty. This is fine ` +
-                `while you are using @theatre/core along with @theatre/studio. But since @theatre/studio ` +
+                `while you are using @toy-box/core along with @toy-box/studio. But since @toy-box/studio ` +
                 `is not loaded, the state of project "${id}" will be empty.\n\n` +
-                `To fix this, you need to add @theatre/studio into the bundle and export ` +
+                `To fix this, you need to add @toy-box/studio into the bundle and export ` +
                 `the project's state. Learn how to do that at https://www.theatrejs.com/docs/latest/manual/projects#state\n`,
             )
           }

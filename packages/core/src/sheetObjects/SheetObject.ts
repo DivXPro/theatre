@@ -1,25 +1,25 @@
-import type {InterpolationTriple} from '@theatre/core/sequences/interpolationTripleAtPosition'
-import interpolationTripleAtPosition from '@theatre/core/sequences/interpolationTripleAtPosition'
-import type Sheet from '@theatre/core/sheets/Sheet'
-import type {SheetObjectAddress} from '@theatre/core/types/public'
-import deepMergeWithCache from '@theatre/utils/deepMergeWithCache'
-import type {SequenceTrackId} from '@theatre/core/types/public'
-import pointerDeep from '@theatre/utils/pointerDeep'
-import SimpleCache from '@theatre/utils/SimpleCache'
-import type {$FixMe, $IntentionalAny} from '@theatre/core/types/public'
-import {valToAtom} from '@theatre/utils/valToAtom'
-import type {PointerToPrismProvider, Prism, Pointer} from '@theatre/dataverse'
-import {Atom, getPointerParts, pointer, prism, val} from '@theatre/dataverse'
+import type {InterpolationTriple} from '@toy-box/core/sequences/interpolationTripleAtPosition'
+import interpolationTripleAtPosition from '@toy-box/core/sequences/interpolationTripleAtPosition'
+import type Sheet from '@toy-box/core/sheets/Sheet'
+import type {SheetObjectAddress} from '@toy-box/core/types/public'
+import deepMergeWithCache from '@toy-box/utils/deepMergeWithCache'
+import type {SequenceTrackId} from '@toy-box/core/types/public'
+import pointerDeep from '@toy-box/utils/pointerDeep'
+import SimpleCache from '@toy-box/utils/SimpleCache'
+import type {$FixMe, $IntentionalAny} from '@toy-box/core/types/public'
+import {valToAtom} from '@toy-box/utils/valToAtom'
+import type {PointerToPrismProvider, Prism, Pointer} from '@toy-box/dataverse'
+import {Atom, getPointerParts, pointer, prism, val} from '@toy-box/dataverse'
 import type SheetObjectTemplate from './SheetObjectTemplate'
 import TheatreSheetObject from './TheatreSheetObject'
-import {getPropConfigByPath} from '@theatre/core/propTypes/utils'
+import {getPropConfigByPath} from '@toy-box/core/propTypes/utils'
 import type {
   Interpolator,
   PropTypeConfig,
   DeepPartialOfSerializableValue,
   SerializableMap,
   SerializableValue,
-} from '@theatre/core/types/public'
+} from '@toy-box/core/types/public'
 
 /**
  * Internally, the sheet's actual configured value is not a specific type, since we
@@ -89,7 +89,7 @@ export default class SheetObject implements PointerToPrismProvider {
          * recalculations are cheap.
          *
          * Question: What about object.initialValue which _could_ change on every frame, but isn't layerd on last?
-         * Answer: initialValue is seldom used (it's only used in `@theatre/r3f` as far as we know). So this won't
+         * Answer: initialValue is seldom used (it's only used in `@toy-box/r3f` as far as we know). So this won't
          * affect the majority of use cases. And in case it _is_ used, it's better for us to implement an alternative
          * to `object.getValues()` that does not layer initialValue (and also skips defaultValue too). This is discussed
          * in issue [P-208](https://linear.app/theatre/issue/P-208/use-overrides-rather-than-final-values-in-r3f).

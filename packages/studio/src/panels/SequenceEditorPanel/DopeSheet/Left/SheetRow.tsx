@@ -1,10 +1,10 @@
-import type {SequenceEditorTree_Sheet} from '@theatre/studio/panels/SequenceEditorPanel/layout/tree'
-import {usePrism} from '@theatre/react'
+import type {SequenceEditorTree_Sheet} from '@toy-box/studio/panels/SequenceEditorPanel/layout/tree'
+import {usePrism} from '@toy-box/react'
 import React from 'react'
 import LeftSheetObjectRow from './SheetObjectRow'
 import AnyCompositeRow from './AnyCompositeRow'
-import {setCollapsedSheetItem} from '@theatre/studio/panels/SequenceEditorPanel/DopeSheet/setCollapsedSheetObjectOrCompoundProp'
-import uniqueKeyForAnyObject from '@theatre/utils/uniqueKeyForAnyObject'
+import {setCollapsedSheetItem} from '@toy-box/studio/panels/SequenceEditorPanel/DopeSheet/setCollapsedSheetObjectOrCompoundProp'
+import uniqueKeyForAnyObject from '@toy-box/utils/uniqueKeyForAnyObject'
 
 const SheetRow: React.VFC<{
   leaf: SequenceEditorTree_Sheet

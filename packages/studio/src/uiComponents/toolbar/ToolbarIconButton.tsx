@@ -1,10 +1,10 @@
 import styled from 'styled-components'
-import {pointerEventsAutoInNormalMode} from '@theatre/studio/css'
+import {pointerEventsAutoInNormalMode} from '@toy-box/studio/css'
 import React from 'react'
-import type {$FixMe, $IntentionalAny} from '@theatre/core/types/public'
+import type {$FixMe, $IntentionalAny} from '@toy-box/core/types/public'
 import {mergeRefs} from 'react-merge-refs'
 import ToolbarSwitchSelectContainer from './ToolbarSwitchSelectContainer'
-import useChordial from '@theatre/studio/uiComponents/chordial/useChodrial'
+import useChordial from '@toy-box/studio/uiComponents/chordial/useChodrial'
 
 export const Container = styled.button`
   ${pointerEventsAutoInNormalMode};

@@ -135,7 +135,7 @@ jobs:
 
               *  🚧 This is an insiders' build. It possibly **is not stable and _may_ corrupt your data**. Always **backup your work** before upgrading.
               * If you do try this build, welcome aboard, insider 😉. If you're feeling generous, share some feedback here or on [\`#contributing\`](https://discord.com/channels/870988717190426644/940301611023073400) at Discord.
-              * 🔼 To upgrade, edit \`package.json\` and replace the versions of all \`@theatre\` or \`theatric\` packages with their new versions:
+              * 🔼 To upgrade, edit \`package.json\` and replace the versions of all \`@toy-box\` or \`@toy-box/theatric\` packages with their new versions:
               
               \`\`\`diff
               ${published.map((pkg) => {

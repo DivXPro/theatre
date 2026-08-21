@@ -1,26 +1,26 @@
-import getStudio from '@theatre/studio/getStudio'
-import type {CommitOrDiscardOrRecapture} from '@theatre/studio/StudioStore/StudioStore'
-import useContextMenu from '@theatre/studio/uiComponents/simpleContextMenu/useContextMenu'
-import useDrag from '@theatre/studio/uiComponents/useDrag'
-import useRefAndState from '@theatre/studio/utils/useRefAndState'
-import {val} from '@theatre/dataverse'
+import getStudio from '@toy-box/studio/getStudio'
+import type {CommitOrDiscardOrRecapture} from '@toy-box/studio/StudioStore/StudioStore'
+import useContextMenu from '@toy-box/studio/uiComponents/simpleContextMenu/useContextMenu'
+import useDrag from '@toy-box/studio/uiComponents/useDrag'
+import useRefAndState from '@toy-box/studio/utils/useRefAndState'
+import {val} from '@toy-box/dataverse'
 import React, {useMemo, useRef, useState} from 'react'
 import styled from 'styled-components'
 import type KeyframeEditor from './KeyframeEditor'
-import type {BasicKeyframe} from '@theatre/core/types/public'
-import {useLockFrameStampPosition} from '@theatre/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
-import {includeLockFrameStampAttrs} from '@theatre/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
-import {pointerEventsAutoInNormalMode} from '@theatre/studio/css'
+import type {BasicKeyframe} from '@toy-box/core/types/public'
+import {useLockFrameStampPosition} from '@toy-box/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
+import {includeLockFrameStampAttrs} from '@toy-box/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
+import {pointerEventsAutoInNormalMode} from '@toy-box/studio/css'
 import {
   lockedCursorCssVarName,
   useCssCursorLock,
-} from '@theatre/studio/uiComponents/PointerEventsHandler'
-import DopeSnap from '@theatre/studio/panels/SequenceEditorPanel/RightOverlay/DopeSnap'
-import {useKeyframeInlineEditorPopover} from '@theatre/studio/panels/SequenceEditorPanel/DopeSheet/Right/BasicKeyframedTrack/KeyframeEditor/useSingleKeyframeInlineEditorPopover'
+} from '@toy-box/studio/uiComponents/PointerEventsHandler'
+import DopeSnap from '@toy-box/studio/panels/SequenceEditorPanel/RightOverlay/DopeSnap'
+import {useKeyframeInlineEditorPopover} from '@toy-box/studio/panels/SequenceEditorPanel/DopeSheet/Right/BasicKeyframedTrack/KeyframeEditor/useSingleKeyframeInlineEditorPopover'
 import usePresence, {
   PresenceFlag,
-} from '@theatre/studio/uiComponents/usePresence'
-import {__private} from '@theatre/core'
+} from '@toy-box/studio/uiComponents/usePresence'
+import {__private} from '@toy-box/core'
 
 const {keyframeUtils} = __private
 

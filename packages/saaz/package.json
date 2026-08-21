@@ -1,5 +1,5 @@
 {
-  "name": "@theatre/saaz",
+  "name": "@toy-box/saaz",
   "version": "0.7.0",
   "license": "Apache-2.0",
   "author": {
@@ -31,8 +31,8 @@
   },
   "devDependencies": {
     "@microsoft/api-extractor": "^7.36.4",
-    "@theatre/dataverse": "workspace:*",
-    "@theatre/utils": "workspace:*",
+    "@toy-box/dataverse": "workspace:*",
+    "@toy-box/utils": "workspace:*",
     "@types/jest": "^26.0.23",
     "@types/lodash-es": "^4.17.4",
     "@types/node": "^15.6.2",

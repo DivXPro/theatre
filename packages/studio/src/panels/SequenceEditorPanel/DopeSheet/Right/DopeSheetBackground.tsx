@@ -1,12 +1,12 @@
-import {theme} from '@theatre/studio/css'
-import type {SequenceEditorPanelLayout} from '@theatre/studio/panels/SequenceEditorPanel/layout/layout'
-import {zIndexes} from '@theatre/studio/panels/SequenceEditorPanel/SequenceEditorPanel'
-import {useVal} from '@theatre/react'
-import type {Pointer} from '@theatre/dataverse'
+import {theme} from '@toy-box/studio/css'
+import type {SequenceEditorPanelLayout} from '@toy-box/studio/panels/SequenceEditorPanel/layout/layout'
+import {zIndexes} from '@toy-box/studio/panels/SequenceEditorPanel/SequenceEditorPanel'
+import {useVal} from '@toy-box/react'
+import type {Pointer} from '@toy-box/dataverse'
 import {darken, transparentize} from 'polished'
 import React from 'react'
 import styled from 'styled-components'
-import FrameGrid from '@theatre/studio/panels/SequenceEditorPanel/FrameGrid/FrameGrid'
+import FrameGrid from '@toy-box/studio/panels/SequenceEditorPanel/FrameGrid/FrameGrid'
 
 const Container = styled.div`
   position: absolute;

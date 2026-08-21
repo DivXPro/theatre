@@ -1,8 +1,8 @@
-import Scrub from '@theatre/studio/Scrub'
-import type {StudioHistoricState} from '@theatre/core/types/private/studio'
-import UI from '@theatre/studio/UI/UI'
-import type {Pointer, Ticker} from '@theatre/dataverse'
-import {Atom, PointerProxy, pointerToPrism} from '@theatre/dataverse'
+import Scrub from '@toy-box/studio/Scrub'
+import type {StudioHistoricState} from '@toy-box/core/types/private/studio'
+import UI from '@toy-box/studio/UI/UI'
+import type {Pointer, Ticker} from '@toy-box/dataverse'
+import {Atom, PointerProxy, pointerToPrism} from '@toy-box/dataverse'
 import type {
   CommitOrDiscardOrRecapture,
   ITransactionPrivateApi,
@@ -13,32 +13,32 @@ import type {
   IStudio,
   PaneClassDefinition,
   InitOpts,
-} from '@theatre/core/types/public'
+} from '@toy-box/core/types/public'
 import TheatreStudio from './TheatreStudio'
 import {nanoid} from 'nanoid/non-secure'
-import type Project from '@theatre/core/projects/Project'
-import type {CoreBits} from '@theatre/core/CoreBundle'
-import SimpleCache from '@theatre/utils/SimpleCache'
-import type {IProject, ISheet, ProjectId} from '@theatre/core'
+import type Project from '@toy-box/core/projects/Project'
+import type {CoreBits} from '@toy-box/core/CoreBundle'
+import SimpleCache from '@toy-box/utils/SimpleCache'
+import type {IProject, ISheet, ProjectId} from '@toy-box/core'
 import PaneManager from './PaneManager'
-import type * as _coreExports from '@theatre/core/coreExports'
+import type * as _coreExports from '@toy-box/core/coreExports'
 import type {
   OnDiskState,
   ProjectEphemeralState,
-} from '@theatre/core/types/private/core'
-import type {Deferred} from '@theatre/utils/defer'
-import {defer} from '@theatre/utils/defer'
+} from '@toy-box/core/types/private/core'
+import type {Deferred} from '@toy-box/utils/defer'
+import {defer} from '@toy-box/utils/defer'
 import checkForUpdates from './checkForUpdates'
 import shallowEqual from 'shallowequal'
 import {createStore} from './IDBStorage'
-import {getAllPossibleAssetIDs} from '@theatre/studio/utils/assets'
+import {getAllPossibleAssetIDs} from '@toy-box/studio/utils/assets'
 import {notify} from './notify'
-import type {RafDriverPrivateAPI} from '@theatre/core/rafDrivers'
-import {persistAtom} from '@theatre/utils/persistAtom'
+import type {RafDriverPrivateAPI} from '@toy-box/core/rafDrivers'
+import {persistAtom} from '@toy-box/utils/persistAtom'
 import produce from 'immer'
 import Storno from './Storno/Storno'
 import Auth from './Auth'
-import type {$IntentionalAny} from '@theatre/core/types/public'
+import type {$IntentionalAny} from '@toy-box/core/types/public'
 import AppLink from './SyncStore/AppLink'
 import SyncServerLink from './SyncStore/SyncServerLink'
 import type {TrpcClientWrapped} from './SyncStore/utils'
@@ -49,28 +49,28 @@ const DEFAULT_PERSISTENCE_KEY = 'theatre-0.4'
 
 export type CoreExports = typeof _coreExports
 
-const STUDIO_NOT_INITIALIZED_MESSAGE = `You seem to have imported '@theatre/studio' but haven't initialized it. You can initialize the studio by:
+const STUDIO_NOT_INITIALIZED_MESSAGE = `You seem to have imported '@toy-box/studio' but haven't initialized it. You can initialize the studio by:
 \`\`\`
-import theatre from '@theatre/core'
+import theatre from '@toy-box/core'
 theatre.init({studio: true})
 \`\`\`
 
-* If you didn't mean to import '@theatre/studio', this means that your bundler is not tree-shaking it. This is most likely a bundler misconfiguration.
+* If you didn't mean to import '@toy-box/studio', this means that your bundler is not tree-shaking it. This is most likely a bundler misconfiguration.
 
-* If you meant to import '@theatre/studio' without showing its UI, you can do that by running:
+* If you meant to import '@toy-box/studio' without showing its UI, you can do that by running:
 
 \`\`\`
-import theatre from '@theatre/core'
+import theatre from '@toy-box/core'
 theatre.init({studio: true})
 studio.ui.hide()
 \`\`\`
 `
 
-const STUDIO_INITIALIZED_LATE_MSG = `You seem to have imported '@theatre/studio' but called \`studio.initialize()\` after some delay.
+const STUDIO_INITIALIZED_LATE_MSG = `You seem to have imported '@toy-box/studio' but called \`studio.initialize()\` after some delay.
 Theatre.js projects remain in pending mode (won't play their sequences) until the studio is initialized, so you should place the \`studio.initialize()\` line right after the import line:
 
 \`\`\`
-import theatre from '@theatre/core'
+import theatre from '@toy-box/core'
 // ... and other imports
 
 studio.initialize()
@@ -110,7 +110,7 @@ export class Studio {
   readonly paneManager: PaneManager
 
   /**
-   * An atom holding the exports of '\@theatre/core'. Will be undefined if '\@theatre/core' is never imported
+   * An atom holding the exports of '\@toy-box/core'. Will be undefined if '\@toy-box/core' is never imported
    */
   private _coreAtom = new Atom<{core?: CoreExports}>({})
 
@@ -153,7 +153,7 @@ export class Studio {
   private _didWarnAboutNotInitializing = false
 
   /**
-   * This will be set as soon as `@theatre/core` registers itself on `@theatre/studio`
+   * This will be set as soon as `@toy-box/core` registers itself on `@toy-box/studio`
    */
   private _coreBits: CoreBits | undefined
 
@@ -311,7 +311,7 @@ export class Studio {
   async initialize(opts?: InitOpts) {
     if (!this._coreBits) {
       throw new Error(
-        `You seem to have imported \`@theatre/studio\` without importing \`@theatre/core\`. Make sure to include an import of \`@theatre/core\` before calling \`studio.initializer()\`.`,
+        `You seem to have imported \`@toy-box/studio\` without importing \`@toy-box/core\`. Make sure to include an import of \`@toy-box/core\` before calling \`studio.initializer()\`.`,
       )
     }
 
@@ -731,7 +731,7 @@ function sanitizeOpts(
     if (!rafDriverPrivateApi) {
       // TODO - need to educate the user about this edge case
       throw new Error(
-        'parameter `rafDriver` in `theatre.init({studio: true, __experimental_rafDriver})` seems to come from a different version of `@theatre/core` than the version that is attached to `@theatre/studio`',
+        'parameter `rafDriver` in `theatre.init({studio: true, __experimental_rafDriver})` seems to come from a different version of `@toy-box/core` than the version that is attached to `@toy-box/studio`',
       )
     }
     storeOpts.rafDriver = rafDriverPrivateApi

@@ -101,9 +101,9 @@ here :)
 
 Your use of Theatre.js is governed under the Apache License Version 2.0:
 
-- Theatre's core (`@theatre/core`) is released under the Apache License. Same
+- Theatre's core (`@toy-box/core`) is released under the Apache License. Same
   goes for most packages in this repository.
-- The studio (`@theatre/studio`) is released under the AGPL 3.0 License. This is
+- The studio (`@toy-box/studio`) is released under the AGPL 3.0 License. This is
   the package that you use to edit your animations, setup your scenes, etc. You
   only use the studio during design/development. Your project's final bundle
-  only includes `@theatre/core`, so only the Apache License applies.
+  only includes `@toy-box/core`, so only the Apache License applies.

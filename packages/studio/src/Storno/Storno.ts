@@ -1,6 +1,6 @@
-import type {Prism} from '@theatre/dataverse'
-import {Atom, prism, val} from '@theatre/dataverse'
-import type {$FixMe} from '@theatre/core/types/public'
+import type {Prism} from '@toy-box/dataverse'
+import {Atom, prism, val} from '@toy-box/dataverse'
+import type {$FixMe} from '@toy-box/core/types/public'
 
 type State = {
   loginState:

@@ -1,4 +1,4 @@
-import type {AppRouter} from '@theatre/app/src/server/api/root'
+import type {AppRouter} from '@toy-box/app/src/server/api/root'
 import {createTRPCProxyClient, httpBatchLink} from '@trpc/client'
 import superjson from 'superjson'
 import {env} from './env'

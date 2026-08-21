@@ -1,5 +1,5 @@
-import type {$FixMe, $IntentionalAny} from '@theatre/core/types/public'
-import userReadableTypeOfValue from '@theatre/utils/userReadableTypeOfValue'
+import type {$FixMe, $IntentionalAny} from '@toy-box/core/types/public'
+import userReadableTypeOfValue from '@toy-box/utils/userReadableTypeOfValue'
 
 import {
   decorateRgba,
@@ -7,9 +7,9 @@ import {
   oklabToLinearSrgb,
   srgbToLinearSrgb,
   linearSrgbToSrgb,
-} from '@theatre/utils/color'
+} from '@toy-box/utils/color'
 import {clamp, mapValues} from 'lodash-es'
-import {propTypeSymbol, type NumberNudgeFn} from '@theatre/core/types/public'
+import {propTypeSymbol, type NumberNudgeFn} from '@toy-box/core/types/public'
 import {sanitizeCompoundProps} from './internals'
 
 import type {
@@ -27,7 +27,7 @@ import type {
   Rgba,
   File,
   Asset,
-} from '@theatre/core/types/public'
+} from '@toy-box/core/types/public'
 
 // Notes on naming:
 // As of now, prop types are either `simple` or `composite`.

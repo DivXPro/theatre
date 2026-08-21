@@ -1,10 +1,10 @@
-import {setupTestSheet} from '@theatre/studio/integration-tests/testUtils'
-import {encodePathToProp} from '@theatre/utils/pathToProp'
+import {setupTestSheet} from '@toy-box/studio/integration-tests/testUtils'
+import {encodePathToProp} from '@toy-box/utils/pathToProp'
 import type {
   ObjectAddressKey,
   SequenceTrackId,
-} from '@theatre/core/types/public'
-import {__private} from '@theatre/core'
+} from '@toy-box/core/types/public'
+import {__private} from '@toy-box/core'
 
 const {keyframeUtils} = __private
 

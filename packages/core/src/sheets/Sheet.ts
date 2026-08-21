@@ -1,20 +1,20 @@
-import type Project from '@theatre/core/projects/Project'
-import Sequence from '@theatre/core/sequences/Sequence'
-import type SheetObject from '@theatre/core/sheetObjects/SheetObject'
-import TheatreSheet from '@theatre/core/sheets/TheatreSheet'
-import type {SheetAddress} from '@theatre/core/types/public'
-import {Atom, prism, val} from '@theatre/dataverse'
+import type Project from '@toy-box/core/projects/Project'
+import Sequence from '@toy-box/core/sequences/Sequence'
+import type SheetObject from '@toy-box/core/sheetObjects/SheetObject'
+import TheatreSheet from '@toy-box/core/sheets/TheatreSheet'
+import type {SheetAddress} from '@toy-box/core/types/public'
+import {Atom, prism, val} from '@toy-box/dataverse'
 import type SheetTemplate from './SheetTemplate'
 import type {
   ObjectAddressKey,
   SheetInstanceId,
-} from '@theatre/core/types/public'
-import type {StrictRecord} from '@theatre/core/types/public'
+} from '@toy-box/core/types/public'
+import type {StrictRecord} from '@toy-box/core/types/public'
 import {isInteger} from 'lodash-es'
 import type {
   SheetObjectActionsConfig,
   SheetObjectPropTypeConfig,
-} from '@theatre/core/types/public'
+} from '@toy-box/core/types/public'
 
 type SheetObjectMap = StrictRecord<ObjectAddressKey, SheetObject>
 

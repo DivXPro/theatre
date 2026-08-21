@@ -1,10 +1,10 @@
-import type {IExtension} from '@theatre/core'
-import theatre from '@theatre/core'
-import '@theatre/core'
+import type {IExtension} from '@toy-box/core'
+import theatre from '@toy-box/core'
+import '@toy-box/core'
 import {extensionButton} from '../../shared/utils/useExtensionButton'
 
 const ext1: IExtension = {
-  id: '@theatre/hello-world-extension',
+  id: '@toy-box/hello-world-extension',
   toolbars: {
     global(set, studio) {
       console.log('mount 1')

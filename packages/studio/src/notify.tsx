@@ -7,8 +7,8 @@ import type {
   NotificationType,
   Notify,
   Notifiers,
-} from '@theatre/core/utils/notify'
-import {useVal} from '@theatre/react'
+} from '@toy-box/core/utils/notify'
+import {useVal} from '@toy-box/react'
 import getStudio from './getStudio'
 import {marked} from 'marked'
 import useTooltip from './uiComponents/Popover/useTooltip'

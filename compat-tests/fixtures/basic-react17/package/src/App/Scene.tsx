@@ -1,7 +1,7 @@
-import type {IScrub} from '@theatre/core'
-import studio from '@theatre/studio'
+import type {IScrub} from '@toy-box/core'
+import studio from '@toy-box/studio'
 import React, {useLayoutEffect, useMemo, useState} from 'react'
-import type {ISheet, ISheetObject, IProject} from '@theatre/core'
+import type {ISheet, ISheetObject, IProject} from '@toy-box/core'
 import type {UseDragOpts} from './useDrag'
 import useDrag from './useDrag'
 

@@ -1,4 +1,4 @@
-import type {$IntentionalAny} from '@theatre/utils/types'
+import type {$IntentionalAny} from '@toy-box/utils/types'
 
 /**
  * A basic cache

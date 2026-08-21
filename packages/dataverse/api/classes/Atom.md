@@ -1,4 +1,4 @@
-[@theatre/dataverse](../README.md) / Atom
+[@toy-box/dataverse](../README.md) / Atom
 
 # Class: Atom<State\>
 

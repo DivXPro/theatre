@@ -1,4 +1,4 @@
-import noop from '@theatre/utils/noop'
+import noop from '@toy-box/utils/noop'
 import type {ElementType} from 'react'
 import React from 'react'
 import styled from 'styled-components'

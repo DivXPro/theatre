@@ -21,5 +21,5 @@ export const globalVariableNames = {
   notifications: '__TheatreJS_Notifications',
 } as const
 
-// This type is easier to import by the studio, since studio can only import types from `@theatre/core/*`
+// This type is easier to import by the studio, since studio can only import types from `@toy-box/core/*`
 export type GlobalVariableNames = typeof globalVariableNames

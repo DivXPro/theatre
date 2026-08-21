@@ -1,5 +1,5 @@
 {
-  "name": "@theatre/compat-tests",
+  "name": "@toy-box/compat-tests",
   "private": true,
   "scripts": {
     "install-fixtures": "tsx ./scripts/install-fixtures.ts",

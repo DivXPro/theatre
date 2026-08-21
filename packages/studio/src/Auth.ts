@@ -1,9 +1,9 @@
-import type {Prism} from '@theatre/dataverse'
-import {Atom, prism, val} from '@theatre/dataverse'
+import type {Prism} from '@toy-box/dataverse'
+import {Atom, prism, val} from '@toy-box/dataverse'
 import {TRPCClientError} from '@trpc/client'
-import delay from '@theatre/utils/delay'
-import type {$FixMe, $IntentionalAny} from '@theatre/core/types/public'
-import {defer} from '@theatre/utils/defer'
+import delay from '@toy-box/utils/delay'
+import type {$FixMe, $IntentionalAny} from '@toy-box/core/types/public'
+import {defer} from '@toy-box/utils/defer'
 import {
   generateRandomCodeVerifier,
   calculatePKCECodeChallenge,
@@ -11,9 +11,9 @@ import {
 import type {Studio} from './Studio'
 import getStudio from './getStudio'
 import {decodeJwt} from 'jose'
-import type {studioAccessScopes, studioAuthTokens} from '@theatre/app/types'
-import type {AtomPersistor} from '@theatre/utils/persistAtom'
-import {persistAtom} from '@theatre/utils/persistAtom'
+import type {studioAccessScopes, studioAuthTokens} from '@toy-box/app/types'
+import type {AtomPersistor} from '@toy-box/utils/persistAtom'
+import {persistAtom} from '@toy-box/utils/persistAtom'
 
 type PersistentState =
   | {loggedIn: false}

@@ -7,16 +7,16 @@ export type {
   ITheatreLoggerConfig,
   ITheatreLoggingConfig,
   ITheatreInternalLogger,
-} from '@theatre/utils/_logger/logger'
+} from '@toy-box/utils/_logger/logger'
 import {
   createTheatreInternalLogger,
   TheatreLoggerLevel,
-} from '@theatre/utils/_logger/logger'
-import type {IUtilLogger} from '@theatre/utils/_logger/logger'
+} from '@toy-box/utils/_logger/logger'
+import type {IUtilLogger} from '@toy-box/utils/_logger/logger'
 export {
   TheatreLoggerLevel,
   createTheatreInternalLogger,
-} from '@theatre/utils/_logger/logger'
+} from '@toy-box/utils/_logger/logger'
 
 /**
  * Common object interface for the context to pass in to utility functions.

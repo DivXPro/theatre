@@ -1,14 +1,14 @@
-import type SheetObject from '@theatre/core/sheetObjects/SheetObject'
-import getStudio from '@theatre/studio/getStudio'
-import type {PathToProp} from '@theatre/utils/pathToProp'
-import type {SequenceTrackId} from '@theatre/core/types/public'
-import {usePrism} from '@theatre/react'
-import type {Pointer} from '@theatre/dataverse'
-import {val} from '@theatre/dataverse'
+import type SheetObject from '@toy-box/core/sheetObjects/SheetObject'
+import getStudio from '@toy-box/studio/getStudio'
+import type {PathToProp} from '@toy-box/utils/pathToProp'
+import type {SequenceTrackId} from '@toy-box/core/types/public'
+import {usePrism} from '@toy-box/react'
+import type {Pointer} from '@toy-box/dataverse'
+import {val} from '@toy-box/dataverse'
 import React from 'react'
-import type {SequenceEditorPanelLayout} from '@theatre/studio/panels/SequenceEditorPanel/layout/layout'
+import type {SequenceEditorPanelLayout} from '@toy-box/studio/panels/SequenceEditorPanel/layout/layout'
 import BasicKeyframedTrack from './BasicKeyframedTrack/BasicKeyframedTrack'
-import type {GraphEditorColors} from '@theatre/core/types/private'
+import type {GraphEditorColors} from '@toy-box/core/types/private'
 
 const PrimitivePropGraph: React.FC<{
   layoutP: Pointer<SequenceEditorPanelLayout>

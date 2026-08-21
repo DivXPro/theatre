@@ -1,9 +1,9 @@
-import {privateAPI, setPrivateAPI} from '@theatre/core/privateAPIs'
-import type {SheetObjectAddress} from '@theatre/core/types/public'
-import SimpleCache from '@theatre/utils/SimpleCache'
-import type {$FixMe, VoidFn} from '@theatre/core/types/public'
-import type {Prism, Pointer} from '@theatre/dataverse'
-import {prism, val} from '@theatre/dataverse'
+import {privateAPI, setPrivateAPI} from '@toy-box/core/privateAPIs'
+import type {SheetObjectAddress} from '@toy-box/core/types/public'
+import SimpleCache from '@toy-box/utils/SimpleCache'
+import type {$FixMe, VoidFn} from '@toy-box/core/types/public'
+import type {Prism, Pointer} from '@toy-box/dataverse'
+import {prism, val} from '@toy-box/dataverse'
 import type SheetObject from './SheetObject'
 import {debounce} from 'lodash-es'
 import type {DebouncedFunc} from 'lodash-es'
@@ -15,8 +15,8 @@ import type {
   PropsValue,
   UnknownShorthandCompoundProps,
   DeepPartialOfSerializableValue,
-} from '@theatre/core/types/public'
-import {onChange} from '@theatre/core/coreExports'
+} from '@toy-box/core/types/public'
+import {onChange} from '@toy-box/core/coreExports'
 
 // Enabled for https://linear.app/theatre/issue/P-217/if-objvalue-is-read-make-sure-its-derivation-remains-hot-for-a-while
 // Disable to test old behavior

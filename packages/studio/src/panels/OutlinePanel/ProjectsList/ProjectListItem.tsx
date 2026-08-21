@@ -1,14 +1,14 @@
-import type Project from '@theatre/core/projects/Project'
+import type Project from '@toy-box/core/projects/Project'
 import React, {useCallback} from 'react'
-import BaseItem from '@theatre/studio/panels/OutlinePanel/BaseItem'
-import SheetsList from '@theatre/studio/panels/OutlinePanel/SheetsList/SheetsList'
-import getStudio from '@theatre/studio/getStudio'
-import {usePrism, useVal} from '@theatre/react'
-import {outlineSelection} from '@theatre/studio/selectors'
-import {val} from '@theatre/dataverse'
+import BaseItem from '@toy-box/studio/panels/OutlinePanel/BaseItem'
+import SheetsList from '@toy-box/studio/panels/OutlinePanel/SheetsList/SheetsList'
+import getStudio from '@toy-box/studio/getStudio'
+import {usePrism, useVal} from '@toy-box/react'
+import {outlineSelection} from '@toy-box/studio/selectors'
+import {val} from '@toy-box/dataverse'
 import styled from 'styled-components'
-import {useCollapseStateInOutlinePanel} from '@theatre/studio/panels/OutlinePanel/outlinePanelUtils'
-import useChordial from '@theatre/studio/uiComponents/chordial/useChodrial'
+import {useCollapseStateInOutlinePanel} from '@toy-box/studio/panels/OutlinePanel/outlinePanelUtils'
+import useChordial from '@toy-box/studio/uiComponents/chordial/useChodrial'
 
 const ConflictNotice = styled.div`
   color: #ff6363;

@@ -1,10 +1,10 @@
-// import type {Studio} from '@theatre/studio/Studio'
-import delay from '@theatre/utils/delay'
+// import type {Studio} from '@toy-box/studio/Studio'
+import delay from '@toy-box/utils/delay'
 import type Project from './Project'
-import type {OnDiskState} from '@theatre/core/types/private/core'
-import {globals} from '@theatre/core/globals'
-import {val} from '@theatre/dataverse'
-import type {$____FixmeStudio} from '@theatre/core/types/public'
+import type {OnDiskState} from '@toy-box/core/types/private/core'
+import {globals} from '@toy-box/core/globals'
+import {val} from '@toy-box/dataverse'
+import type {$____FixmeStudio} from '@toy-box/core/types/public'
 
 type Studio = $____FixmeStudio
 

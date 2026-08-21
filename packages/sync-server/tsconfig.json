@@ -8,10 +8,10 @@
     "baseUrl": ".",
     "composite": true,
     "paths": {
-      "@theatre/utils/*": ["../utils/src/*"],
-      "@theatre/app/*": ["../app/src/*"],
-      "@theatre/core/*": ["../core/src/*"],
-      "@theatre/core": ["../core/src/index.ts"]
+      "@toy-box/utils/*": ["../utils/src/*"],
+      "@toy-box/app/*": ["../app/src/*"],
+      "@toy-box/core/*": ["../core/src/*"],
+      "@toy-box/core": ["../core/src/index.ts"]
     }
   },
   "references": [

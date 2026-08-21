@@ -5,7 +5,7 @@ import type {
   StudioSheetItemKey,
   UIPanelId,
   GraphEditorColors,
-} from '@theatre/core/types/private'
+} from '@toy-box/core/types/private'
 
 import type {
   ProjectAddress,
@@ -23,15 +23,15 @@ import type {
   SerializablePrimitive,
   SerializableValue,
   IRange,
-} from '@theatre/core/types/public'
+} from '@toy-box/core/types/public'
 
 import {
   encodePathToProp,
   commonRootOfPathsToProps,
-} from '@theatre/utils/pathToProp'
-import removePathFromObject from '@theatre/utils/removePathFromObject'
-import {transformNumber} from '@theatre/utils/transformNumber'
-import type {$IntentionalAny} from '@theatre/utils/types'
+} from '@toy-box/utils/pathToProp'
+import removePathFromObject from '@toy-box/utils/removePathFromObject'
+import {transformNumber} from '@toy-box/utils/transformNumber'
+import type {$IntentionalAny} from '@toy-box/utils/types'
 import findLastIndex from 'lodash-es/findLastIndex'
 import keyBy from 'lodash-es/keyBy'
 import pullFromArray from 'lodash-es/pull'
@@ -44,18 +44,18 @@ import type {
   StudioAhistoricState,
   StudioHistoricStateSequenceEditorMarker,
   StudioState,
-} from '@theatre/core/types/private/studio'
+} from '@toy-box/core/types/private/studio'
 import {clamp, cloneDeep} from 'lodash-es'
-import {pointableSetUtil} from '@theatre/utils/PointableSet'
-import type {ProjectState_Historic} from '@theatre/core/types/private/core'
-import {current} from '@theatre/saaz'
+import {pointableSetUtil} from '@toy-box/utils/PointableSet'
+import type {ProjectState_Historic} from '@toy-box/core/types/private/core'
+import {current} from '@toy-box/saaz'
 import type {Draft as _Draft} from 'immer'
 import type {
   EditorDefinitionToEditorInvocable,
   Schema,
-} from '@theatre/saaz/src/types'
+} from '@toy-box/saaz/src/types'
 import {nanoid as generateNonSecure} from 'nanoid/non-secure'
-import {__private} from '@theatre/core'
+import {__private} from '@toy-box/core'
 
 const {keyframeUtils} = __private
 

@@ -1,9 +1,9 @@
-import type {IScrub} from '@theatre/core'
+import type {IScrub} from '@toy-box/core'
 import React, {useLayoutEffect, useMemo, useState} from 'react'
-import type {ISheet, ISheetObject, IProject} from '@theatre/core'
+import type {ISheet, ISheetObject, IProject} from '@toy-box/core'
 import type {UseDragOpts} from './useDrag'
 import useDrag from './useDrag'
-import theatre from '@theatre/core'
+import theatre from '@toy-box/core'
 
 void theatre.init({studio: true})
 
@@ -106,7 +106,7 @@ export const Scene: React.FC<{project: IProject}> = ({project}) => {
         ),
       )
     })
-  })
+  }, [])
 
   return (
     <div

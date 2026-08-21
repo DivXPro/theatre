@@ -1,1 +1,1 @@
-`@theatre/utils`
+`@toy-box/utils`

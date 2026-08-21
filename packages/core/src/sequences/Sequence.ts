@@ -1,19 +1,19 @@
-import type Project from '@theatre/core/projects/Project'
-import type Sheet from '@theatre/core/sheets/Sheet'
-import {encodePathToProp} from '@theatre/utils/pathToProp'
-import type {BasicKeyframe, SequenceAddress} from '@theatre/core/types/public'
-import didYouMean from '@theatre/utils/didYouMean'
-import {InvalidArgumentError} from '@theatre/utils/errors'
+import type Project from '@toy-box/core/projects/Project'
+import type Sheet from '@toy-box/core/sheets/Sheet'
+import {encodePathToProp} from '@toy-box/utils/pathToProp'
+import type {BasicKeyframe, SequenceAddress} from '@toy-box/core/types/public'
+import didYouMean from '@toy-box/utils/didYouMean'
+import {InvalidArgumentError} from '@toy-box/utils/errors'
 import type {
   Prism,
   Pointer,
   Ticker,
   PointerToPrismProvider,
-} from '@theatre/dataverse'
-import {getPointerParts} from '@theatre/dataverse'
-import {Atom} from '@theatre/dataverse'
-import {pointer} from '@theatre/dataverse'
-import {prism, val} from '@theatre/dataverse'
+} from '@toy-box/dataverse'
+import {getPointerParts} from '@toy-box/dataverse'
+import {Atom} from '@toy-box/dataverse'
+import {pointer} from '@toy-box/dataverse'
+import {prism, val} from '@toy-box/dataverse'
 import {padStart} from 'lodash-es'
 import type {
   IPlaybackController,
@@ -26,11 +26,11 @@ import type {
   IPlaybackDirection,
   IPlaybackRange,
   ISequence,
-} from '@theatre/core/types/public'
-import {notify} from '@theatre/core/utils/notify'
-import type {$IntentionalAny} from '@theatre/dataverse/src/types'
-import {isSheetObject} from '@theatre/core/utils/instanceTypes'
-import {getSortedKeyframesCached} from '@theatre/core/utils/keyframeUtils'
+} from '@toy-box/core/types/public'
+import {notify} from '@toy-box/core/utils/notify'
+import type {$IntentionalAny} from '@toy-box/dataverse/src/types'
+import {isSheetObject} from '@toy-box/core/utils/instanceTypes'
+import {getSortedKeyframesCached} from '@toy-box/core/utils/keyframeUtils'
 
 const possibleDirections = [
   'normal',

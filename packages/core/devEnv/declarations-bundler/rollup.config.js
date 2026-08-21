@@ -13,11 +13,11 @@ const config = {
     format: 'es',
   },
   external: (s) => {
-    if (s === '@theatre/dataverse') {
+    if (s === '@toy-box/dataverse') {
       return true
     }
 
-    if (s.startsWith('@theatre')) {
+    if (s.startsWith('@toy-box')) {
       return false
     }
 
@@ -33,18 +33,18 @@ const config = {
       respectExternal: true,
       compilerOptions: {
         paths: {
-          '@theatre/core': [fromPackage(`.temp/declarations/src`)],
+          '@toy-box/core': [fromPackage(`.temp/declarations/src`)],
         },
       },
     }),
     alias({
       entries: [
         {
-          find: `@theatre/core`,
+          find: `@toy-box/core`,
           replacement: fromPackage(`.temp/declarations/src`),
         },
         {
-          find: `@theatre/utils`,
+          find: `@toy-box/utils`,
           replacement: fromPackages(`utils/src`),
         },
       ],

@@ -1,4 +1,4 @@
-import {devStringify} from '@theatre/utils/devStringify'
+import {devStringify} from '@toy-box/utils/devStringify'
 
 type AllowedMessageTypes = string | number | object
 

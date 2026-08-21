@@ -1,18 +1,18 @@
 import type {
   DopeSheetSelection,
   SequenceEditorPanelLayout,
-} from '@theatre/studio/panels/SequenceEditorPanel/layout/layout'
-import type {SequenceEditorTree_PrimitiveProp} from '@theatre/studio/panels/SequenceEditorPanel/layout/tree'
-import type {Pointer} from '@theatre/dataverse'
-import {val} from '@theatre/dataverse'
+} from '@toy-box/studio/panels/SequenceEditorPanel/layout/layout'
+import type {SequenceEditorTree_PrimitiveProp} from '@toy-box/studio/panels/SequenceEditorPanel/layout/tree'
+import type {Pointer} from '@toy-box/dataverse'
+import {val} from '@toy-box/dataverse'
 import React from 'react'
 import styled from 'styled-components'
 import SingleKeyframeConnector from './BasicKeyframeConnector'
 import SingleKeyframeDot from './SingleKeyframeDot'
-import type {TrackWithId} from '@theatre/studio/panels/SequenceEditorPanel/DopeSheet/Right/collectAggregateKeyframes'
-import type {StudioSheetItemKey} from '@theatre/core/types/private'
-import type {BasicKeyframe} from '@theatre/core'
-import {__private} from '@theatre/core'
+import type {TrackWithId} from '@toy-box/studio/panels/SequenceEditorPanel/DopeSheet/Right/collectAggregateKeyframes'
+import type {StudioSheetItemKey} from '@toy-box/core/types/private'
+import type {BasicKeyframe} from '@toy-box/core'
+import {__private} from '@toy-box/core'
 
 const {keyframeUtils} = __private
 

@@ -1,11 +1,11 @@
-import type {TrackData} from '@theatre/core/types/private/core'
-import type SheetObject from '@theatre/core/sheetObjects/SheetObject'
-import {createStudioSheetItemKey} from '@theatre/studio/utils/createStudioSheetItemKey'
+import type {TrackData} from '@toy-box/core/types/private/core'
+import type SheetObject from '@toy-box/core/sheetObjects/SheetObject'
+import {createStudioSheetItemKey} from '@toy-box/studio/utils/createStudioSheetItemKey'
 import type {
   KeyframeWithTrack,
   TrackWithId,
-} from '@theatre/studio/panels/SequenceEditorPanel/DopeSheet/Right/collectAggregateKeyframes'
-import {__private} from '@theatre/core'
+} from '@toy-box/studio/panels/SequenceEditorPanel/DopeSheet/Right/collectAggregateKeyframes'
+import {__private} from '@toy-box/core'
 
 const {keyframeUtils} = __private
 

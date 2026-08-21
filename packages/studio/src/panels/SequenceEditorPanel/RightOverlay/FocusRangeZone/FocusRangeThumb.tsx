@@ -1,28 +1,28 @@
-import type {Pointer} from '@theatre/dataverse'
-import {prism, val} from '@theatre/dataverse'
-import {usePrism, useVal} from '@theatre/react'
-import type {$IntentionalAny, IRange} from '@theatre/core/types/public'
-import getStudio from '@theatre/studio/getStudio'
-import type {SequenceEditorPanelLayout} from '@theatre/studio/panels/SequenceEditorPanel/layout/layout'
+import type {Pointer} from '@toy-box/dataverse'
+import {prism, val} from '@toy-box/dataverse'
+import {usePrism, useVal} from '@toy-box/react'
+import type {$IntentionalAny, IRange} from '@toy-box/core/types/public'
+import getStudio from '@toy-box/studio/getStudio'
+import type {SequenceEditorPanelLayout} from '@toy-box/studio/panels/SequenceEditorPanel/layout/layout'
 import {
   topStripHeight,
   topStripTheme,
-} from '@theatre/studio/panels/SequenceEditorPanel/RightOverlay/TopStrip'
-import type {CommitOrDiscardOrRecapture} from '@theatre/studio/StudioStore/StudioStore'
+} from '@toy-box/studio/panels/SequenceEditorPanel/RightOverlay/TopStrip'
+import type {CommitOrDiscardOrRecapture} from '@toy-box/studio/StudioStore/StudioStore'
 import {
   lockedCursorCssVarName,
   useCssCursorLock,
-} from '@theatre/studio/uiComponents/PointerEventsHandler'
-import useDrag from '@theatre/studio/uiComponents/useDrag'
-import useRefAndState from '@theatre/studio/utils/useRefAndState'
+} from '@toy-box/studio/uiComponents/PointerEventsHandler'
+import useDrag from '@toy-box/studio/uiComponents/useDrag'
+import useRefAndState from '@toy-box/studio/utils/useRefAndState'
 import React, {useMemo} from 'react'
 import styled from 'styled-components'
 import {
   includeLockFrameStampAttrs,
   useLockFrameStampPosition,
-} from '@theatre/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
+} from '@toy-box/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
 import {focusRangeStripTheme, RangeStrip} from './FocusRangeStrip'
-import DopeSnap from '@theatre/studio/panels/SequenceEditorPanel/RightOverlay/DopeSnap'
+import DopeSnap from '@toy-box/studio/panels/SequenceEditorPanel/RightOverlay/DopeSnap'
 
 const TheDiv = styled.div<{enabled: boolean; type: ThumbType}>`
   position: absolute;

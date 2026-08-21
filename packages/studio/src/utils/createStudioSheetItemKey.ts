@@ -1,9 +1,9 @@
-import type SheetObject from '@theatre/core/sheetObjects/SheetObject'
-import type {PathToProp} from '@theatre/utils/pathToProp'
-import stableValueHash from '@theatre/utils/stableJsonStringify'
-import type Sheet from '@theatre/core/sheets/Sheet'
-import type {KeyframeId, SequenceTrackId} from '@theatre/core/types/public'
-import type {StudioSheetItemKey} from '@theatre/core/types/private'
+import type SheetObject from '@toy-box/core/sheetObjects/SheetObject'
+import type {PathToProp} from '@toy-box/utils/pathToProp'
+import stableValueHash from '@toy-box/utils/stableJsonStringify'
+import type Sheet from '@toy-box/core/sheets/Sheet'
+import type {KeyframeId, SequenceTrackId} from '@toy-box/core/types/public'
+import type {StudioSheetItemKey} from '@toy-box/core/types/private'
 
 /**
  * This will not necessarily maintain consistent key values if any

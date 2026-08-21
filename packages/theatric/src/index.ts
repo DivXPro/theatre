@@ -4,11 +4,11 @@ import type {
   ISheetObject,
   UnknownShorthandCompoundProps,
   IStudio,
-} from '@theatre/core'
-import {getStudio, val, init, getStudioSync} from '@theatre/core'
-import {getProject} from '@theatre/core'
-import type {Pointer} from '@theatre/dataverse'
-import {isPointer} from '@theatre/dataverse'
+} from '@toy-box/core'
+import {getStudio, val, init, getStudioSync} from '@toy-box/core'
+import {getProject} from '@toy-box/core'
+import type {Pointer} from '@toy-box/dataverse'
+import {isPointer} from '@toy-box/dataverse'
 import isEqualWith from 'lodash-es/isEqualWith'
 import isEqual from 'lodash-es/isEqual'
 import {useEffect, useMemo, useState, useRef} from 'react'
@@ -317,7 +317,7 @@ export function useControls<Config extends ControlsAndButtons>(
   return {...values, ...$setAndGet}
 }
 
-export {types} from '@theatre/core'
+export {types} from '@toy-box/core'
 
 export const button = (onClick: Button['onClick']) => {
   return {

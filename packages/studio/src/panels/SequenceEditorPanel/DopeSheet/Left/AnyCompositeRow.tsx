@@ -1,15 +1,15 @@
-import {theme} from '@theatre/studio/css'
+import {theme} from '@toy-box/studio/css'
 import type {
   SequenceEditorTree_PrimitiveProp,
   SequenceEditorTree_PropWithChildren,
   SequenceEditorTree_Sheet,
   SequenceEditorTree_SheetObject,
-} from '@theatre/studio/panels/SequenceEditorPanel/layout/tree'
-import type {VoidFn} from '@theatre/core/types/public'
+} from '@toy-box/studio/panels/SequenceEditorPanel/layout/tree'
+import type {VoidFn} from '@toy-box/core/types/public'
 import React, {useRef} from 'react'
 import {HiOutlineChevronRight} from 'react-icons/hi'
 import styled from 'styled-components'
-import {propNameTextCSS} from '@theatre/studio/propEditors/utils/propNameTextCSS'
+import {propNameTextCSS} from '@toy-box/studio/propEditors/utils/propNameTextCSS'
 import {usePropHighlightMouseEnter} from './usePropHighlightMouseEnter'
 
 export const LeftRowContainer = styled.li<{depth: number}>`

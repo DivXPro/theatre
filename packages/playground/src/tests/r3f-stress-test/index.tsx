@@ -1,9 +1,9 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
-import theatre from '@theatre/core'
-import extension from '@theatre/r3f/dist/extension'
-import getStudio from '@theatre/studio/getStudio'
+import theatre from '@toy-box/core'
+import extension from '@toy-box/r3f/dist/extension'
+import getStudio from '@toy-box/studio/getStudio'
 
 const studioPrivate = getStudio()
 

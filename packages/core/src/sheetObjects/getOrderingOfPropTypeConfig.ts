@@ -1,9 +1,9 @@
-import type {$IntentionalAny} from '@theatre/core/types/public'
+import type {$IntentionalAny} from '@toy-box/core/types/public'
 import type {
   PropTypeConfig,
   PropTypeConfig_Compound,
-} from '@theatre/core/types/public'
-import {isPropConfigComposite} from '@theatre/core/propTypes/utils'
+} from '@toy-box/core/types/public'
+import {isPropConfigComposite} from '@toy-box/core/propTypes/utils'
 
 type EncodedPropPath = string
 type Order = number

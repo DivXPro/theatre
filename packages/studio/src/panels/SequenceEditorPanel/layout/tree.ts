@@ -3,19 +3,19 @@ import type {
   PropTypeConfig_AllSimples,
   PropTypeConfig_Compound,
   UnknownValidCompoundProps,
-} from '@theatre/core/types/public'
-import type SheetObject from '@theatre/core/sheetObjects/SheetObject'
-import type {IPropPathToTrackIdTree} from '@theatre/core/sheetObjects/SheetObjectTemplate'
-import type Sheet from '@theatre/core/sheets/Sheet'
-import type {PathToProp} from '@theatre/utils/pathToProp'
-import type {StudioSheetItemKey} from '@theatre/core/types/private'
-import {createStudioSheetItemKey} from '@theatre/studio/utils/createStudioSheetItemKey'
-import type {$FixMe, $IntentionalAny} from '@theatre/core/types/public'
-import {prism, val, pointerToPrism} from '@theatre/dataverse'
-import logger from '@theatre/utils/logger'
-import {titleBarHeight} from '@theatre/studio/panels/BasePanel/common'
-import type {Studio} from '@theatre/studio/Studio'
-import type {SequenceTrackId} from '@theatre/core/types/public'
+} from '@toy-box/core/types/public'
+import type SheetObject from '@toy-box/core/sheetObjects/SheetObject'
+import type {IPropPathToTrackIdTree} from '@toy-box/core/sheetObjects/SheetObjectTemplate'
+import type Sheet from '@toy-box/core/sheets/Sheet'
+import type {PathToProp} from '@toy-box/utils/pathToProp'
+import type {StudioSheetItemKey} from '@toy-box/core/types/private'
+import {createStudioSheetItemKey} from '@toy-box/studio/utils/createStudioSheetItemKey'
+import type {$FixMe, $IntentionalAny} from '@toy-box/core/types/public'
+import {prism, val, pointerToPrism} from '@toy-box/dataverse'
+import logger from '@toy-box/utils/logger'
+import {titleBarHeight} from '@toy-box/studio/panels/BasePanel/common'
+import type {Studio} from '@toy-box/studio/Studio'
+import type {SequenceTrackId} from '@toy-box/core/types/public'
 
 /**
  * Base "view model" for each row with common

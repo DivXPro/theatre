@@ -1,33 +1,33 @@
 import React, {useMemo, useRef} from 'react'
 import styled from 'styled-components'
 
-import getStudio from '@theatre/studio/getStudio'
-import type {CommitOrDiscardOrRecapture} from '@theatre/studio/StudioStore/StudioStore'
-import useContextMenu from '@theatre/studio/uiComponents/simpleContextMenu/useContextMenu'
-import type {DragOpts} from '@theatre/studio/uiComponents/useDrag'
-import useDrag from '@theatre/studio/uiComponents/useDrag'
-import useRefAndState from '@theatre/studio/utils/useRefAndState'
-import {val} from '@theatre/dataverse'
-import {useLockFrameStampPosition} from '@theatre/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
-import {useCssCursorLock} from '@theatre/studio/uiComponents/PointerEventsHandler'
-import DopeSnap from '@theatre/studio/panels/SequenceEditorPanel/RightOverlay/DopeSnap'
+import getStudio from '@toy-box/studio/getStudio'
+import type {CommitOrDiscardOrRecapture} from '@toy-box/studio/StudioStore/StudioStore'
+import useContextMenu from '@toy-box/studio/uiComponents/simpleContextMenu/useContextMenu'
+import type {DragOpts} from '@toy-box/studio/uiComponents/useDrag'
+import useDrag from '@toy-box/studio/uiComponents/useDrag'
+import useRefAndState from '@toy-box/studio/utils/useRefAndState'
+import {val} from '@toy-box/dataverse'
+import {useLockFrameStampPosition} from '@toy-box/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
+import {useCssCursorLock} from '@toy-box/studio/uiComponents/PointerEventsHandler'
+import DopeSnap from '@toy-box/studio/panels/SequenceEditorPanel/RightOverlay/DopeSnap'
 
 import type {ISingleKeyframeEditorProps} from './SingleKeyframeEditor'
-import {absoluteDims} from '@theatre/studio/utils/absoluteDims'
-import {useLogger} from '@theatre/studio/uiComponents/useLogger'
-import type {ILogger} from '@theatre/utils/logger'
-import {copyableKeyframesFromSelection} from '@theatre/studio/panels/SequenceEditorPanel/DopeSheet/selections'
-import {pointerEventsAutoInNormalMode} from '@theatre/studio/css'
+import {absoluteDims} from '@toy-box/studio/utils/absoluteDims'
+import {useLogger} from '@toy-box/studio/uiComponents/useLogger'
+import type {ILogger} from '@toy-box/utils/logger'
+import {copyableKeyframesFromSelection} from '@toy-box/studio/panels/SequenceEditorPanel/DopeSheet/selections'
+import {pointerEventsAutoInNormalMode} from '@toy-box/studio/css'
 import {
   collectKeyframeSnapPositions,
   snapToNone,
   snapToSome,
-} from '@theatre/studio/panels/SequenceEditorPanel/DopeSheet/Right/KeyframeSnapTarget'
+} from '@toy-box/studio/panels/SequenceEditorPanel/DopeSheet/Right/KeyframeSnapTarget'
 import {useKeyframeInlineEditorPopover} from './useSingleKeyframeInlineEditorPopover'
 import usePresence, {
   PresenceFlag,
-} from '@theatre/studio/uiComponents/usePresence'
-import {__private} from '@theatre/core'
+} from '@toy-box/studio/uiComponents/usePresence'
+import {__private} from '@toy-box/core'
 
 const {keyframeUtils} = __private
 

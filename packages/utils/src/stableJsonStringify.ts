@@ -1,5 +1,5 @@
 import {isPlainObject} from 'lodash-es'
-import type {$IntentionalAny} from '@theatre/utils/types'
+import type {$IntentionalAny} from '@toy-box/utils/types'
 
 /**
  * Like JSON.stringify, but sorts the keys of objects so the stringified value
@@ -23,6 +23,6 @@ function deepSortValue<S extends $IntentionalAny>(val: S): S {
           return result
         }, {} as any)
     : Array.isArray(val)
-    ? val.map(deepSortValue)
-    : val
+      ? val.map(deepSortValue)
+      : val
 }

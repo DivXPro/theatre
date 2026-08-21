@@ -1,9 +1,9 @@
-import getStudio from '@theatre/studio/getStudio'
+import getStudio from '@toy-box/studio/getStudio'
 import type {
   SheetAddress,
   WithoutSheetInstance,
-} from '@theatre/core/types/public'
-import type {StudioSheetItemKey} from '@theatre/core/types/private'
+} from '@toy-box/core/types/public'
+import type {StudioSheetItemKey} from '@toy-box/core/types/private'
 
 export function setCollapsedSheetItem(
   isCollapsed: boolean,
