@@ -1,5 +1,4 @@
 import Scrub from '@toy-box/studio/Scrub'
-import type {StudioHistoricState} from '@toy-box/core/types/private/studio'
 import UI from '@toy-box/studio/UI/UI'
 import type {Pointer, Ticker} from '@toy-box/dataverse'
 import {Atom, PointerProxy, pointerToPrism} from '@toy-box/dataverse'
@@ -395,10 +394,6 @@ export class Studio {
     undoable: boolean = true,
   ): unknown {
     return this._store.transaction(fn, undoable)
-  }
-
-  __dev_startHistoryFromScratch(newHistoricPart: StudioHistoricState) {
-    return this._store.__dev_startHistoryFromScratch(newHistoricPart)
   }
 
   get corePrivateAPI() {

@@ -19,6 +19,7 @@ import type {
 } from '@toy-box/sync-server/state/schema'
 import createTransactionPrivateApi from './createTransactionPrivateApi'
 import {deriveSaazNames} from './saazNames'
+import {clearPersistentStorageFor} from './clearPersistentStorage'
 import {SaazBack} from '@toy-box/saaz'
 import type {Studio} from '@toy-box/studio/Studio'
 import getStudio from '@toy-box/studio/getStudio'
@@ -107,23 +108,8 @@ export default class StudioStore {
   }
 
   __experimental_clearPersistentStorage(persistenceKey: string): StudioState {
-    throw new Error(`Implement me?`)
-    // __experimental_clearPersistentStorage(this._reduxStore, persistenceKey)
+    void clearPersistentStorageFor(persistenceKey)
     return this.getState()
-  }
-
-  /**
-   * This method causes the store to start the history from scratch. This is useful
-   * for testing and development where you want to explicitly provide a state to the
-   * store.
-   */
-  __dev_startHistoryFromScratch(newHistoricPart: StudioHistoricState) {
-    throw new Error(`Implement me?`)
-    // this._reduxStore.dispatch(
-    //   studioActions.historic.startHistoryFromScratch(
-    //     studioActions.reduceParts((s) => ({...s, historic: newHistoricPart})),
-    //   ),
-    // )
   }
 
   transaction(
