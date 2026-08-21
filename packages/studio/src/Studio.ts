@@ -313,6 +313,15 @@ export class Studio {
     }
 
     await ahistoricAtomInitializedD.promise
+
+    // Wait for the saaz front to finish restoring persisted state before the
+    // studio is considered initialized. Otherwise a project attached right
+    // after `studio.initialized` resolves (Project.attachToStudio →
+    // initialiseProjectState, which reads the store after a single `delay(0)`)
+    // could read the pre-restore empty snapshot and clobber the restored
+    // project back to empty.
+    await this._store.ready
+
     this.ephemeralAtom.setByPointer((p) => p.initialized, true)
 
     if (process.env.NODE_ENV !== 'test') {

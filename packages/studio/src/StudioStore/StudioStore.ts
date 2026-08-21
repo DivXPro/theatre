@@ -102,6 +102,17 @@ export default class StudioStore {
     this.atomP = this._atom.pointer
   }
 
+  /**
+   * Resolves when the saaz front has finished restoring any persisted state
+   * (from IndexedDB or the memory adapter). `Studio._init` awaits this before
+   * marking the studio initialized, so that a project attached right after
+   * `studio.initialized` resolves reads the restored snapshot instead of an
+   * empty one (which would clobber the persisted project back to empty).
+   */
+  get ready(): Promise<unknown> {
+    return this._saaz.ready
+  }
+
   getState(): StudioState {
     return this._atom.get()
     // return this._reduxStore.getState()
