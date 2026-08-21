@@ -28,3 +28,6 @@
 
 # graft's local graph cache — regenerable, not committed (run `graft build`).
 graft/
+
+# Playwright MCP scratch output (screenshots, snapshots, logs)
+.playwright-mcp/
