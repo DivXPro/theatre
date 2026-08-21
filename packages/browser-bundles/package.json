@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/AriaMinaei/theatre",
+    "url": "https://github.com/theatre-js/theatre",
     "directory": "packages/browser-bundles"
   },
   "files": [

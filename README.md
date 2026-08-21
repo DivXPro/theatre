@@ -14,7 +14,10 @@
  
 </p>
 
-> ✨ Update: Theatre.js 1.0 is around the corner. We have _temporarily_ moved development to a private repo so we can iterate faster. We'll push our work back to this public repo soon. Terms and license will remain OSS, as before. (Also, [we're hiring – join the core team!](https://www.theatrejs.com/join)).
+> **This is a community fork** of [theatre-js/theatre](https://github.com/theatre-js/theatre),
+> which paused public development at 0.7.x. This fork continues toward a 1.0 release
+> published under the `@toy-box` npm scope. Apache-2.0 license and original
+> attribution are preserved. See `docs/superpowers/specs/2026-08-21-theatre-1.0-release-design.md`.
 
 Theatre.js is an animation library for high-fidelity motion graphics. It is
 designed to help you express detailed animation, enabling you to create
