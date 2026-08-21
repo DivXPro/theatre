@@ -686,14 +686,20 @@ export class SaazFront<
         const toPush: Transaction[] = []
         const toPluck: Transaction[] = []
 
-        for (const transacion of memory) {
-          const existing = last.find(
-            (t) => t.peerClock === transacion.peerClock,
+        for (const transaction of memory) {
+          const alreadyStored = last.some(
+            (t) => t.peerClock === transaction.peerClock,
           )
-          if (!existing) {
-            toPush.push(transacion)
-          } else {
-            toPluck.push(existing)
+          if (!alreadyStored) {
+            toPush.push(transaction)
+          }
+        }
+        for (const stored of last) {
+          const stillOutstanding = memory.some(
+            (t) => t.peerClock === stored.peerClock,
+          )
+          if (!stillOutstanding) {
+            toPluck.push(stored)
           }
         }
 
