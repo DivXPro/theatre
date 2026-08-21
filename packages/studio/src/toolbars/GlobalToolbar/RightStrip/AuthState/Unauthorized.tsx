@@ -19,8 +19,6 @@ const P1 = styled.p`
   margin-bottom: 1em;
 `
 
-const auth = getStudio().auth
-
 const Unauthorized: React.FC<{
   authState: Extract<AuthDerivedState, {loggedIn: false}>
 }> = ({authState}) => {
@@ -40,7 +38,10 @@ const Unauthorized: React.FC<{
   const {procedureState} = authState
   if (!procedureState)
     return (
-      <ToolbarButton primary={true} onClick={() => auth.authorize()}>
+      <ToolbarButton
+        primary={true}
+        onClick={() => getStudio().auth?.authorize()}
+      >
         Log in
       </ToolbarButton>
     )

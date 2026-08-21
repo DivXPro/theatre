@@ -31,8 +31,6 @@ const AvatarImage = styled.img`
   }
 `
 
-const auth = getStudio().auth
-
 const Stroke = styled.div`
   position: absolute;
   inset: -2px;
@@ -89,7 +87,7 @@ const Avatar: React.FC<Props> = (props) => {
             {
               label: 'Log out',
               type: 'normal',
-              callback: () => auth.deauthorize(),
+              callback: () => getStudio().auth?.deauthorize(),
             },
           ]
 

@@ -28,7 +28,7 @@ import type {
 } from '@toy-box/core/types/private/core'
 import type {Deferred} from '@toy-box/utils/defer'
 import {defer} from '@toy-box/utils/defer'
-import checkForUpdates from './checkForUpdates'
+import {DEFAULT_PERSISTENCE_KEY, sanitizeOpts} from './sanitizeOpts'
 import shallowEqual from 'shallowequal'
 import {createStore} from './IDBStorage'
 import {getAllPossibleAssetIDs} from '@toy-box/studio/utils/assets'
@@ -43,9 +43,6 @@ import AppLink from './SyncStore/AppLink'
 import SyncServerLink from './SyncStore/SyncServerLink'
 import type {TrpcClientWrapped} from './SyncStore/utils'
 import {wrapTrpcClientWithAuth} from './SyncStore/utils'
-import {env} from './env'
-
-const DEFAULT_PERSISTENCE_KEY = 'theatre-0.4'
 
 export type CoreExports = typeof _coreExports
 
@@ -78,7 +75,12 @@ studio.initialize()
 `
 
 export type StudioOpts = {
-  serverUrl: string
+  /**
+   * The url of the cloud backend (app + sync server). When `undefined` (the
+   * default), the studio runs fully offline: no AppLink/SyncServerLink/Auth
+   * is constructed and no network requests are made.
+   */
+  serverUrl?: string
   persistenceKey: string
   usePersistentStorage: boolean
   rafDriver: RafDriverPrivateAPI
@@ -101,7 +103,11 @@ export class Studio {
     this._projectsProxy.pointer
 
   readonly _store: StudioStore
-  readonly auth!: Auth
+  /**
+   * Only set when a `serverUrl` is provided (i.e. cloud sync is enabled).
+   * `undefined` in the default offline mode.
+   */
+  auth: Auth | undefined
   private readonly _storno = new Storno()
 
   private _corePrivateApi: CoreBits['privateAPI'] | undefined
@@ -162,14 +168,20 @@ export class Studio {
   private readonly _initializedPromise: Promise<void>
 
   readonly _rawLinks: {
-    app: Promise<AppLink>
-    syncServer: Promise<SyncServerLink>
+    app: Promise<AppLink | null>
+    syncServer: Promise<SyncServerLink | null>
   }
 
-  readonly authedLinks!: {
-    app: TrpcClientWrapped<AppLink['api']>
-    syncServer: TrpcClientWrapped<SyncServerLink['api']>
-  }
+  /**
+   * Only set when a `serverUrl` is provided (i.e. cloud sync is enabled).
+   * `undefined` in the default offline mode.
+   */
+  authedLinks:
+    | {
+        app: TrpcClientWrapped<AppLink['api']>
+        syncServer: TrpcClientWrapped<SyncServerLink['api']>
+      }
+    | undefined
 
   get ticker(): Ticker {
     if (!this._rafDriver) {
@@ -194,19 +206,22 @@ export class Studio {
     this.address = {studioId: nanoid(10)}
     this._optsDeferred = defer()
 
-    const syncServerLinkDeferred = defer<SyncServerLink>()
+    const syncServerLinkDeferred = defer<SyncServerLink | null>()
     const syncServerLink = syncServerLinkDeferred.promise
-    const appLink = this._optsPromise.then(
-      ({serverUrl}): AppLink =>
-        typeof window === 'undefined'
-          ? (null as $IntentionalAny)
-          : new AppLink(serverUrl),
+    const appLink = this._optsPromise.then(({serverUrl}): AppLink | null =>
+      typeof window === 'undefined' || serverUrl === undefined
+        ? null
+        : new AppLink(serverUrl),
     )
 
     if (typeof window !== 'undefined') {
       void appLink
-        .then((appLink) => {
-          return appLink.api.syncServerUrl.query().then((url) => {
+        .then((link) => {
+          if (!link) {
+            syncServerLinkDeferred.resolve(null)
+            return
+          }
+          return link.api.syncServerUrl.query().then((url) => {
             syncServerLinkDeferred.resolve(new SyncServerLink(url))
           })
         })
@@ -215,35 +230,38 @@ export class Studio {
           console.error(err)
         })
     } else {
-      syncServerLinkDeferred.resolve(null as $IntentionalAny)
+      syncServerLinkDeferred.resolve(null)
     }
 
     this._rawLinks = {app: appLink, syncServer: syncServerLink}
 
     if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'test') {
-      this.auth = new Auth(this)
-      this.authedLinks = {
-        syncServer: wrapTrpcClientWithAuth(
-          this._rawLinks.syncServer.then((s) => s.api),
-          (fn: any, args: any[], path): any => {
-            return this.auth.wrapTrpcProcedureWithAuth(
-              fn,
-              args as $IntentionalAny,
-              path,
-            )
-          },
-        ),
+      // Auth and the authed tRPC links only make sense when a cloud backend is
+      // configured. In the default offline mode (`serverUrl === undefined`) we
+      // skip constructing them entirely, so no network activity can occur.
+      void this._optsPromise.then((opts) => {
+        if (opts.serverUrl === undefined) return
+        const auth = new Auth(this)
+        this.auth = auth
+        this.authedLinks = {
+          syncServer: wrapTrpcClientWithAuth(
+            this._rawLinks.syncServer.then((s) => s!.api),
+            (fn: any, args: any[], path): any => {
+              return auth.wrapTrpcProcedureWithAuth(
+                fn,
+                args as $IntentionalAny,
+                path,
+              )
+            },
+          ),
 
-        app: wrapTrpcClientWithAuth(
-          this._rawLinks.app.then((s) => s.api),
-          (fn: any, args: any[], path): any =>
-            this.auth.wrapTrpcProcedureWithAuth(
-              fn,
-              args as $IntentionalAny,
-              path,
-            ),
-        ),
-      }
+          app: wrapTrpcClientWithAuth(
+            this._rawLinks.app.then((s) => s!.api),
+            (fn: any, args: any[], path): any =>
+              auth.wrapTrpcProcedureWithAuth(fn, args as $IntentionalAny, path),
+          ),
+        }
+      })
     }
 
     this._store = new StudioStore(this)
@@ -300,11 +318,6 @@ export class Studio {
 
     if (process.env.NODE_ENV !== 'test') {
       this.ui.render()
-      if (navigator.onLine) {
-        checkForUpdates().catch((err) => {
-          console.error(err)
-        })
-      }
     }
   }
 
@@ -682,60 +695,4 @@ export class Studio {
   clearPersistentStorage(persistenceKey = DEFAULT_PERSISTENCE_KEY) {
     this._store.__experimental_clearPersistentStorage(persistenceKey)
   }
-}
-
-function sanitizeOpts(
-  opts: InitOpts | undefined,
-  coreBits: CoreBits,
-): StudioOpts {
-  const storeOpts: StudioOpts = {
-    persistenceKey: DEFAULT_PERSISTENCE_KEY,
-    usePersistentStorage: true,
-    serverUrl: env.BACKEND_URL ?? 'https://app.theatrejs.com',
-    rafDriver: coreBits.getCoreRafDriver(),
-  }
-
-  if (typeof opts?.serverUrl == 'string') {
-    if (
-      // a fully formed url
-      opts.serverUrl.match(/^(https?:)?\/\//) &&
-      // not ending with a slash
-      !opts.serverUrl.endsWith('/')
-    ) {
-      storeOpts.serverUrl = opts.serverUrl
-    } else {
-      throw new Error(
-        'parameter `serverUrl` in `theatre.init({studio: true, serverUrl})` must be either undefined or a fully formed url (e.g. `https://app.theatrejs.com`)',
-      )
-    }
-  }
-
-  if (typeof opts?.persistenceKey === 'string') {
-    storeOpts.persistenceKey = opts.persistenceKey
-  }
-
-  if (opts?.usePersistentStorage === false || typeof window === 'undefined') {
-    storeOpts.usePersistentStorage = false
-  }
-
-  if (opts?.__experimental_rafDriver) {
-    if (opts?.__experimental_rafDriver.type !== 'Theatre_RafDriver_PublicAPI') {
-      throw new Error(
-        'parameter `rafDriver` in `theatre.init({studio: true, __experimental_rafDriver})` must be either be undefined, or the return type of core.createRafDriver()',
-      )
-    }
-
-    const rafDriverPrivateApi = coreBits.privateAPI(
-      opts.__experimental_rafDriver,
-    )
-    if (!rafDriverPrivateApi) {
-      // TODO - need to educate the user about this edge case
-      throw new Error(
-        'parameter `rafDriver` in `theatre.init({studio: true, __experimental_rafDriver})` seems to come from a different version of `@toy-box/core` than the version that is attached to `@toy-box/studio`',
-      )
-    }
-    storeOpts.rafDriver = rafDriverPrivateApi
-  }
-
-  return storeOpts
 }

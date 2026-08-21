@@ -407,6 +407,11 @@ namespace tokenProcedures {
     | {success: false; error: 'userDenied' | 'unknown'; msg?: string}
   > {
     const appLink = await getStudio()._rawLinks.app
+    if (!appLink) {
+      throw new Error(
+        'Auth procedures require a cloud backend, which only exists when a `serverUrl` is provided.',
+      )
+    }
 
     let outerTries = 0
     outer: while (outerTries < 2) {
@@ -508,6 +513,11 @@ namespace tokenProcedures {
     | {success: false; error: 'invalidIdToken' | 'unknown'; msg: string}
   > {
     const appLink = await getStudio()._rawLinks.app
+    if (!appLink) {
+      throw new Error(
+        'Auth procedures require a cloud backend, which only exists when a `serverUrl` is provided.',
+      )
+    }
     let tries = 0
     const MAX_TRIES = 8
     while (true) {
@@ -549,6 +559,11 @@ namespace tokenProcedures {
     | {success: false; error: 'invalidIdToken' | 'unknown'; msg: string}
   > {
     const appLink = await getStudio()._rawLinks.app
+    if (!appLink) {
+      throw new Error(
+        'Auth procedures require a cloud backend, which only exists when a `serverUrl` is provided.',
+      )
+    }
     const result = await appLink.api.studioAuth.destroyIdToken.mutate(
       {idToken: idToken},
       {signal: abortSignal},

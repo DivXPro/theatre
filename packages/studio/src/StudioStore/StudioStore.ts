@@ -65,7 +65,7 @@ export default class StudioStore {
           })
         : Saaz.createDeferredBackend(
             optsPromise.then((opts) =>
-              (opts as $IntentionalAny).serverUrl === undefined
+              opts.serverUrl === undefined
                 ? new SaazBack({
                     dbName: opts.persistenceKey,
                     storageAdapter: new Saaz.BackIDBAdapter(
@@ -261,8 +261,20 @@ export default class StudioStore {
 function createTrpcBackend(
   dbNamePromise: Promise<string>,
 ): Saaz.SaazBackInterface {
+  // This backend is only selected when a `serverUrl` is configured, in which
+  // case the studio constructs `authedLinks`. Guard anyway so a programming
+  // error fails loudly instead of with an obscure undefined access.
+  const getSyncServerApi = () => {
+    const links = getStudio().authedLinks
+    if (!links) {
+      throw new Error(
+        'The sync-server backend requires studio.authedLinks, which only exist when a `serverUrl` is provided.',
+      )
+    }
+    return links.syncServer
+  }
   const applyUpdates: Saaz.SaazBackInterface['applyUpdates'] = async (opts) => {
-    const syncServerApi = getStudio().authedLinks.syncServer
+    const syncServerApi = getSyncServerApi()
     const dbName = await dbNamePromise
     return await syncServerApi.projectState.saaz_applyUpdates.mutate({
       dbName,
@@ -274,7 +286,7 @@ function createTrpcBackend(
     opts,
   ) => {
     const dbName = await dbNamePromise
-    const syncServerApi = getStudio().authedLinks.syncServer
+    const syncServerApi = getSyncServerApi()
 
     return await syncServerApi.projectState.saaz_updatePresence.mutate({
       dbName,
@@ -285,7 +297,7 @@ function createTrpcBackend(
   const getUpdatesSinceClock: Saaz.SaazBackInterface['getUpdatesSinceClock'] =
     async (opts) => {
       const dbName = await dbNamePromise
-      const syncServerApi = getStudio().authedLinks.syncServer
+      const syncServerApi = getSyncServerApi()
 
       return await syncServerApi.projectState.saaz_getUpdatesSinceClock.query({
         dbName,
@@ -296,7 +308,7 @@ function createTrpcBackend(
   const getLastIncorporatedPeerClock: Saaz.SaazBackInterface['getLastIncorporatedPeerClock'] =
     async (opts) => {
       const dbName = await dbNamePromise
-      const syncServerApi = getStudio().authedLinks.syncServer
+      const syncServerApi = getSyncServerApi()
 
       return await syncServerApi.projectState.saaz_getLastIncorporatedPeerClock.query(
         {
@@ -308,7 +320,7 @@ function createTrpcBackend(
 
   const closePeer: Saaz.SaazBackInterface['closePeer'] = async (opts) => {
     const dbName = await dbNamePromise
-    const syncServerApi = getStudio().authedLinks.syncServer
+    const syncServerApi = getSyncServerApi()
 
     return await syncServerApi.projectState.saaz_closePeer.mutate({
       dbName,
@@ -321,7 +333,7 @@ function createTrpcBackend(
     onUpdate,
   ) => {
     const dbName = await dbNamePromise
-    const syncServerApi = getStudio().authedLinks.syncServer
+    const syncServerApi = getSyncServerApi()
 
     const subscription = syncServerApi.projectState.saaz_subscribe.subscribe(
       {
