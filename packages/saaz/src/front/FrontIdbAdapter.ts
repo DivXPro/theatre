@@ -179,7 +179,11 @@ class IDBTransaction implements FrontStorageAdapterTransaction {
       const item = await store.get(sessionAndKeyAndId)
       if (item) {
         results.push(item.value as T)
-        await store.delete(item)
+        // The `lists` object store's keyPath is `sessionAndKeyAndId`, so the
+        // record must be deleted by that key. Deleting by the whole record
+        // works in fake-indexeddb (which silently ignores an invalid key) but
+        // throws a `DataError` in a real browser's IndexedDB.
+        await store.delete(item.sessionAndKeyAndId)
       } else {
         results.push(undefined)
       }
