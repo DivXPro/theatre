@@ -54,10 +54,10 @@ export type EditorDefinitionToEditorInvocable<
 > = Editors extends EditorDefinitionFn
   ? (opts: Parameters<Editors>[2]) => void
   : Editors extends {[key: string]: EditorDefinitions}
-  ? {
-      [K in keyof Editors]: EditorDefinitionToEditorInvocable<Editors[K]>
-    }
-  : never
+    ? {
+        [K in keyof Editors]: EditorDefinitionToEditorInvocable<Editors[K]>
+      }
+    : never
 export type ValidGenerators = {
   [key: string]:
     | (() => SerializableValue)
@@ -255,7 +255,10 @@ export interface FrontStorageAdapter {
   getList<T extends {id: string}>(key: string, session: string): Promise<T[]>
 }
 
-export interface BackStorageAdapter {}
+export interface BackStorageAdapter {
+  get<T>(key: string): Promise<T | void>
+  set<T>(key: string, value: T): Promise<void>
+}
 
 export type Schema<
   OpSnapshot extends {$schemaVersion: number},

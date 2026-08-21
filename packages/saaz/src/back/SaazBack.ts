@@ -42,12 +42,16 @@ export default class SaazBack implements SaazBackInterface {
   }) {
     this._schema = opts.schema
     this._dbName = opts.dbName
-    this._storage = new BackStorage({
-      dbName: opts.dbName,
-      storageAdapter: opts.storageAdapter,
-    })
+    this._storage = new BackStorage({storageAdapter: opts.storageAdapter})
 
     void this._storage.ready.then(() => {
+      const loaded = this._storage.loadedState
+      if (loaded?.snapshot) {
+        this._dbState = ensureOpStateIsUptodate(loaded.snapshot, this._schema)
+      }
+      if (typeof loaded?.clock === 'number') {
+        this._clock = loaded.clock
+      }
       this._readyDeferred.resolve()
     })
 
@@ -223,7 +227,7 @@ export default class SaazBack implements SaazBackInterface {
       peerState.lastIncorporatedPeerClock = lastAcknowledgedClock
       this._clock = backendClock
       this._callSubscribersForBackendStateUpdate()
-      // TODO: save individual updates to storage
+      void this._storage.save(this._dbState, this._clock)
     }
 
     const s = this._getUpdatesSinceClockSync({
