@@ -20,6 +20,7 @@ describe('BackStorage', () => {
         throw new Error('load boom')
       },
       set: async () => {},
+      close: async () => {},
     }
     const storage = new BackStorage({storageAdapter: adapter})
 
@@ -35,6 +36,7 @@ describe('BackStorage', () => {
         order.push(key)
         await new Promise((resolve) => setTimeout(resolve, 5))
       },
+      close: async () => {},
     }
     const storage = new BackStorage({storageAdapter: adapter})
     await storage.ready
@@ -54,6 +56,7 @@ describe('BackStorage', () => {
       set: async () => {
         throw new Error('disk full')
       },
+      close: async () => {},
     }
     const storage = new BackStorage({storageAdapter: adapter})
     await storage.ready
@@ -75,6 +78,7 @@ describe('BackStorage', () => {
           throw new Error('transient')
         }
       },
+      close: async () => {},
     }
     const storage = new BackStorage({storageAdapter: adapter})
     await storage.ready
@@ -94,6 +98,7 @@ describe('SaazBack.ready', () => {
         throw new Error('load boom')
       },
       set: async () => {},
+      close: async () => {},
     }
     const back = new SaazBack({dbName: 'd', storageAdapter: adapter, schema})
 

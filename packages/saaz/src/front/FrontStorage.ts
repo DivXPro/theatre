@@ -18,6 +18,11 @@ export class FrontStorage {
       return await fn(t)
     })
   }
+
+  /** Closes the underlying adapter connection (see `FrontStorageAdapter.close`). */
+  closeAdapter(): Promise<void> {
+    return this._adapter.close()
+  }
 }
 
 class FrontStorageTransactionImpl {

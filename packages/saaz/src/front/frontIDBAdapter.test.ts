@@ -46,3 +46,16 @@ test('FrontIDBAdapter persists values across instances (simulated reload)', asyn
     expect(await t.get('missing', 'peerA')).toBeUndefined()
   })
 })
+
+test('close() releases the connection: reads after close reject, close is idempotent', async () => {
+  const a = new FrontIDBAdapter('front-close-test')
+  await a.ready
+  await a.close()
+
+  await expect(
+    a.transaction(async (t) => t.get('sessionState', 'peerA')),
+  ).rejects.toThrow()
+
+  // closing again is a no-op
+  await expect(a.close()).resolves.toBeUndefined()
+})

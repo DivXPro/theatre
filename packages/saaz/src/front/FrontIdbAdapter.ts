@@ -1,4 +1,4 @@
-import type {IDBPTransaction} from 'idb'
+import type {IDBPTransaction, IDBPDatabase} from 'idb'
 import {openDB} from 'idb'
 import type {
   FrontStorageAdapterTransaction,
@@ -23,6 +23,7 @@ export class FrontIDBAdapter implements FrontStorageAdapter {
   constructor(private _idbName: string | Promise<string>) {}
 
   private _dbPromise = this._initializeDB()
+  private _db: IDBPDatabase | null = null
 
   async _initializeDB() {
     const name = await this._idbName
@@ -41,7 +42,21 @@ export class FrontIDBAdapter implements FrontStorageAdapter {
         listsStore.createIndex('session', 'session')
         listsStore.createIndex('sessionAndKey', 'sessionAndKey')
       },
+    }).then((db) => {
+      this._db = db
+      return db
     })
+  }
+
+  /**
+   * Releases the database connection. Idempotent; a close() that lands before
+   * the connection has opened awaits the open first, so it still releases it.
+   * Reads/writes after close() reject (the connection is closed).
+   */
+  async close(): Promise<void> {
+    const db = this._db ?? (await this._dbPromise.catch(() => null))
+    this._db = null
+    db?.close()
   }
 
   get ready() {

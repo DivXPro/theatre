@@ -17,3 +17,21 @@ test('BackIDBAdapter accepts a promise as the db name', async () => {
   await a.set('clock', 7)
   expect(await a.get('clock')).toBe(7)
 })
+
+test('close() releases the connection: writes after close reject, close is idempotent', async () => {
+  const a = new BackIDBAdapter('back-test-db-close')
+  await a.ready
+  await a.close()
+
+  await expect(a.set('snapshot', {op: {n: 2}, cell: {}})).rejects.toThrow()
+
+  // closing again is a no-op
+  await expect(a.close()).resolves.toBeUndefined()
+})
+
+test('close() before the connection opens still releases it', async () => {
+  const a = new BackIDBAdapter(Promise.resolve('back-test-db-close-early'))
+  await a.close()
+
+  await expect(a.set('clock', 1)).rejects.toThrow()
+})

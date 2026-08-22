@@ -20,6 +20,10 @@ export class BackMemoryAdapter implements BackStorageAdapter {
     }
   }
 
+  async close(): Promise<void> {
+    // in-memory: nothing to close
+  }
+
   async get<T>(key: string): Promise<T | void> {
     return this._state.singularValues[key] as T | void
   }

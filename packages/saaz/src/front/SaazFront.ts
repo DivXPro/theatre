@@ -537,6 +537,9 @@ export class SaazFront<
       cb()
     }
     this._teardownCallbacks.length = 0
+    // Release the underlying IDB connection so teardown doesn't leak open
+    // handles. Memory adapters are no-ops.
+    void this._storage.closeAdapter()
   }
 
   private _removeStalePeerPresenceStates() {

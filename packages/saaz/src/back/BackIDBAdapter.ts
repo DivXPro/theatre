@@ -4,6 +4,7 @@ import type {BackStorageAdapter} from '../types'
 
 export class BackIDBAdapter implements BackStorageAdapter {
   private _dbPromise: Promise<IDBPDatabase>
+  private _db: IDBPDatabase | null = null
 
   constructor(idbName: string | Promise<string>) {
     this._dbPromise = Promise.resolve(idbName).then((name) =>
@@ -17,6 +18,17 @@ export class BackIDBAdapter implements BackStorageAdapter {
 
   get ready() {
     return this._dbPromise.then(() => undefined)
+  }
+
+  /**
+   * Releases the database connection. Idempotent; a close() that lands before
+   * the connection has opened awaits the open first, so it still releases it.
+   * Reads/writes after close() reject (the connection is closed).
+   */
+  async close(): Promise<void> {
+    const db = this._db ?? (await this._dbPromise.catch(() => null))
+    this._db = null
+    db?.close()
   }
 
   async get<T>(key: string): Promise<T | void> {

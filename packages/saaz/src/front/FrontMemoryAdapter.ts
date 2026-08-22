@@ -37,6 +37,10 @@ export class FrontMemoryAdapter implements FrontStorageAdapter {
     return this._readyDeferred.promise
   }
 
+  async close(): Promise<void> {
+    // in-memory: nothing to close
+  }
+
   async transaction<T>(
     fn: (opts: FrontStorageAdapterTransaction) => Promise<T>,
   ): Promise<T> {
