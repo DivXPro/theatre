@@ -142,6 +142,7 @@ export class SaazFront<
    * A list of functions that will be called when the frontend is destroyed.
    */
   private _teardownCallbacks: (() => void)[] = []
+  private _isTeardown = false
 
   /**
    * Locks acquired for crashed/closed sessions (see
@@ -543,7 +544,18 @@ export class SaazFront<
     return all.filter((v): v is SessionLock => !!v)
   }
 
+  /**
+   * Logs an error unless teardown has begun. Reflection callbacks that were
+   * already in-flight when teardown ran keep failing against the closed
+   * storage/backend — those are expected and shouldn't spam the console.
+   */
+  private _consoleErrorFiltered(error: unknown) {
+    if (this._isTeardown) return
+    console.error(error)
+  }
+
   teardown(): void {
+    this._isTeardown = true
     for (const cb of this._teardownCallbacks) {
       cb()
     }
@@ -580,10 +592,12 @@ export class SaazFront<
         ) {
           lastTempTransactions = tempTransactions
           lastUpdateSent = now
-          void this._backend.updatePresence({
-            peerId: this._peerId,
-            presence: {tempTransactions},
-          })
+          void this._backend
+            .updatePresence({
+              peerId: this._peerId,
+              presence: {tempTransactions},
+            })
+            .catch((err) => this._consoleErrorFiltered(err))
         }
         await new Promise((resolve) => setTimeout(resolve, 30))
       },
@@ -644,11 +658,11 @@ export class SaazFront<
         if (res.ok) {
           this._processBackendUpdate(res)
         } else {
-          console.error(res.error)
+          this._consoleErrorFiltered(res.error)
           throw new Error('Backend rejected optimistic update')
         }
       } catch (errs) {
-        console.error(errs)
+        this._consoleErrorFiltered(errs)
       }
     })
   }
@@ -697,7 +711,7 @@ export class SaazFront<
             backendState,
           )
         } catch (error) {
-          console.error(error)
+          this._consoleErrorFiltered(error)
         }
       },
     )
@@ -762,7 +776,7 @@ export class SaazFront<
             memory,
           )
         } catch (error) {
-          console.error(error)
+          this._consoleErrorFiltered(error)
           return
         }
       },
