@@ -1,4 +1,5 @@
 import type {Pointer} from '@toy-box/dataverse'
+import type {OnDiskState} from './private/core'
 
 /** For `any`s that aren't meant to stay `any`*/
 export type $FixMe = any
@@ -128,15 +129,16 @@ export type PaneInstanceId = Nominal<'PaneInstanceId'>
 export type SequenceMarkerId = Nominal<'SequenceMarkerId'>
 
 /**
- * NOTE: **INTERNAL and UNSTABLE** - This _WILL_ break between minor versions.
+ * The shape of a project's on-disk state — what `studio.createContentOfSaveFile()`
+ * returns and what `getProject(id, {state})` accepts for re-import. It carries a
+ * project's sheets, their keyframes, and the `revisionHistory` used to reconcile
+ * concurrent saves.
  *
- * This type represents the object returned by `studio.createContnentOfSaveFile()`. It's
- * meant for advanced users who want to interact with the state of projects. In the vast
- * majority of cases, you __should not__ use this type. Either an API for your use-case
- * already exists, or you should open an issue on GitHub: https://github.com/theatre-js/theatre/issues
- *
+ * Meant for advanced users who want to interact with the state of projects. In the
+ * vast majority of cases, either an API for your use-case already exists, or you
+ * should open an issue on GitHub: https://github.com/theatre-js/theatre/issues
  */
-export type __UNSTABLE_Project_OnDiskState = unknown
+export type {OnDiskState}
 
 /**
  * Addresses are used to identify projects, sheets, objects, and other things.
@@ -1391,7 +1393,7 @@ export interface IStudio {
    * })
    * ```
    */
-  createContentOfSaveFile(projectId: string): Record<string, unknown>
+  createContentOfSaveFile(projectId: string): OnDiskState
 
   /**
    * Disables the play/pause keyboard shortcut (spacebar)

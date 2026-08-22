@@ -3,6 +3,7 @@ import type {Prism, Pointer} from '@toy-box/dataverse'
 import {getPointerParts, prism} from '@toy-box/dataverse'
 import SimpleCache from '@toy-box/utils/SimpleCache'
 import type {$IntentionalAny, VoidFn} from '@toy-box/core/types/public'
+import type {OnDiskState} from '@toy-box/core'
 import type {IScrub} from '@toy-box/core/types/public'
 import type {Studio} from '@toy-box/studio/Studio'
 import {outlineSelection} from './selectors'
@@ -260,9 +261,7 @@ export default class TheatreStudio implements IStudio {
     return getStudio().paneManager.destroyPane(paneId as PaneInstanceId)
   }
 
-  createContentOfSaveFile(projectId: string): Record<string, unknown> {
-    return getStudio().createContentOfSaveFile(
-      projectId as ProjectId,
-    ) as $IntentionalAny
+  createContentOfSaveFile(projectId: string): OnDiskState {
+    return getStudio().createContentOfSaveFile(projectId as ProjectId)
   }
 }

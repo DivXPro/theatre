@@ -18,6 +18,7 @@ import type {
   StateEditorsAPI,
 } from '@toy-box/sync-server/state/schema'
 import createTransactionPrivateApi from './createTransactionPrivateApi'
+import {generateDiskStateRevision} from './generateDiskStateRevision'
 import {deriveSaazNames} from './saazNames'
 import {clearPersistentStorageFor} from './clearPersistentStorage'
 import {SaazBack} from '@toy-box/saaz'
@@ -215,35 +216,27 @@ export default class StudioStore {
   }
 
   createContentOfSaveFile(projectId: ProjectId): OnDiskState {
-    throw new Error(`Implement me`)
-    // const projectState =
-    //   this._reduxStore.getState().$persistent.historic.innerState.coreByProject[
-    //     projectId
-    //   ]
+    // `historic` may be missing if the saaz front has not finished restoring
+    // persisted state yet (`_atom` is seeded with `{}` in the constructor).
+    const projectState = this._atom.get().historic?.coreByProject[projectId]
 
-    // if (!projectState) {
-    //   throw new Error(`Project ${projectId} has not been initialized.`)
-    // }
+    if (!projectState) {
+      throw new Error(`Project ${projectId} has not been initialized.`)
+    }
 
-    // const revision = generateDiskStateRevision()
+    const revision = generateDiskStateRevision()
 
-    // this.tempTransaction(({stateEditors}) => {
-    //   stateEditors.coreByProject.historic.revisionHistory.add({
-    //     projectId,
-    //     revision,
-    //   })
-    // }).commit()
+    this.tempTransaction(({stateEditors}) => {
+      stateEditors.coreByProject.historic.revisionHistory.add({
+        projectId,
+        revision,
+      })
+    }).commit()
 
-    // const projectHistoricState =
-    //   this._reduxStore.getState().$persistent.historic.innerState.coreByProject[
-    //     projectId
-    //   ]
-
-    // const generatedOnDiskState: OnDiskState = {
-    //   ...projectHistoricState,
-    // }
-
-    // return generatedOnDiskState
+    return {
+      ...projectState,
+      revisionHistory: [revision, ...projectState.revisionHistory],
+    }
   }
 
   // get appApi(): TrpcClientWrapped<AppLink['api']> {
