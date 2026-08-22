@@ -9,7 +9,7 @@ import {
   useEmptyNotificationsTooltip,
 } from '@toy-box/studio/notify'
 import {
-  uesConflicts,
+  useConflicts,
   useOutlineTriggerTooltip,
   useMoreMenu,
 } from './globalToolbarHooks'
@@ -60,7 +60,7 @@ const HasUpdatesBadge = styled.div<{type: 'info' | 'warning'}>`
 `
 
 const GlobalToolbar: React.FC = () => {
-  const conflicts = uesConflicts()
+  const conflicts = useConflicts()
   const [outlineTriggerTooltip, outlineTriggerRef] =
     useOutlineTriggerTooltip(conflicts)
 

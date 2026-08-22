@@ -9,7 +9,7 @@ import usePopover from '@toy-box/studio/uiComponents/Popover/usePopover'
 import MoreMenu from './MoreMenu/MoreMenu'
 
 export function useOutlineTriggerTooltip(
-  conflicts: ReturnType<typeof uesConflicts>,
+  conflicts: ReturnType<typeof useConflicts>,
 ) {
   return useTooltip(
     {enabled: conflicts.length > 0, enterDelay: conflicts.length > 0 ? 0 : 200},
@@ -28,7 +28,7 @@ export function useOutlineTriggerTooltip(
   )
 }
 
-export function uesConflicts() {
+export function useConflicts() {
   return usePrism(() => {
     const ephemeralStateOfAllProjects = val(
       getStudio().ephemeralAtom.pointer.coreByProject,
