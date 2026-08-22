@@ -675,13 +675,49 @@ export class SaazFront<
         if (res.ok) {
           this._processBackendUpdate(res)
         } else {
-          this._consoleErrorFiltered(res.error)
-          throw new Error('Backend rejected optimistic update')
+          // spec:169 — the backend rejected this optimistic update. Never
+          // crash: dev fails loud, prod drops the update and notifies the host
+          // through the C8 persistence-failure signal (a dropped update means
+          // that part of the session state is no longer being saved, so the
+          // "state won't be saved" banner applies).
+          if (process.env.NODE_ENV !== 'production') {
+            this._consoleErrorFiltered(res.error)
+          } else {
+            this._onStorageFailure?.(res.error as Error)
+          }
+          // remove the rejected update so it isn't retried on every sync
+          this._dropRejectedOptimisticUpdate(updates)
         }
       } catch (errs) {
         this._consoleErrorFiltered(errs)
       }
     })
+  }
+
+  /**
+   * Removes the rejected optimistic updates from the sync queues (both the
+   * current session's and any closed sessions') so they are not retried
+   * forever. The updates are identified by reference — the exact objects that
+   * were handed to the backend.
+   */
+  private _dropRejectedOptimisticUpdate(rejectedUpdates: Transaction[]) {
+    const rejected = new Set(rejectedUpdates)
+    this._atom.reduce((state) => ({
+      ...state,
+      optimisticUpdatesQueue: state.optimisticUpdatesQueue.filter(
+        (update) => !rejected.has(update),
+      ),
+      closedSessions: state.closedSessions.map((closedSession) =>
+        closedSession.optimisticUpdates.some((update) => rejected.has(update))
+          ? {
+              ...closedSession,
+              optimisticUpdates: closedSession.optimisticUpdates.filter(
+                (update) => !rejected.has(update),
+              ),
+            }
+          : closedSession,
+      ),
+    }))
   }
 
   private _processBackendUpdate(s: BackGetUpdateSinceClockResult) {
