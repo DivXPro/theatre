@@ -10050,6 +10050,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@toy-box/core@workspace:packages/core"
   dependencies:
+    "@microsoft/api-extractor": ^7.28.6
     "@rollup/plugin-alias": ^5.1.0
     "@rollup/plugin-multi-entry": ^6.0.1
     "@rollup/plugin-replace": ^5.0.5

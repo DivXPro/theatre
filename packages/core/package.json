@@ -23,10 +23,12 @@
     "prepublish": "node ../../devEnv/ensurePublishing.js",
     "typecheck": "tsc --build",
     "cli": "tsx devEnv/cli.ts",
-    "build": "yarn cli build"
+    "build": "yarn cli build",
+    "build:api-json": "yarn cli build ts && api-extractor run --local --config devEnv/api-extractor.json"
   },
   "sideEffects": true,
   "devDependencies": {
+    "@microsoft/api-extractor": "^7.28.6",
     "@rollup/plugin-alias": "^5.1.0",
     "@rollup/plugin-multi-entry": "^6.0.1",
     "@rollup/plugin-replace": "^5.0.5",

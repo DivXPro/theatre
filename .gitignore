@@ -2,6 +2,8 @@
 **/xeno
 /packages/*/dist
 /examples/*/dist
+# api-extractor scratch (drift-comparison copy); the tracked report lives in etc/
+/packages/*/temp
 *.log
 *.temp
 /.vscode
