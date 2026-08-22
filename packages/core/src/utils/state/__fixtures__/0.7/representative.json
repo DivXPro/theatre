@@ -1,0 +1,159 @@
+{
+  "definitionVersion": "0.4.0",
+  "sheetsById": {
+    "SheetA": {
+      "staticOverrides": {
+        "byObject": {
+          "obj": {
+            "position": {
+              "x": 1,
+              "y": 0,
+              "z": 2
+            },
+            "color": {
+              "r": 0.8,
+              "g": 0.2,
+              "b": 0.4,
+              "a": 1
+            },
+            "label": "r",
+            "asset": {
+              "type": "file",
+              "id": "model.glb"
+            },
+            "deeply": {
+              "nested": {
+                "checkbox": true
+              }
+            }
+          }
+        }
+      },
+      "sequence": {
+        "type": "PositionalSequence",
+        "tracksByObject": {
+          "obj": {
+            "trackIdByPropPath": {
+              "[\"position\",\"y\"]": "1"
+            },
+            "trackData": {
+              "1": {
+                "type": "BasicKeyframedTrack",
+                "keyframes": {
+                  "byId": {
+                    "0": {
+                      "id": "0",
+                      "position": 0,
+                      "connectedRight": true,
+                      "handles": [
+                        0.5,
+                        0.5,
+                        0.5,
+                        0.5
+                      ],
+                      "type": "bezier",
+                      "value": 0
+                    },
+                    "1": {
+                      "id": "1",
+                      "position": 10,
+                      "connectedRight": true,
+                      "handles": [
+                        0.5,
+                        0.5,
+                        0.5,
+                        0.5
+                      ],
+                      "type": "bezier",
+                      "value": 5
+                    },
+                    "2": {
+                      "id": "2",
+                      "position": 20,
+                      "connectedRight": false,
+                      "handles": [
+                        0,
+                        0,
+                        0,
+                        0
+                      ],
+                      "type": "hold",
+                      "value": 5
+                    }
+                  },
+                  "allIds": {
+                    "0": true,
+                    "1": true,
+                    "2": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "SheetB": {
+      "staticOverrides": {
+        "byObject": {
+          "box": {
+            "opacity": 1,
+            "scale": 3
+          }
+        }
+      },
+      "sequence": {
+        "type": "PositionalSequence",
+        "tracksByObject": {
+          "box": {
+            "trackIdByPropPath": {
+              "[\"opacity\"]": "2"
+            },
+            "trackData": {
+              "2": {
+                "type": "BasicKeyframedTrack",
+                "keyframes": {
+                  "byId": {
+                    "3": {
+                      "id": "3",
+                      "position": 0,
+                      "connectedRight": true,
+                      "handles": [
+                        0.5,
+                        0.5,
+                        0.5,
+                        0.5
+                      ],
+                      "type": "bezier",
+                      "value": 1
+                    },
+                    "4": {
+                      "id": "4",
+                      "position": 30,
+                      "connectedRight": false,
+                      "handles": [
+                        0,
+                        0,
+                        0,
+                        0
+                      ],
+                      "type": "hold",
+                      "value": 0.25
+                    }
+                  },
+                  "allIds": {
+                    "3": true,
+                    "4": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "revisionHistory": [
+    "VJVUnNW1K_ShoTEc"
+  ]
+}

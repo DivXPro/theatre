@@ -6,7 +6,9 @@
  * keyframes, revisionHistory) into a value that can be re-imported via
  * `getProject(id, {state})`.
  */
-import {__private, getProject} from '@toy-box/core'
+import * as fs from 'node:fs'
+import * as path from 'node:path'
+import {__private, getProject, val} from '@toy-box/core'
 import {shallowValidateOnDiskState} from '@toy-box/core/projects/Project'
 import {globals} from '@toy-box/core/globals'
 import {setupTestSheet} from '@toy-box/studio/integration-tests/testUtils'
@@ -15,12 +17,40 @@ import {encodePathToProp} from '@toy-box/utils/pathToProp'
 import * as t from '@toy-box/core/propTypes'
 import type {
   ObjectAddressKey,
+  OnDiskState,
   ProjectId,
   SequenceTrackId,
 } from '@toy-box/core/types/public'
 
 const {keyframeUtils} = __private
 const {asKeyframeId, asSequenceTrackId} = __private.ids
+
+// The committed 0.7-shape fixture (see
+// packages/core/src/utils/state/stateMigration.test.ts for the import/validate
+// half of the compatibility regression; the export round-trip lives here
+// because `createContentOfSaveFile` is studio-only).
+const representativeFixture = JSON.parse(
+  fs.readFileSync(
+    path.join(
+      __dirname,
+      '../../../core/src/utils/state/__fixtures__/0.7/representative.json',
+    ),
+    'utf8',
+  ),
+) as unknown as OnDiskState
+
+const fixtureObjProps = {
+  position: {x: 0, y: 0, z: 0},
+  color: t.rgba(),
+  label: t.stringLiteral('r', {r: 'Red', g: 'Green'}),
+  asset: t.file('model.glb'),
+  deeply: {nested: {checkbox: false}},
+}
+
+const fixtureBoxProps = {
+  opacity: 1,
+  scale: 1,
+}
 
 const defaultProps = {
   position: {
@@ -132,5 +162,36 @@ describe('studio.createContentOfSaveFile', () => {
     expect(keyframes).toHaveLength(2)
     expect(keyframes[0].value).toEqual(3)
     expect(keyframes[1].value).toEqual(6)
+  })
+
+  test('0.7 fixture export round-trips through createContentOfSaveFile', async () => {
+    const projectId = '0.7-fixture-roundtrip' as ProjectId
+    const project = getProject(projectId, {state: representativeFixture})
+    await project.ready
+
+    // export the imported 0.7-shape state
+    const studio = getStudio()!
+    const exported = studio.createContentOfSaveFile(projectId)
+
+    // the export is itself valid on-disk state
+    expect(() => shallowValidateOnDiskState(projectId, exported)).not.toThrow()
+
+    // re-import the export and verify sheets + keyframes + static values survive
+    const reimported = getProject(`RoundTrip ${projectId}`, {state: exported})
+    await reimported.ready
+
+    const sheetA = reimported.sheet('SheetA')
+    const obj = sheetA.object('obj', fixtureObjProps)
+    const keyframes = sheetA.sequence.getKeyframes(obj.props.position.y)
+    expect(keyframes).toHaveLength(3)
+    expect(keyframes.map((k) => k.value)).toEqual([0, 5, 5])
+    expect(keyframes.map((k) => k.type)).toEqual(['bezier', 'bezier', 'hold'])
+    expect(val(obj.props.label)).toBe('r')
+    expect(val(obj.props.asset)).toEqual({type: 'file', id: 'model.glb'})
+
+    const sheetB = reimported.sheet('SheetB')
+    const box = sheetB.object('box', fixtureBoxProps)
+    expect(val(box.props.scale)).toBe(3)
+    expect(sheetB.sequence.getKeyframes(box.props.opacity)).toHaveLength(2)
   })
 })
