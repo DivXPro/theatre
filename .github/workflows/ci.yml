@@ -59,6 +59,9 @@ jobs:
 
       - run: yarn test
 
+      - name: API report in sync
+        run: yarn workspace @toy-box/core run build:api-json && git diff --exit-code packages/core/etc/core.api.md
+
   VisualRegression:
     # skip this until the new API is ready
     if: false
