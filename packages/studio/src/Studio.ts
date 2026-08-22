@@ -122,6 +122,9 @@ export class Studio {
     // internal signal: set to 'degraded' when persistence (IndexedDB) is
     // unavailable and the studio falls back to in-memory-only editing
     persistenceStatus: 'ok' | 'degraded'
+    // internal signal: connection state of the direct-ws sync link. Only set in
+    // direct self-host mode; always 'connected' otherwise (local/offline).
+    connectionStatus: 'connected' | 'reconnecting'
     coreByProject: {[projectId in string]: ProjectEphemeralState}
     extensions: {
       byId: {[extensionId in string]?: IExtension}
@@ -135,6 +138,7 @@ export class Studio {
   }>({
     initialized: false,
     persistenceStatus: 'ok',
+    connectionStatus: 'connected',
     coreByProject: {},
     extensions: {
       byId: {},
@@ -254,11 +258,16 @@ export class Studio {
           // bare sync-server client. `app` is meaningless here.
           // (authedLinks.syncServer must be the client itself, not a promise —
           // createTrpcBackend accesses `.projectState…` on it synchronously.)
-          void this._rawLinks.syncServer.then((s) => {
+          void this._rawLinks.syncServer.then((link) => {
+            if (!link) return
             this.authedLinks = {
-              syncServer: s!.api as $IntentionalAny,
+              syncServer: link.api as $IntentionalAny,
               app: undefined as $IntentionalAny,
             }
+            // surface the direct link's connection state to the UI
+            link.onConnectionStateChange((state) => {
+              this.ephemeralAtom.setByPointer((p) => p.connectionStatus, state)
+            })
           })
           return
         }

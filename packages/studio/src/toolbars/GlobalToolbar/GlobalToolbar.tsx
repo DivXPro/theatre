@@ -3,6 +3,7 @@ import getStudio from '@toy-box/studio/getStudio'
 import React from 'react'
 import styled from 'styled-components'
 import ExtensionToolbar from '@toy-box/studio/toolbars/ExtensionToolbar/ExtensionToolbar'
+import ConnectionStatusBadge from '@toy-box/studio/uiComponents/ConnectionStatusBadge'
 import {
   useNotifications,
   useEmptyNotificationsTooltip,
@@ -65,6 +66,8 @@ const GlobalToolbar: React.FC = () => {
 
   const outlinePinned = useVal(getStudio().atomP.ahistoric.pinOutline) ?? true
   const detailsPinned = useVal(getStudio().atomP.ahistoric.pinDetails) ?? true
+  const connectionStatus =
+    useVal(getStudio().ephemeralAtom.pointer.connectionStatus) ?? 'connected'
 
   const {moreMenu, moreMenuTriggerRef} = useMoreMenu()
 
@@ -100,6 +103,7 @@ const GlobalToolbar: React.FC = () => {
             {conflicts.length}
           </NumberOfConflictsIndicator>
         ) : null}
+        <ConnectionStatusBadge status={connectionStatus} />
         <ExtensionToolbar showLeftDivider toolbarId="global" />
       </SubContainer>
       <SubContainer>
