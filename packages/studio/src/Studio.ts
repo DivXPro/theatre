@@ -118,6 +118,9 @@ export class Studio {
   readonly ephemeralAtom = new Atom<{
     // reflects the value of _initializedDeferred.promise. Since it's in an atom, it can be accessed via a pointer
     initialized: boolean
+    // internal signal: set to 'degraded' when persistence (IndexedDB) is
+    // unavailable and the studio falls back to in-memory-only editing
+    persistenceStatus: 'ok' | 'degraded'
     coreByProject: {[projectId in string]: ProjectEphemeralState}
     extensions: {
       byId: {[extensionId in string]?: IExtension}
@@ -130,6 +133,7 @@ export class Studio {
     }
   }>({
     initialized: false,
+    persistenceStatus: 'ok',
     coreByProject: {},
     extensions: {
       byId: {},
@@ -253,7 +257,11 @@ export class Studio {
       })
     }
 
-    this._store = new StudioStore(this)
+    this._store = new StudioStore(this, {
+      onPersistenceStatusChange: (status) => {
+        this.ephemeralAtom.setByPointer((p) => p.persistenceStatus, status)
+      },
+    })
     this.publicApi = new TheatreStudio(this)
 
     this.ui = new UI(this)

@@ -6,6 +6,7 @@ import React, {useCallback, useState} from 'react'
 import styled from 'styled-components'
 import DetailPanelButton from '@toy-box/studio/uiComponents/DetailPanelButton'
 import StateConflictRow from './ProjectDetails/StateConflictRow'
+import {PersistenceStatusBanner} from '@toy-box/studio/uiComponents/PersistenceStatusBanner'
 import JSZip from 'jszip'
 import {notify} from '@toy-box/studio/notify'
 import {getAllPossibleAssetIDs} from '@toy-box/studio/utils/assets'
@@ -145,6 +146,7 @@ const ProjectDetails: React.FC<{
       {exportTooltip.node}
       <Container>
         <StateConflictRow projectId={projectId} />
+        <PersistenceStatusBanner />
         <TheExportRow>
           <DetailPanelButton
             onMouseEnter={(e) =>

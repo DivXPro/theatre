@@ -143,6 +143,7 @@ export class SaazFront<
    */
   private _teardownCallbacks: (() => void)[] = []
   private _isTeardown = false
+  private _onStorageFailure: ((error: Error) => void) | undefined
 
   /**
    * Locks acquired for crashed/closed sessions (see
@@ -332,6 +333,12 @@ export class SaazFront<
      * If true (default), the frontend will keep the prisms hot. This is a perf optimization
      */
     keepPrismsHot?: boolean
+    /**
+     * Called when persistence fails during init (e.g. IndexedDB can't be
+     * opened). The frontend degrades to in-memory-only: editing keeps
+     * working, but nothing is persisted. The host decides what to surface.
+     */
+    onStorageFailure?: (error: Error) => void
   }) {
     if (opts.diskSnapshot) {
       this._diskSnapshot = {
@@ -375,6 +382,7 @@ export class SaazFront<
     this._schema = opts.schema
     this._peerId = opts.peerId ?? nanoid(PEERID_LENGTH)
     this._backend = opts.backend
+    this._onStorageFailure = opts.onStorageFailure
     this._dbName = opts.dbName
     this._storage = new FrontStorage(this._dbName, opts.storageAdapter)
 
@@ -382,39 +390,52 @@ export class SaazFront<
   }
 
   private async _init() {
-    await this._loadClosedSessions()
+    try {
+      await this._loadClosedSessions()
 
-    // The most recent backend state that one of the closed sessions has cached.
-    // We can use this until we get the first update from the backend
-    const cachedBackendState: SessionState<unknown> | undefined =
-      await this._storage.transaction(async (t) =>
-        t.getMostRecentlySyncedSessionState(),
-      )
+      // The most recent backend state that one of the closed sessions has cached.
+      // We can use this until we get the first update from the backend
+      const cachedBackendState: SessionState<unknown> | undefined =
+        await this._storage.transaction(async (t) =>
+          t.getMostRecentlySyncedSessionState(),
+        )
 
-    // this will create the database and start a transaction
-    await this._storage.transaction(async (t) => {
-      const initialSnapshot = this._diskSnapshot
-      if (!cachedBackendState) {
-        // there are no closed/crashed sessions that have a backend state.
-        this._setSessionState({
-          backendClock: initialSnapshot?.clock ?? null,
-          lastIncorporatedPeerClock: null,
-          lastSyncTime: null,
-          snapshot: initialSnapshot?.snapshot ?? null,
-          peerId: this._peerId,
-        })
-      } else {
-        if (initialSnapshot) {
-          const cachedClock = cachedBackendState.backendClock ?? -1
-          if (initialSnapshot.clock > cachedClock) {
-            // the user explicitly provided a newer save file: restore from it
-            this._setSessionState({
-              backendClock: initialSnapshot.clock,
-              lastIncorporatedPeerClock: null,
-              lastSyncTime: null,
-              snapshot: initialSnapshot.snapshot,
-              peerId: this._peerId,
-            })
+      // this will create the database and start a transaction
+      await this._storage.transaction(async (t) => {
+        const initialSnapshot = this._diskSnapshot
+        if (!cachedBackendState) {
+          // there are no closed/crashed sessions that have a backend state.
+          this._setSessionState({
+            backendClock: initialSnapshot?.clock ?? null,
+            lastIncorporatedPeerClock: null,
+            lastSyncTime: null,
+            snapshot: initialSnapshot?.snapshot ?? null,
+            peerId: this._peerId,
+          })
+        } else {
+          if (initialSnapshot) {
+            const cachedClock = cachedBackendState.backendClock ?? -1
+            if (initialSnapshot.clock > cachedClock) {
+              // the user explicitly provided a newer save file: restore from it
+              this._setSessionState({
+                backendClock: initialSnapshot.clock,
+                lastIncorporatedPeerClock: null,
+                lastSyncTime: null,
+                snapshot: initialSnapshot.snapshot,
+                peerId: this._peerId,
+              })
+            } else {
+              this._atom.setByPointer((p) => p.sessionState, {
+                lastSyncTime: null,
+                backendClock: cachedBackendState.backendClock ?? null,
+                lastIncorporatedPeerClock: null,
+                peerId: this._peerId,
+                snapshot: ensureStateIsUptodate<OpSnapshot>(
+                  cachedBackendState.snapshot as $IntentionalAny,
+                  this._schema,
+                ),
+              })
+            }
           } else {
             this._atom.setByPointer((p) => p.sessionState, {
               lastSyncTime: null,
@@ -427,22 +448,18 @@ export class SaazFront<
               ),
             })
           }
-        } else {
-          this._atom.setByPointer((p) => p.sessionState, {
-            lastSyncTime: null,
-            backendClock: cachedBackendState.backendClock ?? null,
-            lastIncorporatedPeerClock: null,
-            peerId: this._peerId,
-            snapshot: ensureStateIsUptodate<OpSnapshot>(
-              cachedBackendState.snapshot as $IntentionalAny,
-              this._schema,
-            ),
-          })
         }
-      }
 
+        this._atom.setByPointer((p) => p.initialized, true)
+      })
+    } catch (error) {
+      // Persistence failed (e.g. IndexedDB couldn't be opened). Degrade to
+      // in-memory-only: editing must not block, so mark initialized anyway and
+      // let the host decide what to surface.
+      console.warn('[saaz] persistence failed; running in-memory only:', error)
       this._atom.setByPointer((p) => p.initialized, true)
-    })
+      this._onStorageFailure?.(error as Error)
+    }
 
     this._teardownCallbacks.push(
       this._subscribeToBackend(),
@@ -894,7 +911,12 @@ export class SaazFront<
   }
 
   private _subscribeToBackend(): () => void {
-    void this._pullUpdatesFromBackend()
+    // Degraded mode (persistence failed) leaves sessionState null, so the
+    // initial pull has no backend state to sync from and rejects — don't let
+    // that become an unhandled rejection.
+    void this._pullUpdatesFromBackend().catch((err) => {
+      console.error(err)
+    })
     const stop = this._backend.subscribe(
       {
         peerId: this._peerId,

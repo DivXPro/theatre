@@ -55,7 +55,16 @@ export default class StudioStore {
     StudioState
   >
 
-  constructor(readonly studio: Studio) {
+  constructor(
+    readonly studio: Studio,
+    opts?: {
+      /**
+       * Called when persistence fails (e.g. IndexedDB is unavailable). The
+       * studio degrades to in-memory-only and surfaces this to the user.
+       */
+      onPersistenceStatusChange?: (status: 'ok' | 'degraded') => void
+    },
+  ) {
     const optsPromise = this.studio._optsPromise
 
     const backend: Saaz.SaazBackInterface =
@@ -91,6 +100,7 @@ export default class StudioStore {
               ),
             ),
       backend,
+      onStorageFailure: () => opts?.onPersistenceStatusChange?.('degraded'),
     })
     this._saaz = saaz as $IntentionalAny
 
