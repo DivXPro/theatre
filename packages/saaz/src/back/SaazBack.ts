@@ -44,16 +44,24 @@ export default class SaazBack implements SaazBackInterface {
     this._dbName = opts.dbName
     this._storage = new BackStorage({storageAdapter: opts.storageAdapter})
 
-    void this._storage.ready.then(() => {
-      const loaded = this._storage.loadedState
-      if (loaded?.snapshot) {
-        this._dbState = ensureOpStateIsUptodate(loaded.snapshot, this._schema)
-      }
-      if (typeof loaded?.clock === 'number') {
-        this._clock = loaded.clock
-      }
-      this._readyDeferred.resolve()
-    })
+    void this._storage.ready.then(
+      () => {
+        const loaded = this._storage.loadedState
+        if (loaded?.snapshot) {
+          this._dbState = ensureOpStateIsUptodate(loaded.snapshot, this._schema)
+        }
+        if (typeof loaded?.clock === 'number') {
+          this._clock = loaded.clock
+        }
+        this._readyDeferred.resolve()
+      },
+      (err) => {
+        // The backend storage could not be loaded, so this backend is
+        // unusable. Reject `ready` instead of hanging forever — consumers
+        // (e.g. the persistence degradation path) observe this rejection.
+        this._readyDeferred.reject(err)
+      },
+    )
 
     this._schedulePresenseUpdate = throttle(
       () => {
@@ -227,6 +235,12 @@ export default class SaazBack implements SaazBackInterface {
       peerState.lastIncorporatedPeerClock = lastAcknowledgedClock
       this._clock = backendClock
       this._callSubscribersForBackendStateUpdate()
+      // Save failures are handled inside BackStorage.save (its serialized
+      // queue attaches a rejection handler, keeping them out of the
+      // unhandled-rejection channel; the caller receives them via the returned
+      // promise). We deliberately don't throw back into the op-apply flow —
+      // the memory state is already committed and the next apply retries the
+      // save. Task C8 wires an observable persistence-failure signal.
       void this._storage.save(this._dbState, this._clock)
     }
 
