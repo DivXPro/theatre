@@ -9,12 +9,21 @@ export * from './types/public'
 import {defer} from '@toy-box/utils/defer'
 import CoreBundle from './CoreBundle'
 import {globalVariableNames} from './globals'
-import type {$____FixmeStudio} from '@toy-box/core/types/public'
-import type {IStudio, InitOpts} from './types/public'
+import type {
+  IStudio,
+  IStudioBundle,
+  IStudioInternal,
+  InitOpts,
+} from './types/public'
 
-const studioDeferred = defer<$____FixmeStudio>()
+const studioDeferred = defer<IStudioInternal>()
 
 export async function getStudio(): Promise<IStudio> {
+  if (!initCalled) {
+    throw new Error(
+      `You seem to have called getStudio() before init(). The studio has not been initialized; make sure to call init() (e.g. theatre.init({studio: true})) before using the studio.`,
+    )
+  }
   return (await studioDeferred.promise).publicApi
 }
 
@@ -31,6 +40,11 @@ export function getStudioSync(
 let initCalled = false
 const initOptsDeferred = defer<InitOpts | undefined>()
 
+/**
+ * Initializes Theatre.js with the given options.
+ *
+ * This is safe to call multiple times; only the first call has any effect.
+ */
 export async function init(opts?: InitOpts) {
   if (initCalled) {
     return
@@ -42,7 +56,7 @@ export async function init(opts?: InitOpts) {
 const theatre = {getStudio, getStudioSync, init}
 export default theatre
 
-type StudioBundle = $____FixmeStudio // todo
+type StudioBundle = IStudioBundle
 
 registerCoreBundle()
 
@@ -138,7 +152,7 @@ function registerCoreBundle() {
 
   const possibleExistingStudioBundle: undefined | StudioBundle =
     // @ts-ignore ignore
-    globalContext[globalVariableNames.studioBundle]
+    globalContext[globalVariableNames.StudioBundle]
 
   if (
     possibleExistingStudioBundle &&

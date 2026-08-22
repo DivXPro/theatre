@@ -3,10 +3,10 @@ import projectsSingleton from './projects/projectsSingleton'
 import {privateAPI} from './privateAPIs'
 import * as coreExports from './coreExports'
 import {getCoreRafDriver} from './coreTicker'
-import type {$____FixmeStudio} from '@toy-box/core/types/public'
+import type {IStudioInternal} from '@toy-box/core/types/public'
 import {env} from './env'
 
-type Studio = $____FixmeStudio
+type Studio = IStudioInternal
 
 export type CoreBits = {
   projectsP: typeof projectsSingleton.atom.pointer.projects

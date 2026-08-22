@@ -1,4 +1,5 @@
 import type {Pointer} from '@toy-box/dataverse'
+import type CoreBundle from '@toy-box/core/CoreBundle'
 import type {OnDiskState} from './private/core'
 
 /** For `any`s that aren't meant to stay `any`*/
@@ -1413,6 +1414,26 @@ export interface IStudio {
    * @param persistenceKey - same persistencyKey as in `studio.initialize(opts)`, if any
    */
   clearPersistentStorage(persistenceKey?: string): void
+}
+
+/**
+ * The studio bundle object that `@toy-box/studio` registers on the shared
+ * global. Core discovers it during `registerCoreBundle()` and hands over its
+ * `CoreBundle` so the studio can pull core's bits.
+ */
+export interface IStudioBundle {
+  readonly type: 'Theatre_StudioBundle'
+  registerCoreBundle(coreBundle: CoreBundle): void
+}
+
+/**
+ * The studio instance core stores once the studio attaches. Core only touches
+ * `initialize()` (to pass `init()` opts) and `publicApi` (to resolve
+ * `getStudio()`); the concrete studio implements this structurally.
+ */
+export interface IStudioInternal {
+  initialize(opts?: InitOpts): Promise<void>
+  readonly publicApi: IStudio
 }
 
 /**
