@@ -144,6 +144,14 @@ export class SaazFront<
   private _teardownCallbacks: (() => void)[] = []
 
   /**
+   * Locks acquired for crashed/closed sessions (see
+   * `_acquireLocksOnClosedSessions`). Held for the lifetime of the frontend so
+   * no other tab can take over the session; released in teardown so they don't
+   * hang until the process exits.
+   */
+  private _sessionLocks: Array<SessionLock> = []
+
+  /**
    * We use dataverse prisms to derive several values from the atom. This makes the reactive parts of the code easier to maintain.
    */
   private _prisms: {
@@ -450,6 +458,9 @@ export class SaazFront<
     // in case there are crashed/closed sesions that haven't synced
     // with backend yet, let's take them over
     const closedSessionsLocks = await this._acquireLocksOnClosedSessions()
+    // Hold the locks until teardown so no other tab can take over these
+    // sessions while we're processing them.
+    this._sessionLocks = closedSessionsLocks
 
     const closedSessions: ClosedSession[] = await this._storage.transaction(
       async (t) =>
@@ -537,6 +548,9 @@ export class SaazFront<
       cb()
     }
     this._teardownCallbacks.length = 0
+    // Release the session locks so they don't hang until the process exits.
+    for (const lock of this._sessionLocks) lock.unlock()
+    this._sessionLocks = []
     // Release the underlying IDB connection so teardown doesn't leak open
     // handles. Memory adapters are no-ops.
     void this._storage.closeAdapter()
