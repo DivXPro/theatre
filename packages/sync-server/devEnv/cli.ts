@@ -2,8 +2,8 @@ import sade from 'sade'
 import {$, fs, path} from '@cspotcode/zx'
 import {config} from 'dotenv'
 import {fromZodError} from 'zod-validation-error'
-import * as envSchema from 'src/envSchema'
-import type {Env} from 'src/envSchema'
+import * as envSchema from '../src/envSchema'
+import type {Env} from '../src/envSchema'
 
 const isProduction = process.env.NODE_ENV === 'production'
 

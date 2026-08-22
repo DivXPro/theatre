@@ -1,6 +1,6 @@
 import {z} from 'zod'
 import {createRouter, procedure} from '..'
-import {getSaazBack} from 'src/saaz'
+import {getSaazBack} from '../../saaz'
 import {observable} from '@trpc/server/observable'
 
 const studioAuth = z.object({
