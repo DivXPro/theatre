@@ -68,6 +68,10 @@ services:
           name: app
           type: web
           envVarKey: RENDER_EXTERNAL_URL
+      # self-hosted minimal loop: auth off → app + postgres not needed.
+      # keep false here (the official app-backed path).
+      - key: AUTH_DISABLED
+        value: 'false'
 
 databases:
   - name: app-postgres

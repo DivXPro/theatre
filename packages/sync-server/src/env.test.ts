@@ -5,6 +5,29 @@ import * as dotenv from 'dotenv'
 import * as yaml from 'yaml'
 
 describe(`@toy-box/sync-server env`, () => {
+  describe(`AUTH_DISABLED self-host env`, () => {
+    const base = {NODE_ENV: 'development', PORT: '3001', HOST: 'localhost'}
+
+    test(`AUTH_DISABLED=true validates without DATABASE_URL/APP_URL/DEV_DB_*`, () => {
+      const res = envSchema.devSchema.safeParse({
+        ...base,
+        AUTH_DISABLED: 'true',
+      })
+      expect(res.success).toBe(true)
+    })
+
+    test(`AUTH_DISABLED unset still requires DATABASE_URL and APP_URL`, () => {
+      expect(envSchema.devSchema.safeParse(base).success).toBe(false)
+      expect(
+        envSchema.devSchema.safeParse({
+          ...base,
+          DATABASE_URL: 'postgresql://postgres:test@localhost:43943/postgres',
+          APP_URL: 'http://app',
+        }).success,
+      ).toBe(true)
+    })
+  })
+
   describe(`.env files`, () => {
     test(`.env.example should be valid`, () => {
       const pathToEnvExample = path.join(__dirname, '../.env.example')
@@ -45,7 +68,7 @@ describe(`@toy-box/sync-server env`, () => {
       // PORT is automatically added by render
       envVarKeys.push('PORT')
 
-      const requiredKeys = Object.keys(envSchema.productionSchema.shape)
+      const requiredKeys = Object.keys(envSchema.productionSchemaShape.shape)
 
       envVarKeys.sort()
       requiredKeys.sort()

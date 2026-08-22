@@ -3,7 +3,10 @@ import {createTRPCProxyClient, httpBatchLink} from '@trpc/client'
 import superjson from 'superjson'
 import {env} from './env'
 
-export let appHost = env.APP_URL
+// APP_URL is optional in the env schema (AUTH_DISABLED=true needs no app).
+// When auth is on it's required, so this module-level crash-on-import without
+// APP_URL is acceptable for now — Task A2 replaces this with lazy init.
+export let appHost = env.APP_URL as string
 // if host does not start with a protocol:
 if (!appHost.startsWith('http')) {
   // then assume it's https
