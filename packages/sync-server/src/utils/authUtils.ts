@@ -23,13 +23,22 @@ export type Session = {
 } & studioAuthTokens.AccessTokenPayload
 
 export async function verifyAccessTokenOrThrow(opts: {
-  input: {studioAuth: {accessToken: string}}
+  input: {studioAuth?: {accessToken: string}}
 }): Promise<Session> {
   if (process.env.AUTH_DISABLED === 'true') {
-    return {_accessToken: opts.input.studioAuth.accessToken} as Session
+    return {_accessToken: opts.input.studioAuth?.accessToken ?? ''} as Session
   }
 
-  const {accessToken} = opts.input.studioAuth
+  const accessToken = opts.input.studioAuth?.accessToken
+  if (!accessToken) {
+    // Auth is on but no token was sent — reject (this only happens through a
+    // misconfigured direct-ws client; the app-backed client always injects one).
+    throw new TRPCError({
+      code: 'UNAUTHORIZED',
+      cause: 'InvalidSession',
+      message: 'Access token could not be verified',
+    })
+  }
   console.log('verifying ', accessToken)
 
   const publicKey = await getJwtPublicKey()

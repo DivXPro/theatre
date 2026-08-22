@@ -53,7 +53,7 @@ export const mergeRouters = t.mergeRouters
 
 type SyncServerTrpcContext = {
   requireValidSession: (opts: {
-    input: {studioAuth: {accessToken: string}}
+    input: {studioAuth?: {accessToken: string}}
   }) => Promise<Session>
 }
 /**
@@ -71,7 +71,9 @@ export const createContext = async (
       // AUTH_DISABLED=true = self-hosted minimal loop: let everything through,
       // never touch the token verifier (which would fetch the app's jwt key).
       if (process.env.AUTH_DISABLED === 'true') {
-        return {_accessToken: ''} as Session
+        return {
+          _accessToken: opts.input.studioAuth?.accessToken ?? '',
+        } as Session
       }
       if (cashedResult) return cashedResult
       cashedResult = verifyAccessTokenOrThrow(opts)

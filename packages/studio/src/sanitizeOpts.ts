@@ -20,14 +20,14 @@ export function sanitizeOpts(
   if (typeof opts?.serverUrl == 'string') {
     if (
       // a fully formed url
-      opts.serverUrl.match(/^(https?:)?\/\//) &&
+      opts.serverUrl.match(/^(https?|wss?):\/\//) &&
       // not ending with a slash
       !opts.serverUrl.endsWith('/')
     ) {
       storeOpts.serverUrl = opts.serverUrl
     } else {
       throw new Error(
-        'parameter `serverUrl` in `theatre.init({studio: true, serverUrl})` must be either undefined or a fully formed url (e.g. `http://localhost:3000`)',
+        'parameter `serverUrl` in `theatre.init({studio: true, serverUrl})` must be either undefined or a fully formed url (e.g. `http://localhost:3000` or `ws://localhost:3000`)',
       )
     }
   }

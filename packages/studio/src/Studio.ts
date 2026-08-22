@@ -40,6 +40,7 @@ import Auth from './Auth'
 import type {$IntentionalAny} from '@toy-box/core/types/public'
 import AppLink from './SyncStore/AppLink'
 import SyncServerLink from './SyncStore/SyncServerLink'
+import {isDirectSyncServerUrl} from './SyncStore/syncServerUrl'
 import type {TrpcClientWrapped} from './SyncStore/utils'
 import {wrapTrpcClientWithAuth} from './SyncStore/utils'
 
@@ -201,27 +202,40 @@ export class Studio {
 
     const syncServerLinkDeferred = defer<SyncServerLink | null>()
     const syncServerLink = syncServerLinkDeferred.promise
+    // Direct-ws mode (`ws://`/`wss://` serverUrl) never needs the app: the
+    // serverUrl IS the sync-server address. AppLink is only built for the
+    // app-backed path.
     const appLink = this._optsPromise.then(({serverUrl}): AppLink | null =>
-      typeof window === 'undefined' || serverUrl === undefined
+      typeof window === 'undefined' ||
+      serverUrl === undefined ||
+      isDirectSyncServerUrl(serverUrl)
         ? null
         : new AppLink(serverUrl),
     )
 
     if (typeof window !== 'undefined') {
-      void appLink
-        .then((link) => {
-          if (!link) {
-            syncServerLinkDeferred.resolve(null)
-            return
-          }
-          return link.api.syncServerUrl.query().then((url) => {
-            syncServerLinkDeferred.resolve(new SyncServerLink(url))
+      void this._optsPromise.then(({serverUrl}) => {
+        if (serverUrl === undefined) {
+          syncServerLinkDeferred.resolve(null)
+          return
+        }
+        if (isDirectSyncServerUrl(serverUrl)) {
+          syncServerLinkDeferred.resolve(new SyncServerLink(serverUrl))
+          return
+        }
+        // app-backed: the app resolves the sync-server ws url. appLink is
+        // non-null here (serverUrl is defined and not a ws url).
+        void appLink
+          .then((link) => {
+            return link!.api.syncServerUrl.query().then((url) => {
+              syncServerLinkDeferred.resolve(new SyncServerLink(url))
+            })
           })
-        })
-        .catch((err) => {
-          syncServerLinkDeferred.reject(err)
-          console.error(err)
-        })
+          .catch((err) => {
+            syncServerLinkDeferred.reject(err)
+            console.error(err)
+          })
+      })
     } else {
       syncServerLinkDeferred.resolve(null)
     }
@@ -234,6 +248,20 @@ export class Studio {
       // skip constructing them entirely, so no network activity can occur.
       void this._optsPromise.then((opts) => {
         if (opts.serverUrl === undefined) return
+        if (isDirectSyncServerUrl(opts.serverUrl)) {
+          // Direct-ws self-host: no Auth, no auth wrapper. The server runs with
+          // AUTH_DISABLED and ignores tokens, so authedLinks.syncServer is the
+          // bare sync-server client. `app` is meaningless here.
+          // (authedLinks.syncServer must be the client itself, not a promise —
+          // createTrpcBackend accesses `.projectState…` on it synchronously.)
+          void this._rawLinks.syncServer.then((s) => {
+            this.authedLinks = {
+              syncServer: s!.api as $IntentionalAny,
+              app: undefined as $IntentionalAny,
+            }
+          })
+          return
+        }
         const auth = new Auth(this)
         this.auth = auth
         this.authedLinks = {
