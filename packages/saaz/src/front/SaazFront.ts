@@ -896,7 +896,9 @@ export class SaazFront<
     )
 
     const unsub = () => {
-      void stop.then((s) => stop)
+      // `stop` is a promise resolving to the backend's unsubscribe function —
+      // call it, so teardown actually stops the backend subscription.
+      void stop.then((s) => s())
     }
 
     return unsub
