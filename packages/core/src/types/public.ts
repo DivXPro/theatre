@@ -623,11 +623,11 @@ export interface ISequence {
    * Usage:
    * ```ts
    * // let's assume `sheet` is a sheet and obj is one of its objects
-   * const keyframes = sheet.sequence.__experimental_getKeyframes(obj.pointer.x)
+   * const keyframes = sheet.sequence.getKeyframes(obj.pointer.x)
    * console.log(keyframes) // an array of keyframes
    * ```
    */
-  __experimental_getKeyframes(prop: Pointer<{}>): BasicKeyframe[]
+  getKeyframes(prop: Pointer<{}>): BasicKeyframe[]
 
   /**
    * Attaches an audio source to the sequence. Playing the sequence automatically
@@ -1025,26 +1025,20 @@ export interface ITransactionAPI {
   unset<V>(pointer: Pointer<V>): void
 
   /**
-   * EXPERIMENTAL API - this api may be removed without notice.
-   *
    * Makes Theatre forget about this object. This means all the prop overrides and sequenced props
    * will be reset, and the object won't show up in the exported state.
    */
-  __experimental_forgetObject(object: ISheetObject): void
+  forgetObject(object: ISheetObject): void
 
   /**
-   * EXPERIMENTAL API - this api may be removed without notice.
-   *
    * Makes Theatre forget about this sheet.
    */
-  __experimental_forgetSheet(sheet: ISheet): void
+  forgetSheet(sheet: ISheet): void
 
   /**
-   * EXPERIMENTAL API - this api may be removed without notice.
-   *
    * Sequences a track for the
    */
-  __experimental_sequenceProp<V>(pointer: Pointer<V>): void
+  sequenceProp<V>(pointer: Pointer<V>): void
 }
 /**
  *
@@ -1185,7 +1179,7 @@ export interface InitOpts {
    */
   usePersistentStorage?: boolean
 
-  __experimental_rafDriver?: IRafDriver | undefined
+  rafDriver?: IRafDriver | undefined
 
   serverUrl?: string | undefined
 }
@@ -1351,7 +1345,7 @@ export interface IStudio {
        * We're not sure about whether this behavior makes sense or not. If not, let us know
        * in the discord server or open an issue on github.
        */
-      __experimental_reconfigure?: boolean
+      reconfigure?: boolean
     },
   ): void
 
@@ -1399,41 +1393,24 @@ export interface IStudio {
    */
   createContentOfSaveFile(projectId: string): Record<string, unknown>
 
-  __experimental: {
-    /**
-     * Warning: This is an experimental API and will change in the future.
-     *
-     * Disables the play/pause keyboard shortcut (spacebar)
-     * Also see `__experimental_enablePlayPauseKeyboardShortcut()` to re-enable it.
-     */
-    __experimental_disablePlayPauseKeyboardShortcut(): void
-    /**
-     * Warning: This is an experimental API and will change in the future.
-     *
-     * Disables the play/pause keyboard shortcut (spacebar)
-     */
-    __experimental_enablePlayPauseKeyboardShortcut(): void
-    /**
-     * Clears persistent storage and ensures that the current state will not be
-     * saved on window unload. Further changes to state will continue writing to
-     * persistent storage, if enabled during initialization.
-     *
-     * @param persistenceKey - same persistencyKey as in `studio.initialize(opts)`, if any
-     */
-    __experimental_clearPersistentStorage(persistenceKey?: string): void
-
-    /**
-     * Warning: This is an experimental API and will change in the future.
-     *
-     * This is functionally the same as `studio.createContentOfSaveFile()`, but
-     * returns a typed object instead of a JSON object.
-     *
-     * See {@link __UNSTABLE_Project_OnDiskState} for more information.
-     */
-    __experimental_createContentOfSaveFileTyped(
-      projectId: string,
-    ): __UNSTABLE_Project_OnDiskState
-  }
+  /**
+   * Disables the play/pause keyboard shortcut (spacebar)
+   * Also see `enablePlayPauseKeyboardShortcut()` to re-enable it.
+   */
+  disablePlayPauseKeyboardShortcut(): void
+  /**
+   * Re-enables the play/pause keyboard shortcut (spacebar) after it was
+   * disabled with `disablePlayPauseKeyboardShortcut()`.
+   */
+  enablePlayPauseKeyboardShortcut(): void
+  /**
+   * Clears persistent storage and ensures that the current state will not be
+   * saved on window unload. Further changes to state will continue writing to
+   * persistent storage, if enabled during initialization.
+   *
+   * @param persistenceKey - same persistencyKey as in `studio.initialize(opts)`, if any
+   */
+  clearPersistentStorage(persistenceKey?: string): void
 }
 
 /**

@@ -60,7 +60,7 @@ let lastDriverId = 0
  *
  * ```js
  * theatre.init({studio: true,
- *   __experimental_rafDriver: rafDriver,
+ *   rafDriver,
  * })
  * ```
  *

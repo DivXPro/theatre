@@ -10,11 +10,11 @@ import memoizeFn from '@toy-box/utils/memoizeFn'
 import type {IPlaybackRange} from '@toy-box/core/types/public'
 
 let playPauseKeyboardShortcutIsEnabled = true
-export function __experimental_disablePlayPauseKeyboardShortcut() {
+export function disablePlayPauseKeyboardShortcut() {
   playPauseKeyboardShortcutIsEnabled = false
 }
 
-export function __experimental_enablePlayPauseKeyboardShortcut() {
+export function enablePlayPauseKeyboardShortcut() {
   playPauseKeyboardShortcutIsEnabled = true
 }
 

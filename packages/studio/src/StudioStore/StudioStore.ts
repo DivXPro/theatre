@@ -118,7 +118,7 @@ export default class StudioStore {
     // return this._reduxStore.getState()
   }
 
-  __experimental_clearPersistentStorage(persistenceKey: string): StudioState {
+  clearPersistentStorage(persistenceKey: string): StudioState {
     void clearPersistentStorageFor(persistenceKey)
     return this.getState()
   }

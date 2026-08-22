@@ -46,7 +46,7 @@ const steps = [
         ],
       },
 
-      {__experimental_reconfigure: true},
+      {reconfigure: true},
     )
     studio.createPane('pane1')
   },
@@ -71,7 +71,7 @@ const steps = [
         ],
       },
 
-      {__experimental_reconfigure: true},
+      {reconfigure: true},
     )
   },
   function step2() {
@@ -82,7 +82,7 @@ const steps = [
         panes: [],
       },
 
-      {__experimental_reconfigure: true},
+      {reconfigure: true},
     )
   },
   function step3() {

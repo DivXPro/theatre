@@ -18,12 +18,11 @@ import type {
   ProjectId,
 } from '@toy-box/core/types/public'
 import {
-  __experimental_disablePlayPauseKeyboardShortcut,
-  __experimental_enablePlayPauseKeyboardShortcut,
+  disablePlayPauseKeyboardShortcut,
+  enablePlayPauseKeyboardShortcut,
 } from './UIRoot/useKeyboardShortcuts'
 import type TheatreSheetObject from '@toy-box/core/sheetObjects/TheatreSheetObject'
 import type TheatreSheet from '@toy-box/core/sheets/TheatreSheet'
-import type {__UNSTABLE_Project_OnDiskState} from '@toy-box/core'
 import type {OutlineSelectionState} from '@toy-box/core/types/private/studio'
 import type Project from '@toy-box/core/projects/Project'
 import type SheetTemplate from '@toy-box/core/sheets/SheetTemplate'
@@ -61,27 +60,19 @@ export default class TheatreStudio implements IStudio {
 
   private readonly _cache = new SimpleCache()
 
-  __experimental = {
-    __experimental_disablePlayPauseKeyboardShortcut(): void {
-      // This is an experimental API to respond to this issue: https://discord.com/channels/870988717190426644/870988717190426647/1067906775602430062
-      // Ideally we need a coherent way for the user to control keyboard inputs, so we will remove this method in the future.
-      // Here is the procedure for removing it:
-      // 1. Replace this code with a `throw new Error("This is experimental method is now deprecated, and here is how to migrate: ...")`
-      // 2. Then keep it for a few months, and then remove it.
-      __experimental_disablePlayPauseKeyboardShortcut()
-    },
-    __experimental_enablePlayPauseKeyboardShortcut(): void {
-      // see __experimental_disablePlayPauseKeyboardShortcut()
-      __experimental_enablePlayPauseKeyboardShortcut()
-    },
-    __experimental_clearPersistentStorage(persistenceKey?: string): void {
-      return getStudio().clearPersistentStorage(persistenceKey)
-    },
-    __experimental_createContentOfSaveFileTyped(
-      projectId: string,
-    ): __UNSTABLE_Project_OnDiskState {
-      return getStudio().createContentOfSaveFile(projectId) as $IntentionalAny
-    },
+  disablePlayPauseKeyboardShortcut(): void {
+    // This API was originally introduced to respond to this issue: https://discord.com/channels/870988717190426644/870988717190426647/1067906775602430062
+    // Ideally we need a coherent way for the user to control keyboard inputs, so we might revisit this in the future.
+    disablePlayPauseKeyboardShortcut()
+  }
+
+  enablePlayPauseKeyboardShortcut(): void {
+    // see disablePlayPauseKeyboardShortcut()
+    enablePlayPauseKeyboardShortcut()
+  }
+
+  clearPersistentStorage(persistenceKey?: string): void {
+    return getStudio().clearPersistentStorage(persistenceKey)
   }
 
   /**
@@ -89,19 +80,16 @@ export default class TheatreStudio implements IStudio {
    */
   constructor(internals: Studio) {}
 
-  extend(
-    extension: IExtension,
-    opts?: {__experimental_reconfigure?: boolean},
-  ): void {
+  extend(extension: IExtension, opts?: {reconfigure?: boolean}): void {
     getStudio().extend(extension, opts)
   }
 
   transaction(fn: (api: ITransactionAPI) => void) {
     getStudio().transaction(({set, unset, stateEditors}) => {
-      const __experimental_forgetObject = (object: TheatreSheetObject) => {
+      const forgetObject = (object: TheatreSheetObject) => {
         if (!isSheetObjectPublicAPI(object)) {
           throw new Error(
-            `object in transactionApi.__experimental_forgetObject(object) must be the return type of sheet.object(...)`,
+            `object in transactionApi.forgetObject(object) must be the return type of sheet.object(...)`,
           )
         }
 
@@ -110,10 +98,10 @@ export default class TheatreStudio implements IStudio {
         )
       }
 
-      const __experimental_forgetSheet = (sheet: TheatreSheet) => {
+      const forgetSheet = (sheet: TheatreSheet) => {
         if (!isSheetPublicAPI(sheet)) {
           throw new Error(
-            `sheet in transactionApi.__experimental_forgetSheet(sheet) must be the return type of project.sheet()`,
+            `sheet in transactionApi.forgetSheet(sheet) must be the return type of project.sheet()`,
           )
         }
 
@@ -122,7 +110,7 @@ export default class TheatreStudio implements IStudio {
         )
       }
 
-      const __experimental_sequenceProp = <V>(prop: Pointer<V>) => {
+      const sequenceProp = <V>(prop: Pointer<V>) => {
         const {path, root} = getPointerParts(prop)
 
         if (!isSheetObject(root)) {
@@ -141,9 +129,9 @@ export default class TheatreStudio implements IStudio {
       return fn({
         set,
         unset,
-        __experimental_forgetObject,
-        __experimental_forgetSheet,
-        __experimental_sequenceProp,
+        forgetObject,
+        forgetSheet,
+        sequenceProp,
       })
     })
   }

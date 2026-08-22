@@ -40,20 +40,18 @@ export function sanitizeOpts(
     storeOpts.usePersistentStorage = false
   }
 
-  if (opts?.__experimental_rafDriver) {
-    if (opts?.__experimental_rafDriver.type !== 'Theatre_RafDriver_PublicAPI') {
+  if (opts?.rafDriver) {
+    if (opts?.rafDriver.type !== 'Theatre_RafDriver_PublicAPI') {
       throw new Error(
-        'parameter `rafDriver` in `theatre.init({studio: true, __experimental_rafDriver})` must be either be undefined, or the return type of core.createRafDriver()',
+        'parameter `rafDriver` in `theatre.init({studio: true, rafDriver})` must be either be undefined, or the return type of core.createRafDriver()',
       )
     }
 
-    const rafDriverPrivateApi = coreBits.privateAPI(
-      opts.__experimental_rafDriver,
-    )
+    const rafDriverPrivateApi = coreBits.privateAPI(opts.rafDriver)
     if (!rafDriverPrivateApi) {
       // TODO - need to educate the user about this edge case
       throw new Error(
-        'parameter `rafDriver` in `theatre.init({studio: true, __experimental_rafDriver})` seems to come from a different version of `@toy-box/core` than the version that is attached to `@toy-box/studio`',
+        'parameter `rafDriver` in `theatre.init({studio: true, rafDriver})` seems to come from a different version of `@toy-box/core` than the version that is attached to `@toy-box/studio`',
       )
     }
     storeOpts.rafDriver = rafDriverPrivateApi

@@ -56,9 +56,7 @@ describe(`Sequence`, () => {
 
     const seq = sheet.publicApi.sequence
 
-    const keyframes = seq.__experimental_getKeyframes(
-      objPublicAPI.props.position.y,
-    )
+    const keyframes = seq.getKeyframes(objPublicAPI.props.position.y)
     expect(keyframes).toHaveLength(2)
     expect(keyframes[0].value).toEqual(3)
     expect(keyframes[1].value).toEqual(6)

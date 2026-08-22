@@ -417,7 +417,7 @@ export class Studio {
     return this._coreAtom.pointer.core
   }
 
-  extend(extension: IExtension, opts?: {__experimental_reconfigure?: boolean}) {
+  extend(extension: IExtension, opts?: {reconfigure?: boolean}) {
     if (!extension || typeof extension !== 'object') {
       throw new Error(`Extensions must be JS objects`)
     }
@@ -426,7 +426,7 @@ export class Studio {
       throw new Error(`extension.id must be a string`)
     }
 
-    const reconfigure = opts?.__experimental_reconfigure === true
+    const reconfigure = opts?.reconfigure === true
 
     const extensionId = extension.id
 
@@ -443,7 +443,7 @@ export class Studio {
           return
         }
         throw new Error(
-          `Extension id "${extension.id}" is already defined. If you mean to re-configure the extension, do it like this: studio.extend(extension, {__experimental_reconfigure: true})})`,
+          `Extension id "${extension.id}" is already defined. If you mean to re-configure the extension, do it like this: studio.extend(extension, {reconfigure: true})})`,
         )
       }
     }
@@ -697,6 +697,6 @@ export class Studio {
   }
 
   clearPersistentStorage(persistenceKey = DEFAULT_PERSISTENCE_KEY) {
-    this._store.__experimental_clearPersistentStorage(persistenceKey)
+    this._store.clearPersistentStorage(persistenceKey)
   }
 }

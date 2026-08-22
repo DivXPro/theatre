@@ -73,7 +73,7 @@ const steps = [
           },
         },
       },
-      {__experimental_reconfigure: true},
+      {reconfigure: true},
     )
   },
   function step3() {
@@ -83,7 +83,7 @@ const steps = [
         ...ext1,
         toolbars: {},
       },
-      {__experimental_reconfigure: true},
+      {reconfigure: true},
     )
   },
 ]

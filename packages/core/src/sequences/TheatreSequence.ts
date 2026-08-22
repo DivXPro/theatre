@@ -82,7 +82,7 @@ export default class TheatreSequence implements ISequence {
     privateAPI(this).position = position
   }
 
-  __experimental_getKeyframes(prop: Pointer<any>): BasicKeyframe[] {
+  getKeyframes(prop: Pointer<any>): BasicKeyframe[] {
     return privateAPI(this).getKeyframesOfSimpleProp(prop)
   }
 
