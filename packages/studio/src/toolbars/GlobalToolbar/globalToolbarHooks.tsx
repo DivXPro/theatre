@@ -1,14 +1,12 @@
-import {usePrism, useVal} from '@toy-box/react'
+import {usePrism} from '@toy-box/react'
 import getStudio from '@toy-box/studio/getStudio'
-import React, {useMemo, useRef} from 'react'
+import React, {useRef} from 'react'
 import useTooltip from '@toy-box/studio/uiComponents/Popover/useTooltip'
 import ErrorTooltip from '@toy-box/studio/uiComponents/Popover/ErrorTooltip'
 import BasicTooltip from '@toy-box/studio/uiComponents/Popover/BasicTooltip'
 import {val} from '@toy-box/dataverse'
 import usePopover from '@toy-box/studio/uiComponents/Popover/usePopover'
 import MoreMenu from './MoreMenu/MoreMenu'
-
-let showedVisualTestingWarning = false
 
 export function useOutlineTriggerTooltip(
   conflicts: ReturnType<typeof uesConflicts>,
@@ -72,27 +70,4 @@ export function useMoreMenu() {
   )
   const moreMenuTriggerRef = useRef<HTMLButtonElement>(null)
   return {moreMenu, moreMenuTriggerRef}
-}
-
-export function useShouldShowUpdatesBadge(): boolean {
-  const hasUpdates =
-    useVal(
-      getStudio().ahistoricAtom.pointer.updateChecker.result.hasUpdates,
-    ) === true
-
-  return useMemo(() => {
-    if (window.__IS_VISUAL_REGRESSION_TESTING) {
-      if (!showedVisualTestingWarning) {
-        showedVisualTestingWarning = true
-        console.warn(
-          "Visual regression testing enabled, so we're showing the updates badge unconditionally",
-        )
-      }
-    }
-    if (hasUpdates || window.__IS_VISUAL_REGRESSION_TESTING) {
-      return true
-    }
-
-    return hasUpdates
-  }, [hasUpdates])
 }

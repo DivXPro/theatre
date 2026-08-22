@@ -1,6 +1,4 @@
-import {useVal} from '@toy-box/react'
 import type {$IntentionalAny} from '@toy-box/core/types/public'
-import getStudio from '@toy-box/studio/getStudio'
 import React from 'react'
 import styled from 'styled-components'
 import {env} from '@toy-box/studio/env'
@@ -104,25 +102,9 @@ const Divider = styled.div`
   background: rgba(255, 255, 255, 0.02);
 `
 
-const UpdateDot = styled.div`
-  position: absolute;
-  width: 8px;
-  height: 8px;
-  background: #40aaa4;
-  right: 14px;
-  top: 12px;
-  border-radius: 50%;
-`
-
 const version: string = env.THEATRE_VERSION ?? '0.4.0'
 
-const untaggedVersion: string = version.match(/^[^\-]+/)![0]
-
 const MoreMenu = React.forwardRef((props: {}, ref) => {
-  const hasUpdates = useVal(
-    getStudio().ahistoricAtom.pointer.updateChecker.result.hasUpdates,
-  )
-
   return (
     <Container ref={ref as $IntentionalAny}>
       <Link
@@ -172,42 +154,9 @@ const MoreMenu = React.forwardRef((props: {}, ref) => {
       <VersionContainer>
         <VersionLabel>Version</VersionLabel>
         <VersionValueRow>
-          <VersionValue>
-            {version}{' '}
-            {hasUpdates === true
-              ? '(outdated)'
-              : hasUpdates === false
-                ? '(latest)'
-                : ''}
-          </VersionValue>
+          <VersionValue>{version}</VersionValue>
         </VersionValueRow>
       </VersionContainer>
-      {hasUpdates === true && (
-        <>
-          <Divider />
-          <Link
-            as="a"
-            href={`https://www.theatrejs.com/docs/latest/releases${encodeURIComponent(
-              untaggedVersion,
-            )}`}
-            className=""
-            target="_blank"
-          >
-            Update
-            <UpdateDot />
-          </Link>
-          <Link
-            as="a"
-            href={`https://www.theatrejs.com/docs/latest/releases#${encodeURIComponent(
-              untaggedVersion,
-            )}`}
-            className=""
-            target="_blank"
-          >
-            What's new?
-          </Link>
-        </>
-      )}
     </Container>
   )
 })

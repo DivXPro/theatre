@@ -11,7 +11,6 @@ import {
   uesConflicts,
   useOutlineTriggerTooltip,
   useMoreMenu,
-  useShouldShowUpdatesBadge,
 } from './globalToolbarHooks'
 import LeftStrip from './LeftStrip/LeftStrip'
 import RightStrip from './RightStrip/RightStrip'
@@ -68,8 +67,6 @@ const GlobalToolbar: React.FC = () => {
   const detailsPinned = useVal(getStudio().atomP.ahistoric.pinDetails) ?? true
 
   const {moreMenu, moreMenuTriggerRef} = useMoreMenu()
-
-  const showUpdatesBadge = useShouldShowUpdatesBadge()
 
   const {hasNotifications} = useNotifications()
 

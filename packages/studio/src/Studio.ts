@@ -85,10 +85,6 @@ export type StudioOpts = {
   rafDriver: RafDriverPrivateAPI
 }
 
-export type UpdateCheckerResponse =
-  | {hasUpdates: true; newVersion: string; releasePage: string}
-  | {hasUpdates: false}
-
 export class Studio {
   readonly ui: UI
   // this._uiInitDeferred.promise will resolve once this._ui is set
@@ -141,13 +137,7 @@ export class Studio {
     },
   })
 
-  readonly ahistoricAtom = new Atom<{
-    updateChecker?: {
-      // timestamp of the last time we checked for updates
-      lastChecked: number
-      result: UpdateCheckerResponse | 'error'
-    }
-  }>({})
+  readonly ahistoricAtom = new Atom<{}>({})
   /**
    * Tracks whether studio.initialize() is called.
    */
