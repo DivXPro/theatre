@@ -26,5 +26,6 @@
     "esbuild": "^0.15.15",
     "tsx": "4.7.0",
     "typescript": "5.1.6"
-  }
+  },
+  "private": true
 }
