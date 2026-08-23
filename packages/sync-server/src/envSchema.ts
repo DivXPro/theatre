@@ -25,12 +25,19 @@ const baseSchema = z.object({
     ),
 })
 
+// shape of the fields `requireAppWhenAuth` validates, shared by dev & prod
+type AppAuthEnv = {
+  NODE_ENV?: string
+  AUTH_DISABLED?: string
+  DATABASE_URL?: string
+  APP_URL?: string
+  DEV_DB_PORT?: string
+  DEV_DB_PASSWORD?: string
+}
+
 // AUTH_DISABLED=true = self-hosted minimal loop (no app, no postgres).
 // Otherwise the app + its DB are mandatory.
-function requireAppWhenAuth(
-  data: z.infer<typeof baseSchema>,
-  ctx: z.RefinementCtx,
-) {
+function requireAppWhenAuth(data: AppAuthEnv, ctx: z.RefinementCtx) {
   if (data.AUTH_DISABLED === 'true') return
   if (!data.DATABASE_URL) {
     ctx.addIssue({
@@ -45,6 +52,27 @@ function requireAppWhenAuth(
       path: ['APP_URL'],
       message: 'Required when AUTH_DISABLED is not true',
     })
+  }
+  // dev-only: DEV_DB_* compose DATABASE_URL in dev (see devEnv/cli.ts). They
+  // stay `.optional()` at the schema level like the rest, but are enforced
+  // here so a dev running auth-on without them gets a clear error instead of a
+  // confusing `postgresql://postgres:undefined@…` mismatch downstream. Mirrors
+  // the app's envSchema, where DEV_DB_* are mandatory.
+  if (data.NODE_ENV === 'development') {
+    if (!data.DEV_DB_PORT) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['DEV_DB_PORT'],
+        message: 'Required in development when AUTH_DISABLED is not true',
+      })
+    }
+    if (!data.DEV_DB_PASSWORD) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['DEV_DB_PASSWORD'],
+        message: 'Required in development when AUTH_DISABLED is not true',
+      })
+    }
   }
 }
 

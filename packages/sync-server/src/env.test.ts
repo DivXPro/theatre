@@ -16,13 +16,25 @@ describe(`@toy-box/sync-server env`, () => {
       expect(res.success).toBe(true)
     })
 
-    test(`AUTH_DISABLED unset still requires DATABASE_URL and APP_URL`, () => {
+    test(`AUTH_DISABLED unset in development requires DATABASE_URL, APP_URL and DEV_DB_*`, () => {
       expect(envSchema.devSchema.safeParse(base).success).toBe(false)
+      // DATABASE_URL + APP_URL alone is no longer enough in dev: DEV_DB_*
+      // compose the dev DATABASE_URL, so they're enforced too (mirrors the
+      // app's envSchema where they are mandatory).
       expect(
         envSchema.devSchema.safeParse({
           ...base,
           DATABASE_URL: 'postgresql://postgres:test@localhost:43943/postgres',
           APP_URL: 'http://app',
+        }).success,
+      ).toBe(false)
+      expect(
+        envSchema.devSchema.safeParse({
+          ...base,
+          DATABASE_URL: 'postgresql://postgres:test@localhost:43943/postgres',
+          APP_URL: 'http://app',
+          DEV_DB_PORT: '43943',
+          DEV_DB_PASSWORD: 'test',
         }).success,
       ).toBe(true)
     })
