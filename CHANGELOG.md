@@ -1,5 +1,19 @@
 # Theatre.js changelog
 
+## 1.0.0
+
+Theatre.js 1.0 将 npm scope 从 `@theatre/*` 迁至 `@toy-box/*`,定稿 `init()` 流程,并引入实验性的自托管协作。完整迁移步骤见 [MIGRATION.md](MIGRATION.md)。
+
+* Breaking
+  * npm scope 改名:`@theatre/*` → `@toy-box/*`。所有 install / import 都需更新,见 MIGRATION.md「scope 改名」。
+  * `init()` 流程定稿:调用 `getStudio()` 前必须先 `await theatre.init()`。此前顺序相反的代码现在会抛错,见 MIGRATION.md「init() 流程」。
+* 协作(实验性)
+  * 自托管 sync-server minimal loop:`AUTH_DISABLED=true` 下无需 app / postgres 即可运行。
+  * studio 支持直连 ws serverUrl(`ws://` / `wss://`),无需经 app 中转。
+  * 断线时全局工具栏显示「Reconnecting…」徽标。
+* 内部
+  * 同步引擎改为 saaz 桥;StudioStore 后端按配置可选。
+
 ## 0.4.5
 
 * New features
