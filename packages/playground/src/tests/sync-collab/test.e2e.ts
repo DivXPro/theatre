@@ -40,6 +40,28 @@ const waitForServer = (port: number, timeoutMs = 20000): Promise<void> =>
     poll()
   })
 
+// Waits until nothing accepts connections on `port` — the killed server's
+// listening socket is gone (ECONNREFUSED). Restarting on the same port before
+// this resolves risks EADDRINUSE from the dying process still holding the socket.
+const waitForPortDown = (port: number, timeoutMs = 20000): Promise<void> =>
+  new Promise((resolve, reject) => {
+    const start = Date.now()
+    const probe = () => {
+      const sock = net.connect({host: 'localhost', port})
+      sock.once('connect', () => {
+        sock.destroy()
+        if (Date.now() - start > timeoutMs)
+          return reject(new Error('port still accepting connections'))
+        setTimeout(probe, 200)
+      })
+      sock.once('error', () => {
+        sock.destroy()
+        resolve()
+      })
+    }
+    probe()
+  })
+
 // The config's 4s test timeout is far too tight for booting a sync-server +
 // loading two studio pages + syncing, so raise it for this test.
 test.setTimeout(60000)
@@ -102,5 +124,71 @@ test('two browsers sync via self-hosted sync-server', async ({browser}) => {
     if (server.pid) process.kill(-server.pid, 'SIGTERM')
     await ctxA.close().catch(() => {})
     await ctxB.close().catch(() => {})
+  }
+})
+
+test('connection badge shows on server loss and clears on reconnect', async ({
+  browser,
+}) => {
+  test.setTimeout(90000)
+  const port = await findOpenPort()
+
+  const startServer = () => {
+    const s = spawn(
+      'yarn',
+      [
+        'exec',
+        'tsx',
+        '--tsconfig',
+        'packages/sync-server/tsconfig.json',
+        'packages/sync-server/src/index.ts',
+      ],
+      {
+        cwd: MONOREPO_ROOT,
+        env: {
+          ...process.env,
+          PORT: String(port),
+          HOST: 'localhost',
+          AUTH_DISABLED: 'true',
+        },
+        stdio: ['ignore', 'pipe', 'pipe'],
+        detached: true,
+      },
+    )
+    s.stdout.on('data', (d) => process.stdout.write(`[sync-server] ${d}`))
+    s.stderr.on('data', (d) => process.stderr.write(`[sync-server] ${d}`))
+    return s
+  }
+
+  let server = startServer()
+  const killServer = () => {
+    if (server.pid) process.kill(-server.pid, 'SIGTERM')
+  }
+
+  const ctx = await browser.newContext()
+  const page = await ctx.newPage()
+  const badge = page.locator('[data-testid="connection-status-badge"]')
+
+  try {
+    await waitForServer(port)
+    const url = `./shared/sync/?serverUrl=ws://localhost:${port}`
+    await page.goto(url)
+    await expect(page.locator('#sync-value')).toHaveText('0')
+
+    // connected: the badge is not rendered
+    await expect(badge).toHaveCount(0, {timeout: 15000})
+
+    // kill the server → the 1s connection poll flips the badge to reconnecting
+    killServer()
+    await expect(badge).toHaveCount(1, {timeout: 15000})
+
+    // restart on the same port → trpc's ws client reconnects → badge clears
+    await waitForPortDown(port)
+    server = startServer()
+    await waitForServer(port)
+    await expect(badge).toHaveCount(0, {timeout: 15000})
+  } finally {
+    killServer()
+    await ctx.close().catch(() => {})
   }
 })

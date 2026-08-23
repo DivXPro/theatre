@@ -40,6 +40,7 @@ import Auth from './Auth'
 import type {$IntentionalAny} from '@toy-box/core/types/public'
 import AppLink from './SyncStore/AppLink'
 import SyncServerLink from './SyncStore/SyncServerLink'
+import {wireDirectSyncServerLink} from './SyncStore/wireDirectSyncServerLink'
 import {isDirectSyncServerUrl} from './SyncStore/syncServerUrl'
 import type {TrpcClientWrapped} from './SyncStore/utils'
 import {wrapTrpcClientWithAuth} from './SyncStore/utils'
@@ -256,18 +257,9 @@ export class Studio {
           // Direct-ws self-host: no Auth, no auth wrapper. The server runs with
           // AUTH_DISABLED and ignores tokens, so authedLinks.syncServer is the
           // bare sync-server client. `app` is meaningless here.
-          // (authedLinks.syncServer must be the client itself, not a promise —
-          // createTrpcBackend accesses `.projectState…` on it synchronously.)
           void this._rawLinks.syncServer.then((link) => {
             if (!link) return
-            this.authedLinks = {
-              syncServer: link.api as $IntentionalAny,
-              app: undefined as $IntentionalAny,
-            }
-            // surface the direct link's connection state to the UI
-            link.onConnectionStateChange((state) => {
-              this.ephemeralAtom.setByPointer((p) => p.connectionStatus, state)
-            })
+            wireDirectSyncServerLink(this, link)
           })
           return
         }

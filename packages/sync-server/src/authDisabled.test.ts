@@ -98,4 +98,20 @@ describe('auth-on (AUTH_DISABLED unset or false) still rejects token-less reques
       code: 'UNAUTHORIZED',
     })
   })
+
+  // Only the exact lowercase string 'true' disables auth. A typo (uppercase,
+  // '1', 'yes', trailing space, …) must be fail-closed: auth stays on and
+  // token-less requests are still rejected.
+  test.each(['falsee', 'TRUE', '1', 'yes', 'true '])(
+    'AUTH_DISABLED=%j is fail-closed: token-less request still rejected',
+    async (bad) => {
+      process.env.AUTH_DISABLED = bad
+      jest.resetModules()
+      const {createContext} = require('./trpc') as $IntentionalAny
+      const ctx = await createContext({} as $IntentionalAny)
+      await expect(ctx.requireValidSession({input: {}})).rejects.toMatchObject({
+        code: 'UNAUTHORIZED',
+      })
+    },
+  )
 })
