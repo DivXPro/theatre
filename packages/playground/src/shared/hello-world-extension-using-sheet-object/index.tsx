@@ -4,6 +4,7 @@ import App from './App'
 import type {ISheetObject} from '@toy-box/core'
 import {onChange, types, val} from '@toy-box/core'
 import theatre from '@toy-box/core'
+import '@toy-box/studio'
 import extension from '@toy-box/r3f/dist/extension'
 
 const dataConfig = {
@@ -13,6 +14,7 @@ const dataConfig = {
   }),
 }
 
+void theatre.init({studio: true})
 void theatre.getStudio().then((studio) => {
   studio.extend(extension)
   studio.extend({
@@ -62,6 +64,5 @@ void theatre.getStudio().then((studio) => {
     panes: [],
   })
 })
-void theatre.init({studio: true})
 
 ReactDOM.createRoot(document.getElementById('root')!).render(<App />)
