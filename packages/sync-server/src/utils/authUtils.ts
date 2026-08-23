@@ -1,6 +1,7 @@
 import * as jose from 'jose'
 import {TRPCError} from '@trpc/server'
 import {appHost} from '../appClient'
+import {isAuthDisabled} from '../authConfig'
 import type {studioAuthTokens} from '@toy-box/app/types'
 import type {$IntentionalAny} from '@toy-box/utils/types'
 
@@ -25,7 +26,7 @@ export type Session = {
 export async function verifyAccessTokenOrThrow(opts: {
   input: {studioAuth?: {accessToken: string}}
 }): Promise<Session> {
-  if (process.env.AUTH_DISABLED === 'true') {
+  if (isAuthDisabled()) {
     return {_accessToken: opts.input.studioAuth?.accessToken ?? ''} as Session
   }
 

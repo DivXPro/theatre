@@ -5,6 +5,7 @@ import type {NodeHTTPCreateContextFnOptions} from '@trpc/server/adapters/node-ht
 import superjson from 'superjson'
 import type ws from 'ws'
 import {ZodError} from 'zod'
+import {isAuthDisabled} from '../authConfig'
 import type {Session} from '../utils/authUtils'
 import {verifyAccessTokenOrThrow} from '../utils/authUtils'
 
@@ -70,7 +71,7 @@ export const createContext = async (
     async requireValidSession(opts): Promise<Session> {
       // AUTH_DISABLED=true = self-hosted minimal loop: let everything through,
       // never touch the token verifier (which would fetch the app's jwt key).
-      if (process.env.AUTH_DISABLED === 'true') {
+      if (isAuthDisabled()) {
         return {
           _accessToken: opts.input.studioAuth?.accessToken ?? '',
         } as Session
