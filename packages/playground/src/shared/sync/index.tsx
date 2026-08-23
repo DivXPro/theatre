@@ -1,3 +1,4 @@
+import '@toy-box/studio'
 import theatre, {getProject, getStudioSync} from '@toy-box/core'
 
 const params = new URLSearchParams(window.location.search)
