@@ -14,6 +14,8 @@
  
 </p>
 
+> **1.0**:本 fork 的 npm scope 为 `@toy-box/*`。从 0.7 升级见 [MIGRATION.md](MIGRATION.md)。
+
 > **This is a community fork** of [theatre-js/theatre](https://github.com/theatre-js/theatre),
 > which paused public development at 0.7.x. This fork continues toward a 1.0 release
 > published under the `@toy-box` npm scope. Apache-2.0 license and original
