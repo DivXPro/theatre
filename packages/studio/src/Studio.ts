@@ -182,6 +182,13 @@ export class Studio {
       }
     | undefined
 
+  /**
+   * Teardown for the direct-ws connection-state subscription, set when a
+   * `ws://`/`wss://` serverUrl is wired (see the constructor). Kept instead of
+   * discarded so the 1s poll in SyncServerLink can be stopped on teardown.
+   */
+  private _disconnectDirectSyncServerLink: (() => void) | undefined
+
   get ticker(): Ticker {
     if (!this._rafDriver) {
       throw new Error(
@@ -259,7 +266,10 @@ export class Studio {
           // bare sync-server client. `app` is meaningless here.
           void this._rawLinks.syncServer.then((link) => {
             if (!link) return
-            wireDirectSyncServerLink(this, link)
+            this._disconnectDirectSyncServerLink = wireDirectSyncServerLink(
+              this,
+              link,
+            )
           })
           return
         }
