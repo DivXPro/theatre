@@ -61,3 +61,41 @@ describe('AUTH_DISABLED', () => {
     })
   })
 })
+
+describe('auth-on (AUTH_DISABLED unset or false) still rejects token-less requests', () => {
+  // The direct-ws client sends no `studioAuth` at all, so projectStateRouter
+  // made the field optional. That must NOT open the door in auth-on mode:
+  // requireValidSession / verifyAccessTokenOrThrow still reject. These tests
+  // lock that property — the inverse of the AUTH_DISABLED bypass above.
+  beforeEach(() => {
+    // The AUTH_DISABLED=true tests register a doMock for ./utils/authUtils;
+    // this describe needs the real module, so clear the mock + module cache.
+    jest.unmock('./utils/authUtils')
+    jest.resetModules()
+    delete process.env.AUTH_DISABLED
+    delete process.env.APP_URL
+    delete process.env.DATABASE_URL
+  })
+
+  test('requireValidSession throws UNAUTHORIZED with no studioAuth when auth is on', async () => {
+    const {createContext} = require('./trpc') as $IntentionalAny
+    const ctx = await createContext({} as $IntentionalAny)
+    // direct-ws client shape: no `studioAuth` key at all
+    await expect(ctx.requireValidSession({input: {}})).rejects.toMatchObject({
+      code: 'UNAUTHORIZED',
+    })
+  })
+
+  test('verifyAccessTokenOrThrow throws UNAUTHORIZED before any jwt fetch when AUTH_DISABLED=false', async () => {
+    process.env.AUTH_DISABLED = 'false'
+    jest.resetModules()
+    const {verifyAccessTokenOrThrow} =
+      require('./utils/authUtils') as $IntentionalAny
+    // Rejecting with UNAUTHORIZED (rather than a fetch/network error) is the
+    // proof it bailed before touching the jwt public key, which would need the
+    // app (APP_URL is deleted here).
+    await expect(verifyAccessTokenOrThrow({input: {}})).rejects.toMatchObject({
+      code: 'UNAUTHORIZED',
+    })
+  })
+})
