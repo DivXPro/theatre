@@ -22,7 +22,8 @@
     "prepublish": "node ../../devEnv/ensurePublishing.js",
     "typecheck": "tsc --build",
     "cli": "tsx devEnv/cli.ts",
-    "build": "yarn cli build"
+    "build": "yarn cli build",
+    "clean": "rm -rf ./dist && rm -f tsconfig.tsbuildinfo"
   },
   "sideEffects": true,
   "peerDependencies": {

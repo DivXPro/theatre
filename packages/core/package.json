@@ -24,6 +24,7 @@
     "typecheck": "tsc --build",
     "cli": "tsx devEnv/cli.ts",
     "build": "yarn cli build",
+    "clean": "rm -rf ./dist && rm -f tsconfig.tsbuildinfo",
     "build:api-json": "yarn cli build ts && api-extractor run --local --config devEnv/api-extractor.json"
   },
   "sideEffects": true,

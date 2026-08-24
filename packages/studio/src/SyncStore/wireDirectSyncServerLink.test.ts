@@ -23,7 +23,9 @@ const makeFakeLink = () => {
 }
 
 const makeStudio = () => ({
-  authedLinks: undefined,
+  authedLinks: undefined as
+    | undefined
+    | {syncServer: $IntentionalAny; app: undefined},
   ephemeralAtom: new Atom({connectionStatus: 'connected' as ConnectionState}),
 })
 
