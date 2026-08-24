@@ -38,6 +38,22 @@ const packagesToBuild = [
   '@toy-box/browser-bundles',
 ]
 
+/**
+ * Publishable workspace name -> directory relative to the monorepo root.
+ * `packagesToBuild` holds workspace _names_, which cannot be used as
+ * filesystem/git paths.
+ */
+const workspaceLocationsByName: Record<string, string> = {
+  '@toy-box/dataverse': 'packages/dataverse',
+  '@toy-box/saaz': 'packages/saaz',
+  '@toy-box/core': 'packages/core',
+  '@toy-box/studio': 'packages/studio',
+  '@toy-box/react': 'packages/react',
+  '@toy-box/r3f': 'packages/r3f',
+  '@toy-box/theatric': 'packages/theatric',
+  '@toy-box/browser-bundles': 'packages/browser-bundles',
+}
+
 prog
   .command(
     'build clean',
@@ -66,6 +82,10 @@ prog
   .command('release <version>', 'Releases all the main packages to npm')
   .option('--skip-ts', 'Skip emitting typescript declarations')
   .option('--skip-lint', 'Skip typecheck and lint')
+  .option(
+    '--dry-run',
+    'Build + version-check + pack tarballs, but skip commit/tag/publish',
+  )
   .action(async (version, opts) => {
     /**
      * This script publishes all packages to npm.
@@ -77,8 +97,12 @@ prog
 
     /**
      * All these packages will have the same version from monorepo/package.json
+     * (paths relative to the monorepo root, not workspace names)
      */
-    const packagesWhoseVersionsShouldBump = ['.', ...packagesToPublish]
+    const packagesWhoseVersionsShouldBump = [
+      '.',
+      ...packagesToPublish.map((name) => workspaceLocationsByName[name]),
+    ]
 
     // our packages will check for this env variable to make sure their
     // prepublish script is only called from the `$ cd /path/to/monorepo; yarn run release`
@@ -134,12 +158,40 @@ prog
         console.log('npm tag: ' + npmTag)
       }
 
-      if ((await $`git status -s`).toString().length > 0) {
-        console.error(`Git working directory contains uncommitted changes:`)
-        $.verbose = true
-        await $`git status -s`
-        console.log('Commit/stash them and try again.')
-        process.exit(1)
+      const initialGitStatus = (await $`git status -s`).toString()
+      if (initialGitStatus.length > 0) {
+        if (opts['dry-run'] === true) {
+          // A dry-run never commits, so unrelated WIP in the working tree is
+          // fine -- but the package.json files we temporarily rewrite (and
+          // later restore via `git checkout`) must be clean, or the restore
+          // would clobber the user's uncommitted changes.
+          const dirtyVersionedFiles = (
+            await Promise.all(
+              packagesWhoseVersionsShouldBump.map(async (p) => {
+                const pkgPath = p === '.' ? 'package.json' : `${p}/package.json`
+                const s = (await $`git status -s -- ${pkgPath}`).toString()
+                return s.trim().length > 0 ? pkgPath : undefined
+              }),
+            )
+          ).filter((f): f is string => typeof f === 'string')
+          if (dirtyVersionedFiles.length > 0) {
+            console.error(
+              `Dry-run requires these package.json files to be clean (their versions get temporarily rewritten, then restored):`,
+            )
+            for (const f of dirtyVersionedFiles) console.error(`  ${f}`)
+            console.log('Commit/stash them and try again.')
+            process.exit(1)
+          }
+          console.log(
+            'Dry-run: ignoring uncommitted changes outside the versioned package.json files',
+          )
+        } else {
+          console.error(`Git working directory contains uncommitted changes:`)
+          $.verbose = true
+          await $`git status -s`
+          console.log('Commit/stash them and try again.')
+          process.exit(1)
+        }
       }
 
       $.verbose = true
@@ -173,20 +225,54 @@ prog
         'Checking if the build produced artifacts that must first be comitted to git',
       )
       $.verbose = false
-      if ((await $`git status -s`).toString().length > 0) {
-        $.verbose = true
-        await $`git status -s`
-        console.error(`Git directory contains uncommitted changes.`)
-        process.exit(1)
+      const gitStatusAfterBuild = (await $`git status -s`).toString()
+      if (gitStatusAfterBuild.length > 0) {
+        // In a dry-run, pre-existing WIP is tolerated (see the earlier check);
+        // only _new_ uncommitted changes produced by the build are fatal.
+        const initialDirtyLines = initialGitStatus.split('\n')
+        const onlyPreExistingDirt =
+          opts['dry-run'] === true &&
+          gitStatusAfterBuild
+            .split('\n')
+            .filter((l) => l.trim().length > 0)
+            .every((l) => initialDirtyLines.includes(l))
+        if (!onlyPreExistingDirt) {
+          $.verbose = true
+          await $`git status -s`
+          console.error(`Git directory contains uncommitted changes.`)
+          process.exit(1)
+        }
+        console.log('Dry-run: build produced no new uncommitted changes')
       }
 
       $.verbose = true
 
       await writeVersionsToPackageJSONs(version)
 
+      if (opts['dry-run'] === true) {
+        console.log('Dry-run: packing tarballs instead of commit/tag/publish')
+        const tarballsDir = path.join(root, 'dist', 'tarballs')
+        fs.mkdirSync(tarballsDir, {recursive: true})
+        for (const workspace of packagesToPublish) {
+          await $`yarn workspace ${workspace} pack --out ${path.join(
+            tarballsDir,
+            '%s-%v.tgz',
+          )}`
+        }
+        console.log(
+          'Dry-run complete. Tarballs in dist/tarballs/. Nothing published.',
+        )
+        await restoreVersions()
+        return
+      }
+
       console.log('Committing/tagging')
 
-      await $`git add .`
+      // Explicitly add each versioned package.json instead of `git add .`,
+      // so a release never sweeps up unrelated work-in-progress.
+      for (const p of packagesWhoseVersionsShouldBump) {
+        await $`git add ${p === '.' ? 'package.json' : p + '/package.json'}`
+      }
       await $`git commit -m ${version}`
       await $`git tag ${version}`
 
