@@ -6,7 +6,7 @@ Theatre.js 1.0 将 npm scope 从 `@theatre/*` 迁至 `@toy-box/*`,定稿 `init()
 
 * Breaking
   * npm scope 改名:`@theatre/*` → `@toy-box/*`。所有 install / import 都需更新,见 MIGRATION.md「scope 改名」。
-  * `init()` 流程定稿:调用 `getStudio()` 前必须先 `await theatre.init()`。此前顺序相反的代码现在会抛错,见 MIGRATION.md「init() 流程」。
+  * `init()` 流程定稿:调用 `getStudio()` 前必须先调用 `theatre.init()`。此前顺序相反的代码现在会抛错,见 MIGRATION.md「init() 流程」。
 * 协作(实验性)
   * 自托管 sync-server minimal loop:`AUTH_DISABLED=true` 下无需 app / postgres 即可运行。
   * studio 支持直连 ws serverUrl(`ws://` / `wss://`),无需经 app 中转。

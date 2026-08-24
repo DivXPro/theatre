@@ -17,7 +17,7 @@ Theatre.js 1.0 是这个 fork 的首个主版本。本指南分两部分:Part 1 
 - import {getProject} from '@theatre/core'
 - import studio from '@theatre/studio'
 + import {getProject} from '@toy-box/core'
-+ import studio from '@toy-box/studio'
++ import '@toy-box/studio'
 ```
 
 受影响的包:`core`、`studio`、`dataverse`、`react`、`r3f`、`utils`、`browser-bundles`。`@theatre/theatric` → `@toy-box/theatric`。
@@ -27,7 +27,7 @@ Theatre.js 1.0 是这个 fork 的首个主版本。本指南分两部分:Part 1 
 1.0 定稿了初始化顺序:`getStudio()` 现在要求先 `init()`,顺序相反会抛 `You seem to have called getStudio() before init()`。
 
 ```diff
-+ import studio from '@toy-box/studio'   // 副作用注册 studio bundle
++ import '@toy-box/studio'   // 副作用注册 studio bundle
   import theatre from '@toy-box/core'
 
 + void theatre.init({studio: true})
