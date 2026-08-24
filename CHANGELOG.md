@@ -14,6 +14,7 @@ Theatre.js 1.0 将 npm scope 从 `@theatre/*` 迁至 `@toy-box/*`,定稿 `init()
   * 断线时全局工具栏显示「Reconnecting…」徽标。
 * 内部
   * 同步引擎改为 saaz 桥;StudioStore 后端按配置可选。
+  * `@toy-box/studio` 内置 UI 升级到 react 19 + styled-components 6(均打包进 dist;消费端项目用 react 16/17/18/19 均可,无感知)。
 
 ## 0.4.5
 
