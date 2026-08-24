@@ -2,18 +2,8 @@ import {getProject} from '@toy-box/core'
 import * as THREE from 'three'
 import React, {useState, useEffect, useRef} from 'react'
 import {useFrame, Canvas} from '@react-three/fiber'
-import {Shadow, softShadows} from '@react-three/drei'
-import studio from '@toy-box/studio'
+import {Shadow, SoftShadows} from '@react-three/drei'
 import {editable as e, SheetProvider} from '@toy-box/r3f'
-import extension from '@toy-box/r3f/dist/extension'
-
-if (process.env.NODE_ENV === 'development') {
-  studio.extend(extension)
-  studio.initialize()
-}
-
-// Soft shadows are expensive, comment and refresh when it's too slow
-softShadows()
 
 // credit: https://codesandbox.io/s/camera-pan-nsb7f
 
@@ -53,7 +43,7 @@ function Button() {
       onPointerOut={() => setActive(false)}
       theatreKey="The Button"
     >
-      <sphereBufferGeometry args={[0.75, 64, 64]} />
+      <sphereGeometry args={[0.75, 64, 64]} />
       <meshPhysicalMaterial
         color={active ? 'purple' : '#e7b056'}
         clearcoat={1}
@@ -78,7 +68,7 @@ function Button() {
 function Plane({color, theatreKey, ...props}) {
   return (
     <e.mesh receiveShadow castShadow {...props} theatreKey={theatreKey}>
-      <boxBufferGeometry />
+      <boxGeometry />
       <meshStandardMaterial color={color} />
     </e.mesh>
   )
@@ -88,13 +78,14 @@ function App() {
   return (
     <div>
       <Canvas
-        // @ts-ignore
-        shadowMap
+        shadows
         gl={{preserveDrawingBuffer: true}}
         linear
         frameloop="demand"
         dpr={[1.5, 2]}
       >
+        {/* Soft shadows are expensive, comment and refresh when it's too slow */}
+        <SoftShadows />
         <SheetProvider
           sheet={getProject('Playground - R3F').sheet('R3F-Canvas')}
         >
