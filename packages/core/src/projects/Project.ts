@@ -16,6 +16,7 @@ import projectsSingleton from './projectsSingleton'
 import type {Deferred} from '@toy-box/utils/defer'
 import {defer} from '@toy-box/utils/defer'
 import {globals} from '@toy-box/core/globals'
+import {initState} from '@toy-box/core/initState'
 import type {
   ProjectId,
   SheetId,
@@ -159,7 +160,7 @@ export default class Project {
           )
         }
       } else {
-        setTimeout(() => {
+        const emptyStateTimer = setTimeout(() => {
           if (!this._studio) {
             throw new Error(
               `Argument config.state in Theatre.getProject("${id}", config) is empty. This is fine ` +
@@ -170,6 +171,13 @@ export default class Project {
             )
           }
         }, 1000)
+        // If init({studio: true}) was called, the studio is on its way — it
+        // will attach itself once loaded, so don't treat the empty state as
+        // an error. Studio loading can exceed the 1s grace period above
+        // (e.g. cold dev servers), so this is not a race the timer can win.
+        void initState.optsDeferred.promise.then((opts) => {
+          if (opts?.studio) clearTimeout(emptyStateTimer)
+        })
       }
     }
   }

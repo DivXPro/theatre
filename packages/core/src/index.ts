@@ -9,6 +9,7 @@ export * from './types/public'
 import {defer} from '@toy-box/utils/defer'
 import CoreBundle from './CoreBundle'
 import {globalVariableNames} from './globals'
+import {initState} from './initState'
 import type {
   IStudio,
   IStudioBundle,
@@ -19,7 +20,7 @@ import type {
 const studioDeferred = defer<IStudioInternal>()
 
 export async function getStudio(): Promise<IStudio> {
-  if (!initCalled) {
+  if (!initState.called) {
     throw new Error(
       `You seem to have called getStudio() before init(). The studio has not been initialized; make sure to call init() (e.g. theatre.init({studio: true})) before using the studio.`,
     )
@@ -37,20 +38,17 @@ export function getStudioSync(
   return studioDeferred.currentValue!.publicApi
 }
 
-let initCalled = false
-const initOptsDeferred = defer<InitOpts | undefined>()
-
 /**
  * Initializes Theatre.js with the given options.
  *
  * This is safe to call multiple times; only the first call has any effect.
  */
 export async function init(opts?: InitOpts) {
-  if (initCalled) {
+  if (initState.called) {
     return
   }
-  initCalled = true
-  initOptsDeferred.resolve(opts)
+  initState.called = true
+  initState.optsDeferred.resolve(opts)
 }
 
 const theatre = {getStudio, getStudioSync, init}
@@ -140,7 +138,7 @@ function registerCoreBundle() {
 
   const coreBundle = new CoreBundle({
     onAttach: (s) => {
-      void initOptsDeferred.promise.then((opts) => {
+      void initState.optsDeferred.promise.then((opts) => {
         s.initialize(opts)
         studioDeferred.resolve(s)
       })
