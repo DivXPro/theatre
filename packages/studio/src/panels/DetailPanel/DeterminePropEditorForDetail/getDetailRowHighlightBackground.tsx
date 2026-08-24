@@ -1,9 +1,9 @@
 import type {PropHighlighted} from '@toy-box/studio/panels/SequenceEditorPanel/whatPropIsHighlighted'
 
 export function getDetailRowHighlightBackground({
-  isHighlighted,
+  $isHighlighted: isHighlighted,
 }: {
-  isHighlighted: PropHighlighted
+  $isHighlighted: PropHighlighted
 }): string {
   return isHighlighted === 'self'
     ? '#1857a4'

@@ -32,7 +32,7 @@ import {mergeRefs} from 'react-merge-refs'
 import usePopover from '@toy-box/studio/uiComponents/Popover/usePopover'
 import {generateSequenceMarkerId} from '@toy-box/studio/utils/ids'
 
-const Container = styled.div<{isVisible: boolean}>`
+const Container = styled.div<{$isVisible: boolean}>`
   --thumbColor: #00e0ff;
   position: absolute;
   top: 0;
@@ -42,7 +42,7 @@ const Container = styled.div<{isVisible: boolean}>`
   z-index: ${() => zIndexes.playhead};
   pointer-events: none;
 
-  display: ${(props) => (props.isVisible ? 'block' : 'none')};
+  display: ${(props) => (props.$isVisible ? 'block' : 'none')};
 `
 
 const Rod = styled.div`
@@ -306,7 +306,7 @@ const Playhead: React.FC<{layoutP: Pointer<SequenceEditorPanelLayout>}> = ({
       {popover.node}
 
       <Container
-        isVisible={isVisible}
+        $isVisible={isVisible}
         style={{transform: `translate3d(${posInClippedSpace}px, 0, 0)`}}
         className={`${isSeeking && 'seeking'} ${
           popover.isOpen && 'popoverOpen'

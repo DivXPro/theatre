@@ -26,7 +26,7 @@ const AuthedAuthState: React.FC<{auth: Auth}> = ({auth}) => {
   } else {
     return (
       <>
-        <ToolbarButton primary={true} onClick={() => {}}>
+        <ToolbarButton $primary={true} onClick={() => {}}>
           Share
         </ToolbarButton>
         <Avatar authState={authState} />

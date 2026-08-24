@@ -39,7 +39,7 @@ const Unauthorized: React.FC<{
   if (!procedureState)
     return (
       <ToolbarButton
-        primary={true}
+        $primary={true}
         onClick={() => getStudio().auth?.authorize()}
       >
         Log in

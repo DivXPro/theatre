@@ -115,7 +115,7 @@ const ReferenceWindowContainer = styled.div`
   justify-content: center;
 `
 
-const WaitForSceneInitMessage = styled.div<{active?: boolean}>`
+const WaitForSceneInitMessage = styled.div<{$active?: boolean}>`
   position: absolute;
   margin: auto;
   left: 0;

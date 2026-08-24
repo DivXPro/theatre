@@ -27,7 +27,7 @@ const {isProject, isSheetObject} = __private.instanceTypes
 
 const headerHeight = `32px`
 
-const Container = styled.div<{pin: boolean}>`
+const Container = styled.div<{$pin: boolean}>`
   ${pointerEventsAutoInNormalMode};
   background-color: rgba(40, 43, 47, 0.8);
   position: fixed;
@@ -44,7 +44,7 @@ const Container = styled.div<{pin: boolean}>`
   backdrop-filter: blur(14px);
   border-radius: 2px;
 
-  display: ${({pin}) => (pin ? 'block' : 'none')};
+  display: ${({$pin}) => ($pin ? 'block' : 'none')};
 
   &:hover {
     display: block;
@@ -126,7 +126,7 @@ const DetailPanel: React.FC<{}> = (props) => {
       return (
         <Container
           data-testid="DetailPanel-Object"
-          pin={showDetailsPanel}
+          $pin={showDetailsPanel}
           ref={setContainerElt}
           onMouseEnter={() => {
             isDetailPanelHoveredB.set(true)
@@ -159,7 +159,7 @@ const DetailPanel: React.FC<{}> = (props) => {
     const project = selection.find(isProject)
     if (project) {
       return (
-        <Container pin={showDetailsPanel}>
+        <Container $pin={showDetailsPanel}>
           <Header>
             <Title title={`${project.address.projectId}`}>
               <TitleBar_Piece>{project.address.projectId} </TitleBar_Piece>
@@ -174,7 +174,7 @@ const DetailPanel: React.FC<{}> = (props) => {
 
     return (
       <Container
-        pin={showDetailsPanel}
+        $pin={showDetailsPanel}
         onMouseEnter={() => {
           isDetailPanelHoveredB.set(true)
         }}

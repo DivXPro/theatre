@@ -49,9 +49,9 @@ const SubContainer = styled.div`
   gap: 8px;
 `
 
-const HasUpdatesBadge = styled.div<{type: 'info' | 'warning'}>`
+const HasUpdatesBadge = styled.div<{$type: 'info' | 'warning'}>`
   position: absolute;
-  background: ${({type}) => (type === 'info' ? '#40aaa4' : '#f59e0b')};
+  background: ${({$type}) => ($type === 'info' ? '#40aaa4' : '#f59e0b')};
   width: 6px;
   height: 6px;
   border-radius: 50%;
@@ -125,7 +125,7 @@ const GlobalToolbar: React.FC = () => {
           unpinHintIcon={<Bell />}
           pinned={useVal(getStudio().atomP.ahistoric.pinNotifications) ?? false}
         >
-          {hasNotifications && <HasUpdatesBadge type="warning" />}
+          {hasNotifications && <HasUpdatesBadge $type="warning" />}
         </PinButton> */}
         {/* {moreMenu.node}
         <ToolbarIconButton
@@ -135,7 +135,7 @@ const GlobalToolbar: React.FC = () => {
           }}
         >
           <Ellipsis />
-          {showUpdatesBadge && <HasUpdatesBadge type="info" />}
+          {showUpdatesBadge && <HasUpdatesBadge $type="info" />}
         </ToolbarIconButton> */}
         {/* <PinButton
           ref={outlineTriggerRef as $IntentionalAny}

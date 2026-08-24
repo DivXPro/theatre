@@ -8,8 +8,8 @@ import type SheetObject from '@toy-box/core/sheetObjects/SheetObject'
 import BaseItem from '@toy-box/studio/panels/OutlinePanel/BaseItem'
 import {useCollapseStateInOutlinePanel} from '@toy-box/studio/panels/OutlinePanel/outlinePanelUtils'
 
-export const Li = styled.li<{isSelected: boolean}>`
-  color: ${(props) => (props.isSelected ? 'white' : 'hsl(1, 1%, 80%)')};
+export const Li = styled.li<{$isSelected: boolean}>`
+  color: ${(props) => (props.$isSelected ? 'white' : 'hsl(1, 1%, 80%)')};
 `
 
 const ObjectsList: React.FC<{

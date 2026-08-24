@@ -12,20 +12,20 @@ import styled from 'styled-components'
 import {propNameTextCSS} from '@toy-box/studio/propEditors/utils/propNameTextCSS'
 import {usePropHighlightMouseEnter} from './usePropHighlightMouseEnter'
 
-export const LeftRowContainer = styled.li<{depth: number}>`
-  --depth: ${(props) => props.depth};
+export const LeftRowContainer = styled.li<{$depth: number}>`
+  --depth: ${(props) => props.$depth};
   margin: 0;
   padding: 0;
   list-style: none;
 `
 
-export const BaseHeader = styled.div<{isEven: boolean}>`
+export const BaseHeader = styled.div<{$isEven: boolean}>`
   border-bottom: 1px solid #7695b705;
 `
 
 const LeftRowHeader = styled(BaseHeader)<{
-  isSelectable: boolean
-  isSelected: boolean
+  $isSelectable: boolean
+  $isSelected: boolean
 }>`
   padding-left: calc(0px + var(--depth) * 20px);
 
@@ -35,7 +35,7 @@ const LeftRowHeader = styled(BaseHeader)<{
 
   box-sizing: border-box;
 
-  ${(props) => props.isSelected && `background: blue`};
+  ${(props) => props.$isSelected && `background: blue`};
 `
 
 const LeftRowHead_Label = styled.span`
@@ -52,7 +52,7 @@ const LeftRowHead_Label = styled.span`
   }
 `
 
-const LeftRowHead_Icon = styled.span<{isCollapsed: boolean}>`
+const LeftRowHead_Icon = styled.span<{$isCollapsed: boolean}>`
   width: 12px;
   padding: 8px;
   font-size: 9px;
@@ -62,11 +62,11 @@ const LeftRowHead_Icon = styled.span<{isCollapsed: boolean}>`
   transition:
     transform 0.05s ease-out,
     color 0.1s ease-out;
-  transform: rotateZ(${(props) => (props.isCollapsed ? 0 : 90)}deg);
+  transform: rotateZ(${(props) => (props.$isCollapsed ? 0 : 90)}deg);
   color: #66686a;
 
   &:hover {
-    transform: rotateZ(${(props) => (props.isCollapsed ? 15 : 75)}deg);
+    transform: rotateZ(${(props) => (props.$isCollapsed ? 15 : 75)}deg);
     color: #c0c4c9;
   }
 `
@@ -107,18 +107,18 @@ const AnyCompositeRow: React.FC<{
   usePropHighlightMouseEnter(rowHeaderRef.current, leaf)
 
   return leaf.shouldRender ? (
-    <LeftRowContainer depth={leaf.depth}>
+    <LeftRowContainer $depth={leaf.depth}>
       <LeftRowHeader
         ref={rowHeaderRef}
         style={{
           height: leaf.nodeHeight + 'px',
         }}
-        isSelectable={isSelectable === true}
-        isSelected={isSelected === true}
+        $isSelectable={isSelectable === true}
+        $isSelected={isSelected === true}
         onClick={toggleSelect}
-        isEven={leaf.n % 2 === 0}
+        $isEven={leaf.n % 2 === 0}
       >
-        <LeftRowHead_Icon isCollapsed={isCollapsed} onClick={toggleCollapsed}>
+        <LeftRowHead_Icon $isCollapsed={isCollapsed} onClick={toggleCollapsed}>
           <HiOutlineChevronRight />
         </LeftRowHead_Icon>
         <LeftRowHead_Label>{label}</LeftRowHead_Label>

@@ -31,8 +31,8 @@ const {keyframeUtils} = __private
 
 const HITBOX_SIZE_PX = 5
 
-const Container = styled.div<{isShiftDown: boolean}>`
-  cursor: ${(props) => (props.isShiftDown ? 'cell' : 'default')};
+const Container = styled.div<{$isShiftDown: boolean}>`
+  cursor: ${(props) => (props.$isShiftDown ? 'cell' : 'default')};
 `
 
 const DopeSheetSelectionView: React.FC<{
@@ -52,7 +52,7 @@ const DopeSheetSelectionView: React.FC<{
     <Container
       style={{height: height + 'px'}}
       ref={containerRef}
-      isShiftDown={isShiftDown}
+      $isShiftDown={isShiftDown}
       className="selectionview"
     >
       {selectionBounds && (

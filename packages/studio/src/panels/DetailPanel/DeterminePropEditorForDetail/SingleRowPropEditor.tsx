@@ -15,7 +15,7 @@ import useChordial from '@toy-box/studio/uiComponents/chordial/useChodrial'
 import type {$FixMe} from '@toy-box/core/types/public'
 
 const Container = styled.div<{
-  isHighlighted: PropHighlighted
+  $isHighlighted: PropHighlighted
 }>`
   display: flex;
   height: 30px;
@@ -51,7 +51,7 @@ const Left = styled.div`
 `
 
 const PropNameContainer = styled.div<{
-  isHighlighted: PropHighlighted
+  $isHighlighted: PropHighlighted
 }>`
   text-align: left;
   flex: 1 0;
@@ -121,11 +121,11 @@ export function SingleRowPropEditor<T>({
   })
 
   return (
-    <Container isHighlighted={isHighlighted}>
+    <Container $isHighlighted={isHighlighted}>
       <Left>
         <ControlsContainer>{editingTools.controlIndicators}</ControlsContainer>
         <PropNameContainer
-          isHighlighted={isHighlighted}
+          $isHighlighted={isHighlighted}
           ref={targetRef as $FixMe}
         >
           {label}

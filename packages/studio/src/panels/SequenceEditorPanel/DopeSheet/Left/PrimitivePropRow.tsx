@@ -25,8 +25,8 @@ const theme = {
 const PrimitivePropRowContainer = styled(BaseContainer)<{}>``
 
 const PrimitivePropRowHead = styled(BaseHeader)<{
-  isSelected: boolean
-  isEven: boolean
+  $isSelected: boolean
+  $isEven: boolean
 }>`
   display: flex;
   color: ${theme.label.color};
@@ -37,8 +37,8 @@ const PrimitivePropRowHead = styled(BaseHeader)<{
 `
 
 const PrimitivePropRowIconContainer = styled.button<{
-  isSelected: boolean
-  graphEditorColor: keyof GraphEditorColors
+  $isSelected: boolean
+  $graphEditorColor: keyof GraphEditorColors
 }>`
   background: none;
   border: none;
@@ -50,8 +50,8 @@ const PrimitivePropRowIconContainer = styled.button<{
   height: 100%;
   margin-left: 12px;
   color: ${(props) =>
-    props.isSelected
-      ? graphEditorColors[props.graphEditorColor].iconColor
+    props.$isSelected
+      ? graphEditorColors[props.$graphEditorColor].iconColor
       : nextPrevCursorsTheme.offColor};
 
   &:not([disabled]):hover {
@@ -143,21 +143,21 @@ const PrimitivePropRow: React.FC<{
   usePropHighlightMouseEnter(headRef.current, leaf)
 
   return (
-    <PrimitivePropRowContainer depth={leaf.depth}>
+    <PrimitivePropRowContainer $depth={leaf.depth}>
       <PrimitivePropRowHead
         ref={headRef}
-        isEven={leaf.n % 2 === 0}
+        $isEven={leaf.n % 2 === 0}
         style={{
           height: leaf.nodeHeight + 'px',
         }}
-        isSelected={isSelected === true}
+        $isSelected={isSelected === true}
       >
         <PrimitivePropRowHead_Label>{label}</PrimitivePropRowHead_Label>
         {controlIndicators}
         <PrimitivePropRowIconContainer
           onClick={toggleSelect}
-          isSelected={isSelected === true}
-          graphEditorColor={possibleColor ?? '1'}
+          $isSelected={isSelected === true}
+          $graphEditorColor={possibleColor ?? '1'}
           style={{opacity: isSelectable ? 1 : 0.25}}
           disabled={!isSelectable}
         >
