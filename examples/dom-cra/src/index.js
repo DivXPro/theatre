@@ -1,19 +1,23 @@
 import ReactDOM from 'react-dom'
 import './index.css'
 import reportWebVitals from './reportWebVitals'
-import studio from '@toy-box/studio'
-import {getProject} from '@toy-box/core'
+import theatre, {getProject} from '@toy-box/core'
+import '@toy-box/studio'
 import React from 'react'
 import App from './App'
 
-studio.initialize()
-
-ReactDOM.render(
-  <React.StrictMode>
-    <App project={getProject('CRA project')} />
-  </React.StrictMode>,
-  document.getElementById('root'),
-)
+void theatre
+  .init({studio: true})
+  // render only once the studio has attached, so App can use getStudioSync()
+  .then(() => theatre.getStudio())
+  .then(() => {
+    ReactDOM.render(
+      <React.StrictMode>
+        <App project={getProject('CRA project')} />
+      </React.StrictMode>,
+      document.getElementById('root'),
+    )
+  })
 
 // If you want to start measuring performance in your app, pass a function
 // to log results (for example: reportWebVitals(console.log))

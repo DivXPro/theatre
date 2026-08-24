@@ -5,8 +5,6 @@ import type {UseDragOpts} from './useDrag'
 import useDrag from './useDrag'
 import theatre from '@toy-box/core'
 
-void theatre.init({studio: true})
-
 const boxObjectConfig = {
   x: 0,
   y: 0,
