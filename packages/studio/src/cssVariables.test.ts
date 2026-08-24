@@ -78,12 +78,20 @@ describe('studio theming tokens', () => {
         'panels/OutlinePanel/BaseItem.tsx',
         'panels/SequenceEditorPanel/SequenceEditorPanel.tsx',
         'panels/DetailPanel/DetailPanel.tsx',
-        'panels/DetailPanel/DeterminePropEditorForDetail/DetailCompoundPropEditor.tsx',
         'uiComponents/toolbar/ToolbarIconButton.tsx',
         'uiComponents/toolbar/ToolbarButton.tsx',
       ],
       [/#282b2f/i, /rgba\(\s*40,\s*43,\s*47/],
       ['var(--theatre-panel-bg'],
+    )
+    // DetailCompoundPropEditor's bg token was removed with its dead polished
+    // interpolation; it must stay free of the raw values (no required token).
+    expectMigrated(
+      [
+        'panels/DetailPanel/DeterminePropEditorForDetail/DetailCompoundPropEditor.tsx',
+      ],
+      [/#282b2f/i, /rgba\(\s*40,\s*43,\s*47/],
+      [],
     )
   })
 
@@ -182,6 +190,20 @@ describe('studio theming tokens', () => {
         'panels/SequenceEditorPanel/DopeSheet/Left/AnyCompositeRow.tsx',
       ],
       [/(lighten|darken|transparentize|opacify)\([^)]*theme\./],
+      [],
+    )
+  })
+
+  it('DetailCompoundPropEditor has no polished calls at all', () => {
+    // Regression: a var()-valued const was fed to darken() inside a
+    // CSS-commented template interpolation — interpolations are live JS,
+    // the CSS comment does not disable them. polished must not appear in
+    // this file (neither import nor call).
+    expectMigrated(
+      [
+        'panels/DetailPanel/DeterminePropEditorForDetail/DetailCompoundPropEditor.tsx',
+      ],
+      [/lighten|darken|transparentize|opacify|from 'polished'/],
       [],
     )
   })
