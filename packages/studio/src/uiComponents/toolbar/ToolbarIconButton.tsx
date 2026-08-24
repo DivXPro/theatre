@@ -20,7 +20,7 @@ export const Container = styled.button`
 
   color: #a8a8a9;
 
-  background: rgba(40, 43, 47, 0.8);
+  background: var(--theatre-panel-bg-80);
   backdrop-filter: blur(14px);
   border: none;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
@@ -62,7 +62,7 @@ export const Container = styled.button`
   }
 
   @supports not (backdrop-filter: blur()) {
-    background: rgba(40, 43, 47, 0.95);
+    background: var(--theatre-panel-bg-95);
   }
 `
 

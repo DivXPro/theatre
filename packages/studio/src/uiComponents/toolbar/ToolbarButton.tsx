@@ -24,7 +24,7 @@ export const Container = styled.button<{
       ? 'rgba(64, 67, 71, 0.8)'
       : $primary === true
         ? 'rgb(41 110 120 / 60%)'
-        : 'rgba(40, 43, 47, 0.8)'};
+        : 'var(--theatre-panel-bg-80)'};
 
   backdrop-filter: blur(14px);
   border: none;

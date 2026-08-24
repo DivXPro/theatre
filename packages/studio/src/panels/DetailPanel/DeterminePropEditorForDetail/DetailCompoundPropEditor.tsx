@@ -7,7 +7,7 @@ import type {$FixMe} from '@toy-box/core/types/public'
 import {Atom, getPointerParts} from '@toy-box/dataverse'
 import type {Pointer} from '@toy-box/dataverse'
 import last from 'lodash-es/last'
-import {darken, transparentize} from 'polished'
+import {darken} from 'polished'
 import React, {useMemo} from 'react'
 import styled from 'styled-components'
 import {rowIndentationFormulaCSS} from '@toy-box/studio/panels/DetailPanel/DeterminePropEditorForDetail/rowIndentationFormulaCSS'
@@ -107,7 +107,7 @@ const CollapseIcon = styled.span<{$isCollapsed: boolean; $isVector: boolean}>`
   }
 `
 
-const color = transparentize(0.05, `#282b2f`)
+const color = `var(--theatre-panel-bg-95)`
 
 const SubProps = styled.div<{$depth: number; $lastSubIsComposite: boolean}>`
   /* background: ${({$depth}) => darken($depth * 0.03, color)}; */

@@ -56,4 +56,20 @@ describe('studio theming tokens', () => {
   it('ProvideTheme dead shell is removed', () => {
     expect(() => read('UIRoot/ProvideTheme.tsx')).toThrow()
   })
+
+  it('panel background family migrated', () => {
+    expectMigrated(
+      [
+        'notify.tsx',
+        'panels/OutlinePanel/BaseItem.tsx',
+        'panels/SequenceEditorPanel/SequenceEditorPanel.tsx',
+        'panels/DetailPanel/DetailPanel.tsx',
+        'panels/DetailPanel/DeterminePropEditorForDetail/DetailCompoundPropEditor.tsx',
+        'uiComponents/toolbar/ToolbarIconButton.tsx',
+        'uiComponents/toolbar/ToolbarButton.tsx',
+      ],
+      [/#282b2f/i, /rgba\(\s*40,\s*43,\s*47/],
+      ['var(--theatre-panel-bg'],
+    )
+  })
 })

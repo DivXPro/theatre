@@ -59,6 +59,8 @@ const GlobalStyle =
           --theatre-panel-bg: #282b2f;
           --theatre-panel-bg-95: rgba(40, 43, 47, 0.95);
           --theatre-panel-bg-80: rgba(40, 43, 47, 0.8);
+          --theatre-panel-bg-65: rgba(40, 43, 47, 0.65);
+          --theatre-panel-bg-99: rgba(40, 43, 47, 0.99);
           --theatre-panel-border: #1f1f1f;
           --theatre-text-primary: #ffffff;
           --theatre-text-secondary: #cccccc;

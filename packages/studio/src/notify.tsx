@@ -89,14 +89,14 @@ const NotificationContainer = styled.div`
   display: flex;
   gap: 12px;
   ${pointerEventsAutoInNormalMode};
-  background-color: rgba(40, 43, 47, 0.8);
+  background-color: var(--theatre-panel-bg-80);
   box-shadow:
     0 1px 1px rgba(0, 0, 0, 0.25),
     0 2px 6px rgba(0, 0, 0, 0.15);
   backdrop-filter: blur(14px);
 
   @supports not (backdrop-filter: blur()) {
-    background: rgba(40, 43, 47, 0.95);
+    background: var(--theatre-panel-bg-95);
   }
 `
 
@@ -283,7 +283,7 @@ const Button = styled.button<{$danger?: boolean}>`
   align-items: center;
   gap: 12px;
   ${pointerEventsAutoInNormalMode};
-  background-color: rgba(40, 43, 47, 0.8);
+  background-color: var(--theatre-panel-bg-80);
   box-shadow:
     0 1px 1px rgba(0, 0, 0, 0.25),
     0 2px 6px rgba(0, 0, 0, 0.15);
@@ -305,7 +305,7 @@ const Button = styled.button<{$danger?: boolean}>`
   }
 
   @supports not (backdrop-filter: blur()) {
-    background: rgba(40, 43, 47, 0.95);
+    background: var(--theatre-panel-bg-95);
   }
 `
 

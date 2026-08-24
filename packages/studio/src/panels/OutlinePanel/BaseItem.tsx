@@ -38,7 +38,7 @@ const Header = styled(BaseHeader)`
   box-shadow: 0 3px 4px -1px rgba(0, 0, 0, 0.48);
 
   color: rgba(255, 255, 255, 0.9);
-  background: rgba(40, 43, 47, 0.65);
+  background: var(--theatre-panel-bg-65);
   backdrop-filter: blur(14px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 
@@ -64,7 +64,7 @@ const Header = styled(BaseHeader)`
   }
 
   @supports not (backdrop-filter: blur()) {
-    background: rgba(40, 43, 47, 0.95);
+    background: var(--theatre-panel-bg-95);
   }
 `
 

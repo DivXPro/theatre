@@ -29,7 +29,7 @@ const headerHeight = `32px`
 
 const Container = styled.div<{$pin: boolean}>`
   ${pointerEventsAutoInNormalMode};
-  background-color: rgba(40, 43, 47, 0.8);
+  background-color: var(--theatre-panel-bg-80);
   position: fixed;
   right: 8px;
   top: 50px;
@@ -51,7 +51,7 @@ const Container = styled.div<{$pin: boolean}>`
   }
 
   @supports not (backdrop-filter: blur()) {
-    background: rgba(40, 43, 47, 0.95);
+    background: var(--theatre-panel-bg-95);
   }
 `
 

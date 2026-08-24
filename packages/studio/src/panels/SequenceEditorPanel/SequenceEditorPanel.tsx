@@ -37,7 +37,7 @@ const Container = styled(PanelWrapper)`
 `
 
 const LeftBackground = styled.div`
-  background-color: rgba(40, 43, 47, 0.99);
+  background-color: var(--theatre-panel-bg-99);
   position: absolute;
   left: 0;
   top: 0;
