@@ -8,6 +8,8 @@ import React, {
   useState,
 } from 'react'
 import theatre, {getStudioSync} from '@toy-box/core'
+// 1.0 init 流程:studio 在被 import 时才向 core 注册,缺了这行 init({studio: true}) 永远不就绪
+import '@toy-box/studio'
 import type {ISheet} from '@toy-box/core'
 import {types} from '@toy-box/core'
 import type {ITurtle} from './turtle'
@@ -93,7 +95,9 @@ const TurtleRenderer: React.FC<{
         newTransform.startingPoint.y =
           oldTransform.startingPoint.y - event.deltaY / dimsRef.current.height
       }
-      const studio = getStudioSync()!
+      const studio = getStudioSync()
+      // init({studio: true}) 是异步的;studio 未就绪时丢弃本次滚轮事件
+      if (!studio) return
       studio.transaction((api) => {
         api.set(obj.props, newTransform)
       })
