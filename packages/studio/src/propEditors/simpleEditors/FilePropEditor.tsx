@@ -46,9 +46,9 @@ const InputLabel = styled.label<{$empty: boolean}>`
   font-size: 16px;
 
   overflow: hidden;
-  color: #ccc;
+  color: var(--theatre-text-secondary);
   &:hover {
-    color: white;
+    color: var(--theatre-text-primary);
   }
 
   border-radius: 99999px;
@@ -85,7 +85,7 @@ const DeleteButton = styled.button`
 
   &:hover {
     opacity: 1;
-    color: white;
+    color: var(--theatre-text-primary);
   }
 `
 

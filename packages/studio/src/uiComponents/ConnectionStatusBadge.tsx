@@ -5,7 +5,7 @@ const Badge = styled.div`
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #fff;
+  color: var(--theatre-text-primary);
   background: rgba(120, 120, 120, 0.35);
   border-radius: 4px;
   padding: 2px 8px;

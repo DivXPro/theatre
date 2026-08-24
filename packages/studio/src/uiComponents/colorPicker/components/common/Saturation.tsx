@@ -15,7 +15,11 @@ const Container = styled.div`
   border-bottom: 12px solid #000;
   border-radius: 2px;
   background-image: linear-gradient(to top, #000, rgba(0, 0, 0, 0)),
-    linear-gradient(to right, #fff, rgba(255, 255, 255, 0));
+    linear-gradient(
+      to right,
+      var(--theatre-text-primary),
+      rgba(255, 255, 255, 0)
+    );
 
   // Improve elements rendering on light backgrounds
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05);

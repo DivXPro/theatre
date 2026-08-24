@@ -6,7 +6,7 @@ const SVG_CIRCLE_RADIUS = 0.1
 const VIEWBOX_SIZE = 1 + VIEWBOX_PADDING * 2
 
 const SELECTED_CURVE_COLOR = '#F5F5F5'
-const CURVE_COLOR = '#888888'
+const CURVE_COLOR = 'var(--theatre-text-muted)'
 const CONTROL_COLOR = '#4f4f4f'
 const CONTROL_HITZONE_COLOR = 'rgba(255, 255, 255, 0.1)'
 

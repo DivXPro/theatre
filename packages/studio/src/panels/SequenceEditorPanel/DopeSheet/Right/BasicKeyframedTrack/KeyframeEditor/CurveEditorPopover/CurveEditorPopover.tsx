@@ -96,7 +96,7 @@ const CurveEditorContainer = styled.div`
 const NoResultsFoundContainer = styled.div`
   grid-column: 1 / 4;
   padding: 6px;
-  color: #888888;
+  color: var(--theatre-text-muted);
 `
 /**
  * Tracking for what kinds of events are allowed to change the input's value.

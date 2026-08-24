@@ -55,7 +55,7 @@ const PrimitivePropRowIconContainer = styled.button<{
       : nextPrevCursorsTheme.offColor};
 
   &:not([disabled]):hover {
-    color: white;
+    color: var(--theatre-text-primary);
   }
 `
 
@@ -80,7 +80,7 @@ const PrimitivePropRowHead_Label = styled.span`
   ${propNameTextCSS};
 
   ${PrimitivePropRowHead}:hover & {
-    color: #ccc;
+    color: var(--theatre-text-secondary);
   }
 `
 

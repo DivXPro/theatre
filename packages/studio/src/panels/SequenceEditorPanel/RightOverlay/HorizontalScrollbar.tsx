@@ -101,7 +101,7 @@ const Tooltip = styled.div<{$active: boolean}>`
   transform: translateX(-50%);
   background: #131d1f;
   border-radius: 4px;
-  color: #fff;
+  color: var(--theatre-text-primary);
   font-size: 10px;
   line-height: 18px;
   text-align: center;

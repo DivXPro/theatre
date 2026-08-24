@@ -71,7 +71,7 @@ const GlobalStyle =
           --theatre-shadow-color: rgba(0, 0, 0, 0.25);
           --theatre-font-family: -apple-system, BlinkMacSystemFont, Segoe WPC, Segoe Editor, HelveticaNeue-Light, Ubuntu, Droid Sans, sans-serif;
           --theatre-font-size: 11px;
-          color: white;
+          color: var(--theatre-text-primary);
           font:
             11px -apple-system,
             BlinkMacSystemFont,
@@ -86,14 +86,14 @@ const GlobalStyle =
           a[href^='http'] {
             text-decoration: none;
             text-decoration-line: underline;
-            text-decoration-color: #888;
+            text-decoration-color: var(--theatre-text-muted);
             position: relative;
             display: inline-block;
             margin-left: 0.4em;
 
             &:hover,
             &:active {
-              text-decoration-color: #ccc;
+              text-decoration-color: var(--theatre-text-secondary);
             }
           }
 
@@ -190,7 +190,7 @@ const GlobalStyle =
           }
 
           .text-color-pale {
-            color: #CCC;
+            color: var(--theatre-text-secondary);
           }
         }
 

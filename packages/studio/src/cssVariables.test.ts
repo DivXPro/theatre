@@ -72,4 +72,33 @@ describe('studio theming tokens', () => {
       ['var(--theatre-panel-bg'],
     )
   })
+
+  it('text color family migrated', () => {
+    expectMigrated(
+      [
+        'panels/SequenceEditorPanel/DopeSheet/Left/AnyCompositeRow.tsx',
+        'panels/SequenceEditorPanel/DopeSheet/Left/PrimitivePropRow.tsx',
+        'uiComponents/ExternalLink.tsx',
+        'propEditors/simpleEditors/ImagePropEditor.tsx',
+        'propEditors/simpleEditors/FilePropEditor.tsx',
+        'notify.tsx',
+        'panels/SequenceEditorPanel/RightOverlay/HorizontalScrollbar.tsx',
+        'uiComponents/ConnectionStatusBadge.tsx',
+        'uiComponents/icons/CubeRendered.tsx',
+        'uiComponents/colorPicker/components/common/Pointer.tsx',
+        'uiComponents/colorPicker/components/common/Alpha.tsx',
+        'uiComponents/colorPicker/components/common/Saturation.tsx',
+        'panels/SequenceEditorPanel/DopeSheet/Right/BasicKeyframedTrack/KeyframeEditor/CurveEditorPopover/CurveEditorPopover.tsx',
+        'panels/SequenceEditorPanel/DopeSheet/Right/BasicKeyframedTrack/KeyframeEditor/CurveEditorPopover/SVGCurveSegment.tsx',
+      ],
+      [/#fff\b/i, /#ccc\b/i, /#888\b/i, /#888888/i, /color:\s*white\b/],
+      [],
+    )
+  })
+
+  it('css.tsx host text styles migrated', () => {
+    const css = read('css.tsx')
+    expect(css).not.toMatch(/color:\s*white\b/)
+    expect(css).not.toMatch(/\.text-color-pale\s*\{[^}]*#ccc/i)
+  })
 })

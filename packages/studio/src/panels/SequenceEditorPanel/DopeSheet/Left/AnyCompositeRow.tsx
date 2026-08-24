@@ -48,7 +48,7 @@ const LeftRowHead_Label = styled.span`
   flex-wrap: nowrap;
 
   ${LeftRowHeader}:hover & {
-    color: #ccc;
+    color: var(--theatre-text-secondary);
   }
 `
 

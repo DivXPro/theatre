@@ -103,7 +103,7 @@ const NotificationContainer = styled.div`
 const NotificationTitle = styled.div`
   font-size: 14px;
   font-weight: bold;
-  color: #fff;
+  color: var(--theatre-text-primary);
 `
 
 const NotificationMain = styled.div`
@@ -290,7 +290,7 @@ const Button = styled.button<{$danger?: boolean}>`
   backdrop-filter: blur(14px);
   border: none;
   padding: 12px;
-  color: #fff;
+  color: var(--theatre-text-primary);
   overflow: hidden;
 
   ::before {
