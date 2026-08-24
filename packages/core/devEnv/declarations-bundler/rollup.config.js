@@ -34,6 +34,86 @@ const normalizeGetterNamespaces = {
   },
 }
 
+// rollup-plugin-dts inlines @toy-box/utils (mapped to utils/src) by compiling its
+// TypeScript source. For most symbols it emits proper declarations, but for
+// `SimpleCache` and the `nominal$1` unique symbol it leaks implementation bodies into
+// the output: `declare const nominal$1 = Symbol()`, a `_values` field initializer,
+// `constructor() {}`, and method bodies. Those are illegal in an ambient context and
+// break any consumer compiling without `skipLibCheck`. Replace them with their proper
+// declaration-only forms (mirroring the already-correct `nominal`/`Nominal` pair that
+// ships in the same bundle). Both are private to the bundle and appear exactly once,
+// so a bounded exact-match replacement is safe and deterministic.
+const stripImplementations = {
+  name: 'strip-implementations',
+  renderChunk(code) {
+    code = code.replace(
+      'declare const nominal$1 = Symbol()',
+      'declare const nominal$1: unique symbol;',
+    )
+
+    const simpleCacheImpl = `declare class SimpleCache {
+  /**
+   * NOTE this could also be a Map.
+   */
+  protected _values: Record<string, unknown> = {}
+  constructor() {}
+
+  /**
+   * get the cache item at \`key\` or produce it using \`producer\` and cache _that_.
+   *
+   * Note that this won't work if you change the producer, like \`get(key, producer1); get(key, producer2)\`.
+   */
+  get<T>(key: string, producer: () => T): T {
+    if (this.has(key)) {
+      return this._values[key] as $IntentionalAny
+    } else {
+      const cachedValue = producer()
+      this._values[key] = cachedValue
+      return cachedValue
+    }
+  }
+
+  /**
+   * Returns true if the cache has an item at \`key\`.
+   */
+  has(key: string): boolean {
+    return this._values.hasOwnProperty(key)
+  }
+}`
+
+    const simpleCacheDecl = `declare class SimpleCache {
+  /**
+   * NOTE this could also be a Map.
+   */
+  protected _values: Record<string, unknown>;
+  constructor();
+
+  /**
+   * get the cache item at \`key\` or produce it using \`producer\` and cache _that_.
+   *
+   * Note that this won't work if you change the producer, like \`get(key, producer1); get(key, producer2)\`.
+   */
+  get<T>(key: string, producer: () => T): T;
+
+  /**
+   * Returns true if the cache has an item at \`key\`.
+   */
+  has(key: string): boolean;
+}`
+
+    if (!code.includes(simpleCacheImpl)) {
+      // Fail loudly if upstream changes the emitted shape, so this doesn't silently
+      // stop stripping. (The block above must match the d.ts rollup emits verbatim.)
+      throw new Error(
+        '[strip-implementations] expected inlined SimpleCache implementation not found; update the replacement to match the new emitted shape.',
+      )
+    }
+    code = code.replace(simpleCacheImpl, simpleCacheDecl)
+
+    return code
+  },
+}
+
 const config = {
   input: fromPackage(`.temp/declarations/src/index.d.ts`),
   output: {
@@ -79,6 +159,9 @@ const config = {
         },
       ],
     }),
+    // Runs after dts/alias have produced the final chunk, so it sees the inlined
+    // implementation bodies and strips them before the file is written.
+    stripImplementations,
   ],
 }
 

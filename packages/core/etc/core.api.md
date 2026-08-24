@@ -596,10 +596,10 @@ export type WithoutSheetInstance<T extends SheetAddress> = Omit<T, 'sheetInstanc
 
 // Warnings were encountered during analysis:
 //
-// dist/index.d.ts:2380:5 - (ae-forgotten-export) The symbol "propTypeUtils" needs to be exported by the entry point index.d.ts
-// dist/index.d.ts:2381:5 - (ae-forgotten-export) The symbol "ids" needs to be exported by the entry point index.d.ts
-// dist/index.d.ts:2382:5 - (ae-forgotten-export) The symbol "instanceTypes" needs to be exported by the entry point index.d.ts
-// dist/index.d.ts:2383:5 - (ae-forgotten-export) The symbol "keyframeUtils" needs to be exported by the entry point index.d.ts
+// dist/index.d.ts:2370:5 - (ae-forgotten-export) The symbol "propTypeUtils" needs to be exported by the entry point index.d.ts
+// dist/index.d.ts:2371:5 - (ae-forgotten-export) The symbol "ids" needs to be exported by the entry point index.d.ts
+// dist/index.d.ts:2372:5 - (ae-forgotten-export) The symbol "instanceTypes" needs to be exported by the entry point index.d.ts
+// dist/index.d.ts:2373:5 - (ae-forgotten-export) The symbol "keyframeUtils" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 
