@@ -1,4 +1,3 @@
-import {theme} from '@toy-box/studio/css'
 import type {SequenceEditorPanelLayout} from '@toy-box/studio/panels/SequenceEditorPanel/layout/layout'
 import {zIndexes} from '@toy-box/studio/panels/SequenceEditorPanel/SequenceEditorPanel'
 import {useVal} from '@toy-box/react'
@@ -15,7 +14,8 @@ const Container = styled.div`
   bottom: 0;
   z-index: ${() => zIndexes.rightBackground};
   overflow: hidden;
-  background: ${transparentize(0.01, darken(1 * 0.03, theme.panel.bg))};
+  /* 派生色:polished 无法处理 var(),一期保持静态计算值(原 theme.panel.bg = #282b2f) */
+  background: ${transparentize(0.01, darken(1 * 0.03, '#282b2f'))};
   pointer-events: none;
 `
 

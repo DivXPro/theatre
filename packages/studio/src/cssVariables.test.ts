@@ -171,4 +171,18 @@ describe('studio theming tokens', () => {
     expect(css).toContain('var(--theatre-font-family)')
     expect(css).not.toMatch(/font:\s*\n?\s*11px/)
   })
+
+  it('no polished call receives a var()-valued theme member', () => {
+    // theme.panel.bg is now 'var(--theatre-panel-bg)'; polished cannot parse
+    // var() and throws at render time (DopeSheetBackground regression).
+    expectMigrated(
+      [
+        'panels/SequenceEditorPanel/DopeSheet/Right/DopeSheetBackground.tsx',
+        'panels/BasePanel/common.tsx',
+        'panels/SequenceEditorPanel/DopeSheet/Left/AnyCompositeRow.tsx',
+      ],
+      [/(lighten|darken|transparentize|opacify)\([^)]*theme\./],
+      [],
+    )
+  })
 })
