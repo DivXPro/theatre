@@ -17,7 +17,11 @@ export const Container = styled.button<{
   padding: 0 8px;
 
   color: ${({disabled, $primary}) =>
-    disabled === true ? '#919191' : $primary === true ? 'white' : '#a8a8a9'};
+    disabled === true
+      ? '#919191'
+      : $primary === true
+        ? 'var(--theatre-text-primary)'
+        : '#a8a8a9'};
 
   background: ${({disabled, $primary}) =>
     disabled === true

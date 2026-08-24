@@ -12,7 +12,7 @@ function CubeRendered(props: React.SVGProps<SVGSVGElement>) {
     >
       <path
         d="M8.202 2.973l-2.92 1.58 2.714 1.58 2.817-1.58-2.61-1.58zM3.532 10.555v-3.22l3.031 1.72v3l-3.03-1.5zM12.532 10.555v-3.22l-3.031 1.72v3l3.031-1.5z"
-        fill="var(--theatre-text-primary)"
+        style={{fill: 'var(--theatre-text-primary)'}}
       />
       <path
         fillRule="evenodd"

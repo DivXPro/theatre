@@ -21,28 +21,42 @@ export const expectMigrated = (
   }
 }
 
+// Full definition lines as they appear verbatim in css.tsx `:host`,
+// pinning both token names and their default values.
 const TOKEN_DEFINITIONS = [
-  '--theatre-panel-bg:',
-  '--theatre-panel-bg-95:',
-  '--theatre-panel-bg-80:',
-  '--theatre-panel-border:',
-  '--theatre-text-primary:',
-  '--theatre-text-secondary:',
-  '--theatre-text-muted:',
-  '--theatre-head-title:',
-  '--theatre-head-punctuation:',
-  '--theatre-accent:',
-  '--theatre-shadow-color:',
-  '--theatre-font-family:',
-  '--theatre-font-size:',
+  '--theatre-panel-bg: #282b2f;',
+  '--theatre-panel-bg-95: rgba(40, 43, 47, 0.95);',
+  '--theatre-panel-bg-80: rgba(40, 43, 47, 0.8);',
+  '--theatre-panel-bg-65: rgba(40, 43, 47, 0.65);',
+  '--theatre-panel-bg-99: rgba(40, 43, 47, 0.99);',
+  '--theatre-panel-border: #1f1f1f;',
+  '--theatre-text-primary: #ffffff;',
+  '--theatre-text-secondary: #cccccc;',
+  '--theatre-text-muted: #888888;',
+  '--theatre-head-title: #bbbbbb;',
+  '--theatre-head-punctuation: #808080;',
+  '--theatre-accent: #40aaa4;',
+  '--theatre-shadow-color: rgba(0, 0, 0, 0.25);',
+  '--theatre-font-family: -apple-system, BlinkMacSystemFont, Segoe WPC, Segoe Editor, HelveticaNeue-Light, Ubuntu, Droid Sans, sans-serif;',
+  '--theatre-font-size: 11px;',
 ]
 
 describe('studio theming tokens', () => {
-  it('defines all 13 tokens in css.tsx', () => {
+  it('defines all 15 tokens in css.tsx with their default values', () => {
     const css = read('css.tsx')
     for (const def of TOKEN_DEFINITIONS) {
       expect(css).toContain(def)
     }
+  })
+
+  it('host link underline colors use text tokens', () => {
+    const css = read('css.tsx')
+    // base state of external links
+    expect(css).toContain('text-decoration-color: var(--theatre-text-muted);')
+    // hover/active state
+    expect(css).toContain(
+      'text-decoration-color: var(--theatre-text-secondary);',
+    )
   })
 
   it('theme object references variables', () => {
