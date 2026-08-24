@@ -11,24 +11,26 @@ export function useExtensionButton(
   const refs = useRef({callback, svgSource})
   const id = useMemo(() => 'useExtensionButton#' + idCounter++, [])
   useEffect(() => {
-    const studio = theatre.getStudioSync()!
-    studio.extend({
-      id: id,
-      toolbars: {
-        global(set) {
-          set([
-            {
-              type: 'Icon',
-              title,
-              onClick() {
-                refs.current.callback()
+    // the studio attaches asynchronously after init() — wait for it
+    void theatre.getStudio().then((studio) => {
+      studio.extend({
+        id: id,
+        toolbars: {
+          global(set) {
+            set([
+              {
+                type: 'Icon',
+                title,
+                onClick() {
+                  refs.current.callback()
+                },
+                svgSource: refs.current.svgSource,
               },
-              svgSource: refs.current.svgSource,
-            },
-          ])
-          return () => {}
+            ])
+            return () => {}
+          },
         },
-      },
+      })
     })
   }, [id])
 }
@@ -39,24 +41,26 @@ export function extensionButton(
   svgSource?: string,
 ) {
   const id = 'useExtensionButton#' + idCounter++
-  const studio = theatre.getStudioSync()!
-  studio.extend({
-    id: id,
-    toolbars: {
-      global(set) {
-        set([
-          {
-            type: 'Icon',
-            title,
-            onClick() {
-              callback()
+  // the studio attaches asynchronously after init() — wait for it
+  void theatre.getStudio().then((studio) => {
+    studio.extend({
+      id: id,
+      toolbars: {
+        global(set) {
+          set([
+            {
+              type: 'Icon',
+              title,
+              onClick() {
+                callback()
+              },
+              svgSource: svgSource ?? stepForward,
             },
-            svgSource: svgSource ?? stepForward,
-          },
-        ])
-        return () => {}
+          ])
+          return () => {}
+        },
       },
-    },
+    })
   })
 }
 

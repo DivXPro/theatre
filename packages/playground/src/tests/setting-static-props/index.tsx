@@ -1,4 +1,5 @@
 import theatre from '@toy-box/core'
+import '@toy-box/studio'
 import {getProject} from '@toy-box/core'
 
 void theatre.init({studio: true, usePersistentStorage: false})

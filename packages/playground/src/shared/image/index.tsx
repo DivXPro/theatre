@@ -1,5 +1,6 @@
 import {getProject, types} from '@toy-box/core'
 import theatre from '@toy-box/core'
+import '@toy-box/studio'
 import React, {useEffect, useState} from 'react'
 import ReactDom from 'react-dom/client'
 import styled from 'styled-components'

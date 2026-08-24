@@ -1,6 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import theatre from '@toy-box/core'
+import '@toy-box/studio'
 import {getProject, notify} from '@toy-box/core'
 import {Scene} from './Scene'
 

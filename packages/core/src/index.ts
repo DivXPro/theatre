@@ -49,6 +49,22 @@ export async function init(opts?: InitOpts) {
   }
   initState.called = true
   initState.optsDeferred.resolve(opts)
+
+  if (opts?.studio && typeof window !== 'undefined') {
+    // The studio bundle registers itself with core when imported; init() only
+    // supplies the opts. If nothing has attached after a while, the likely
+    // cause is a missing `import '@toy-box/studio'` — say so instead of
+    // leaving the user with a silently absent studio.
+    setTimeout(() => {
+      if (studioDeferred.status !== 'resolved') {
+        console.warn(
+          `theatre.init({studio: true}) was called, but @toy-box/studio has not loaded. ` +
+            `Did you forget to import it? Add \`import '@toy-box/studio'\` to your app's entry ` +
+            `module — the studio registers itself with core when it is imported.`,
+        )
+      }
+    }, 5000)
+  }
 }
 
 const theatre = {getStudio, getStudioSync, init}

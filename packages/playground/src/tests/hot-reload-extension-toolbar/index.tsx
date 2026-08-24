@@ -1,5 +1,6 @@
 import type {IExtension} from '@toy-box/core'
 import theatre from '@toy-box/core'
+import '@toy-box/studio'
 import '@toy-box/core'
 import {extensionButton} from '../../shared/utils/useExtensionButton'
 

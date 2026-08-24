@@ -58,4 +58,17 @@ describe('Project empty-state guard vs init()', () => {
 
     expect(() => jest.advanceTimersByTime(5000)).toThrow(/is empty/)
   })
+
+  test('warns after 5s when init({studio: true}) was called but the studio never loads', async () => {
+    const {default: theatre} = require('../index')
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
+
+    await theatre.init({studio: true})
+    jest.advanceTimersByTime(6000)
+
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringMatching(/import '@toy-box\/studio'/),
+    )
+    warnSpy.mockRestore()
+  })
 })

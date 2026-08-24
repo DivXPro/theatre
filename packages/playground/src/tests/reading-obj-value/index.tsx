@@ -1,4 +1,5 @@
 import theatre from '@toy-box/core'
+import '@toy-box/studio'
 import {getProject, types} from '@toy-box/core'
 import state from './reading obj value.theatre-project-state.json'
 
