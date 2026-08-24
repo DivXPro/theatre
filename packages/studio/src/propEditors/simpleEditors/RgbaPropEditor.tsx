@@ -41,7 +41,7 @@ const noop = () => {}
 const RgbaPopover = styled.div`
   position: absolute;
   background-color: ${popoverBackgroundColor};
-  color: white;
+  color: var(--theatre-text-primary);
   margin: 0;
   cursor: default;
   border-radius: 3px;

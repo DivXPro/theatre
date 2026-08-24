@@ -38,7 +38,7 @@ const Wrapper = styled.div<{$isSelected: boolean}>`
 
 const EasingTooltip = styled(BasicPopover)`
   padding: 0.5em;
-  color: white;
+  color: var(--theatre-text-primary);
   max-width: 240px;
   pointer-events: none !important;
   --popover-bg: black;

@@ -39,7 +39,7 @@ const Label = styled.label`
   }
 
   &&[data-checked='true'] {
-    color: white;
+    color: var(--theatre-text-primary);
     background: #3f3f4c;
   }
 `

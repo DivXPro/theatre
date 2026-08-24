@@ -123,7 +123,7 @@ const Container = styled(animated.div)`
   cursor: default;
   ${pointerEventsAutoInNormalMode};
 
-  color: white;
+  color: var(--theatre-text-primary);
   box-sizing: border-box;
 
   border-radius: 4px;
@@ -154,7 +154,7 @@ const IconContainer = styled.div`
   background: #59595938;
   border-radius: 4px;
   border: 0.5px solid #ffffff1a;
-  color: white;
+  color: var(--theatre-text-primary);
   padding: 4px;
   font-size: 10px;
   /* margin: 0; */

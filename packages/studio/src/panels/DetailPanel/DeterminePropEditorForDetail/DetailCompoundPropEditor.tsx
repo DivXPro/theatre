@@ -68,7 +68,7 @@ const PropName = deriver(styled.div<{$isHighlighted: PropHighlighted}>`
   gap: 4px;
   user-select: none;
   &:hover {
-    color: white;
+    color: var(--theatre-text-primary);
   }
   overflow: hidden;
 

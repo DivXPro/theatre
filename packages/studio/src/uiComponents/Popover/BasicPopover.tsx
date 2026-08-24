@@ -21,7 +21,7 @@ const Container = styled.div`
   background: var(--popover-bg);
   /* border: 1px solid var(--popover-inner-stroke); */
 
-  color: white;
+  color: var(--theatre-text-primary);
   padding: 1px 2px 1px 10px;
   margin: 0;
   cursor: default;

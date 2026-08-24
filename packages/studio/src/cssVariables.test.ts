@@ -96,6 +96,35 @@ describe('studio theming tokens', () => {
     )
   })
 
+  it('text color residuals migrated', () => {
+    expectMigrated(
+      [
+        'panels/BasePanel/ExtensionPaneWrapper.tsx',
+        'panels/SequenceEditorPanel/GraphEditorToggle.tsx',
+        'panels/SequenceEditorPanel/DopeSheet/Right/LengthIndicator/LengthIndicator.tsx',
+        'panels/SequenceEditorPanel/DopeSheet/Right/BasicKeyframedTrack/KeyframeEditor/CurveEditorPopover/EasingOption.tsx',
+        'panels/DetailPanel/DeterminePropEditorForDetail/SingleRowPropEditor.tsx',
+        'panels/DetailPanel/DeterminePropEditorForDetail/DetailCompoundPropEditor.tsx',
+        'uiComponents/Popover/TooltipWithIcon.tsx',
+        'uiComponents/simpleContextMenu/ContextMenu/BaseMenu.tsx',
+        'uiComponents/form/BasicSwitch.tsx',
+        'uiComponents/Popover/BasicTooltip.tsx',
+        'uiComponents/Popover/BasicPopover.tsx',
+        'propEditors/simpleEditors/RgbaPropEditor.tsx',
+        'uiComponents/chordial/TooltipOverlay.tsx',
+        'toolbars/GlobalToolbar/GlobalToolbar.tsx',
+        'toolbars/GlobalToolbar/MoreMenu/MoreMenu.tsx',
+      ],
+      [
+        /color:\s*white\b/i,
+        /color:\s*#fff\b/i,
+        /color:\s*#ccc\b/i,
+        /color:\s*#888\b/i,
+      ],
+      [],
+    )
+  })
+
   it('css.tsx host text styles migrated', () => {
     const css = read('css.tsx')
     expect(css).not.toMatch(/color:\s*white\b/)

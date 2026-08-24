@@ -19,7 +19,7 @@ const MenuContainer = styled.ul`
 
   background: rgb(45 55 66 / 75%);
   backdrop-filter: blur(8px) brightness(70%);
-  color: white;
+  color: var(--theatre-text-primary);
   border: 0.5px solid #6262622c;
   box-sizing: border-box;
   box-shadow: ${transparentize(0.75, '#000000')} 0px 4px 20px;

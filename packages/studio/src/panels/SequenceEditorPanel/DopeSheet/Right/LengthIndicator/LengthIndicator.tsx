@@ -80,7 +80,7 @@ const Tooltip = styled.div`
 
   ${Strip}:hover &, ${Strip}.dragging & {
     display: block;
-    color: white;
+    color: var(--theatre-text-primary);
     background-color: ${colors.stripActive};
   }
 `
@@ -98,7 +98,7 @@ const Tumb = styled.div`
   background-color: #191919;
 
   ${Strip}:hover &, ${Strip}.dragging & {
-    color: white;
+    color: var(--theatre-text-primary);
     background-color: ${colors.stripActive};
 
     & > svg:first-child {

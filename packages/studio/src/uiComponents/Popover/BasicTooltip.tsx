@@ -6,13 +6,13 @@ import type {$IntentionalAny} from '@toy-box/core/types/public'
 const Container = styled.div`
   position: absolute;
 
-  color: white;
+  color: var(--theatre-text-primary);
   padding: 0;
   margin: 0;
   cursor: default;
   ${pointerEventsAutoInNormalMode};
 
-  color: white;
+  color: var(--theatre-text-primary);
   box-sizing: border-box;
 
   border-radius: 4px;

@@ -26,7 +26,7 @@ const Container = styled.button`
   font-size: 10px;
 
   &:hover {
-    color: white;
+    color: var(--theatre-text-primary);
   }
 
   & > svg {

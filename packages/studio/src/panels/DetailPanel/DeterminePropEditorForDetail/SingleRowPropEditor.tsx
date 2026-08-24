@@ -65,7 +65,7 @@ const PropNameContainer = styled.div<{
 
   ${propNameTextCSS};
   &:hover {
-    color: white;
+    color: var(--theatre-text-primary);
   }
 `
 

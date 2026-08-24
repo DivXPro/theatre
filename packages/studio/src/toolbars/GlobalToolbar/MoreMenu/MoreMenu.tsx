@@ -63,7 +63,7 @@ const Link = styled(Item)`
 
   &:hover {
     /* background-color: #398995; */
-    color: white !important;
+    color: var(--theatre-text-primary) !important;
     &:before {
       opacity: 1;
     }

@@ -28,7 +28,7 @@ const Container = styled.div`
 `
 
 const NumberOfConflictsIndicator = styled.div`
-  color: white;
+  color: var(--theatre-text-primary);
   width: 14px;
   height: 14px;
   background: #d00;

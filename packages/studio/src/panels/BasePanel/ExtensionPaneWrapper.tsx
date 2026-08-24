@@ -73,7 +73,7 @@ const ClosePanelButton = styled.button`
   border: none;
   cursor: pointer;
   &:hover {
-    color: white;
+    color: var(--theatre-text-primary);
   }
 `
 
