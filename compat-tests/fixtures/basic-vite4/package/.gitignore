@@ -1,3 +1,5 @@
 /.cache
 /dist
 /package-lock.json
+# tsc build artifact generated when the fixture runs
+/src/index.js
