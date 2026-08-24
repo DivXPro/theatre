@@ -150,4 +150,11 @@ describe('studio theming tokens', () => {
     expect(css).not.toMatch(/color:\s*white\b/)
     expect(css).not.toMatch(/\.text-color-pale\s*\{[^}]*#ccc/i)
   })
+
+  it('host font uses font tokens', () => {
+    const css = read('css.tsx')
+    expect(css).toContain('var(--theatre-font-size)')
+    expect(css).toContain('var(--theatre-font-family)')
+    expect(css).not.toMatch(/font:\s*\n?\s*11px/)
+  })
 })

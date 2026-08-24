@@ -72,15 +72,7 @@ const GlobalStyle =
           --theatre-font-family: -apple-system, BlinkMacSystemFont, Segoe WPC, Segoe Editor, HelveticaNeue-Light, Ubuntu, Droid Sans, sans-serif;
           --theatre-font-size: 11px;
           color: var(--theatre-text-primary);
-          font:
-            11px -apple-system,
-            BlinkMacSystemFont,
-            Segoe WPC,
-            Segoe Editor,
-            HelveticaNeue-Light,
-            Ubuntu,
-            Droid Sans,
-            sans-serif;
+          font: var(--theatre-font-size) var(--theatre-font-family);
 
           // external links
           a[href^='http'] {
