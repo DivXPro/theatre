@@ -49,9 +49,7 @@ export default function useSnapshotEditorCamera(
   const [orbitControlsRef, orbitControls] =
     useRefAndState<OrbitControlsImpl | null>(null)
 
-  const [camRef, cam] = useRefAndState<PerspectiveCameraImpl | undefined>(
-    undefined,
-  )
+  const [camRef, cam] = useRefAndState<PerspectiveCameraImpl | null>(null)
 
   const objRef = useRef<ISheetObject<typeof camConf> | null>(null)
 
@@ -73,7 +71,7 @@ export default function useSnapshotEditorCamera(
       <OrbitControls
         makeDefault
         ref={orbitControlsRef}
-        camera={cam}
+        camera={cam ?? undefined}
         enableDamping={false}
       />
     </>
@@ -97,7 +95,7 @@ export default function useSnapshotEditorCamera(
 const COMMIT_DEBOUNCE_MS = 200
 
 function usePassValuesFromOrbitControlsToTheatre(
-  cam: PerspectiveCameraImpl | undefined,
+  cam: PerspectiveCameraImpl | null,
   orbitControls: OrbitControlsImpl | null,
   objRef: MutableRefObject<ISheetObject<typeof camConf> | null>,
 ) {
@@ -186,7 +184,7 @@ function usePassValuesFromOrbitControlsToTheatre(
 }
 
 function usePassValuesFromTheatreToCamera(
-  cam: PerspectiveCameraImpl | undefined,
+  cam: PerspectiveCameraImpl | null,
   orbitControls: OrbitControlsImpl | null,
   objRef: MutableRefObject<ISheetObject<typeof camConf> | null>,
 ) {

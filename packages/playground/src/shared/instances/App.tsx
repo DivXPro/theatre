@@ -14,7 +14,10 @@ function Model({
   url,
   instance,
   ...props
-}: {url: string; instance?: string} & JSX.IntrinsicElements['group']) {
+}: {url: string; instance?: string} & Omit<
+  React.JSX.IntrinsicElements['group'],
+  'ref'
+>) {
   const {nodes} = useGLTF(url) as any
 
   return (

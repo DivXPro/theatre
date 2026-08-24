@@ -118,7 +118,8 @@ const defaultEditableFactoryConfig = {
   }),
   orthographicCamera: baseCameraConfig,
   points: baseObjectConfig,
-  line: baseObjectConfig,
+  // fiber v9 removed the `<line>` JSX element (SVG name conflict);
+  // use lineSegments/lineLoop or a drei Line wrapped with editable().
   lineLoop: baseObjectConfig,
   lineSegments: baseObjectConfig,
   fog: {

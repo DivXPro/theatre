@@ -48,6 +48,7 @@
     "@types/react-dom": "18.2.7",
     "@types/react-icons": "3.0.0",
     "@types/shallowequal": "^1.1.1",
+    "@types/styled-components": "^5.1.26",
     "@types/uuid": "^8.3.0",
     "blob-compare": "1.1.0",
     "esbuild": "^0.18.17",

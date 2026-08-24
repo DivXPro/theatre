@@ -4,7 +4,7 @@ import {defer, testServerAndPage} from '../../utils/testUtils'
 
 const PATH_TO_PACKAGE = path.join(__dirname, `./package`)
 
-describe(`react18`, () => {
+describe(`react19`, () => {
   test(`build succeeds`, async () => {
     cd(PATH_TO_PACKAGE)
     const {exitCode} = await $`npm run build`

@@ -2,6 +2,7 @@ import type {UnknownShorthandCompoundProps} from '@toy-box/core'
 import {notify} from '@toy-box/core'
 import {types} from '@toy-box/core'
 import type {Object3D} from 'three'
+import type {ThreeElements} from '@react-three/fiber'
 import type {IconID} from '../extension/icons'
 import {Color} from 'three'
 
@@ -23,7 +24,7 @@ type Meta<T> = {
 }
 export type ObjectConfig<T> = {props: Props} & Meta<T>
 export type EditableFactoryConfig = Partial<
-  Record<keyof JSX.IntrinsicElements, ObjectConfig<any>>
+  Record<keyof ThreeElements, ObjectConfig<any>>
 >
 
 type Vector3 = {
