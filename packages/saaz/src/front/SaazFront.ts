@@ -199,11 +199,7 @@ export class SaazFront<
       const closedSessions = val(this._atom.pointer.closedSessions)
       for (const session of closedSessions) {
         for (const update of session.optimisticUpdates) {
-          stateSoFar = this._cachedApplyTransactionToState(
-            update,
-            base,
-            stateSoFar,
-          )
+          stateSoFar = this._applyPersistedTransaction(update, base, stateSoFar)
         }
       }
 
@@ -216,11 +212,7 @@ export class SaazFront<
         // if the update has already been incorporated into the backend state, skip it (it'll be garbage collected soon)
         if (update.peerClock <= lastIncorporatedPeerClock) continue
 
-        stateSoFar = this._cachedApplyTransactionToState(
-          update,
-          base,
-          stateSoFar,
-        )
+        stateSoFar = this._applyPersistedTransaction(update, base, stateSoFar)
       }
 
       return stateSoFar
@@ -836,6 +828,38 @@ export class SaazFront<
     )
   }
 
+  /**
+   * Transactions that fail to replay (e.g. persisted by an older, incompatible
+   * version whose editor names have changed). Skipped silently after the first
+   * warning so hot prisms don't re-warn on every recalculation.
+   */
+  private _unreplayableTransactions = new Set<Transaction>()
+
+  /**
+   * Like {@link _cachedApplyTransactionToState}, but for persisted updates:
+   * an update that fails to replay is skipped (with a warning) instead of
+   * crashing the prism chain, which would leave `state` undefined and break
+   * every subsequent read and write.
+   */
+  private _applyPersistedTransaction(
+    transaction: Transaction,
+    base: FullSnapshot<OpSnapshot>,
+    before: FullSnapshot<OpSnapshot>,
+  ): FullSnapshot<OpSnapshot> {
+    if (this._unreplayableTransactions.has(transaction)) return before
+    try {
+      return this._cachedApplyTransactionToState(transaction, base, before)
+    } catch (error) {
+      this._unreplayableTransactions.add(transaction)
+      console.warn(
+        '[saaz] skipping a persisted update that fails to replay ' +
+          '(it may come from an older, incompatible version):',
+        error,
+      )
+      return before
+    }
+  }
+
   private _cachedApplyTransactionToState(
     transaction: Transaction,
     base: FullSnapshot<OpSnapshot>,
@@ -977,7 +1001,16 @@ export class SaazFront<
   }
 
   get state(): {op: OpSnapshot; cell: CellShape} {
-    return finalState(this._prisms.withPeers.getValue()) as $IntentionalAny
+    const s = this._prisms.withPeers.getValue()
+    if (s === undefined) {
+      // Should not happen: the prism chain starts from a non-null base and
+      // persisted updates that fail to replay are skipped. If it does, fail
+      // loudly here instead of deep inside finalState with a confusing error.
+      throw new Error(
+        '[saaz] state is unavailable (see earlier console errors)',
+      )
+    }
+    return finalState(s) as $IntentionalAny
   }
 
   get isReady(): boolean {
@@ -993,8 +1026,15 @@ export class SaazFront<
     draftFn?: (cellDraft: CellShape) => void,
     undoable: boolean = true,
   ): void {
+    const currentState = this._prisms.optimisticState.getValue()
+    if (currentState === undefined) {
+      throw new Error(
+        '[saaz] cannot create a transaction: state is unavailable ' +
+          '(see earlier console errors)',
+      )
+    }
     const [update, isEmpty, backwardOps] = this._createTransaction(
-      this._prisms.optimisticState.getValue(),
+      currentState,
       editorFn,
       draftFn,
     )
@@ -1360,6 +1400,10 @@ export class SaazFront<
     let oldState = withPeers.getValue()
     return withPeers.onStale(() => {
       const newState = withPeers.getValue()
+      // A failed recalculation leaves the prism undefined (the error is
+      // logged by dataverse). Skip the notification rather than crash the
+      // subscriber with a confusing "reading 'op'" deep inside finalState.
+      if (newState === undefined) return
       if (newState !== oldState) {
         oldState = newState
         fn(finalState(newState) as $IntentionalAny)
