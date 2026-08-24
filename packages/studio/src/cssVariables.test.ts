@@ -125,6 +125,26 @@ describe('studio theming tokens', () => {
     )
   })
 
+  it('accent and shadow migrated', () => {
+    expectMigrated(
+      [
+        'panels/SequenceEditorPanel/RightOverlay/FocusRangeZone/FocusRangeThumb.tsx',
+        'toolbars/GlobalToolbar/GlobalToolbar.tsx',
+      ],
+      [/#40aaa4/i],
+      ['var(--theatre-accent)'],
+    )
+    expectMigrated(
+      [
+        'notify.tsx',
+        'panels/DetailPanel/DetailPanel.tsx',
+        'toolbars/GlobalToolbar/MoreMenu/MoreMenu.tsx',
+      ],
+      [/rgba\(\s*0,\s*0,\s*0,\s*0\.25\s*\)/],
+      ['var(--theatre-shadow-color)'],
+    )
+  })
+
   it('css.tsx host text styles migrated', () => {
     const css = read('css.tsx')
     expect(css).not.toMatch(/color:\s*white\b/)

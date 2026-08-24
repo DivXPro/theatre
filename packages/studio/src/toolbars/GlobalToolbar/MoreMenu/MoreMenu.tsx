@@ -13,7 +13,7 @@ const Container = styled.div`
   align-items: stretch;
   justify-content: flex-start;
   box-shadow:
-    0px 1px 1px rgba(0, 0, 0, 0.25),
+    0px 1px 1px var(--theatre-shadow-color),
     0px 2px 6px rgba(0, 0, 0, 0.15);
   backdrop-filter: blur(14px);
   pointer-events: auto;

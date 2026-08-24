@@ -39,7 +39,7 @@ const Container = styled.div<{$pin: boolean}>`
   z-index: ${panelZIndexes.propsPanel};
 
   box-shadow:
-    0 1px 1px rgba(0, 0, 0, 0.25),
+    0 1px 1px var(--theatre-shadow-color),
     0 2px 6px rgba(0, 0, 0, 0.15);
   backdrop-filter: blur(14px);
   border-radius: 2px;

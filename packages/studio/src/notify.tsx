@@ -91,7 +91,7 @@ const NotificationContainer = styled.div`
   ${pointerEventsAutoInNormalMode};
   background-color: var(--theatre-panel-bg-80);
   box-shadow:
-    0 1px 1px rgba(0, 0, 0, 0.25),
+    0 1px 1px var(--theatre-shadow-color),
     0 2px 6px rgba(0, 0, 0, 0.15);
   backdrop-filter: blur(14px);
 
@@ -285,7 +285,7 @@ const Button = styled.button<{$danger?: boolean}>`
   ${pointerEventsAutoInNormalMode};
   background-color: var(--theatre-panel-bg-80);
   box-shadow:
-    0 1px 1px rgba(0, 0, 0, 0.25),
+    0 1px 1px var(--theatre-shadow-color),
     0 2px 6px rgba(0, 0, 0, 0.15);
   backdrop-filter: blur(14px);
   border: none;
