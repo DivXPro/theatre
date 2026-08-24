@@ -46,6 +46,11 @@ Theatre.js 1.0 是这个 fork 的首个主版本。本指南分两部分:Part 1 
 
 - **`getStudioSync()` 返回 undefined**:缺 `import '@toy-box/studio'` 副作用 import,见「init() 流程」。
 - **自托管 sync-server 起不来**:minimal loop 需要 `AUTH_DISABLED=true`;auth-on 则必须配 `DATABASE_URL`/`APP_URL`(dev 下还要 `DEV_DB_PORT`/`DEV_DB_PASSWORD`)。
+- **安装 `@toy-box/r3f` 报 `ERESOLVE`**:`@toy-box/r3f` 的 peer 是 `@react-three/fiber@^8`,fiber@8 只支持 react 18(`react >=18 <19`)。npm 7+ 会自动把 peer 装成最新版(react 19),还会顺带装 fiber@8 声明的 peerOptional `expo` 链(同样拽入 react 19),于是一个「裸」`npm install @toy-box/r3f` 必失败——裸装上游 `@react-three/fiber@8` 本身就以同样方式失败,非本包缺陷。正确姿势是按 r3f 惯例显式声明 react 18 技术栈:
+  ```bash
+  npm install react@^18 react-dom@^18 three @react-three/fiber@^8 @toy-box/r3f
+  ```
+  兜底:确需让 npm 跳过 peer 自动安装时用 `npm install --legacy-peer-deps`(已验证可装通)。需要 react 19 的用户请等 r3f 升级到 fiber@9。
 
 ## Part 2 内部架构说明
 

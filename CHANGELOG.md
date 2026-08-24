@@ -13,6 +13,8 @@ Theatre.js 1.0 将 npm scope 从 `@theatre/*` 迁至 `@toy-box/*`,定稿 `init()
   * 断线时全局工具栏显示「Reconnecting…」徽标。
 * 内部
   * 同步引擎改为 saaz 桥;StudioStore 后端按配置可选。
+* 已知问题
+  * `@toy-box/r3f`:裸 `npm install @toy-box/r3f` 会因 npm 自动安装 peer 最新版(react 19 + fiber@8 的 peerOptional expo 链)报 `ERESOLVE`,与裸装上游 `@react-three/fiber@8` 行为一致。需显式声明 react 18 技术栈,或用 `--legacy-peer-deps`,见 MIGRATION.md「常见问题」。
 
 ## 0.4.5
 
