@@ -37,7 +37,7 @@ export default class TheatreSheetObject<
    * @internal
    */
   constructor(internals: SheetObject) {
-    setPrivateAPI(this, internals)
+    setPrivateAPI(this as $FixMe, internals)
   }
 
   get props(): Pointer<this['value']> {

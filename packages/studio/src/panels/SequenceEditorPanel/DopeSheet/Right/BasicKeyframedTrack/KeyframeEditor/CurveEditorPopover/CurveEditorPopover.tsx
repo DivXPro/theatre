@@ -340,7 +340,7 @@ const CurveEditorPopover: React.FC<ICurveEditorPopoverProps> = (props) => {
         ref={optionsRef.current[preset.label]}
         onMouseOver={() => onEasingOptionMouseOver(preset)}
         onMouseOut={onEasingOptionMouseOut}
-        onClick={select}
+        onClick={(e) => select(e.nativeEvent)}
         tooltipPlacement={
           (optionsRef.current[preset.label].current?.offsetTop ?? 0) -
             (optionsScrollPosition ?? 0) <

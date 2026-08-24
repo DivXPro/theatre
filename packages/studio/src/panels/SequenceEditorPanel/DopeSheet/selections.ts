@@ -195,7 +195,7 @@ function swapKeyAndValue<K extends string, V extends string>(
   obj: StrictRecord<K, V>,
 ): StrictRecord<V, K> {
   const result: StrictRecord<V, K> = {}
-  for (const [key, value] of Object.entries(obj)) {
+  for (const [key, value] of Object.entries(obj) as Array<[K, V]>) {
     result[value as V] = key
   }
   return result

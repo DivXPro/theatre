@@ -299,7 +299,9 @@ export namespace stateEditors {
                     ? possibleColors.values().next().value
                     : Object.keys(graphEditorColors)[0]
 
-                selectedProps[path] = color
+                selectedProps[path] = color as
+                  | keyof GraphEditorColors
+                  | undefined
               }
 
               export function removePropFromGraphEditor(

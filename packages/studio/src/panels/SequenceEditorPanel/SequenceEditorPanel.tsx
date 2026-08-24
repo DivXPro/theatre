@@ -87,7 +87,7 @@ const defaultPosition: PanelPosition = {
 
 const minDims = {width: 800, height: 200}
 
-const SequenceEditorPanel: React.VFC<{}> = (props) => {
+const SequenceEditorPanel: React.FC<{}> = (props) => {
   return (
     <BasePanel
       panelId={'sequenceEditor' as UIPanelId}
@@ -99,7 +99,7 @@ const SequenceEditorPanel: React.VFC<{}> = (props) => {
   )
 }
 
-const Content: React.VFC<{}> = () => {
+const Content: React.FC<{}> = () => {
   const {dims} = usePanel()
   const [containerNode, setContainerNode] = useState<null | HTMLDivElement>(
     null,

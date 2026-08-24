@@ -6,7 +6,7 @@ import {useVal} from '@toy-box/react'
 import {outlineSelection} from '@toy-box/studio/selectors'
 import useChordial from '@toy-box/studio/uiComponents/chordial/useChodrial'
 
-export const ObjectItem: React.VFC<{
+export const ObjectItem: React.FC<{
   sheetObject: SheetObject
   depth: number
   overrideLabel?: string

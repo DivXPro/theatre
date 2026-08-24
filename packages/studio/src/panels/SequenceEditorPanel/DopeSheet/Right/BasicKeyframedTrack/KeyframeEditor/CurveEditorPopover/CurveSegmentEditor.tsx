@@ -67,7 +67,7 @@ type ICurveSegmentEditorProps = {
   backgroundConnections: Array<KeyframeConnectionWithAddress>
 }
 
-const CurveSegmentEditor: React.VFC<ICurveSegmentEditorProps> = (props) => {
+const CurveSegmentEditor: React.FC<ICurveSegmentEditorProps> = (props) => {
   const {
     curveConnection: {left, right},
     backgroundConnections,

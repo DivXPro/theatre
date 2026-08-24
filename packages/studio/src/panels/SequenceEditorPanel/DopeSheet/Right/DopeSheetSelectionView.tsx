@@ -446,7 +446,7 @@ const sortBounds = (b: SelectionBounds): SelectionBounds => {
   }
 }
 
-const SelectionRectangle: React.VFC<{
+const SelectionRectangle: React.FC<{
   state: SelectionBounds
   layoutP: Pointer<SequenceEditorPanelLayout>
 }> = ({state, layoutP}) => {

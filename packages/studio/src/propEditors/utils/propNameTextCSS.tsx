@@ -1,7 +1,13 @@
 import type {PropHighlighted} from '@toy-box/studio/panels/SequenceEditorPanel/whatPropIsHighlighted'
+import type {$IntentionalAny} from '@toy-box/core/types/public'
+import type {RuleSet} from 'styled-components'
 import {css} from 'styled-components'
 
-export const propNameTextCSS = css<{isHighlighted?: PropHighlighted}>`
+// typed as RuleSet<any> so it can be interpolated into any styled component,
+// whether or not that component declares isHighlighted
+export const propNameTextCSS: RuleSet<$IntentionalAny> = css<{
+  isHighlighted?: PropHighlighted
+}>`
   font-weight: 300;
   font-size: 11px;
   color: ${(props) => (props.isHighlighted === 'self' ? '#CCC' : '#919191')};

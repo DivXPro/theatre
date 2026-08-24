@@ -204,7 +204,7 @@ export const ProvideStyles: React.FC<{
   children: React.ReactNode
 }> = (props) => {
   return (
-    <StyleSheetManager disableVendorPrefixes target={props.target}>
+    <StyleSheetManager target={props.target}>
       <>
         <GlobalStyle />
         {props.children}

@@ -32,7 +32,7 @@ export default class AppLink {
     })
   }
 
-  get api() {
+  get api(): CreateTRPCProxyClient<StudioTRPCRouter> {
     return this._client
   }
 }

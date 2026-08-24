@@ -194,7 +194,7 @@ namespace Icons {
   )
 }
 
-const NextPrevKeyframeCursors: React.VFC<NearbyKeyframesControls> = (props) => {
+const NextPrevKeyframeCursors: React.FC<NearbyKeyframesControls> = (props) => {
   const prevPresence = usePresence(props.prev?.itemKey)
   const curPresence = usePresence(
     props.cur?.type === 'on' ? props.cur.itemKey : undefined,

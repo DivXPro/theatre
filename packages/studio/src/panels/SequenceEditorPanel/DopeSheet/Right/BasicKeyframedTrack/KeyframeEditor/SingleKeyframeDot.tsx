@@ -111,7 +111,7 @@ const HitZone = styled.div<{isInlineEditorPopoverOpen: boolean}>`
 type ISingleKeyframeDotProps = ISingleKeyframeEditorProps
 
 /** The ◆ you can grab onto in "keyframe editor" (aka "dope sheet" in other programs) */
-const SingleKeyframeDot: React.VFC<ISingleKeyframeDotProps> = (props) => {
+const SingleKeyframeDot: React.FC<ISingleKeyframeDotProps> = (props) => {
   const logger = useLogger('SingleKeyframeDot', props.keyframe.id)
   const presence = usePresence(props.itemKey)
   const [ref, node] = useRefAndState<HTMLDivElement | null>(null)

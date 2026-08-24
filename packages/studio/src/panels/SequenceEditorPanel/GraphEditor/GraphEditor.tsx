@@ -87,7 +87,6 @@ const GraphEditor: React.FC<{
         style={{
           width: width + 'px',
           height: height + 'px',
-          // @ts-expect-error
           '--unitSpaceToScaledSpaceMultiplier':
             unitSpaceToScaledSpaceMultiplier,
           '--graphEditorVerticalSpace': `${val(

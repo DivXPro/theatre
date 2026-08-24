@@ -50,7 +50,7 @@ export const AggregateCurveEditorPopover: React.FC<
   )
 })
 
-export const AggregateKeyframeConnector: React.VFC<
+export const AggregateKeyframeConnector: React.FC<
   IAggregateKeyframeConnectorProps
 > = (props) => {
   const [nodeRef, node] = useRefAndState<HTMLDivElement | null>(null)

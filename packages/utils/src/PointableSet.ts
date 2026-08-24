@@ -83,7 +83,7 @@ export const pointableSetUtil = {
     predicate: (value: V | undefined) => boolean | undefined | null,
   ): PointableSet<Id, V> {
     const set = pointableSetUtil.shallowCopy(existing)
-    for (const [id, value] of Object.entries(set.byId)) {
+    for (const [id, value] of Object.entries(set.byId) as Array<[Id, V]>) {
       if (!predicate(value)) {
         delete set.allIds[id]
         delete set.byId[id]

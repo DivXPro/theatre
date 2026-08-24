@@ -21,7 +21,7 @@ function OptionButton<T>({
   return (
     <>
       <ButtonImpl
-        forwardedAs={Button}
+        forwardedAs={Button as React.ElementType}
         className={isSelected ? 'selected' : undefined}
         aria-label={label}
         onClick={onClick}

@@ -25,7 +25,7 @@
     "@types/react": "^18.0.25",
     "esbuild": "^0.15.15",
     "tsx": "4.7.0",
-    "typescript": "5.1.6"
+    "typescript": "5.6.3"
   },
   "private": true
 }

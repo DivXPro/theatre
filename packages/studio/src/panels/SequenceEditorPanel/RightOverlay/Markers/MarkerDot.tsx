@@ -103,7 +103,7 @@ type IMarkerDotProps = {
   markerId: SequenceMarkerId
 }
 
-const MarkerDot: React.VFC<IMarkerDotProps> = ({layoutP, markerId}) => {
+const MarkerDot: React.FC<IMarkerDotProps> = ({layoutP, markerId}) => {
   const sheetAddress = useVal(layoutP.sheet.address)
   const marker = useVal(
     getStudio().atomP.historic.projects.stateByProjectId[sheetAddress.projectId]
@@ -149,7 +149,7 @@ type IMarkerDotVisibleProps = {
   marker: StudioHistoricStateSequenceEditorMarker
 }
 
-const MarkerDotVisible: React.VFC<IMarkerDotVisibleProps> = ({
+const MarkerDotVisible: React.FC<IMarkerDotVisibleProps> = ({
   layoutP,
   marker,
 }) => {

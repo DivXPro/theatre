@@ -88,7 +88,7 @@ function minimalOverrideObject<T extends {}>(base: T, override: T): T {
   for (const key of keysOfOverride) {
     const baseVal = base[key]
     const overrideVal = override[key]
-    const minimalOverrideVal = minimalOverride(baseVal, overrideVal)
+    const minimalOverrideVal = minimalOverride(baseVal as {}, overrideVal as {})
     o[key] = minimalOverrideVal
     if (minimalOverrideVal !== baseVal) {
       atLeastOneKeyWasDifferent = true

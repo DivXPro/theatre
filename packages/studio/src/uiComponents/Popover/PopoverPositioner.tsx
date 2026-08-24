@@ -8,6 +8,7 @@ import useOnClickOutside from '@toy-box/studio/uiComponents/useOnClickOutside'
 import onPointerOutside from '@toy-box/studio/uiComponents/onPointerOutside'
 import noop from '@toy-box/utils/noop'
 import {clamp} from 'lodash-es'
+import type {$IntentionalAny} from '@toy-box/core/types/public'
 
 const minimumDistanceOfArrowToEdgeOfPopover = 8
 
@@ -34,8 +35,13 @@ export type PopoverPositionerProps = {
 const PopoverPositioner: React.FC<PopoverPositionerProps> = (props) => {
   const originalElement = props.children()
   const [ref, container] = useRefAndState<HTMLElement | SVGElement | null>(null)
-  const style: Record<string, string> = originalElement.props.style
-    ? {...originalElement.props.style}
+  // react 19 types ReactElement.props as unknown; the child is always one of
+  // our own components accepting style/ref
+  const originalProps = originalElement.props as {
+    style?: Record<string, string>
+  }
+  const style: Record<string, string> = originalProps.style
+    ? {...originalProps.style}
     : {}
   style.position = 'absolute'
 
@@ -147,7 +153,7 @@ const PopoverPositioner: React.FC<PopoverPositionerProps> = (props) => {
 
   return (
     <ArrowContext.Provider value={arrowContextValue}>
-      {cloneElement(originalElement, {ref, style})}
+      {cloneElement(originalElement, {ref, style} as $IntentionalAny)}
     </ArrowContext.Provider>
   )
 }

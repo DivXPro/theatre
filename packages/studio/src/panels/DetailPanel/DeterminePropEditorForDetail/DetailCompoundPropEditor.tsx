@@ -39,7 +39,7 @@ const Container = styled.div`
   --right-width: 60%;
 `
 
-const Header = styled.div<{isHighlighted: PropHighlighted}>`
+const Header = styled.div`
   height: 30px;
   display: flex;
   align-items: stretch;
@@ -257,7 +257,9 @@ function DetailCompoundPropEditor<
                   key={'prop-' + subPropKey}
                   // @ts-ignore
                   propConfig={subPropConfig}
-                  pointerToProp={pointerToProp[subPropKey] as Pointer<$FixMe>}
+                  pointerToProp={
+                    (pointerToProp as $FixMe)[subPropKey] as Pointer<$FixMe>
+                  }
                   obj={obj}
                 />
               )
@@ -279,7 +281,9 @@ function DetailCompoundPropEditor<
                 <DeterminePropEditorForDetail
                   key={'prop-' + subPropKey}
                   propConfig={subPropConfig}
-                  pointerToProp={pointerToProp[subPropKey] as Pointer<$FixMe>}
+                  pointerToProp={
+                    (pointerToProp as $FixMe)[subPropKey] as Pointer<$FixMe>
+                  }
                   obj={obj}
                   visualIndentation={visualIndentation + 1}
                 />

@@ -1,4 +1,5 @@
 import type {AppRouter} from '@toy-box/app/src/server/api/root'
+import type {CreateTRPCProxyClient} from '@trpc/client'
 import {createTRPCProxyClient, httpBatchLink} from '@trpc/client'
 import superjson from 'superjson'
 import {env} from './env'
@@ -13,7 +14,7 @@ if (typeof rawAppUrl === 'string' && rawAppUrl !== '') {
   appHost = rawAppUrl.startsWith('http') ? rawAppUrl : 'https://' + rawAppUrl
 }
 
-const appClient = appHost
+const appClient: CreateTRPCProxyClient<AppRouter> | null = appHost
   ? createTRPCProxyClient<AppRouter>({
       links: [
         httpBatchLink({
