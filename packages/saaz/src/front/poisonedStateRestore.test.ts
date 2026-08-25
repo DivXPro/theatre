@@ -162,6 +162,95 @@ describe('restoring from incompatible persisted state', () => {
     }
   })
 
+  test('mixed cell (cell root, raw nested entries) falls back to empty; front stays usable', async () => {
+    // 混合树:根是合法 cell 格式,内层 mapProps 却混着未包装的原始值。
+    // 旧版本在旧数据上继续写入就会产生这种存档。
+    const stored = poisonSnapshots(await seedStorageWithSyncedState(), {
+      op: {$schemaVersion: 1, opCount: 42},
+      cell: {
+        $type: ['map', 'base'],
+        $branches: {
+          base: {
+            $mapProps: {
+              historic: {panels: {}},
+            },
+          },
+        },
+      },
+    })
+    const front = new SaazFront({
+      schema,
+      dbName: 'd',
+      storageAdapter: new FrontMemoryAdapter(stored),
+      backend: freshBack(),
+    })
+    try {
+      await front.ready
+      expect(() => front.state).not.toThrow()
+      // cell 已回退为空:访问内层不会抛 "not an ahistoric cell"
+      front.tx(undefined, (cellDraft) => {
+        void (cellDraft as $IntentionalAny).historic
+        ;(cellDraft as $IntentionalAny).panels = {}
+      })
+      front.tx((e) => e.setCount({to: 11}), undefined)
+      expect(front.state.op.opCount).toBe(11)
+    } finally {
+      front.teardown()
+    }
+  })
+
+  test('backend-delivered snapshot with raw cell is cleaned; front stays usable', async () => {
+    // 服务器内存里的状态被旧版本前端污染过,snapshot 经 backend 下发。
+    // _setSessionState 必须清洗后才写入 sessionState.snapshot(base 读的就是它)。
+    const poisonSnapshot = {
+      op: {$schemaVersion: 1, opCount: 42},
+      cell: {ahistoric: {foo: 1}, historic: {}, ephemeral: {}},
+    }
+    const backend = {
+      async subscribe(): Promise<() => void> {
+        return () => undefined
+      },
+      async getUpdatesSinceClock() {
+        return {
+          hasUpdates: true,
+          clock: 5,
+          lastIncorporatedPeerClock: null,
+          peerId: 'p',
+          snapshot: {type: 'Snapshot', value: poisonSnapshot},
+        }
+      },
+      async applyUpdates() {
+        return {ok: true}
+      },
+      async updatePresence() {
+        return {ok: true}
+      },
+      async closePeer() {
+        return {ok: true}
+      },
+    }
+    const front = new SaazFront({
+      schema,
+      dbName: 'd',
+      storageAdapter: new FrontMemoryAdapter(),
+      backend: backend as $IntentionalAny,
+      peerId: 'p',
+    })
+    try {
+      await front.ready
+      // 等首轮 backend 拉取完成
+      await new Promise((r) => setTimeout(r, 50))
+      expect(() => front.state).not.toThrow()
+      front.tx(undefined, (cellDraft) => {
+        void (cellDraft as $IntentionalAny).ahistoric
+      })
+      front.tx((e) => e.setCount({to: 13}), undefined)
+      expect(front.state.op.opCount).toBe(13)
+    } finally {
+      front.teardown()
+    }
+  })
+
   test('stored update with unknown editor is skipped; front stays usable', async () => {
     const stored = poisonStoredUpdates(await seedStorageWithSyncedState(), [
       ['removedEditor', {to: 1}],

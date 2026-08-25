@@ -892,7 +892,10 @@ export class SaazFront<
   _setSessionState(opts: SessionState<OpSnapshot>) {
     const s = {
       ...opts,
-      value: ensureStateIsUptodate(opts.snapshot, this._schema),
+      // The cleaned snapshot must land in `snapshot` itself: the base prism
+      // reads `sessionState.snapshot`, so a raw-but-cleaned-elsewhere value
+      // would still feed incompatible data into every transaction.
+      snapshot: ensureStateIsUptodate(opts.snapshot, this._schema),
     }
 
     if (s.peerId === this._peerId) {

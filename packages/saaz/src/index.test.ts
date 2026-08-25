@@ -135,7 +135,7 @@ describe(`saaz`, () => {
 
     expect(
       (mem.export() as $IntentionalAny).sessions['peer1'].keyval.sessionState
-        .value.op,
+        .snapshot.op,
     ).toEqual({opCount: 13})
 
     // const fauxBackennd: SaazBackInterface = {
