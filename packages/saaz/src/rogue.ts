@@ -69,7 +69,7 @@ type PathSegment = [branchName: BranchName, mapProp: string]
 
 type Path = PathSegment[]
 
-function isCell(v: unknown): v is Cell {
+export function isCell(v: unknown): v is Cell {
   if (typeof v !== 'object' || v === null) return false
   const $type = (v as any).$type
   if (!Array.isArray($type)) return false

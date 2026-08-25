@@ -135,6 +135,33 @@ describe('restoring from incompatible persisted state', () => {
     }
   })
 
+  test('old-format (raw) snapshot cell falls back to empty; front stays usable', async () => {
+    // 旧开发版本把 cell 存成未包装的 raw 对象;op 部分形状正常
+    const stored = poisonSnapshots(await seedStorageWithSyncedState(), {
+      op: {$schemaVersion: 1, opCount: 42},
+      cell: {ahistoric: {foo: 1}, historic: {}, ephemeral: {}},
+    })
+    const front = new SaazFront({
+      schema,
+      dbName: 'd',
+      storageAdapter: new FrontMemoryAdapter(stored),
+      backend: freshBack(),
+    })
+    try {
+      await front.ready
+      expect(() => front.state).not.toThrow()
+      // cell 已回退为空:读写 cell draft 不会抛 "not an ahistoric cell"
+      front.tx(undefined, (cellDraft) => {
+        void (cellDraft as $IntentionalAny).ahistoric
+        ;(cellDraft as $IntentionalAny).foo = 'bar'
+      })
+      front.tx((e) => e.setCount({to: 9}), undefined)
+      expect(front.state.op.opCount).toBe(9)
+    } finally {
+      front.teardown()
+    }
+  })
+
   test('stored update with unknown editor is skipped; front stays usable', async () => {
     const stored = poisonStoredUpdates(await seedStorageWithSyncedState(), [
       ['removedEditor', {to: 1}],
