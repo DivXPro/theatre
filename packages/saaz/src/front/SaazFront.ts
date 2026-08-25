@@ -991,10 +991,15 @@ export class SaazFront<
       },
     )
 
+    // subscribe() rejects when the backend is unreachable. Log it here so the
+    // rejection is handled; otherwise it surfaces as an unhandled rejection.
+    void stop.catch((err) => this._consoleErrorFiltered(err))
+
     const unsub = () => {
       // `stop` is a promise resolving to the backend's unsubscribe function —
       // call it, so teardown actually stops the backend subscription.
-      void stop.then((s) => s())
+      // The rejection case is already logged above; ignore it here.
+      void stop.then((s) => s()).catch(() => {})
     }
 
     return unsub

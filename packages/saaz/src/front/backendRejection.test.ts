@@ -85,6 +85,46 @@ const expectQueueDrains = (front: SaazFront<OpShape, Editors, {}, {}>) =>
     ),
   ])
 
+test('a failing backend subscribe is logged, not an unhandled rejection', async () => {
+  const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+  const unhandled: unknown[] = []
+  const onUnhandled = (reason: unknown) => {
+    unhandled.push(reason)
+  }
+  process.on('unhandledRejection', onUnhandled)
+
+  const backend = createFakeBackend(false) as $IntentionalAny
+  backend.subscribe = async (): Promise<() => void> => {
+    throw new Error('backend unreachable')
+  }
+  const front = new SaazFront({
+    schema,
+    dbName: 'd',
+    storageAdapter: new FrontMemoryAdapter(),
+    backend: backend as SaazBackInterface,
+    peerId: 'p',
+  })
+
+  try {
+    await front.ready
+    await flush()
+    await flush()
+
+    // the rejection is surfaced through the filtered error log
+    expect(errorSpy).toHaveBeenCalled()
+
+    // teardown's unsub path must not re-raise the rejected `stop` promise
+    front.teardown()
+    await flush()
+    await flush()
+
+    expect(unhandled).toEqual([])
+  } finally {
+    process.off('unhandledRejection', onUnhandled)
+    errorSpy.mockRestore()
+  }
+})
+
 test('dev: a backend-rejected update is fail-loud and dropped from the queue', async () => {
   const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
   const front = makeFront(true)
