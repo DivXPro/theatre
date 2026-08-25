@@ -62,7 +62,7 @@ function App() {
       <Canvas
         dpr={[1.5, 2]}
         linear
-        shadows
+        shadows="percentage"
         gl={{preserveDrawingBuffer: true}}
         frameloop="demand"
       >
