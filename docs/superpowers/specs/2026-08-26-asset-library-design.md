@@ -30,8 +30,41 @@
 | 转换管线 | 一期就做，浏览器内完成（FBXLoader 解析 + GLTFExporter 导出） |
 | 库界面 | 场景左侧可收起面板，模型/姿势/动作三个 tab，网格卡片 |
 | 导入类型识别 | 一个入口，按文件内容自动识别模型/动作/姿势 |
+| 存储访问 | 统一走异步适配接口；playground 用 IndexedDB 实现，应用层可换 HTTP API 实现 |
 
 ## 数据结构与存储
+
+### 存储适配层（本地 IndexedDB / 远程 API）
+
+库的所有读写都经过 `LibraryBackend` 异步接口，上层（导入管线、
+面板、姿势应用）不直接碰 IndexedDB：
+
+```ts
+interface LibraryBackend {
+  // 元数据
+  listEntries(kind?: EntryKind): Promise<LibraryEntry[]>
+  getEntry(id: string): Promise<LibraryEntry | undefined>
+  putEntry(entry: LibraryEntry): Promise<void>
+  deleteEntry(id: string): Promise<void>
+  // 大二进制:以 URL 形式暴露——本地实现返回 blob: URL,
+  // 远程实现直接返回 CDN/接口地址,渲染层无感
+  putBlob(data: Blob): Promise<string>   // 返回 blobId(内容哈希)
+  getBlobUrl(blobId: string): Promise<string>
+  deleteBlob(blobId: string): Promise<void>
+}
+```
+
+两个实现：
+
+- **P1：`IndexedDBBackend`**（playground），即下面两张表的封装；
+- **将来：`HttpBackend`**（应用层），entries 走 REST JSON，
+  blob 上传走 multipart，`getBlobUrl` 返回远程地址。接口形状
+  按"远程也好实现"设计：全部方法异步、blob 内容寻址（blobId =
+  内容哈希，天然支持服务端去重和缓存）、无流式/长事务。
+
+切换实现只在库初始化时注入不同 backend，场景代码零改动。
+
+### 本地存储结构
 
 独立 IndexedDB 数据库 `toybox-asset-library`，与 theatre 各项目存储
 平级、互不干扰。两个 object store：
@@ -170,8 +203,8 @@ type AnimationEntry = {
 
 ## 分期
 
-- **P1（本设计实现）**：库数据层 + 导入管线（含自动识别与两层
-  去重）+ 模型 tab + 动作 tab（同族过滤、点击套用、淡入淡出）
+- **P1（本设计实现）**：库数据层（LibraryBackend 接口 + IndexedDB
+  实现）+ 导入管线（含自动识别与两层去重）+ 模型 tab + 动作 tab（同族过滤、点击套用、淡入淡出）
   + 缩略图 + 导入确认清单。交付后"导入模型 → 放置 → 切换动作"
   完整可用
 - **P2**：静态姿势（从动作抽一帧存姿势 JSON、摆好骨骼一键保存）
@@ -189,4 +222,5 @@ type AnimationEntry = {
 - 纯动画 GLB 内含骨骼节点树（glTF 要求动画轨道指向文件内存在的
   节点），几 KB，不算冗余，且天然记录骨架族
 - 库浏览器侧数据（IndexedDB）不随 theatre 同步协议走；多端各自
-  建库，P1 不做库的同步/导出导入
+  建库，P1 不做库的同步/导出导入。应用层接入 HttpBackend 后
+  天然多端正，无需再改设计
