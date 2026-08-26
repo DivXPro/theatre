@@ -28,6 +28,7 @@ module.exports = {
       'jest-esbuild',
       {
         sourcemap: true,
+        target: 'es2020',
         supported: {
           'dynamic-import': false,
         },
@@ -37,6 +38,7 @@ module.exports = {
       'jest-esbuild',
       {
         sourcemap: true,
+        target: 'es2020',
         supported: {
           'dynamic-import': false,
         },
