@@ -271,7 +271,8 @@ export function AssetLibraryPanel({
         top: 0,
         bottom: 0,
         width: 260,
-        zIndex: 20,
+        // studio 大纲面板的层级是 100,面板必须盖过它
+        zIndex: 1000,
         display: 'flex',
         flexDirection: 'column',
         background: 'rgba(24,24,28,0.96)',
