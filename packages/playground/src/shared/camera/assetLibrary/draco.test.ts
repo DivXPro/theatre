@@ -70,3 +70,43 @@ describe('compressGLBDraco', () => {
     expect(pos.getCount()).toBe(5000)
   })
 })
+
+describe('compressGLBDraco 初始化失败重试', () => {
+  afterEach(() => {
+    jest.dontMock('draco3dgltf')
+    jest.resetModules()
+  })
+
+  it('第一次初始化失败不缓存,第二次调用重试并成功', async () => {
+    let encoderCalls = 0
+    const actual = jest.requireActual('draco3dgltf')
+    jest.doMock('draco3dgltf', () => ({
+      ...actual,
+      createEncoderModule: (...args: unknown[]) => {
+        encoderCalls++
+        if (encoderCalls === 1) {
+          return Promise.reject(new Error('wasm 404'))
+        }
+        return actual.createEncoderModule(...args)
+      },
+    }))
+    jest.resetModules()
+
+    const {compressGLBDraco: compressMocked} = require('./draco') as {
+      compressGLBDraco: typeof compressGLBDraco
+    }
+
+    const glb = await buildGLB(5000)
+    const raw = glb.buffer.slice(
+      glb.byteOffset,
+      glb.byteOffset + glb.byteLength,
+    )
+
+    await expect(compressMocked(raw)).rejects.toThrow('wasm 404')
+
+    const compressed = await compressMocked(raw)
+    expect(compressed.byteLength).toBeLessThan(glb.byteLength)
+    const text = new TextDecoder().decode(new Uint8Array(compressed))
+    expect(text).toContain('KHR_draco_mesh_compression')
+  })
+})

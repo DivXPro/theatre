@@ -10,23 +10,30 @@ import draco3dgltf from 'draco3dgltf'
  */
 let ioPromise: Promise<WebIO> | undefined
 
+async function initIO(): Promise<WebIO> {
+  // 浏览器里胶水按页面 URL 相对路径取 wasm 会 404,指到 vite 服务的 /draco/;
+  // node(jest)里胶水走 fs 直读,不能给它 locateFile
+  const wasmOpts =
+    typeof window === 'undefined'
+      ? undefined
+      : {locateFile: (file: string) => `/draco/${file}`}
+  const [decoder, encoder] = await Promise.all([
+    draco3dgltf.createDecoderModule(wasmOpts),
+    draco3dgltf.createEncoderModule(wasmOpts),
+  ])
+  return new WebIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({
+    'draco3d.decoder': decoder,
+    'draco3d.encoder': encoder,
+  })
+}
+
 function getIO(): Promise<WebIO> {
-  return (ioPromise ??= (async () => {
-    // 浏览器里胶水按页面 URL 相对路径取 wasm 会 404,指到 vite 服务的 /draco/;
-    // node(jest)里胶水走 fs 直读,不能给它 locateFile
-    const wasmOpts =
-      typeof window === 'undefined'
-        ? undefined
-        : {locateFile: (file: string) => `/draco/${file}`}
-    const [decoder, encoder] = await Promise.all([
-      draco3dgltf.createDecoderModule(wasmOpts),
-      draco3dgltf.createEncoderModule(wasmOpts),
-    ])
-    return new WebIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({
-      'draco3d.decoder': decoder,
-      'draco3d.encoder': encoder,
-    })
-  })())
+  ioPromise ??= initIO().catch((err) => {
+    // 初始化失败不缓存(wasm 404 等瞬时故障),下次调用重试
+    ioPromise = undefined
+    throw err
+  })
+  return ioPromise
 }
 
 /**
