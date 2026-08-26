@@ -121,4 +121,66 @@ describe('blob 生命周期', () => {
     expect(ids).toContain(used)
     expect(ids).not.toContain(orphan)
   })
+
+  test('并发导入与孤儿清理: blob 与条目都保留', async () => {
+    const lib = new Library(new IndexedDBBackend())
+    const data = new Blob(['concurrent-sweep-import'])
+    let importedBlobId = ''
+    await Promise.all([
+      lib.sweepOrphanBlobs(),
+      lib.putBlobWithEntry(data, (blobId) => {
+        importedBlobId = blobId
+        return {
+          id: 'a-concurrent-sweep',
+          kind: 'animation',
+          name: 'a-concurrent-sweep',
+          rig: 'r',
+          blobId,
+          contentHash: 'h-concurrent-sweep',
+          duration: 1,
+          createdAt: 1,
+        }
+      }),
+    ])
+    expect(await lib.backend.listBlobIds()).toContain(importedBlobId)
+    const entry = await lib.backend.getEntry('a-concurrent-sweep')
+    expect(entry).toBeTruthy()
+    expect(entry?.kind).toBe('animation')
+  })
+
+  test('并发删除与同哈希导入: 新条目与新 blob 都保留', async () => {
+    const lib = new Library(new IndexedDBBackend())
+    const data = new Blob(['shared-hash'])
+    let blobId = ''
+    await lib.putBlobWithEntry(data, (id) => {
+      blobId = id
+      return {
+        id: 'm-delete-original',
+        kind: 'model',
+        name: 'm-delete-original',
+        rig: 'static',
+        blobId: id,
+        contentHash: 'h-shared-hash',
+        boneCount: 0,
+        vertexCount: 1,
+        createdAt: 1,
+      }
+    })
+    await Promise.all([
+      lib.deleteEntryDeep('m-delete-original'),
+      lib.putBlobWithEntry(data, (id) => ({
+        id: 'm-delete-reimport',
+        kind: 'model',
+        name: 'm-delete-reimport',
+        rig: 'static',
+        blobId: id,
+        contentHash: 'h-shared-hash',
+        boneCount: 0,
+        vertexCount: 1,
+        createdAt: 1,
+      })),
+    ])
+    expect(await lib.backend.listBlobIds()).toContain(blobId)
+    expect(await lib.backend.getEntry('m-delete-reimport')).toBeTruthy()
+  })
 })

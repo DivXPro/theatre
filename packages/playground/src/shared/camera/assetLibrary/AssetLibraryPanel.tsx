@@ -102,15 +102,19 @@ export function AssetLibraryPanel({
         if (item.type !== 'model') continue
         const blob = await renderThumbnail(item.glb)
         if (!blob) continue
-        const thumbnailId = await getLibrary().backend.putBlob(blob)
-        if (!mountedRef.current) return
         const list = (await getLibrary().backend.listEntries(
           'model',
         )) as ModelEntry[]
         const entry = list.find(
           (e) => e.contentHash === item.contentHash && !e.thumbnailId,
         )
-        if (entry) await getLibrary().putEntry({...entry, thumbnailId})
+        if (entry) {
+          await getLibrary().putBlobWithEntry(blob, (thumbnailId) => ({
+            ...entry,
+            thumbnailId,
+          }))
+          if (!mountedRef.current) return
+        }
       }
     } finally {
       if (mountedRef.current) {

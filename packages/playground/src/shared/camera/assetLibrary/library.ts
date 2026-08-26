@@ -9,6 +9,7 @@ import type {EntryKind, LibraryBackend, LibraryEntry} from './types'
  */
 export class Library {
   private listeners = new Set<() => void>()
+  private queue: Promise<void> = Promise.resolve()
 
   constructor(readonly backend: LibraryBackend) {}
 
@@ -23,21 +24,49 @@ export class Library {
     this.listeners.forEach((fn) => fn())
   }
 
+  /** 所有写操作串行化:删除/清理与导入不会交错扫描引用 */
+  private enqueue<T>(fn: () => Promise<T>): Promise<T> {
+    const run = this.queue.then(fn, fn)
+    this.queue = run.then(
+      () => undefined,
+      () => undefined,
+    )
+    return run
+  }
+
   async putEntry(entry: LibraryEntry): Promise<void> {
-    await this.backend.putEntry(entry)
-    this.emit()
+    await this.enqueue(async () => {
+      await this.backend.putEntry(entry)
+      this.emit()
+    })
   }
 
   async deleteEntry(id: string): Promise<void> {
-    await this.backend.deleteEntry(id)
-    this.emit()
+    await this.enqueue(async () => {
+      await this.backend.deleteEntry(id)
+      this.emit()
+    })
   }
 
   async renameEntry(id: string, name: string): Promise<void> {
-    const entry = await this.backend.getEntry(id)
-    if (!entry) return
-    await this.backend.putEntry({...entry, name})
-    this.emit()
+    await this.enqueue(async () => {
+      const entry = await this.backend.getEntry(id)
+      if (!entry) return
+      await this.backend.putEntry({...entry, name})
+      this.emit()
+    })
+  }
+
+  /** 原子写入 blob + 条目(导入/缩略图共用):与删除/清理串行,引用不会被并发误删 */
+  async putBlobWithEntry(
+    data: Blob,
+    makeEntry: (blobId: string) => LibraryEntry,
+  ): Promise<void> {
+    await this.enqueue(async () => {
+      const blobId = await this.backend.putBlob(data)
+      await this.backend.putEntry(makeEntry(blobId))
+      this.emit()
+    })
   }
 
   /** 所有条目引用的 blob id 集合(模型 blobId + thumbnailId) */
@@ -53,31 +82,36 @@ export class Library {
 
   /** 删条目并清理它的 blob;blob 被其他条目共享时保留 */
   async deleteEntryDeep(id: string): Promise<void> {
-    const entry = await this.backend.getEntry(id)
-    if (!entry) return
-    const own: string[] = []
-    if ('blobId' in entry) own.push(entry.blobId)
-    if (entry.kind === 'model' && entry.thumbnailId) own.push(entry.thumbnailId)
-    await this.backend.deleteEntry(id)
-    const referenced = await this.referencedBlobIds()
-    for (const blobId of own) {
-      if (!referenced.has(blobId)) await this.backend.deleteBlob(blobId)
-    }
-    this.emit()
+    await this.enqueue(async () => {
+      const entry = await this.backend.getEntry(id)
+      if (!entry) return
+      const own: string[] = []
+      if ('blobId' in entry) own.push(entry.blobId)
+      if (entry.kind === 'model' && entry.thumbnailId)
+        own.push(entry.thumbnailId)
+      await this.backend.deleteEntry(id)
+      const referenced = await this.referencedBlobIds()
+      for (const blobId of own) {
+        if (!referenced.has(blobId)) await this.backend.deleteBlob(blobId)
+      }
+      this.emit()
+    })
   }
 
   /** 清理无条目引用的孤儿 blob,返回删除数量 */
   async sweepOrphanBlobs(): Promise<number> {
-    const referenced = await this.referencedBlobIds()
-    const all = await this.backend.listBlobIds()
-    let n = 0
-    for (const id of all) {
-      if (!referenced.has(id)) {
-        await this.backend.deleteBlob(id)
-        n++
+    return this.enqueue(async () => {
+      const referenced = await this.referencedBlobIds()
+      const all = await this.backend.listBlobIds()
+      let n = 0
+      for (const id of all) {
+        if (!referenced.has(id)) {
+          await this.backend.deleteBlob(id)
+          n++
+        }
       }
-    }
-    return n
+      return n
+    })
   }
 }
 

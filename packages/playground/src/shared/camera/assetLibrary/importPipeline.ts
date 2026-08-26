@@ -239,32 +239,34 @@ export async function executeImport(
     if (item.type === 'skip') continue
     if (item.type === 'model') {
       if (drop.has(i)) continue
-      const blobId = await library.backend.putBlob(new Blob([item.glb]))
-      const entry: ModelEntry = {
-        id: newId(),
-        kind: 'model',
-        name: item.name,
-        rig: item.rig,
-        blobId,
-        contentHash: item.contentHash,
-        boneCount: item.boneCount,
-        vertexCount: item.vertexCount,
-        createdAt: Date.now(),
-      }
-      await library.putEntry(entry)
+      await library.putBlobWithEntry(
+        new Blob([item.glb]),
+        (blobId): ModelEntry => ({
+          id: newId(),
+          kind: 'model',
+          name: item.name,
+          rig: item.rig,
+          blobId,
+          contentHash: item.contentHash,
+          boneCount: item.boneCount,
+          vertexCount: item.vertexCount,
+          createdAt: Date.now(),
+        }),
+      )
     } else if (item.type === 'animation') {
-      const blobId = await library.backend.putBlob(new Blob([item.glb]))
-      const entry: AnimationEntry = {
-        id: newId(),
-        kind: 'animation',
-        name: item.name,
-        rig: item.rig,
-        blobId,
-        contentHash: item.contentHash,
-        duration: item.duration,
-        createdAt: Date.now(),
-      }
-      await library.putEntry(entry)
+      await library.putBlobWithEntry(
+        new Blob([item.glb]),
+        (blobId): AnimationEntry => ({
+          id: newId(),
+          kind: 'animation',
+          name: item.name,
+          rig: item.rig,
+          blobId,
+          contentHash: item.contentHash,
+          duration: item.duration,
+          createdAt: Date.now(),
+        }),
+      )
     } else {
       await library.putEntry({
         id: newId(),
