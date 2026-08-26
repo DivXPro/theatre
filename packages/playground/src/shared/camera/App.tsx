@@ -407,6 +407,7 @@ function App() {
     useState<ISheetObject<any> | null>(null)
   const [selectionCount, setSelectionCount] = useState(0)
   const [selectedRig, setSelectedRig] = useState<string | undefined>(undefined)
+  const [rigLoading, setRigLoading] = useState(false)
 
   useEffect(() => {
     const studio = getStudioSync()
@@ -430,14 +431,22 @@ function App() {
       : undefined
     if (!entry?.libraryEntryId) {
       setSelectedRig(undefined)
+      setRigLoading(false)
       return
     }
-    void getLibrary()
-      .backend.getEntry(entry.libraryEntryId)
-      .then((libEntry) => {
+    setRigLoading(true)
+    const load = async () => {
+      try {
+        const libEntry = await getLibrary().backend.getEntry(
+          entry.libraryEntryId!,
+        )
         if (cancelled) return
         setSelectedRig(libEntry?.rig)
-      })
+      } finally {
+        if (!cancelled) setRigLoading(false)
+      }
+    }
+    void load()
     return () => {
       cancelled = true
     }
@@ -495,10 +504,13 @@ function App() {
       {libraryOpen && (
         <AssetLibraryPanel
           onPlaceModel={(entry: ModelEntry) => {
-            void startPlacingFromLibrary(entry)
+            startPlacingFromLibrary(entry).catch((err) =>
+              console.warn('[placement] 库模型加载失败', err),
+            )
           }}
           onApplyAnimation={applyAnimation}
           applyDisabled={!canApplyAnimation}
+          disabled={rigLoading}
           filterRig={selectedRig}
           onClose={() => setLibraryOpen(false)}
         />

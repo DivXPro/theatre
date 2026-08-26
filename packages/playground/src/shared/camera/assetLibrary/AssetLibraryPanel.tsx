@@ -13,12 +13,14 @@ export function AssetLibraryPanel({
   onClose,
   onApplyAnimation,
   applyDisabled,
+  disabled,
 }: {
   onPlaceModel: (entry: ModelEntry) => void
   filterRig?: string
   onClose: () => void
   onApplyAnimation?: (entry: AnimationEntry) => void
   applyDisabled?: boolean
+  disabled?: boolean
 }) {
   const [tab, setTab] = useState<Tab>('model')
   const models = useLibraryEntries('model') as ModelEntry[]
@@ -234,16 +236,16 @@ export function AssetLibraryPanel({
   }
 
   const renderAnimationCard = (entry: AnimationEntry) => {
-    const disabled = applyDisabled || !onApplyAnimation
+    const cardDisabled = disabled || applyDisabled || !onApplyAnimation
     return (
       <div
         key={entry.id}
         style={{
           ...cardBaseStyle,
-          cursor: disabled ? 'default' : 'pointer',
-          opacity: disabled ? 0.5 : 1,
+          cursor: cardDisabled ? 'default' : 'pointer',
+          opacity: cardDisabled ? 0.5 : 1,
         }}
-        onClick={disabled ? undefined : () => onApplyAnimation!(entry)}
+        onClick={cardDisabled ? undefined : () => onApplyAnimation!(entry)}
         onContextMenu={(ev) => {
           ev.preventDefault()
           setMenu({x: ev.clientX, y: ev.clientY, id: entry.id})

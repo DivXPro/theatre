@@ -18,7 +18,8 @@ import {AnimationMixer, Box3, Plane, Raycaster, Vector2, Vector3} from 'three'
 import type {Group, Mesh, Object3D, AnimationClip, AnimationAction} from 'three'
 import {GLTFLoader, SkeletonUtils} from 'three-stdlib'
 import {getLibrary} from './assetLibrary/library'
-import type { ModelEntry} from './assetLibrary/types'
+import {disposeObjectTree} from './assetLibrary/dispose'
+import type {ModelEntry} from './assetLibrary/types'
 
 /**
  * FBX 模型放置:页面顶部按钮选文件进入放置模式,半透明 ghost 跟随光标
@@ -294,8 +295,12 @@ export function usePlacementController(project: IProject) {
   )
 
   /** 从资产库选模型进入放置模式:不创建 theatre 项目资产 */
+  const libraryGenRef = useRef(0)
   const startPlacingFromLibrary = useCallback(async (entry: ModelEntry) => {
+    const gen = ++libraryGenRef.current
     const url = await getLibrary().backend.getBlobUrl(entry.blobId)
+    // 用户快速切换选择时,旧加载结果直接丢弃
+    if (gen !== libraryGenRef.current) return
     setPlacing({
       url,
       label: entry.name,
@@ -463,6 +468,12 @@ function PlacementRigGLTF({
       cancelled = true
     }
   }, [placing.url])
+  // 卸载或 URL 变化时释放模型 GPU 资源
+  useEffect(() => {
+    return () => {
+      if (model) disposeObjectTree(model)
+    }
+  }, [model])
   if (failed) throw new Error('[placement] 库模型预览加载失败')
   if (!model) return null
   return (
@@ -778,6 +789,12 @@ function LibraryPlacedModel({
       cancelled = true
     }
   }, [entry.libraryEntryId])
+  // 卸载或条目变化时释放已加载模型
+  useEffect(() => {
+    return () => {
+      if (loaded?.group) disposeObjectTree(loaded.group)
+    }
+  }, [loaded?.group])
   if (failed) throw new Error('[placement] 库模型加载失败')
   if (!loaded) return null
   return (
@@ -917,24 +934,30 @@ function PlacedModelCore({
   // 动画片段切换:0.2s 淡入淡出
   useEffect(() => {
     if (!clip) {
-      if (currentActionRef.current) {
-        currentActionRef.current.fadeOut(0.2)
+      const oldAction = currentActionRef.current
+      if (oldAction) {
+        oldAction.fadeOut(0.2)
+        mixer.uncacheAction(oldAction.getClip(), instance)
         currentActionRef.current = null
       }
       return
     }
+    const oldAction = currentActionRef.current
+    const oldClip = oldAction?.getClip()
     const action = mixer.clipAction(clip)
     action.reset().fadeIn(0.2).play()
-    if (currentActionRef.current && currentActionRef.current !== action) {
-      currentActionRef.current.fadeOut(0.2)
+    if (oldAction && oldAction !== action) {
+      oldAction.fadeOut(0.2)
+      if (oldClip) mixer.uncacheAction(oldClip, instance)
     }
     currentActionRef.current = action
-  }, [clip, mixer])
+  }, [clip, mixer, instance])
 
   useEffect(() => {
     return () => {
       mixer.stopAllAction()
       mixer.uncacheRoot(instance)
+      disposeObjectTree(instance)
     }
   }, [mixer, instance])
 
