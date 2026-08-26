@@ -2,6 +2,7 @@ import {editable as e} from '@toy-box/r3f'
 import {getStudioSync, onChange, types as t, val} from '@toy-box/core'
 import type {IProject, IScrub, ISheet, ISheetObject} from '@toy-box/core'
 import {privateAPI} from '@toy-box/core/privateAPIs'
+import {useVal} from '@toy-box/react'
 import {TransformControls, useFBX} from '@react-three/drei'
 import {useFrame, useThree} from '@react-three/fiber'
 import type {ThreeEvent} from '@react-three/fiber'
@@ -13,19 +14,11 @@ import React, {
   useRef,
   useState,
 } from 'react'
-import {
-  AnimationMixer,
-  Box3,
-  Plane,
-  Raycaster,
-  Vector2,
-  Vector3,
-} from 'three'
-import type {Group, Mesh, Object3D,
-  AnimationClip} from 'three'
+import {AnimationMixer, Box3, Plane, Raycaster, Vector2, Vector3} from 'three'
+import type {Group, Mesh, Object3D, AnimationClip, AnimationAction} from 'three'
 import {GLTFLoader, SkeletonUtils} from 'three-stdlib'
 import {getLibrary} from './assetLibrary/library'
-import type {ModelEntry} from './assetLibrary/types'
+import type { ModelEntry} from './assetLibrary/types'
 
 /**
  * FBX 模型放置:页面顶部按钮选文件进入放置模式,半透明 ghost 跟随光标
@@ -99,6 +92,18 @@ function assetStorageOf(project: IProject): AssetStorage | undefined {
  * 两条路径的配置才能相等。
  */
 const fileConfigCache = new Map<string, ReturnType<typeof t.file>>()
+
+const animPropConfig = t.string('', {label: '动作'})
+const posePropConfig = t.string('', {label: '姿势'})
+
+/** 已放置模型的 theatre 对象 → PlacementEntry 映射,App 通过 selection 反查 rig */
+const placementObjects = new Map<ISheetObject<any>, PlacementEntry>()
+
+export function getPlacementEntryForObject(
+  obj: ISheetObject<any>,
+): PlacementEntry | undefined {
+  return placementObjects.get(obj)
+}
 
 function fileConfigFor(assetId: string) {
   let config = fileConfigCache.get(assetId)
@@ -809,15 +814,25 @@ function PlacedModelCore({
   selectLocked?: boolean
   onObjectMenu?: (key: string, x: number, y: number) => void
 }) {
-  const additionalProps = useMemo(
-    () =>
-      sourceType === 'local' && entry.assetId
-        ? {source: fileConfigFor(entry.assetId)}
-        : undefined,
-    [sourceType, entry.assetId],
-  )
+  const additionalProps = useMemo(() => {
+    const props: Record<string, any> = {
+      animation: animPropConfig,
+      pose: posePropConfig,
+    }
+    if (sourceType === 'local' && entry.assetId) {
+      props.source = fileConfigFor(entry.assetId)
+    }
+    return props
+  }, [sourceType, entry.assetId])
   const {scale, lift} = useNormalizedModel(group)
   const objRef = useRef<ISheetObject<any> | undefined>(undefined)
+  const [sheetObject, setSheetObject] = useState<ISheetObject<any> | undefined>(
+    undefined,
+  )
+  const setObjRef = useCallback((obj: ISheetObject<any> | null) => {
+    objRef.current = obj ?? undefined
+    setSheetObject(obj ?? undefined)
+  }, [])
   // 登记为落点表面:之后的放置可以把模型摞到这个模型上
   const groupRef = useRef<Group>(null!)
   usePlacementSurface(groupRef)
@@ -858,15 +873,70 @@ function PlacedModelCore({
   // 所以每个实例克隆一份(SkinnedMesh 安全),配独立的 AnimationMixer。
   const instance = useMemo(() => SkeletonUtils.clone(group), [group])
   const mixer = useMemo(() => new AnimationMixer(instance), [instance])
+  const animationId = useVal(sheetObject?.props.animation) ?? ''
+  const [clip, setClip] = useState<AnimationClip | null>(null)
+  const currentActionRef = useRef<AnimationAction | null>(null)
+
+  // 登记当前 theatre 对象与 PlacementEntry 的映射,App 用 selection 反查 rig
   useEffect(() => {
-    const clip = instance.animations[0] ?? animations[0]
-    if (!clip) return
-    mixer.clipAction(clip).play()
+    if (!sheetObject) return
+    placementObjects.set(sheetObject, entry)
+    return () => {
+      placementObjects.delete(sheetObject)
+    }
+  }, [sheetObject, entry])
+
+  // animation 属性变化时加载库动画 GLB
+  useEffect(() => {
+    if (!animationId) {
+      setClip(null)
+      return
+    }
+    let cancelled = false
+    const load = async () => {
+      const animEntry = await getLibrary().backend.getEntry(animationId)
+      if (!animEntry || animEntry.kind !== 'animation') {
+        if (!cancelled) setClip(null)
+        return
+      }
+      const url = await getLibrary().backend.getBlobUrl(animEntry.blobId)
+      const gltf = await new GLTFLoader().loadAsync(url)
+      if (!cancelled) {
+        setClip(gltf.animations[0] ?? null)
+      }
+    }
+    load().catch((err) => {
+      console.warn('[placement] 动画加载失败', err)
+      if (!cancelled) setClip(null)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [animationId])
+
+  // 动画片段切换:0.2s 淡入淡出
+  useEffect(() => {
+    if (!clip) {
+      if (currentActionRef.current) {
+        currentActionRef.current.fadeOut(0.2)
+        currentActionRef.current = null
+      }
+      return
+    }
+    const action = mixer.clipAction(clip)
+    action.reset().fadeIn(0.2).play()
+    if (currentActionRef.current && currentActionRef.current !== action) {
+      currentActionRef.current.fadeOut(0.2)
+    }
+    currentActionRef.current = action
+  }, [clip, mixer])
+
+  useEffect(() => {
     return () => {
       mixer.stopAllAction()
       mixer.uncacheRoot(instance)
     }
-  }, [mixer, instance, animations])
+  }, [mixer, instance])
 
   // 只在 theatre 序列播放时驱动动画:编辑/摆姿势时模型保持静止。
   // demand 帧循环下没有持续帧,播放状态翻成 true 时主动起一帧,
@@ -917,7 +987,7 @@ function PlacedModelCore({
     <e.group
       ref={groupRef}
       theatreKey={entry.key}
-      objRef={objRef}
+      objRef={setObjRef}
       additionalProps={additionalProps}
       position={[entry.position.x, entry.position.y, entry.position.z]}
       scale={scale}

@@ -34,6 +34,7 @@ import {
   PlacedModels,
   SelectionGizmo,
   deletePlacement,
+  getPlacementEntryForObject,
   isSelectSuppressed,
   useGizmoMode,
   usePlacementController,
@@ -41,7 +42,8 @@ import {
   useSelectionGizmoTarget,
 } from './PlacementManager'
 import {AssetLibraryPanel} from './assetLibrary/AssetLibraryPanel'
-import type {ModelEntry} from './assetLibrary/types'
+import {getLibrary} from './assetLibrary/library'
+import type {AnimationEntry, ModelEntry} from './assetLibrary/types'
 
 document.body.style.backgroundColor = '#171717'
 
@@ -400,6 +402,65 @@ function App() {
     y: number
   } | null>(null)
 
+  // 跟踪 studio 选中状态,用于动作 tab 的套用与过滤
+  const [selectedPlacement, setSelectedPlacement] =
+    useState<ISheetObject<any> | null>(null)
+  const [selectionCount, setSelectionCount] = useState(0)
+  const [selectedRig, setSelectedRig] = useState<string | undefined>(undefined)
+
+  useEffect(() => {
+    const studio = getStudioSync()
+    if (!studio) return
+    const sync = () => {
+      const placement = studio.selection.find((item) =>
+        getPlacementEntryForObject(item as ISheetObject<any>),
+      ) as ISheetObject<any> | undefined
+      setSelectedPlacement(placement ?? null)
+      setSelectionCount(studio.selection.length)
+    }
+    sync()
+    return studio.onSelectionChange(sync)
+  }, [])
+
+  // 选中单个库来源模型时,异步查其 rig 给面板过滤动画
+  useEffect(() => {
+    let cancelled = false
+    const entry = selectedPlacement
+      ? getPlacementEntryForObject(selectedPlacement)
+      : undefined
+    if (!entry?.libraryEntryId) {
+      setSelectedRig(undefined)
+      return
+    }
+    void getLibrary()
+      .backend.getEntry(entry.libraryEntryId)
+      .then((libEntry) => {
+        if (cancelled) return
+        setSelectedRig(libEntry?.rig)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [selectedPlacement])
+
+  const applyAnimation = useCallback(
+    (animEntry: AnimationEntry) => {
+      const studio = getStudioSync()
+      if (!studio || !selectedPlacement) return
+      const scrub = studio.scrub()
+      scrub.capture(({set}) => {
+        set(selectedPlacement.props.animation, animEntry.id)
+      })
+      scrub.commit()
+    },
+    [selectedPlacement],
+  )
+
+  const canApplyAnimation =
+    selectedPlacement !== null &&
+    selectionCount === 1 &&
+    getPlacementEntryForObject(selectedPlacement)?.libraryEntryId !== undefined
+
   return (
     <div
       onClick={() => {
@@ -436,6 +497,9 @@ function App() {
           onPlaceModel={(entry: ModelEntry) => {
             void startPlacingFromLibrary(entry)
           }}
+          onApplyAnimation={applyAnimation}
+          applyDisabled={!canApplyAnimation}
+          filterRig={selectedRig}
           onClose={() => setLibraryOpen(false)}
         />
       )}

@@ -11,10 +11,14 @@ export function AssetLibraryPanel({
   onPlaceModel,
   filterRig,
   onClose,
+  onApplyAnimation,
+  applyDisabled,
 }: {
   onPlaceModel: (entry: ModelEntry) => void
   filterRig?: string
   onClose: () => void
+  onApplyAnimation?: (entry: AnimationEntry) => void
+  applyDisabled?: boolean
 }) {
   const [tab, setTab] = useState<Tab>('model')
   const models = useLibraryEntries('model') as ModelEntry[]
@@ -229,35 +233,43 @@ export function AssetLibraryPanel({
     )
   }
 
-  const renderAnimationCard = (entry: AnimationEntry) => (
-    <div
-      key={entry.id}
-      style={{...cardBaseStyle, cursor: 'default'}}
-      onContextMenu={(ev) => {
-        ev.preventDefault()
-        setMenu({x: ev.clientX, y: ev.clientY, id: entry.id})
-      }}
-    >
-      <div style={placeholderStyle}>🎬</div>
-      <div style={tagStyle} title={entry.rig}>
-        {entry.rig}
-      </div>
-      <div style={labelStyle} title={entry.name}>
-        {entry.name}
-      </div>
+  const renderAnimationCard = (entry: AnimationEntry) => {
+    const disabled = applyDisabled || !onApplyAnimation
+    return (
       <div
+        key={entry.id}
         style={{
-          position: 'absolute',
-          bottom: 24,
-          left: 6,
-          fontSize: 10,
-          color: 'rgba(255,255,255,0.55)',
+          ...cardBaseStyle,
+          cursor: disabled ? 'default' : 'pointer',
+          opacity: disabled ? 0.5 : 1,
+        }}
+        onClick={disabled ? undefined : () => onApplyAnimation!(entry)}
+        onContextMenu={(ev) => {
+          ev.preventDefault()
+          setMenu({x: ev.clientX, y: ev.clientY, id: entry.id})
         }}
       >
-        {entry.duration.toFixed(2)}s
+        <div style={placeholderStyle}>🎬</div>
+        <div style={tagStyle} title={entry.rig}>
+          {entry.rig}
+        </div>
+        <div style={labelStyle} title={entry.name}>
+          {entry.name}
+        </div>
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 24,
+            left: 6,
+            fontSize: 10,
+            color: 'rgba(255,255,255,0.55)',
+          }}
+        >
+          {entry.duration.toFixed(2)}s
+        </div>
       </div>
-    </div>
-  )
+    )
+  }
 
   const visibleAnimations = filterRig
     ? animations.filter((a) => a.rig === filterRig)
