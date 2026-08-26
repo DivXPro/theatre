@@ -483,11 +483,22 @@ function App() {
 
   // 抽帧存姿势:从当前选中的已放置模型实例捕获骨骼状态入库
   const onSavePose = useCallback(async () => {
-    const instance = selectedPlacement
-      ? getPlacementInstanceForObject(selectedPlacement)?.instance
+    const placement = selectedPlacement
+      ? getPlacementInstanceForObject(selectedPlacement)
       : undefined
+    const instance = placement?.instance
+    const entry = placement?.entry
     if (!instance) return
-    const rig = rigIdOf(instance)
+    // GLB 导出会清洗骨骼名(如去掉 mixamorig:Hips 中的 ':'),
+    // 实例侧重算的 rig 与库模型条目记录的 rig 可能不一致。
+    // 优先取库模型条目的 rig,保证保存的姿势能和来源模型匹配;
+    // 本地 FBX 路径或条目缺失时回退到实例计算(legacy 路径,可能与库 rig 不一致但可接受)。
+    let rig: string | undefined
+    if (entry?.libraryEntryId) {
+      const libEntry = await getLibrary().backend.getEntry(entry.libraryEntryId)
+      if (libEntry?.kind === 'model') rig = libEntry.rig
+    }
+    if (!rig) rig = rigIdOf(instance)
     if (rig === 'static') return
     const poseEntries = (await getLibrary().backend.listEntries(
       'pose',
