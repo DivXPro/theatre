@@ -996,7 +996,11 @@ function PlacedModelCore({
         oldAction.fadeOut(0.2)
         // 淡出结束再 uncache;立即 uncache 会中断淡出插值、骨骼瞬间回弹
         pendingUncachesRef.current.push(
-          setTimeout(() => mixer.uncacheAction(oldClip, instance), 250),
+          setTimeout(() => {
+            const act = mixer.existingAction(oldClip, instance)
+            if (act && act.isRunning()) return
+            mixer.uncacheAction(oldClip, instance)
+          }, 250),
         )
         currentActionRef.current = null
       }
@@ -1011,7 +1015,11 @@ function PlacedModelCore({
       if (oldClip) {
         // 同上:等淡出完成再清缓存,避免打断交叉淡化
         pendingUncachesRef.current.push(
-          setTimeout(() => mixer.uncacheAction(oldClip, instance), 250),
+          setTimeout(() => {
+            const act = mixer.existingAction(oldClip, instance)
+            if (act && act.isRunning()) return
+            mixer.uncacheAction(oldClip, instance)
+          }, 250),
         )
       }
     }
