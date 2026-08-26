@@ -893,6 +893,7 @@ function PlacedModelCore({
   const animationId = useVal(sheetObject?.props.animation) ?? ''
   const [clip, setClip] = useState<AnimationClip | null>(null)
   const currentActionRef = useRef<AnimationAction | null>(null)
+  const pendingUncachesRef = useRef<Array<ReturnType<typeof setTimeout>>>([])
 
   // 登记当前 theatre 对象与 PlacementEntry 的映射,App 用 selection 反查 rig
   useEffect(() => {
@@ -936,8 +937,12 @@ function PlacedModelCore({
     if (!clip) {
       const oldAction = currentActionRef.current
       if (oldAction) {
+        const oldClip = oldAction.getClip()
         oldAction.fadeOut(0.2)
-        mixer.uncacheAction(oldAction.getClip(), instance)
+        // 淡出结束再 uncache;立即 uncache 会中断淡出插值、骨骼瞬间回弹
+        pendingUncachesRef.current.push(
+          setTimeout(() => mixer.uncacheAction(oldClip, instance), 250),
+        )
         currentActionRef.current = null
       }
       return
@@ -948,13 +953,20 @@ function PlacedModelCore({
     action.reset().fadeIn(0.2).play()
     if (oldAction && oldAction !== action) {
       oldAction.fadeOut(0.2)
-      if (oldClip) mixer.uncacheAction(oldClip, instance)
+      if (oldClip) {
+        // 同上:等淡出完成再清缓存,避免打断交叉淡化
+        pendingUncachesRef.current.push(
+          setTimeout(() => mixer.uncacheAction(oldClip, instance), 250),
+        )
+      }
     }
     currentActionRef.current = action
   }, [clip, mixer, instance])
 
   useEffect(() => {
     return () => {
+      for (const t of pendingUncachesRef.current) clearTimeout(t)
+      pendingUncachesRef.current = []
       mixer.stopAllAction()
       mixer.uncacheRoot(instance)
       disposeObjectTree(instance)
