@@ -82,7 +82,10 @@ export function AssetLibraryPanel({
   const renameRig = (rig: string) => (ev: React.MouseEvent) => {
     ev.stopPropagation() // 标签在卡片内,不能触发卡片的放置/套用
     const name = window.prompt('骨架族名称', rigAliases[rig] ?? '')?.trim()
-    if (name) void getLibrary().setRigAlias(rig, name)
+    if (name)
+      void getLibrary()
+        .setRigAlias(rig, name)
+        .catch((err) => console.warn('[assetLibrary] 设置骨架别名失败', err))
   }
 
   const onPickFiles = async (files: FileList | null) => {
