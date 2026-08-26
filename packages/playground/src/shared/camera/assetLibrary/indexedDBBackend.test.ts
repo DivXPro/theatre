@@ -116,9 +116,22 @@ describe('骨架族别名', () => {
       req.onsuccess = () => resolve(req.result)
       req.onerror = () => reject(req.error)
     })
+    // 写入老数据后再关闭,验证升级后旧数据仍然可读
+    const seededEntry = makeModel('legacy-model')
+    const blobKey = 'seed-blob'
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(['entries', 'blobs'], 'readwrite')
+      tx.objectStore('entries').put(seededEntry)
+      tx.objectStore('blobs').put(new Blob(['seed']), blobKey)
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => reject(tx.error)
+    })
     db.close()
     // 新版本后端打开触发升级
     const backend = new IndexedDBBackend()
+    expect(await backend.getEntry('legacy-model')).toEqual(seededEntry)
+    expect(await backend.listBlobIds()).toContain(blobKey)
+    expect(await backend.getBlobUrl(blobKey)).toBe('blob:mock-url')
     await backend.putRigAlias({rig: 'rig-x', name: '升级后可用'})
     expect(await backend.getRigAliases()).toEqual([
       {rig: 'rig-x', name: '升级后可用'},

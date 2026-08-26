@@ -65,7 +65,7 @@ describe('Library', () => {
     await lib.setRigAlias('rig-a', 'Mixamo')
     unsub()
     expect(await lib.getRigAliases()).toEqual([{rig: 'rig-a', name: 'Mixamo'}])
-    expect(events.length).toBeGreaterThan(0)
+    expect(events.length).toBe(1)
   })
 
   it('renameEntry 保留其它字段', async () => {
