@@ -186,6 +186,12 @@ export async function planImport(
             newName: baseName(file.name),
           })
         }
+      } else {
+        items.push({
+          type: 'skip',
+          name: baseName(file.name),
+          reason: '模型已存在(同库中「' + dup.name + '」)',
+        })
       }
       // dup 命中:模型跳过,下面的动作照常提取
     }

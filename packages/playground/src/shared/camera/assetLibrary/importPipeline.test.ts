@@ -114,7 +114,10 @@ describe('planImport', () => {
         'b.fbx': {root: skinnedModel('Hips'), animations: [clip('jump')]},
       }),
     )
-    expect(plan.items.map((i) => i.type)).toEqual(['animation'])
+    expect(plan.items.map((i) => i.type)).toEqual(['skip', 'animation'])
+    expect(plan.items[0]).toMatchObject({
+      reason: expect.stringContaining('已存在'),
+    })
   })
 
   it('哈希不同但同族同结构:记入 similar 由用户定', async () => {
