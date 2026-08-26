@@ -10,10 +10,13 @@ import type {LibraryBackend, LibraryEntry, ModelEntry} from './types'
 
 function memoryBackend(): LibraryBackend & {
   entries: Map<string, LibraryEntry>
+  aliases: Map<string, string>
 } {
   const entries = new Map<string, LibraryEntry>()
+  const aliases = new Map<string, string>()
   return {
     entries,
+    aliases,
     listEntries: async (kind) =>
       [...entries.values()].filter((e) => !kind || e.kind === kind),
     getEntry: async (id) => entries.get(id),
@@ -23,6 +26,9 @@ function memoryBackend(): LibraryBackend & {
     getBlobUrl: async () => 'blob:x',
     deleteBlob: async () => {},
     listBlobIds: async () => [],
+    getRigAliases: async () =>
+      [...aliases.entries()].map(([rig, name]) => ({rig, name})),
+    putRigAlias: async ({rig, name}) => void aliases.set(rig, name),
   }
 }
 
@@ -50,6 +56,16 @@ describe('Library', () => {
     unsub()
     await lib.putEntry(model('m2'))
     expect(seen.length).toBe(3) // 退订后不再触发
+  })
+
+  it('setRigAlias 写入并触发订阅', async () => {
+    const lib = new Library(memoryBackend())
+    const events: number[] = []
+    const unsub = lib.subscribe(() => events.push(1))
+    await lib.setRigAlias('rig-a', 'Mixamo')
+    unsub()
+    expect(await lib.getRigAliases()).toEqual([{rig: 'rig-a', name: 'Mixamo'}])
+    expect(events.length).toBeGreaterThan(0)
   })
 
   it('renameEntry 保留其它字段', async () => {

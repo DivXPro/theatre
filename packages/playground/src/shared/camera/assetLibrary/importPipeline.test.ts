@@ -51,6 +51,8 @@ function memoryBackend(existing: LibraryEntry[] = []): LibraryBackend {
     getBlobUrl: async () => 'blob:x',
     deleteBlob: async () => {},
     listBlobIds: async () => [],
+    getRigAliases: async () => [],
+    putRigAlias: async () => {},
   }
 }
 

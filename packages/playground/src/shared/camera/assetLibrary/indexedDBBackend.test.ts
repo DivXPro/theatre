@@ -10,6 +10,37 @@ import type {ModelEntry} from './types'
 const {IndexedDBBackend} =
   require('./indexedDBBackend') as typeof import('./indexedDBBackend')
 
+const DB_NAME = 'toybox-asset-library'
+
+// 追踪所有打开的连接,reset 前先 close,否则 deleteDatabase 会被阻塞
+const openDatabases: IDBDatabase[] = []
+const originalOpen = indexedDB.open.bind(indexedDB)
+indexedDB.open = (...args: Parameters<IDBFactory['open']>) => {
+  const req = originalOpen(...args)
+  req.addEventListener('success', () => {
+    openDatabases.push(req.result)
+  })
+  return req
+}
+
+function resetDB(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    for (const db of openDatabases) {
+      try {
+        db.close()
+      } catch {}
+    }
+    openDatabases.length = 0
+    const req = indexedDB.deleteDatabase(DB_NAME)
+    req.onsuccess = () => resolve()
+    req.onerror = () => reject(req.error)
+  })
+}
+
+beforeEach(async () => {
+  await resetDB()
+})
+
 function makeModel(id: string): ModelEntry {
   return {
     id,
@@ -55,5 +86,42 @@ describe('IndexedDBBackend', () => {
     expect(await backend.getBlobUrl(id1)).toBe('blob:mock-url')
     await backend.deleteBlob(id1)
     await expect(backend.getBlobUrl(id1)).rejects.toThrow()
+  })
+})
+
+describe('骨架族别名', () => {
+  it('存取往返,同 rig 覆盖', async () => {
+    const backend = new IndexedDBBackend()
+    await backend.putRigAlias({rig: 'rig-a', name: 'Mixamo'})
+    await backend.putRigAlias({rig: 'rig-b', name: '自带骨架'})
+    await backend.putRigAlias({rig: 'rig-a', name: 'Mixamo 标准'})
+    const aliases = await backend.getRigAliases()
+    expect(aliases).toContainEqual({rig: 'rig-a', name: 'Mixamo 标准'})
+    expect(aliases).toContainEqual({rig: 'rig-b', name: '自带骨架'})
+    expect(aliases).toHaveLength(2)
+  })
+
+  it('v1 老库升级到 v2 后别名表可用,旧数据不丢', async () => {
+    // 先以 v1 结构建库,模拟老用户已有的库
+    const db: IDBDatabase = await new Promise((resolve, reject) => {
+      const req = indexedDB.open('toybox-asset-library', 1)
+      req.onupgradeneeded = () => {
+        const d = req.result
+        if (!d.objectStoreNames.contains('blobs')) d.createObjectStore('blobs')
+        if (!d.objectStoreNames.contains('entries')) {
+          const s = d.createObjectStore('entries', {keyPath: 'id'})
+          s.createIndex('kind', 'kind', {unique: false})
+        }
+      }
+      req.onsuccess = () => resolve(req.result)
+      req.onerror = () => reject(req.error)
+    })
+    db.close()
+    // 新版本后端打开触发升级
+    const backend = new IndexedDBBackend()
+    await backend.putRigAlias({rig: 'rig-x', name: '升级后可用'})
+    expect(await backend.getRigAliases()).toEqual([
+      {rig: 'rig-x', name: '升级后可用'},
+    ])
   })
 })

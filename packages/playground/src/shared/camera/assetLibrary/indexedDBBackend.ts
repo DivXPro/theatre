@@ -1,8 +1,8 @@
 import {hashBytes} from './hash'
-import type {EntryKind, LibraryBackend, LibraryEntry} from './types'
+import type {EntryKind, LibraryBackend, LibraryEntry, RigAlias} from './types'
 
 const DB_NAME = 'toybox-asset-library'
-const DB_VERSION = 1
+const DB_VERSION = 2
 
 function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -13,6 +13,9 @@ function openDB(): Promise<IDBDatabase> {
       if (!db.objectStoreNames.contains('entries')) {
         const store = db.createObjectStore('entries', {keyPath: 'id'})
         store.createIndex('kind', 'kind', {unique: false})
+      }
+      if (!db.objectStoreNames.contains('rigAliases')) {
+        db.createObjectStore('rigAliases', {keyPath: 'rig'})
       }
     }
     req.onsuccess = () => resolve(req.result)
@@ -117,5 +120,23 @@ export class IndexedDBBackend implements LibraryBackend {
       .objectStore('blobs')
       .getAllKeys()
     return (await requestToPromise(req)) as string[]
+  }
+
+  async getRigAliases(): Promise<RigAlias[]> {
+    const db = await this.db()
+    const req = db
+      .transaction('rigAliases', 'readonly')
+      .objectStore('rigAliases')
+      .getAll()
+    return (await requestToPromise(req)) as RigAlias[]
+  }
+
+  async putRigAlias(alias: RigAlias): Promise<void> {
+    const db = await this.db()
+    const req = db
+      .transaction('rigAliases', 'readwrite')
+      .objectStore('rigAliases')
+      .put(alias)
+    await requestToPromise(req)
   }
 }

@@ -1,6 +1,9 @@
 /** 骨架族 id(rigIdOf 生成);无骨架模型为 'static' */
 export type RigId = string
 
+/** 骨架族别名:给人看的名字,面板骨架标签显示 */
+export type RigAlias = {rig: RigId; name: string}
+
 export type EntryKind = 'model' | 'pose' | 'animation'
 
 export type ModelEntry = {
@@ -59,4 +62,8 @@ export interface LibraryBackend {
   deleteBlob(blobId: string): Promise<void>
   /** 列出全部 blob id(孤儿清理用);HTTP 实现后续补 */
   listBlobIds(): Promise<string[]>
+  /** 列出全部骨架族别名 */
+  getRigAliases(): Promise<RigAlias[]>
+  /** 设置/覆盖某骨架族的别名 */
+  putRigAlias(alias: RigAlias): Promise<void>
 }

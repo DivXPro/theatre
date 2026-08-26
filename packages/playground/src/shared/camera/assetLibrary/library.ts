@@ -1,6 +1,6 @@
 import {useEffect, useState} from 'react'
 import {IndexedDBBackend} from './indexedDBBackend'
-import type {EntryKind, LibraryBackend, LibraryEntry} from './types'
+import type {EntryKind, LibraryBackend, LibraryEntry, RigAlias} from './types'
 
 /**
  * 库的对外门面:backend 直读,写操作在 backend 之上加变更事件,
@@ -113,6 +113,19 @@ export class Library {
       return n
     })
   }
+
+  /** 直读别名(透传,不 emit) */
+  getRigAliases(): Promise<RigAlias[]> {
+    return this.backend.getRigAliases()
+  }
+
+  /** 设置/覆盖骨架族别名 */
+  async setRigAlias(rig: string, name: string): Promise<void> {
+    await this.enqueue(async () => {
+      await this.backend.putRigAlias({rig, name})
+      this.emit()
+    })
+  }
 }
 
 let singleton: Library | undefined
@@ -149,4 +162,27 @@ export function useLibraryEntries(kind?: EntryKind): LibraryEntry[] {
     }
   }, [kind])
   return entries
+}
+
+/** 订阅式读骨架族别名:rig → 名字;改名后自动刷新 */
+export function useRigAliases(): Record<string, string> {
+  const [aliases, setAliases] = useState<Record<string, string>>({})
+  useEffect(() => {
+    let alive = true
+    const reload = () => {
+      void getLibrary()
+        .getRigAliases()
+        .then((list) => {
+          if (alive)
+            setAliases(Object.fromEntries(list.map((a) => [a.rig, a.name])))
+        })
+    }
+    reload()
+    const unsub = getLibrary().subscribe(reload)
+    return () => {
+      alive = false
+      unsub()
+    }
+  }, [])
+  return aliases
 }
