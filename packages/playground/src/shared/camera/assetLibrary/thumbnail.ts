@@ -7,7 +7,7 @@ import {
   Vector3,
   WebGLRenderer,
 } from 'three'
-import {GLTFLoader} from 'three-stdlib'
+import {createGLTFLoader} from './gltfLoader'
 
 /**
  * 离屏渲染模型缩略图(128×128 PNG)。WebGL 上下文创建失败、
@@ -34,7 +34,7 @@ export async function renderThumbnail(
       scene.add(dir)
 
       const gltf = await new Promise<{scene: import('three').Group}>(
-        (resolve, reject) => new GLTFLoader().parse(glb, '', resolve, reject),
+        (resolve, reject) => createGLTFLoader().parse(glb, '', resolve, reject),
       )
       scene.add(gltf.scene)
 

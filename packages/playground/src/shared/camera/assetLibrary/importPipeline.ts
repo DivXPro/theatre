@@ -1,5 +1,6 @@
 import type {AnimationClip, Group, Object3D} from 'three'
 import {classifyModel, validatePoseJson} from './classify'
+import {createGLTFLoader} from './gltfLoader'
 import {exportAnimationGLB, exportModelGLB} from './exportGLB'
 import {hashBytes} from './hash'
 import type {Library} from './library'
@@ -27,11 +28,11 @@ export const realImportDeps: () => ImportDeps = () => ({
 })
 
 async function defaultLoad(file: File): Promise<LoadedModel> {
-  const {FBXLoader, GLTFLoader} = await import('three-stdlib')
+  const {FBXLoader} = await import('three-stdlib')
   const url = URL.createObjectURL(file)
   try {
     if (/\.glb$|\.gltf$/i.test(file.name)) {
-      const gltf = await new GLTFLoader().loadAsync(url)
+      const gltf = await createGLTFLoader().loadAsync(url)
       return {root: gltf.scene as Group, animations: gltf.animations}
     }
     const root = await new FBXLoader().loadAsync(url)

@@ -17,7 +17,8 @@ import React, {
 } from 'react'
 import {AnimationMixer, Box3, Plane, Raycaster, Vector2, Vector3} from 'three'
 import type {Group, Mesh, Object3D, AnimationClip, AnimationAction} from 'three'
-import {GLTFLoader, SkeletonUtils} from 'three-stdlib'
+import {SkeletonUtils} from 'three-stdlib'
+import {createGLTFLoader} from './assetLibrary/gltfLoader'
 import {getLibrary} from './assetLibrary/library'
 import {disposeObjectTree} from './assetLibrary/dispose'
 import {applyPose, captureBindPose} from './assetLibrary/pose'
@@ -479,7 +480,7 @@ function PlacementRigGLTF({
   const [failed, setFailed] = useState(false)
   useEffect(() => {
     let cancelled = false
-    const loader = new GLTFLoader()
+    const loader = createGLTFLoader()
     loader
       .loadAsync(placing.url)
       .then((gltf) => {
@@ -797,7 +798,7 @@ function LibraryPlacedModel({
           throw new Error('library model entry not found')
         }
         const url = await getLibrary().backend.getBlobUrl(libEntry.blobId)
-        const gltf = await new GLTFLoader().loadAsync(url)
+        const gltf = await createGLTFLoader().loadAsync(url)
         if (!cancelled) {
           setLoaded({
             group: gltf.scene as Group,
@@ -951,7 +952,7 @@ function PlacedModelCore({
         return
       }
       const url = await getLibrary().backend.getBlobUrl(animEntry.blobId)
-      const gltf = await new GLTFLoader().loadAsync(url)
+      const gltf = await createGLTFLoader().loadAsync(url)
       if (!cancelled) {
         setClip(gltf.animations[0] ?? null)
       }
