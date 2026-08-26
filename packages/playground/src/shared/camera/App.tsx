@@ -35,6 +35,7 @@ import {
   SelectionGizmo,
   deletePlacement,
   getPlacementEntryForObject,
+  getPlacementInstanceForObject,
   isSelectSuppressed,
   useGizmoMode,
   usePlacementController,
@@ -44,6 +45,8 @@ import {
 import {AssetLibraryPanel} from './assetLibrary/AssetLibraryPanel'
 import {getLibrary} from './assetLibrary/library'
 import type {AnimationEntry, ModelEntry, PoseEntry} from './assetLibrary/types'
+import {capturePose} from './assetLibrary/pose'
+import {rigIdOf} from './assetLibrary/rig'
 
 document.body.style.backgroundColor = '#171717'
 
@@ -478,12 +481,46 @@ function App() {
     [selectedPlacement],
   )
 
+  // 抽帧存姿势:从当前选中的已放置模型实例捕获骨骼状态入库
+  const onSavePose = useCallback(async () => {
+    const instance = selectedPlacement
+      ? getPlacementInstanceForObject(selectedPlacement)?.instance
+      : undefined
+    if (!instance) return
+    const rig = rigIdOf(instance)
+    if (rig === 'static') return
+    const poseEntries = (await getLibrary().backend.listEntries(
+      'pose',
+    )) as PoseEntry[]
+    const defaultName = `姿势-${poseEntries.length + 1}`
+    const name = window.prompt('姿势名称', defaultName)?.trim()
+    if (!name) return
+    const bones = capturePose(instance)
+    await getLibrary().putEntry({
+      id: 'lib-' + Math.random().toString(36).slice(2, 10),
+      kind: 'pose',
+      name,
+      rig,
+      bones,
+      createdAt: Date.now(),
+    })
+  }, [selectedPlacement])
+
   const canApplyAnimation =
     selectedPlacement !== null &&
     selectionCount === 1 &&
     getPlacementEntryForObject(selectedPlacement)?.libraryEntryId !== undefined
 
   const canApplyPose = canApplyAnimation
+
+  const selectedPlacementInstance = selectedPlacement
+    ? getPlacementInstanceForObject(selectedPlacement)?.instance
+    : undefined
+  const canSavePose =
+    selectedPlacement !== null &&
+    selectionCount === 1 &&
+    selectedPlacementInstance !== undefined &&
+    rigIdOf(selectedPlacementInstance) !== 'static'
 
   return (
     <div
@@ -525,6 +562,8 @@ function App() {
           }}
           onApplyAnimation={applyAnimation}
           onApplyPose={applyPose}
+          onSavePose={onSavePose}
+          canSavePose={canSavePose}
           applyDisabled={!canApplyAnimation}
           disabled={rigLoading}
           filterRig={selectedRig}

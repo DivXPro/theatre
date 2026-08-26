@@ -113,6 +113,13 @@ export function getPlacementEntryForObject(
   return placementObjects.get(obj)?.entry
 }
 
+/** 按 theatre 对象取已放置实例的 entry 与场景 Group,供 App 抽帧/查 rig 用 */
+export function getPlacementInstanceForObject(
+  obj: ISheetObject<any>,
+): {entry: PlacementEntry; instance: Group} | undefined {
+  return placementObjects.get(obj)
+}
+
 /** 统计场景里引用某库条目的已放置实例数(模型本体/动作/姿势三种引用) */
 export function countLibraryEntryUsage(entryId: string): number {
   let n = 0

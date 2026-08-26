@@ -14,6 +14,8 @@ export function AssetLibraryPanel({
   onClose,
   onApplyAnimation,
   onApplyPose,
+  onSavePose,
+  canSavePose,
   applyDisabled,
   disabled,
 }: {
@@ -22,6 +24,8 @@ export function AssetLibraryPanel({
   onClose: () => void
   onApplyAnimation?: (entry: AnimationEntry) => void
   onApplyPose?: (entry: PoseEntry) => void
+  onSavePose?: () => void
+  canSavePose?: boolean
   applyDisabled?: boolean
   disabled?: boolean
 }) {
@@ -437,6 +441,38 @@ export function AssetLibraryPanel({
           }}
         >
           只列出同骨架族的条目可套用,不同族的已置灰
+        </div>
+      )}
+
+      {/* 姿势 tab 顶部工具行:抽帧存姿势 */}
+      {tab === 'pose' && (
+        <div
+          style={{
+            padding: '8px 12px',
+            borderBottom: '1px solid rgba(255,255,255,0.08)',
+          }}
+        >
+          <button
+            disabled={!canSavePose}
+            onClick={() => void onSavePose?.()}
+            title={canSavePose ? undefined : '先选中一个带骨架的已放置模型'}
+            style={{
+              width: '100%',
+              padding: '6px 10px',
+              borderRadius: 6,
+              border: '1px solid rgba(255,255,255,0.12)',
+              background: canSavePose
+                ? 'rgba(255,255,255,0.08)'
+                : 'rgba(255,255,255,0.04)',
+              color: canSavePose
+                ? 'rgba(255,255,255,0.9)'
+                : 'rgba(255,255,255,0.4)',
+              cursor: canSavePose ? 'pointer' : 'default',
+              fontSize: 13,
+            }}
+          >
+            存当前姿势
+          </button>
         </div>
       )}
 
