@@ -10,8 +10,16 @@ declare module 'draco3dgltf' {
     // 编码器实例由 gltf-transform 内部消费,这里只声明模块边界。
   }
 
-  function createDecoderModule(): Promise<DracoDecoderModule>
-  function createEncoderModule(): Promise<DracoEncoderModule>
+  interface DracoModuleOptions {
+    locateFile?: (file: string) => string
+  }
+
+  function createDecoderModule(
+    opts?: DracoModuleOptions,
+  ): Promise<DracoDecoderModule>
+  function createEncoderModule(
+    opts?: DracoModuleOptions,
+  ): Promise<DracoEncoderModule>
 
   const draco3dgltf: {
     createDecoderModule: typeof createDecoderModule
