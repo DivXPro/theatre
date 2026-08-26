@@ -10,6 +10,7 @@ import React, {
   Suspense,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -19,7 +20,8 @@ import type {Group, Mesh, Object3D, AnimationClip, AnimationAction} from 'three'
 import {GLTFLoader, SkeletonUtils} from 'three-stdlib'
 import {getLibrary} from './assetLibrary/library'
 import {disposeObjectTree} from './assetLibrary/dispose'
-import type {ModelEntry} from './assetLibrary/types'
+import {applyPose, captureBindPose} from './assetLibrary/pose'
+import type {ModelEntry, PoseEntry} from './assetLibrary/types'
 
 /**
  * FBX 模型放置:页面顶部按钮选文件进入放置模式,半透明 ghost 跟随光标
@@ -890,8 +892,15 @@ function PlacedModelCore({
   // 所以每个实例克隆一份(SkinnedMesh 安全),配独立的 AnimationMixer。
   const instance = useMemo(() => SkeletonUtils.clone(group), [group])
   const mixer = useMemo(() => new AnimationMixer(instance), [instance])
+  const bindPoseRef = useRef<PoseEntry['bones']>({})
+  // 实例刚克隆出来时同步捕获绑定姿势,确保后续姿势应用 effect 运行前已就位
+  useLayoutEffect(() => {
+    bindPoseRef.current = captureBindPose(instance)
+  }, [instance])
   const animationId = useVal(sheetObject?.props.animation) ?? ''
+  const poseId = useVal(sheetObject?.props.pose) ?? ''
   const [clip, setClip] = useState<AnimationClip | null>(null)
+  const [poseBones, setPoseBones] = useState<PoseEntry['bones'] | null>(null)
   const currentActionRef = useRef<AnimationAction | null>(null)
   const pendingUncachesRef = useRef<Array<ReturnType<typeof setTimeout>>>([])
 
@@ -931,6 +940,28 @@ function PlacedModelCore({
       cancelled = true
     }
   }, [animationId])
+
+  // pose 属性变化时加载库姿势(内联 JSON,无 blob 加载)
+  useEffect(() => {
+    if (!poseId) {
+      setPoseBones(null)
+      return
+    }
+    let cancelled = false
+    const load = async () => {
+      const poseEntry = await getLibrary().backend.getEntry(poseId)
+      if (!cancelled) {
+        setPoseBones(poseEntry?.kind === 'pose' ? poseEntry.bones : null)
+      }
+    }
+    load().catch((err) => {
+      console.warn('[placement] 姿势加载失败', err)
+      if (!cancelled) setPoseBones(null)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [poseId])
 
   // 动画片段切换:0.2s 淡入淡出
   useEffect(() => {
@@ -975,12 +1006,26 @@ function PlacedModelCore({
 
   // 只在 theatre 序列播放时驱动动画:编辑/摆姿势时模型保持静止。
   // demand 帧循环下没有持续帧,播放状态翻成 true 时主动起一帧,
-  // 之后 useFrame 里边播边续帧;暂停的那帧起不再 invalidate,画面静止
+  // 之后 useFrame 里边播边续帧;暂停的那帧起不再 invalidate,画面静止。
+  // 序列停止时把当前姿势(或绑定姿势)写回骨骼;播放时由 clip effect + useFrame 驱动,
+  // animation 为空时 mixer 不更新,骨骼保持停止前的姿势,无需额外处理。
+  // 旧的 action fadeOut 残余权重在停止后直接由 applyPose 覆盖,不必 stopAllAction。
   useEffect(() => {
     return onChange(sheet.sequence.pointer.playing, (playing) => {
-      if (playing) invalidate()
+      if (playing) {
+        invalidate()
+      } else {
+        applyPose(instance, poseBones ?? bindPoseRef.current)
+        invalidate()
+      }
     })
-  }, [sheet, invalidate])
+  }, [sheet, invalidate, instance, poseBones])
+  // pose 数据变化且当前未播放时立即应用,覆盖 poseId 切换与撤销/重做路径
+  useEffect(() => {
+    if (val(sheet.sequence.pointer.playing)) return
+    applyPose(instance, poseBones ?? bindPoseRef.current)
+    invalidate()
+  }, [instance, poseBones, invalidate, sheet])
   useFrame((_, delta) => {
     if (!val(sheet.sequence.pointer.playing)) return
     mixer.update(delta)
