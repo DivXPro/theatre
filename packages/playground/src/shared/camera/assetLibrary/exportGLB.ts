@@ -1,6 +1,7 @@
 import {Bone, Group} from 'three'
 import type {AnimationClip, Object3D} from 'three'
 import {GLTFExporter} from 'three-stdlib'
+import {compressGLBDraco} from './draco'
 
 /**
  * 克隆纯骨骼层级(容器名 AnimationRig):动画轨道按骨骼名寻址,
@@ -42,9 +43,9 @@ function exportGLB(
   })
 }
 
-/** 模型入库:剥掉动画,只留网格+骨架+绑定姿势 */
+/** 模型入库:剥掉动画,只留网格+骨架+绑定姿势;几何走 Draco 压缩 */
 export function exportModelGLB(root: Object3D): Promise<ArrayBuffer> {
-  return exportGLB(root, [])
+  return exportGLB(root, []).then(compressGLBDraco)
 }
 
 /** 动作入库:骨骼树克隆 + 单条动画,不含网格 */

@@ -44,6 +44,10 @@ module.exports = {
         },
       },
     ],
+    '^.+\\.mjs$': './devEnv/jestMjsTransformer.js',
   },
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
+  transformIgnorePatterns: [
+    'node_modules/(?!(property-graph|@gltf-transform)/)',
+  ],
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'mjs', 'json', 'node'],
 }
