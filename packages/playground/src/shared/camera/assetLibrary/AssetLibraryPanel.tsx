@@ -1,6 +1,6 @@
 import React, {useEffect, useRef, useState} from 'react'
 import {countLibraryEntryUsage} from '../PlacementManager'
-import {getLibrary, useLibraryEntries} from './library'
+import {getLibrary, useLibraryEntries, useRigAliases} from './library'
 import {planImport, executeImport, realImportDeps} from './importPipeline'
 import type {ImportPlan} from './importPipeline'
 import {renderThumbnail} from './thumbnail'
@@ -73,6 +73,16 @@ export function AssetLibraryPanel({
         loadingThumbsRef.current.delete(entry.id)
       })
     return undefined
+  }
+
+  const rigAliases = useRigAliases()
+  /** 骨架标签文案:有别名显示别名,否则短哈希 */
+  const rigLabel = (rig: string) =>
+    rigAliases[rig] ?? (rig.length > 12 ? rig.slice(0, 11) + '…' : rig)
+  const renameRig = (rig: string) => (ev: React.MouseEvent) => {
+    ev.stopPropagation() // 标签在卡片内,不能触发卡片的放置/套用
+    const name = window.prompt('骨架族名称', rigAliases[rig] ?? '')?.trim()
+    if (name) void getLibrary().setRigAlias(rig, name)
   }
 
   const onPickFiles = async (files: FileList | null) => {
@@ -237,8 +247,12 @@ export function AssetLibraryPanel({
         ) : (
           <div style={placeholderStyle}>📦</div>
         )}
-        <div style={tagStyle} title={entry.rig}>
-          {entry.rig}
+        <div
+          style={{...tagStyle, cursor: 'pointer'}}
+          title={`${entry.rig}\n点击给这套骨架起名`}
+          onClick={renameRig(entry.rig)}
+        >
+          {rigLabel(entry.rig)}
         </div>
         <div style={labelStyle} title={entry.name}>
           {entry.name}
@@ -279,8 +293,12 @@ export function AssetLibraryPanel({
         }}
       >
         <div style={placeholderStyle}>{icon}</div>
-        <div style={tagStyle} title={entry.rig}>
-          {entry.rig}
+        <div
+          style={{...tagStyle, cursor: 'pointer'}}
+          title={`${entry.rig}\n点击给这套骨架起名`}
+          onClick={renameRig(entry.rig)}
+        >
+          {rigLabel(entry.rig)}
           {rigMismatch && ' · 骨架不匹配'}
         </div>
         <div style={labelStyle} title={entry.name}>
