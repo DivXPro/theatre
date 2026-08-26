@@ -8,7 +8,7 @@ function projectWithState(state: unknown): Project {
         sheetsById: state,
       },
     },
-  } as $IntentionalAny as Project
+  } as unknown as Project
 }
 
 describe('getAllPossibleAssetIDs', () => {
