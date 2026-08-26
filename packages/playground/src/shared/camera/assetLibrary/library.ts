@@ -39,13 +39,60 @@ export class Library {
     await this.backend.putEntry({...entry, name})
     this.emit()
   }
+
+  /** 所有条目引用的 blob id 集合(模型 blobId + thumbnailId) */
+  private async referencedBlobIds(): Promise<Set<string>> {
+    const entries = await this.backend.listEntries()
+    const ids = new Set<string>()
+    for (const e of entries) {
+      if ('blobId' in e) ids.add(e.blobId)
+      if (e.kind === 'model' && e.thumbnailId) ids.add(e.thumbnailId)
+    }
+    return ids
+  }
+
+  /** 删条目并清理它的 blob;blob 被其他条目共享时保留 */
+  async deleteEntryDeep(id: string): Promise<void> {
+    const entry = await this.backend.getEntry(id)
+    if (!entry) return
+    const own: string[] = []
+    if ('blobId' in entry) own.push(entry.blobId)
+    if (entry.kind === 'model' && entry.thumbnailId) own.push(entry.thumbnailId)
+    await this.backend.deleteEntry(id)
+    const referenced = await this.referencedBlobIds()
+    for (const blobId of own) {
+      if (!referenced.has(blobId)) await this.backend.deleteBlob(blobId)
+    }
+    this.emit()
+  }
+
+  /** 清理无条目引用的孤儿 blob,返回删除数量 */
+  async sweepOrphanBlobs(): Promise<number> {
+    const referenced = await this.referencedBlobIds()
+    const all = await this.backend.listBlobIds()
+    let n = 0
+    for (const id of all) {
+      if (!referenced.has(id)) {
+        await this.backend.deleteBlob(id)
+        n++
+      }
+    }
+    return n
+  }
 }
 
 let singleton: Library | undefined
 
 /** 库单例:playground 固定用 IndexedDB 实现 */
 export function getLibrary(): Library {
-  return (singleton ??= new Library(new IndexedDBBackend()))
+  if (!singleton) {
+    singleton = new Library(new IndexedDBBackend())
+    // 启动时清理孤儿 blob(上次导入中断等留下的),失败不阻塞
+    void singleton.sweepOrphanBlobs().catch((err) => {
+      console.warn('[assetLibrary] 孤儿 blob 清理失败', err)
+    })
+  }
+  return singleton
 }
 
 /** 订阅式读库条目:导入/删除/重命名后自动刷新 */

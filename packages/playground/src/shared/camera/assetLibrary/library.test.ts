@@ -1,5 +1,12 @@
+import {indexedDB as fakeIndexedDB} from 'fake-indexeddb'
 import {Library} from './library'
+import {IndexedDBBackend} from './indexedDBBackend'
 import type {LibraryBackend, LibraryEntry, ModelEntry} from './types'
+
+// jsdom 没有 indexedDB,新测 IndexedDBBackend 前装好
+;(globalThis as any).indexedDB = fakeIndexedDB
+;(URL as any).createObjectURL = jest.fn(() => 'blob:mock-url')
+;(URL as any).revokeObjectURL = jest.fn()
 
 function memoryBackend(): LibraryBackend & {
   entries: Map<string, LibraryEntry>
@@ -15,6 +22,7 @@ function memoryBackend(): LibraryBackend & {
     putBlob: async () => 'blob-x',
     getBlobUrl: async () => 'blob:x',
     deleteBlob: async () => {},
+    listBlobIds: async () => [],
   }
 }
 
@@ -50,5 +58,67 @@ describe('Library', () => {
     await lib.putEntry(model('m1', '旧'))
     await lib.renameEntry('m1', '新')
     expect(backend.entries.get('m1')).toMatchObject({name: '新', rig: 'rig-x'})
+  })
+})
+
+describe('blob 生命周期', () => {
+  test('deleteEntryDeep: 缩略图被两个模型共享时,删一个不删 blob', async () => {
+    const lib = new Library(new IndexedDBBackend())
+    const thumbId = await lib.backend.putBlob(new Blob(['thumb']))
+    const model = (id: string) => ({
+      id,
+      kind: 'model' as const,
+      name: id,
+      rig: 'static',
+      blobId: 'b-' + id,
+      contentHash: 'h-' + id,
+      thumbnailId: thumbId,
+      boneCount: 0,
+      vertexCount: 1,
+      createdAt: 1,
+    })
+    await lib.putEntry(model('m1'))
+    await lib.putEntry(model('m2'))
+    await lib.deleteEntryDeep('m1')
+    // 共享缩略图仍在;m1 自己的模型 blob 不在本次放入(不影响断言)
+    expect(await lib.backend.listBlobIds()).toContain(thumbId)
+  })
+
+  test('deleteEntryDeep: 独占 blob 随条目删除', async () => {
+    const lib = new Library(new IndexedDBBackend())
+    const blobId = await lib.backend.putBlob(new Blob(['glb']))
+    await lib.putEntry({
+      id: 'm1',
+      kind: 'model',
+      name: 'm1',
+      rig: 'static',
+      blobId,
+      contentHash: 'h',
+      boneCount: 0,
+      vertexCount: 1,
+      createdAt: 1,
+    })
+    await lib.deleteEntryDeep('m1')
+    expect(await lib.backend.listBlobIds()).not.toContain(blobId)
+  })
+
+  test('sweepOrphanBlobs: 清掉无引用 blob,保留有引用的', async () => {
+    const lib = new Library(new IndexedDBBackend())
+    const used = await lib.backend.putBlob(new Blob(['used']))
+    const orphan = await lib.backend.putBlob(new Blob(['orphan']))
+    await lib.putEntry({
+      id: 'a1',
+      kind: 'animation',
+      name: 'a1',
+      rig: 'r',
+      blobId: used,
+      contentHash: 'h',
+      duration: 1,
+      createdAt: 1,
+    })
+    expect(await lib.sweepOrphanBlobs()).toBe(1)
+    const ids = await lib.backend.listBlobIds()
+    expect(ids).toContain(used)
+    expect(ids).not.toContain(orphan)
   })
 })

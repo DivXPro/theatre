@@ -50,6 +50,7 @@ function memoryBackend(existing: LibraryEntry[] = []): LibraryBackend {
     putBlob: async () => 'blob-' + Math.random().toString(36).slice(2),
     getBlobUrl: async () => 'blob:x',
     deleteBlob: async () => {},
+    listBlobIds: async () => [],
   }
 }
 

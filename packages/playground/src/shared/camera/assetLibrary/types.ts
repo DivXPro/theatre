@@ -57,4 +57,6 @@ export interface LibraryBackend {
   putBlob(data: Blob): Promise<string>
   getBlobUrl(blobId: string): Promise<string>
   deleteBlob(blobId: string): Promise<void>
+  /** 列出全部 blob id(孤儿清理用);HTTP 实现后续补 */
+  listBlobIds(): Promise<string[]>
 }

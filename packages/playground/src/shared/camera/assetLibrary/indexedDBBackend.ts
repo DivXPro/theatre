@@ -109,4 +109,13 @@ export class IndexedDBBackend implements LibraryBackend {
       .delete(blobId)
     await requestToPromise(req)
   }
+
+  async listBlobIds(): Promise<string[]> {
+    const db = await this.db()
+    const req = db
+      .transaction('blobs', 'readonly')
+      .objectStore('blobs')
+      .getAllKeys()
+    return (await requestToPromise(req)) as string[]
+  }
 }
