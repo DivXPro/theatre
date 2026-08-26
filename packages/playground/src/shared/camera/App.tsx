@@ -43,7 +43,7 @@ import {
 } from './PlacementManager'
 import {AssetLibraryPanel} from './assetLibrary/AssetLibraryPanel'
 import {getLibrary} from './assetLibrary/library'
-import type {AnimationEntry, ModelEntry} from './assetLibrary/types'
+import type {AnimationEntry, ModelEntry, PoseEntry} from './assetLibrary/types'
 
 document.body.style.backgroundColor = '#171717'
 
@@ -465,10 +465,25 @@ function App() {
     [selectedPlacement],
   )
 
+  const applyPose = useCallback(
+    (poseEntry: PoseEntry) => {
+      const studio = getStudioSync()
+      if (!studio || !selectedPlacement) return
+      const scrub = studio.scrub()
+      scrub.capture(({set}) => {
+        set(selectedPlacement.props.pose, poseEntry.id)
+      })
+      scrub.commit()
+    },
+    [selectedPlacement],
+  )
+
   const canApplyAnimation =
     selectedPlacement !== null &&
     selectionCount === 1 &&
     getPlacementEntryForObject(selectedPlacement)?.libraryEntryId !== undefined
+
+  const canApplyPose = canApplyAnimation
 
   return (
     <div
@@ -509,6 +524,7 @@ function App() {
             )
           }}
           onApplyAnimation={applyAnimation}
+          onApplyPose={applyPose}
           applyDisabled={!canApplyAnimation}
           disabled={rigLoading}
           filterRig={selectedRig}

@@ -99,13 +99,29 @@ const fileConfigCache = new Map<string, ReturnType<typeof t.file>>()
 const animPropConfig = t.string('', {label: '动作'})
 const posePropConfig = t.string('', {label: '姿势'})
 
-/** 已放置模型的 theatre 对象 → PlacementEntry 映射,App 通过 selection 反查 rig */
-const placementObjects = new Map<ISheetObject<any>, PlacementEntry>()
+/** 已放置模型的 theatre 对象 → {PlacementEntry, 场景实例} 映射,
+ * App 通过 selection 反查 rig,Task 6 用 instance 抽帧。
+ */
+const placementObjects = new Map<
+  ISheetObject<any>,
+  {entry: PlacementEntry; instance: Group}
+>()
 
 export function getPlacementEntryForObject(
   obj: ISheetObject<any>,
 ): PlacementEntry | undefined {
-  return placementObjects.get(obj)
+  return placementObjects.get(obj)?.entry
+}
+
+/** 统计场景里引用某库条目的已放置实例数(模型本体/动作/姿势三种引用) */
+export function countLibraryEntryUsage(entryId: string): number {
+  let n = 0
+  for (const [obj, {entry}] of placementObjects.entries()) {
+    if (entry.libraryEntryId === entryId) n++
+    if (val(obj.props.animation) === entryId) n++
+    if (val(obj.props.pose) === entryId) n++
+  }
+  return n
 }
 
 function fileConfigFor(assetId: string) {
@@ -890,7 +906,7 @@ function PlacedModelCore({
   // 骨架动画:加载结果按 URL 缓存,同一文件放多个会共享同一份骨架,
   // 互相打架(多个 <primitive> 挂同一个 Object3D 也只有最后一个能显示)。
   // 所以每个实例克隆一份(SkinnedMesh 安全),配独立的 AnimationMixer。
-  const instance = useMemo(() => SkeletonUtils.clone(group), [group])
+  const instance = useMemo(() => SkeletonUtils.clone(group) as Group, [group])
   const mixer = useMemo(() => new AnimationMixer(instance), [instance])
   const bindPoseRef = useRef<PoseEntry['bones']>({})
   // 实例刚克隆出来时同步捕获绑定姿势,确保后续姿势应用 effect 运行前已就位
@@ -904,14 +920,15 @@ function PlacedModelCore({
   const currentActionRef = useRef<AnimationAction | null>(null)
   const pendingUncachesRef = useRef<Array<ReturnType<typeof setTimeout>>>([])
 
-  // 登记当前 theatre 对象与 PlacementEntry 的映射,App 用 selection 反查 rig
+  // 登记当前 theatre 对象与 PlacementEntry 的映射,App 用 selection 反查 rig;
+  // 同时保留场景实例,供资产库面板统计引用与 Task 6 抽帧。
   useEffect(() => {
     if (!sheetObject) return
-    placementObjects.set(sheetObject, entry)
+    placementObjects.set(sheetObject, {entry, instance})
     return () => {
       placementObjects.delete(sheetObject)
     }
-  }, [sheetObject, entry])
+  }, [sheetObject, entry, instance])
 
   // animation 属性变化时加载库动画 GLB
   useEffect(() => {

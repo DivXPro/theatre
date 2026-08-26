@@ -1,17 +1,19 @@
 import React, {useEffect, useRef, useState} from 'react'
+import {countLibraryEntryUsage} from '../PlacementManager'
 import {getLibrary, useLibraryEntries} from './library'
 import {planImport, executeImport, realImportDeps} from './importPipeline'
 import type {ImportPlan} from './importPipeline'
 import {renderThumbnail} from './thumbnail'
-import type {AnimationEntry, ModelEntry} from './types'
+import type {AnimationEntry, ModelEntry, PoseEntry} from './types'
 
-type Tab = 'model' | 'animation'
+type Tab = 'model' | 'pose' | 'animation'
 
 export function AssetLibraryPanel({
   onPlaceModel,
   filterRig,
   onClose,
   onApplyAnimation,
+  onApplyPose,
   applyDisabled,
   disabled,
 }: {
@@ -19,11 +21,13 @@ export function AssetLibraryPanel({
   filterRig?: string
   onClose: () => void
   onApplyAnimation?: (entry: AnimationEntry) => void
+  onApplyPose?: (entry: PoseEntry) => void
   applyDisabled?: boolean
   disabled?: boolean
 }) {
   const [tab, setTab] = useState<Tab>('model')
   const models = useLibraryEntries('model') as ModelEntry[]
+  const poses = useLibraryEntries('pose') as PoseEntry[]
   const animations = useLibraryEntries('animation') as AnimationEntry[]
   const fileRef = useRef<HTMLInputElement>(null)
   const [plan, setPlan] = useState<ImportPlan | null>(null)
@@ -115,13 +119,13 @@ export function AssetLibraryPanel({
   const removeEntry = async (id: string) => {
     const entry = await getLibrary().backend.getEntry(id)
     if (!entry) return
-    if (!window.confirm(`删除「${entry.name}」?场景里已放置的实例不受影响。`))
-      return
-    await getLibrary().deleteEntry(id)
-    if ('blobId' in entry) await getLibrary().backend.deleteBlob(entry.blobId)
-    if (entry.kind === 'model' && entry.thumbnailId) {
-      await getLibrary().backend.deleteBlob(entry.thumbnailId)
-    }
+    const usage = countLibraryEntryUsage(id)
+    const message =
+      usage > 0
+        ? `删除「${entry.name}」?场景中有 ${usage} 个实例正在使用它,删除后这些实例将回退为绑定姿势/无动作或无法加载。`
+        : `删除「${entry.name}」?场景里已放置的实例不受影响。`
+    if (!window.confirm(message)) return
+    await getLibrary().deleteEntryDeep(id)
     if (mountedRef.current) {
       setThumbUrls((m) => {
         const {[id]: _, ...rest} = m
@@ -235,8 +239,23 @@ export function AssetLibraryPanel({
     )
   }
 
-  const renderAnimationCard = (entry: AnimationEntry) => {
-    const cardDisabled = disabled || applyDisabled || !onApplyAnimation
+  const sortBySelectedRig = <T extends {rig: string}>(list: T[]): T[] => {
+    if (!filterRig) return list
+    return [...list].sort((a, b) => {
+      const aSame = a.rig === filterRig ? 1 : 0
+      const bSame = b.rig === filterRig ? 1 : 0
+      return bSame - aSame
+    })
+  }
+
+  const renderApplyCard = <T extends AnimationEntry | PoseEntry>(
+    entry: T,
+    icon: string,
+    onApply: ((entry: T) => void) | undefined,
+    extra?: React.ReactNode,
+  ) => {
+    const rigMismatch = filterRig ? entry.rig !== filterRig : false
+    const cardDisabled = disabled || applyDisabled || !onApply || rigMismatch
     return (
       <div
         key={entry.id}
@@ -245,37 +264,48 @@ export function AssetLibraryPanel({
           cursor: cardDisabled ? 'default' : 'pointer',
           opacity: cardDisabled ? 0.5 : 1,
         }}
-        onClick={cardDisabled ? undefined : () => onApplyAnimation!(entry)}
+        onClick={cardDisabled ? undefined : () => onApply!(entry)}
         onContextMenu={(ev) => {
           ev.preventDefault()
           setMenu({x: ev.clientX, y: ev.clientY, id: entry.id})
         }}
       >
-        <div style={placeholderStyle}>🎬</div>
+        <div style={placeholderStyle}>{icon}</div>
         <div style={tagStyle} title={entry.rig}>
           {entry.rig}
+          {rigMismatch && ' · 骨架不匹配'}
         </div>
         <div style={labelStyle} title={entry.name}>
           {entry.name}
         </div>
-        <div
-          style={{
-            position: 'absolute',
-            bottom: 24,
-            left: 6,
-            fontSize: 10,
-            color: 'rgba(255,255,255,0.55)',
-          }}
-        >
-          {entry.duration.toFixed(2)}s
-        </div>
+        {extra}
       </div>
     )
   }
 
-  const visibleAnimations = filterRig
-    ? animations.filter((a) => a.rig === filterRig)
-    : animations
+  const renderAnimationCard = (entry: AnimationEntry) =>
+    renderApplyCard(
+      entry,
+      '🎬',
+      onApplyAnimation,
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 24,
+          left: 6,
+          fontSize: 10,
+          color: 'rgba(255,255,255,0.55)',
+        }}
+      >
+        {entry.duration.toFixed(2)}s
+      </div>,
+    )
+
+  const renderPoseCard = (entry: PoseEntry) =>
+    renderApplyCard(entry, '🧍', onApplyPose)
+
+  const visibleAnimations = sortBySelectedRig(animations)
+  const visiblePoses = sortBySelectedRig(poses)
 
   return (
     <div
@@ -320,6 +350,21 @@ export function AssetLibraryPanel({
           }}
         >
           模型
+        </button>
+        <button
+          onClick={() => setTab('pose')}
+          style={{
+            padding: '4px 10px',
+            borderRadius: 6,
+            border: 'none',
+            background:
+              tab === 'pose' ? 'rgba(255,255,255,0.15)' : 'transparent',
+            color: 'rgba(255,255,255,0.9)',
+            cursor: 'pointer',
+            fontSize: 13,
+          }}
+        >
+          姿势
         </button>
         <button
           onClick={() => setTab('animation')}
@@ -380,8 +425,8 @@ export function AssetLibraryPanel({
         }}
       />
 
-      {/* filterRig 提示条 */}
-      {tab === 'animation' && filterRig && (
+      {/* filterRig 提示条:姿势/动作共用 */}
+      {(tab === 'animation' || tab === 'pose') && filterRig && (
         <div
           style={{
             padding: '8px 12px',
@@ -391,7 +436,7 @@ export function AssetLibraryPanel({
             borderBottom: '1px solid rgba(255,255,255,0.08)',
           }}
         >
-          仅显示与选中模型同骨架族的动作
+          只列出同骨架族的条目可套用,不同族的已置灰
         </div>
       )}
 
@@ -409,7 +454,9 @@ export function AssetLibraryPanel({
       >
         {tab === 'model'
           ? models.map(renderModelCard)
-          : visibleAnimations.map(renderAnimationCard)}
+          : tab === 'pose'
+            ? visiblePoses.map(renderPoseCard)
+            : visibleAnimations.map(renderAnimationCard)}
       </div>
 
       {/* 确认清单弹层 */}
