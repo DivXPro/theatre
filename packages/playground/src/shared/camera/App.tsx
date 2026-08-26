@@ -29,7 +29,6 @@ import type {Mesh, Object3D} from 'three'
 import {
   GizmoModeHint,
   ObjectContextMenu,
-  PlacementButton,
   PlacementRig,
   PlacementRigErrorBoundary,
   PlacedModels,
@@ -41,6 +40,8 @@ import {
   usePlacementSurface,
   useSelectionGizmoTarget,
 } from './PlacementManager'
+import {AssetLibraryPanel} from './assetLibrary/AssetLibraryPanel'
+import type {ModelEntry} from './assetLibrary/types'
 
 document.body.style.backgroundColor = '#171717'
 
@@ -385,12 +386,13 @@ function App() {
   const {
     placing,
     pendingEntry,
-    startPlacing,
+    startPlacingFromLibrary,
     cancelPlacing,
     confirmPlacing,
     clearPending,
   } = usePlacementController(project)
   const [gizmoMode, setGizmoMode] = useGizmoMode()
+  const [libraryOpen, setLibraryOpen] = useState(false)
   // 右键已放置模型弹出的操作菜单:记录目标条目和光标位置
   const [objectMenu, setObjectMenu] = useState<{
     key: string
@@ -408,8 +410,35 @@ function App() {
         position: 'relative',
       }}
     >
-      <PlacementButton placing={placing} onPick={startPlacing} />
+      <button
+        disabled={!!placing}
+        onClick={() => setLibraryOpen((v) => !v)}
+        style={{
+          position: 'absolute',
+          top: 12,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 10,
+          padding: '6px 14px',
+          borderRadius: 6,
+          border: '1px solid #444',
+          background: placing ? '#333' : '#272730',
+          color: placing ? '#888' : '#eee',
+          cursor: placing ? 'default' : 'pointer',
+          fontSize: 13,
+        }}
+      >
+        {placing ? '放置中:左键确认落点,Esc/右键取消' : '资产库'}
+      </button>
       <GizmoModeHint mode={gizmoMode} />
+      {libraryOpen && (
+        <AssetLibraryPanel
+          onPlaceModel={(entry: ModelEntry) => {
+            void startPlacingFromLibrary(entry)
+          }}
+          onClose={() => setLibraryOpen(false)}
+        />
+      )}
       {objectMenu && (
         <ObjectContextMenu
           position={{x: objectMenu.x, y: objectMenu.y}}

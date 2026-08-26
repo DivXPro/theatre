@@ -271,7 +271,7 @@ export function AssetLibraryPanel({
         top: 0,
         bottom: 0,
         width: 260,
-        zIndex: 10,
+        zIndex: 20,
         display: 'flex',
         flexDirection: 'column',
         background: 'rgba(24,24,28,0.96)',

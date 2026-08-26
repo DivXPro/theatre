@@ -13,9 +13,19 @@ import React, {
   useRef,
   useState,
 } from 'react'
-import {AnimationMixer, Box3, Plane, Raycaster, Vector2, Vector3} from 'three'
-import type {Group, Mesh, Object3D} from 'three'
-import {SkeletonUtils} from 'three-stdlib'
+import {
+  AnimationMixer,
+  Box3,
+  Plane,
+  Raycaster,
+  Vector2,
+  Vector3,
+} from 'three'
+import type {Group, Mesh, Object3D,
+  AnimationClip} from 'three'
+import {GLTFLoader, SkeletonUtils} from 'three-stdlib'
+import {getLibrary} from './assetLibrary/library'
+import type {ModelEntry} from './assetLibrary/types'
 
 /**
  * FBX 模型放置:页面顶部按钮选文件进入放置模式,半透明 ghost 跟随光标
@@ -44,17 +54,24 @@ import {SkeletonUtils} from 'three-stdlib'
 
 type PlacementEntry = {
   key: string
-  assetId: string
+  /** 本地 FBX 路径的 theatre 资产 id;库来源的条目没有此字段 */
+  assetId?: string
+  /** 库来源条目的 id;存在时优先从资产库加载 GLB */
+  libraryEntryId?: string
   position: {x: number; y: number; z: number}
 }
 
 /** 已确认但尚未提交进清单的放置:先渲染,挂载后在 effect 里一次性提交 */
 type PendingPlacementEntry = PlacementEntry & {pending: true}
 
+type PlacementSource =
+  | {type: 'local'; file: File; assetId: string}
+  | {type: 'library'; entryId: string}
+
 export type PlacingState = {
-  file: File
   url: string
-  assetId: string
+  label: string
+  source: PlacementSource
 }
 
 const REGISTRY_KEY = 'Placements'
@@ -262,14 +279,29 @@ export function usePlacementController(project: IProject) {
         return
       }
       if (!assetId) return
-      setPlacing({file, url: URL.createObjectURL(file), assetId})
+      setPlacing({
+        url: URL.createObjectURL(file),
+        label: file.name,
+        source: {type: 'local', file, assetId},
+      })
     },
     [project],
   )
 
+  /** 从资产库选模型进入放置模式:不创建 theatre 项目资产 */
+  const startPlacingFromLibrary = useCallback(async (entry: ModelEntry) => {
+    const url = await getLibrary().backend.getBlobUrl(entry.blobId)
+    setPlacing({
+      url,
+      label: entry.name,
+      source: {type: 'library', entryId: entry.id},
+    })
+  }, [])
+
   const cancelPlacing = useCallback(() => {
     setPlacing((p) => {
-      if (p) URL.revokeObjectURL(p.url)
+      // 本地文件是自己创建的 blob URL,库 URL 由 backend 管理生命周期
+      if (p && p.source.type === 'local') URL.revokeObjectURL(p.url)
       return null
     })
   }, [])
@@ -279,15 +311,23 @@ export function usePlacementController(project: IProject) {
       if (!placing) return
       // theatreKey 只能含安全字符,文件名其余字符换成下划线
       const base =
-        placing.file.name.replace(/\.fbx$/i, '').replace(/[^\w-]/g, '_') ||
-        'model'
-      setPendingEntry({
-        key: `Placed / ${base}-${Date.now().toString(36)}`,
-        assetId: placing.assetId,
-        position: point,
-        pending: true,
-      })
-      URL.revokeObjectURL(placing.url)
+        placing.label.replace(/\.[^.]+$/, '').replace(/[^\w-]/g, '_') || 'model'
+      if (placing.source.type === 'local') {
+        setPendingEntry({
+          key: `Placed / ${base}-${Date.now().toString(36)}`,
+          assetId: placing.source.assetId,
+          position: point,
+          pending: true,
+        })
+      } else {
+        setPendingEntry({
+          key: `Placed / ${base}-${Date.now().toString(36)}`,
+          libraryEntryId: placing.source.entryId,
+          position: point,
+          pending: true,
+        })
+      }
+      if (placing.source.type === 'local') URL.revokeObjectURL(placing.url)
       setPlacing(null)
     },
     [placing],
@@ -299,6 +339,7 @@ export function usePlacementController(project: IProject) {
     placing,
     pendingEntry,
     startPlacing,
+    startPlacingFromLibrary,
     cancelPlacing,
     confirmPlacing,
     clearPending,
@@ -361,7 +402,20 @@ export function PlacementButton({
  * 落点规则:物体表面优先;y=0 地面(数学平面,无限大)兜底;视线与地面
  * 平行或朝天时再退到"前方 30 个单位、压到地面",保证任何视角都有落点预览。
  */
-export function PlacementRig({
+export function PlacementRig(props: {
+  placing: PlacingState
+  onConfirm: (point: {x: number; y: number; z: number}) => void
+  onCancel: () => void
+}) {
+  return props.placing.source.type === 'local' ? (
+    <PlacementRigFBX {...props} />
+  ) : (
+    <PlacementRigGLTF {...props} />
+  )
+}
+
+/** 本地 FBX 预览:用 drei 的 useFBX,加载完交给公共的 Rig 逻辑 */
+function PlacementRigFBX({
   placing,
   onConfirm,
   onCancel,
@@ -371,11 +425,65 @@ export function PlacementRig({
   onCancel: () => void
 }) {
   const fbx = useFBX(placing.url)
+  return (
+    <PlacementRigCore model={fbx} onConfirm={onConfirm} onCancel={onCancel} />
+  )
+}
+
+/** 资产库 GLB 预览:用 GLTFLoader 异步加载,失败时交给错误边界 */
+function PlacementRigGLTF({
+  placing,
+  onConfirm,
+  onCancel,
+}: {
+  placing: PlacingState
+  onConfirm: (point: {x: number; y: number; z: number}) => void
+  onCancel: () => void
+}) {
+  const [model, setModel] = useState<Group | null>(null)
+  const [failed, setFailed] = useState(false)
+  useEffect(() => {
+    let cancelled = false
+    const loader = new GLTFLoader()
+    loader
+      .loadAsync(placing.url)
+      .then((gltf) => {
+        if (!cancelled) setModel(gltf.scene as Group)
+      })
+      .catch((err) => {
+        console.warn('[placement] 库模型预览加载失败', err)
+        if (!cancelled) setFailed(true)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [placing.url])
+  if (failed) throw new Error('[placement] 库模型预览加载失败')
+  if (!model) return null
+  return (
+    <PlacementRigCore model={model} onConfirm={onConfirm} onCancel={onCancel} />
+  )
+}
+
+/** 放置模式下的 Canvas 内容:半透明 ghost 跟随光标。
+ * 事件走 canvas 的 DOM 监听 + 手动射线检测,不用不可见网格接事件——
+ * 视线与地面平行时网格永远打不中,事件根本不触发,看起来就是"没反应"。
+ * 落点规则:物体表面优先;y=0 地面(数学平面,无限大)兜底;视线与地面
+ * 平行或朝天时再退到"前方 30 个单位、压到地面",保证任何视角都有落点预览。 */
+function PlacementRigCore({
+  model,
+  onConfirm,
+  onCancel,
+}: {
+  model: Group
+  onConfirm: (point: {x: number; y: number; z: number}) => void
+  onCancel: () => void
+}) {
   const invalidate = useThree((s) => s.invalidate)
   const gl = useThree((s) => s.gl)
   const camera = useThree((s) => s.camera)
-  const ghost = useMemo(() => makeGhost(fbx), [fbx])
-  const {scale, lift} = useNormalizedModel(fbx)
+  const ghost = useMemo(() => makeGhost(model), [model])
+  const {scale, lift} = useNormalizedModel(model)
   const ghostRef = useRef<Group>(null!)
   const raycaster = useMemo(() => new Raycaster(), [])
   const groundPlane = useMemo(() => new Plane(new Vector3(0, 1, 0), 0), [])
@@ -556,17 +664,159 @@ function PlacedModel({
   selectLocked?: boolean
   onObjectMenu?: (key: string, x: number, y: number) => void
 }) {
+  if (entry.libraryEntryId) {
+    return (
+      <LibraryPlacedModel
+        entry={entry}
+        project={project}
+        sheet={sheet}
+        onPersisted={onPersisted}
+        selectLocked={selectLocked}
+        onObjectMenu={onObjectMenu}
+      />
+    )
+  }
+  return (
+    <FBXPlacedModel
+      entry={entry}
+      project={project}
+      sheet={sheet}
+      onPersisted={onPersisted}
+      selectLocked={selectLocked}
+      onObjectMenu={onObjectMenu}
+    />
+  )
+}
+
+/** 旧本地 FBX 路径:通过 theatre assetStorage 取 URL,再用 useFBX 加载 */
+function FBXPlacedModel({
+  entry,
+  project,
+  sheet,
+  onPersisted,
+  selectLocked,
+  onObjectMenu,
+}: {
+  entry: PlacementEntry | PendingPlacementEntry
+  project: IProject
+  sheet: ISheet
+  onPersisted: () => void
+  selectLocked?: boolean
+  onObjectMenu?: (key: string, x: number, y: number) => void
+}) {
   const url = useMemo(() => {
     const storage = assetStorageOf(project)
-    if (!storage) throw new Error('asset storage unavailable')
+    if (!storage || !entry.assetId) throw new Error('asset storage unavailable')
     return storage.getAssetUrl(entry.assetId)
   }, [project, entry.assetId])
   const fbx = useFBX(url)
-  const {scale, lift} = useNormalizedModel(fbx)
-  const additionalProps = useMemo(
-    () => ({source: fileConfigFor(entry.assetId)}),
-    [entry.assetId],
+  return (
+    <PlacedModelCore
+      entry={entry}
+      sheet={sheet}
+      group={fbx}
+      animations={fbx.animations}
+      sourceType="local"
+      onPersisted={onPersisted}
+      selectLocked={selectLocked}
+      onObjectMenu={onObjectMenu}
+    />
   )
+}
+
+/** 资产库 GLB 路径:解析条目、取 blob URL、用 GLTFLoader 异步加载 */
+function LibraryPlacedModel({
+  entry,
+  project,
+  sheet,
+  onPersisted,
+  selectLocked,
+  onObjectMenu,
+}: {
+  entry: PlacementEntry | PendingPlacementEntry
+  project: IProject
+  sheet: ISheet
+  onPersisted: () => void
+  selectLocked?: boolean
+  onObjectMenu?: (key: string, x: number, y: number) => void
+}) {
+  const [loaded, setLoaded] = useState<{
+    group: Group
+    animations: AnimationClip[]
+  } | null>(null)
+  const [failed, setFailed] = useState(false)
+  useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      try {
+        const libEntry = await getLibrary().backend.getEntry(
+          entry.libraryEntryId!,
+        )
+        if (!libEntry || libEntry.kind !== 'model') {
+          throw new Error('library model entry not found')
+        }
+        const url = await getLibrary().backend.getBlobUrl(libEntry.blobId)
+        const gltf = await new GLTFLoader().loadAsync(url)
+        if (!cancelled) {
+          setLoaded({
+            group: gltf.scene as Group,
+            animations: gltf.animations,
+          })
+        }
+      } catch (err) {
+        console.warn('[placement] 库模型加载失败', err)
+        if (!cancelled) setFailed(true)
+      }
+    }
+    load()
+    return () => {
+      cancelled = true
+    }
+  }, [entry.libraryEntryId])
+  if (failed) throw new Error('[placement] 库模型加载失败')
+  if (!loaded) return null
+  return (
+    <PlacedModelCore
+      entry={entry}
+      sheet={sheet}
+      group={loaded.group}
+      animations={loaded.animations}
+      sourceType="library"
+      onPersisted={onPersisted}
+      selectLocked={selectLocked}
+      onObjectMenu={onObjectMenu}
+    />
+  )
+}
+
+/** 已加载 Group 之后的公共逻辑:克隆、归一化、动画 mixer、点选菜单、持久化 */
+function PlacedModelCore({
+  entry,
+  sheet,
+  group,
+  animations,
+  sourceType,
+  onPersisted,
+  selectLocked,
+  onObjectMenu,
+}: {
+  entry: PlacementEntry | PendingPlacementEntry
+  sheet: ISheet
+  group: Group
+  animations: AnimationClip[]
+  sourceType: 'local' | 'library'
+  onPersisted: () => void
+  selectLocked?: boolean
+  onObjectMenu?: (key: string, x: number, y: number) => void
+}) {
+  const additionalProps = useMemo(
+    () =>
+      sourceType === 'local' && entry.assetId
+        ? {source: fileConfigFor(entry.assetId)}
+        : undefined,
+    [sourceType, entry.assetId],
+  )
+  const {scale, lift} = useNormalizedModel(group)
   const objRef = useRef<ISheetObject<any> | undefined>(undefined)
   // 登记为落点表面:之后的放置可以把模型摞到这个模型上
   const groupRef = useRef<Group>(null!)
@@ -603,20 +853,20 @@ function PlacedModel({
     )
   }
 
-  // 骨架动画:useFBX 按 URL 缓存,同一文件放多个会共享同一份骨架,
+  // 骨架动画:加载结果按 URL 缓存,同一文件放多个会共享同一份骨架,
   // 互相打架(多个 <primitive> 挂同一个 Object3D 也只有最后一个能显示)。
   // 所以每个实例克隆一份(SkinnedMesh 安全),配独立的 AnimationMixer。
-  const instance = useMemo(() => SkeletonUtils.clone(fbx), [fbx])
+  const instance = useMemo(() => SkeletonUtils.clone(group), [group])
   const mixer = useMemo(() => new AnimationMixer(instance), [instance])
   useEffect(() => {
-    const clip = instance.animations[0] ?? fbx.animations[0]
+    const clip = instance.animations[0] ?? animations[0]
     if (!clip) return
     mixer.clipAction(clip).play()
     return () => {
       mixer.stopAllAction()
       mixer.uncacheRoot(instance)
     }
-  }, [mixer, instance, fbx])
+  }, [mixer, instance, animations])
 
   // 只在 theatre 序列播放时驱动动画:编辑/摆姿势时模型保持静止。
   // demand 帧循环下没有持续帧,播放状态翻成 true 时主动起一帧,
@@ -632,9 +882,9 @@ function PlacedModel({
     invalidate()
   })
 
-  // pending 条目:对象已由 e.group 建好后,一次性提交清单 + source 静态覆盖。
-  // source 必须落在项目状态里:studio 启动时会清掉"没被项目状态引用"的
-  // IndexedDB 资产,只待在 JSX 默认值里的引用扛不过清理。
+  // pending 条目:对象已由 e.group 建好后,一次性提交清单。
+  // 本地来源额外写 source 静态覆盖,让 theatre 项目状态引用到资产(避免被清理);
+  // 库来源不写 source,清单里的 libraryEntryId 足够恢复。
   const isPending = 'pending' in entry && entry.pending
   useEffect(() => {
     if (!isPending) return
@@ -649,13 +899,15 @@ function PlacedModel({
     scrub.capture(({set}) => {
       const {pending: _pending, ...rest} = entry as PendingPlacementEntry
       set(registry.props.list, JSON.stringify([...list, rest]))
-      set(
-        obj.props.source as any,
-        {
-          type: 'file',
-          id: entry.assetId,
-        } as any,
-      )
+      if (sourceType === 'local' && entry.assetId) {
+        set(
+          obj.props.source as any,
+          {
+            type: 'file',
+            id: entry.assetId,
+          } as any,
+        )
+      }
     })
     scrub.commit()
     onPersisted()
