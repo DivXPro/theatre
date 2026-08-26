@@ -9,4 +9,4 @@
 compat-tests/fixtures/*/package/
 examples/dom-cra/
 examples/r3f-cra/
-packages/playground/public/draco/
+packages/playground/src/public/draco/
