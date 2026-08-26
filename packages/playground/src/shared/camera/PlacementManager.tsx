@@ -1,0 +1,978 @@
+import {editable as e} from '@toy-box/r3f'
+import {getStudioSync, onChange, types as t, val} from '@toy-box/core'
+import type {IProject, IScrub, ISheet, ISheetObject} from '@toy-box/core'
+import {privateAPI} from '@toy-box/core/privateAPIs'
+import {TransformControls, useFBX} from '@react-three/drei'
+import {useFrame, useThree} from '@react-three/fiber'
+import type {ThreeEvent} from '@react-three/fiber'
+import React, {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
+import {AnimationMixer, Box3, Plane, Raycaster, Vector2, Vector3} from 'three'
+import type {Group, Mesh, Object3D} from 'three'
+import {SkeletonUtils} from 'three-stdlib'
+
+/**
+ * FBX 模型放置:页面顶部按钮选文件进入放置模式,半透明 ghost 跟随光标
+ * (落点取物体表面优先,y=0 地面兜底),左键确认、Esc/右键取消。
+ *
+ * 确认后模型成为 theatre 可编辑对象(位置/旋转/缩放 + source 文件属性),
+ * 放置清单写进 "Placements" sheet 对象(string prop 存 JSON),一次 scrub
+ * 提交 = 一步撤销(撤销即模型消失)。模型文件本体走 studio 的资产库存进
+ * IndexedDB,刷新后按清单 + 资产 id 恢复。
+ *
+ * 带骨架动画的 FBX:每个实例克隆独立骨架 + AnimationMixer,自动播放第一个
+ * 动画片段,但只在 theatre 序列播放(空格/播放键)时驱动——编辑时模型静止,
+ * 方便摆姿势。ghost 预览始终静止。
+ *
+ * 点选与移动:画布左键点已放置的模型即加入 studio 选中(放置模式下点击
+ * 仍是确认落点),选中后对象上挂三轴移动箭头(SelectionGizmo),拖箭头
+ * 实时改位置,一次拖动 = 一步撤销。想让别的可编辑对象也有箭头,
+ * 用 useSelectionGizmoTarget 登记即可(App 里的 Thingy 就是)。
+ *
+ * 已知边界:
+ *  - 撤销放置后,theatre 里会留下一个空的 "Placed/..." 对象(对象一经创建
+ *    不能从公开 API 删除),重新加载后消失于大纲是 theatre 自身行为,不影响场景
+ *  - 资产 blob 只存本地 IndexedDB;另一个客户端收到同步的清单但本地没有文件时,
+ *    该模型不渲染(错误边界兜住,不影响其它内容)
+ */
+
+type PlacementEntry = {
+  key: string
+  assetId: string
+  position: {x: number; y: number; z: number}
+}
+
+/** 已确认但尚未提交进清单的放置:先渲染,挂载后在 effect 里一次性提交 */
+type PendingPlacementEntry = PlacementEntry & {pending: true}
+
+export type PlacingState = {
+  file: File
+  url: string
+  assetId: string
+}
+
+const REGISTRY_KEY = 'Placements'
+
+// IProject 的公开类型上没有 assetStorage:它在内部 Project 实例上,
+// 由 studio attach 完成后挂上真实存储(之前是会抛错的占位实现)。
+// 这里通过 privateAPI 取内部实例,只用到两个方法。
+type AssetStorage = {
+  getAssetUrl: (assetId: string) => string
+  createAsset: (file: File) => Promise<string | null>
+}
+
+function assetStorageOf(project: IProject): AssetStorage | undefined {
+  const internal = privateAPI(project as any) as unknown as
+    | {assetStorage?: AssetStorage}
+    | undefined
+  return internal?.assetStorage
+}
+
+/**
+ * 每个资产 id 的 file 属性配置,模块级缓存。
+ * t.file/t.number 每次调用都会生成新的闭包(interpolate 等),而 sheet.object
+ * 对同一个 key 的重复调用要求配置 fast-deep-equal(函数按引用比)——
+ * 只有缓存成同一个对象引用,命令式创建和 <e.group additionalProps>
+ * 两条路径的配置才能相等。
+ */
+const fileConfigCache = new Map<string, ReturnType<typeof t.file>>()
+
+function fileConfigFor(assetId: string) {
+  let config = fileConfigCache.get(assetId)
+  if (!config) {
+    config = t.file(assetId)
+    fileConfigCache.set(assetId, config)
+  }
+  return config
+}
+
+function getRegistry(sheet: ISheet) {
+  return sheet.object(REGISTRY_KEY, {list: t.string('[]')})
+}
+
+/**
+ * 放置时射线检测的目标清单(模块级登记表)。
+ * 只有登记过的分组才参与落点检测——ghost 本身、星星、gizmo、相机子树
+ * 都不在表里,检测时直接跳过,不用测完再过滤。模型面数越高省得越多。
+ * 想让人能把模型摞在已有模型上,就把对应分组登记进来。
+ */
+const placementSurfaces = new Set<Object3D>()
+
+/** 把 ref 指向的分组登记为落点表面,卸载时自动移除 */
+export function usePlacementSurface(ref: React.RefObject<Object3D | null>) {
+  useEffect(() => {
+    const obj = ref.current
+    if (!obj) return
+    placementSurfaces.add(obj)
+    return () => {
+      placementSurfaces.delete(obj)
+    }
+  }, [ref])
+}
+
+/**
+ * 选中 gizmo 的目标登记表:"theatre 对象 → 场景节点"。
+ * 想让某个可编辑对象被选中后挂移动箭头,就用 useSelectionGizmoTarget
+ * 把它的 theatre 对象和场景节点登记进来(已放置的模型、Thingy 都是)。
+ */
+const selectionGizmoTargets = new Map<ISheetObject<any>, Object3D>()
+
+/** 把 ref 指向的节点登记为选中 gizmo 的附着目标,卸载时自动移除 */
+export function useSelectionGizmoTarget(
+  objRef: React.RefObject<ISheetObject<any> | undefined>,
+  nodeRef: React.RefObject<Object3D | null>,
+) {
+  useEffect(() => {
+    const obj = objRef.current
+    const node = nodeRef.current
+    if (!obj || !node) return
+    selectionGizmoTargets.set(obj, node)
+    return () => {
+      selectionGizmoTargets.delete(obj)
+    }
+    // 两个 ref 都是挂载后不再变的
+  }, [])
+}
+
+/**
+ * 点 gizmo 箭头时射线会穿过箭头打到后面的模型,松手那一下会被误当成
+ * "点击选中别的模型"。拖 gizmo 期间和松手后一小段时间内,点选一律忽略。
+ */
+let suppressSelectUntil = 0
+
+/** 当前这次点击是否该被 gizmo 吞掉(场景里所有点选入口共用一个判断) */
+export function isSelectSuppressed() {
+  return performance.now() < suppressSelectUntil
+}
+
+function suppressSelectBriefly() {
+  suppressSelectUntil = performance.now() + 200
+}
+
+function readRegistry(
+  registry: ISheetObject<{list: string}>,
+): PlacementEntry[] {
+  try {
+    const list = JSON.parse(registry.value.list)
+    return Array.isArray(list) ? list : []
+  } catch {
+    return []
+  }
+}
+
+/**
+ * 等资产存储就绪:attach 完成前 project.assetStorage 还是占位实现,
+ * getAssetUrl 只会返回 "undefined/<id>" 假地址(theatre 官方也要求
+ * project.ready 之后再取资产地址)。就绪前渲染已放置模型必然 404。
+ */
+function useProjectReady(project: IProject): boolean {
+  const [ready, setReady] = useState(() => project.isReady)
+  useEffect(() => {
+    if (ready) return
+    let cancelled = false
+    void project.ready.then(() => {
+      if (!cancelled) setReady(true)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [project, ready])
+  return ready
+}
+
+/** 响应式读放置清单:scrub 提交/撤销/同步都会触发 onValuesChange */
+function usePlacementsList(sheet: ISheet): PlacementEntry[] {
+  const registry = useMemo(() => getRegistry(sheet), [sheet])
+  const [list, setList] = useState<PlacementEntry[]>(() =>
+    readRegistry(registry),
+  )
+  useEffect(() => {
+    setList(readRegistry(registry))
+    return registry.onValuesChange(() => setList(readRegistry(registry)))
+  }, [registry])
+  return list
+}
+
+/** 归一化:任意 FBX 单位差异很大,统一缩放到最大边 5 个世界单位,底部对齐落点 */
+function useNormalizedModel(fbx: Group) {
+  return useMemo(() => {
+    const box = new Box3().setFromObject(fbx)
+    const size = box.getSize(new Vector3())
+    const maxDim = Math.max(size.x, size.y, size.z)
+    return {
+      scale: maxDim > 0 ? 5 / maxDim : 1,
+      // lift 是模型局部单位,放进 scale 过的组里后底部正好落在 y=0
+      lift: -box.min.y,
+    }
+  }, [fbx])
+}
+
+/** ghost:克隆一份(SkinnedMesh 安全),材质全部换成半透明 */
+function makeGhost(fbx: Group): Group {
+  const ghost = SkeletonUtils.clone(fbx) as Group
+  ghost.traverse((obj) => {
+    const mesh = obj as Mesh
+    if (!mesh.isMesh) return
+    const materials = Array.isArray(mesh.material)
+      ? mesh.material
+      : [mesh.material]
+    const ghosted = materials.map((m) => {
+      const c = m.clone()
+      c.transparent = true
+      c.opacity = 0.4
+      c.depthWrite = false
+      return c
+    })
+    mesh.material = Array.isArray(mesh.material) ? ghosted : ghosted[0]
+  })
+  return ghost
+}
+
+/**
+ * 放置状态的控制器:选文件 → 存资产 + 进放置模式;确认 → 先放入 pending
+ * (模型立刻渲染),持久化由 PlacedModel 挂载后一次性提交(清单 + source
+ * 静态覆盖同一个 scrub,一步撤销);取消/确认后释放 blob URL。
+ */
+export function usePlacementController(project: IProject) {
+  const [placing, setPlacing] = useState<PlacingState | null>(null)
+  const [pendingEntry, setPendingEntry] =
+    useState<PendingPlacementEntry | null>(null)
+
+  const startPlacing = useCallback(
+    async (file: File) => {
+      // 等 attach 完成:占位存储的 createAsset 会直接抛错
+      await project.ready
+      const storage = assetStorageOf(project)
+      if (!storage) {
+        console.warn('[placement] 没有 studio 资产存储,无法放置')
+        return
+      }
+      // 重名且内容不同时 createAsset 会弹窗让用户改名;返回 null 即用户取消或失败
+      let assetId: string | null = null
+      try {
+        assetId = await storage.createAsset(file)
+      } catch (err) {
+        console.warn('[placement] 创建资产失败', err)
+        return
+      }
+      if (!assetId) return
+      setPlacing({file, url: URL.createObjectURL(file), assetId})
+    },
+    [project],
+  )
+
+  const cancelPlacing = useCallback(() => {
+    setPlacing((p) => {
+      if (p) URL.revokeObjectURL(p.url)
+      return null
+    })
+  }, [])
+
+  const confirmPlacing = useCallback(
+    (point: {x: number; y: number; z: number}) => {
+      if (!placing) return
+      // theatreKey 只能含安全字符,文件名其余字符换成下划线
+      const base =
+        placing.file.name.replace(/\.fbx$/i, '').replace(/[^\w-]/g, '_') ||
+        'model'
+      setPendingEntry({
+        key: `Placed / ${base}-${Date.now().toString(36)}`,
+        assetId: placing.assetId,
+        position: point,
+        pending: true,
+      })
+      URL.revokeObjectURL(placing.url)
+      setPlacing(null)
+    },
+    [placing],
+  )
+
+  const clearPending = useCallback(() => setPendingEntry(null), [])
+
+  return {
+    placing,
+    pendingEntry,
+    startPlacing,
+    cancelPlacing,
+    confirmPlacing,
+    clearPending,
+  }
+}
+
+/** 页面顶部的入口按钮(HTML 覆盖层,放在 Canvas 外) */
+export function PlacementButton({
+  placing,
+  onPick,
+}: {
+  placing: PlacingState | null
+  onPick: (file: File) => void
+}) {
+  const inputRef = useRef<HTMLInputElement>(null)
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        top: 12,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        zIndex: 10,
+      }}
+    >
+      <input
+        ref={inputRef}
+        type="file"
+        accept=".fbx"
+        style={{display: 'none'}}
+        onChange={(ev) => {
+          const file = ev.target.files?.[0]
+          if (file) onPick(file)
+          ev.target.value = ''
+        }}
+      />
+      <button
+        disabled={!!placing}
+        onClick={() => inputRef.current?.click()}
+        style={{
+          padding: '6px 14px',
+          borderRadius: 6,
+          border: '1px solid #444',
+          background: placing ? '#333' : '#272730',
+          color: placing ? '#888' : '#eee',
+          cursor: placing ? 'default' : 'pointer',
+          fontSize: 13,
+        }}
+      >
+        {placing ? '放置中:左键确认落点,Esc/右键取消' : '放置 FBX 模型'}
+      </button>
+    </div>
+  )
+}
+
+/**
+ * 放置模式下的 Canvas 内容:半透明 ghost 跟随光标。
+ * 事件走 canvas 的 DOM 监听 + 手动射线检测,不用不可见网格接事件——
+ * 视线与地面平行时网格永远打不中,事件根本不触发,看起来就是"没反应"。
+ * 落点规则:物体表面优先;y=0 地面(数学平面,无限大)兜底;视线与地面
+ * 平行或朝天时再退到"前方 30 个单位、压到地面",保证任何视角都有落点预览。
+ */
+export function PlacementRig({
+  placing,
+  onConfirm,
+  onCancel,
+}: {
+  placing: PlacingState
+  onConfirm: (point: {x: number; y: number; z: number}) => void
+  onCancel: () => void
+}) {
+  const fbx = useFBX(placing.url)
+  const invalidate = useThree((s) => s.invalidate)
+  const gl = useThree((s) => s.gl)
+  const camera = useThree((s) => s.camera)
+  const ghost = useMemo(() => makeGhost(fbx), [fbx])
+  const {scale, lift} = useNormalizedModel(fbx)
+  const ghostRef = useRef<Group>(null!)
+  const raycaster = useMemo(() => new Raycaster(), [])
+  const groundPlane = useMemo(() => new Plane(new Vector3(0, 1, 0), 0), [])
+
+  const computePoint = useCallback(
+    (clientX: number, clientY: number): Vector3 => {
+      const rect = gl.domElement.getBoundingClientRect()
+      const ndc = new Vector2(
+        ((clientX - rect.left) / rect.width) * 2 - 1,
+        -((clientY - rect.top) / rect.height) * 2 + 1,
+      )
+      raycaster.setFromCamera(ndc, camera)
+      // 表面优先:只对登记过的落点表面检测(行星、已放置的模型)。
+      // ghost、星星、gizmo 等不在表里,天然跳过;只认 Mesh 命中
+      const surface = raycaster
+        .intersectObjects([...placementSurfaces], true)
+        .find((h) => (h.object as Mesh).isMesh)
+      const ground = raycaster.ray.intersectPlane(groundPlane, new Vector3())
+      // 相机贴着地平面(y≈0)时,地面会在"相机脚下"命中(t≈0),
+      // 这个命中比任何表面都"近",但它就在相机自己身上,没有放置意义。
+      // 半单位以内的地面命中直接丢弃,让给表面或前方兜底。
+      const usableGround =
+        ground && raycaster.ray.origin.distanceTo(ground) > 0.5 ? ground : null
+      if (
+        surface &&
+        (!usableGround ||
+          surface.distance <= raycaster.ray.origin.distanceTo(usableGround))
+      ) {
+        return surface.point
+      }
+      if (usableGround) return usableGround
+      // 视线与地面平行、朝天、或贴地:放到正前方 30 个单位、压到地面
+      const ahead = raycaster.ray.at(30, new Vector3())
+      ahead.y = 0
+      return ahead
+    },
+    [gl, camera, raycaster, groundPlane],
+  )
+
+  // 鼠标事件只记坐标并申请一帧,真正的落点计算在帧回调里做一次——
+  // pointermove 一秒能来上百次(每次都全量射线检测会很卡),渲染帧一秒最多 60 次
+  const pendingMoveRef = useRef<{x: number; y: number} | null>(null)
+  useFrame(() => {
+    const pending = pendingMoveRef.current
+    if (!pending) return
+    pendingMoveRef.current = null
+    const p = computePoint(pending.x, pending.y)
+    if (ghostRef.current) {
+      ghostRef.current.visible = true
+      ghostRef.current.position.copy(p)
+    }
+  })
+
+  useEffect(() => {
+    const el = gl.domElement
+    let downPos: {x: number; y: number} | null = null
+
+    const onMove = (ev: PointerEvent) => {
+      pendingMoveRef.current = {x: ev.clientX, y: ev.clientY}
+      invalidate()
+    }
+    const onDown = (ev: PointerEvent) => {
+      downPos = {x: ev.clientX, y: ev.clientY}
+    }
+    const onClick = (ev: MouseEvent) => {
+      if (ev.button !== 0) return
+      // 拖动后的松手不算点击
+      if (
+        downPos &&
+        Math.hypot(ev.clientX - downPos.x, ev.clientY - downPos.y) > 2
+      )
+        return
+      const p = computePoint(ev.clientX, ev.clientY)
+      // 太远的落点直接忽略,留在放置模式里(防止误放到天边)
+      if (p.distanceTo(camera.position) > 300) return
+      onConfirm({x: p.x, y: p.y, z: p.z})
+    }
+    const onKey = (ev: KeyboardEvent) => {
+      if (ev.key === 'Escape') onCancel()
+    }
+    const onContextMenu = (ev: MouseEvent) => {
+      ev.preventDefault()
+      onCancel()
+    }
+
+    el.addEventListener('pointermove', onMove)
+    el.addEventListener('pointerdown', onDown)
+    el.addEventListener('click', onClick)
+    window.addEventListener('keydown', onKey)
+    window.addEventListener('contextmenu', onContextMenu)
+    return () => {
+      el.removeEventListener('pointermove', onMove)
+      el.removeEventListener('pointerdown', onDown)
+      el.removeEventListener('click', onClick)
+      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('contextmenu', onContextMenu)
+    }
+  }, [gl, computePoint, camera, invalidate, onConfirm, onCancel])
+
+  return (
+    // 首次 pointermove 之前不显示,避免在原地闪一下
+    <group ref={ghostRef} scale={scale} visible={false}>
+      <primitive object={ghost} position={[0, lift, 0]} />
+    </group>
+  )
+}
+
+/** FBX 解析失败(文件损坏/格式太老)时取消放置,而不是崩掉画布、卡住按钮 */
+export class PlacementRigErrorBoundary extends React.Component<
+  {onCancel: () => void; children: React.ReactNode},
+  {failed: boolean}
+> {
+  state = {failed: false}
+  static getDerivedStateFromError() {
+    return {failed: true}
+  }
+  componentDidCatch(err: unknown) {
+    console.warn('[placement] 模型文件解析失败,已取消放置', err)
+    this.props.onCancel()
+  }
+  render() {
+    return this.state.failed ? null : this.props.children
+  }
+}
+
+/** 已放置的模型们:按清单渲染(外加刚确认、待提交的那条),每个是独立的 theatre 可编辑对象 */
+export function PlacedModels({
+  sheet,
+  project,
+  pendingEntry,
+  onPersisted,
+  selectLocked,
+  onObjectMenu,
+}: {
+  sheet: ISheet
+  project: IProject
+  pendingEntry: PendingPlacementEntry | null
+  onPersisted: () => void
+  selectLocked?: boolean
+  onObjectMenu?: (key: string, x: number, y: number) => void
+}) {
+  const list = usePlacementsList(sheet)
+  const ready = useProjectReady(project)
+  const entries: Array<PlacementEntry | PendingPlacementEntry> = pendingEntry
+    ? [...list, pendingEntry]
+    : list
+  if (!ready) return null
+  return (
+    <>
+      {entries.map((entry) => (
+        <Suspense key={entry.key} fallback={null}>
+          <PlacedModelErrorBoundary
+            entry={entry}
+            project={project}
+            sheet={sheet}
+            onPersisted={onPersisted}
+            selectLocked={selectLocked}
+            onObjectMenu={onObjectMenu}
+          />
+        </Suspense>
+      ))}
+    </>
+  )
+}
+
+function PlacedModel({
+  entry,
+  project,
+  sheet,
+  onPersisted,
+  selectLocked,
+  onObjectMenu,
+}: {
+  entry: PlacementEntry | PendingPlacementEntry
+  project: IProject
+  sheet: ISheet
+  onPersisted: () => void
+  selectLocked?: boolean
+  onObjectMenu?: (key: string, x: number, y: number) => void
+}) {
+  const url = useMemo(() => {
+    const storage = assetStorageOf(project)
+    if (!storage) throw new Error('asset storage unavailable')
+    return storage.getAssetUrl(entry.assetId)
+  }, [project, entry.assetId])
+  const fbx = useFBX(url)
+  const {scale, lift} = useNormalizedModel(fbx)
+  const additionalProps = useMemo(
+    () => ({source: fileConfigFor(entry.assetId)}),
+    [entry.assetId],
+  )
+  const objRef = useRef<ISheetObject<any> | undefined>(undefined)
+  // 登记为落点表面:之后的放置可以把模型摞到这个模型上
+  const groupRef = useRef<Group>(null!)
+  usePlacementSurface(groupRef)
+  // 登记为选中 gizmo 的附着目标:被选中时身上挂三轴移动箭头
+  useSelectionGizmoTarget(objRef, groupRef)
+  const invalidate = useThree((s) => s.invalidate)
+
+  // 主画面点选:和 App 里 Model 的 selectThingy 同款。放置模式下点击是
+  // 确认落点,不选中、不拦截;点 gizmo 箭头穿透过来的误点也要吞掉。
+  const selectSelf = (event: ThreeEvent<MouseEvent>) => {
+    if (selectLocked || isSelectSuppressed()) return
+    event.stopPropagation()
+    const studio = getStudioSync()
+    if (studio && objRef.current) {
+      studio.setSelection([objRef.current])
+    }
+  }
+
+  // 右键:选中自己 + 弹操作菜单(切换手柄模式/删除)。
+  // 放置模式下右键是取消放置(PlacementRig 的监听),这里不抢。
+  const openMenu = (event: ThreeEvent<MouseEvent>) => {
+    if (selectLocked || !onObjectMenu) return
+    event.stopPropagation()
+    event.nativeEvent.preventDefault()
+    const studio = getStudioSync()
+    if (studio && objRef.current) {
+      studio.setSelection([objRef.current])
+    }
+    onObjectMenu(
+      entry.key,
+      event.nativeEvent.clientX,
+      event.nativeEvent.clientY,
+    )
+  }
+
+  // 骨架动画:useFBX 按 URL 缓存,同一文件放多个会共享同一份骨架,
+  // 互相打架(多个 <primitive> 挂同一个 Object3D 也只有最后一个能显示)。
+  // 所以每个实例克隆一份(SkinnedMesh 安全),配独立的 AnimationMixer。
+  const instance = useMemo(() => SkeletonUtils.clone(fbx), [fbx])
+  const mixer = useMemo(() => new AnimationMixer(instance), [instance])
+  useEffect(() => {
+    const clip = instance.animations[0] ?? fbx.animations[0]
+    if (!clip) return
+    mixer.clipAction(clip).play()
+    return () => {
+      mixer.stopAllAction()
+      mixer.uncacheRoot(instance)
+    }
+  }, [mixer, instance, fbx])
+
+  // 只在 theatre 序列播放时驱动动画:编辑/摆姿势时模型保持静止。
+  // demand 帧循环下没有持续帧,播放状态翻成 true 时主动起一帧,
+  // 之后 useFrame 里边播边续帧;暂停的那帧起不再 invalidate,画面静止
+  useEffect(() => {
+    return onChange(sheet.sequence.pointer.playing, (playing) => {
+      if (playing) invalidate()
+    })
+  }, [sheet, invalidate])
+  useFrame((_, delta) => {
+    if (!val(sheet.sequence.pointer.playing)) return
+    mixer.update(delta)
+    invalidate()
+  })
+
+  // pending 条目:对象已由 e.group 建好后,一次性提交清单 + source 静态覆盖。
+  // source 必须落在项目状态里:studio 启动时会清掉"没被项目状态引用"的
+  // IndexedDB 资产,只待在 JSX 默认值里的引用扛不过清理。
+  const isPending = 'pending' in entry && entry.pending
+  useEffect(() => {
+    if (!isPending) return
+    const obj = objRef.current
+    const studio = getStudioSync()
+    if (!obj || !studio) return
+    const registry = getRegistry(sheet)
+    const list = readRegistry(registry)
+    // 已在清单里 = 重做/同步/StrictMode 二次触发,不重复提交
+    if (list.some((e) => e.key === entry.key)) return
+    const scrub = studio.scrub()
+    scrub.capture(({set}) => {
+      const {pending: _pending, ...rest} = entry as PendingPlacementEntry
+      set(registry.props.list, JSON.stringify([...list, rest]))
+      set(
+        obj.props.source as any,
+        {
+          type: 'file',
+          id: entry.assetId,
+        } as any,
+      )
+    })
+    scrub.commit()
+    onPersisted()
+  }, [])
+
+  return (
+    <e.group
+      ref={groupRef}
+      theatreKey={entry.key}
+      objRef={objRef}
+      additionalProps={additionalProps}
+      position={[entry.position.x, entry.position.y, entry.position.z]}
+      scale={scale}
+      onClick={selectSelf}
+      onContextMenu={openMenu}
+    >
+      <primitive object={instance} position={[0, lift, 0]} />
+    </e.group>
+  )
+}
+
+/** 本地缺资产(另一个客户端同步来的清单)或 FBX 解析失败时,跳过该模型而不是崩掉画布 */
+class PlacedModelErrorBoundary extends React.Component<
+  {
+    entry: PlacementEntry | PendingPlacementEntry
+    project: IProject
+    sheet: ISheet
+    onPersisted: () => void
+    selectLocked?: boolean
+    onObjectMenu?: (key: string, x: number, y: number) => void
+  },
+  {failed: boolean}
+> {
+  state = {failed: false}
+  static getDerivedStateFromError() {
+    return {failed: true}
+  }
+  componentDidCatch(err: unknown) {
+    console.warn(`[placement] 模型 ${this.props.entry.key} 加载失败`, err)
+  }
+  render() {
+    return this.state.failed ? null : <PlacedModel {...this.props} />
+  }
+}
+
+/** gizmo 的三种操作模式 */
+export type GizmoMode = 'translate' | 'rotate' | 'scale'
+
+const GIZMO_MODE_LABELS: Record<GizmoMode, string> = {
+  translate: '移动',
+  rotate: '旋转',
+  scale: '缩放',
+}
+
+/**
+ * 快捷键切换 gizmo 模式:W 移动 / E 旋转 / R 缩放。
+ * 有选中对象时才响应;焦点在输入框时不抢按键(和 studio 快捷键同一套避让)。
+ * 返回 [当前模式, 设置模式]——右键菜单也用设置接口切模式。
+ */
+export function useGizmoMode(): [GizmoMode, (mode: GizmoMode) => void] {
+  const [mode, setMode] = useState<GizmoMode>('translate')
+  useEffect(() => {
+    const onKey = (ev: KeyboardEvent) => {
+      const target = ev.target as HTMLElement | null
+      if (
+        target &&
+        (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')
+      )
+        return
+      const next: GizmoMode | null =
+        ev.code === 'KeyW'
+          ? 'translate'
+          : ev.code === 'KeyE'
+            ? 'rotate'
+            : ev.code === 'KeyR'
+              ? 'scale'
+              : null
+      if (!next) return
+      const studio = getStudioSync()
+      if (!studio || studio.selection.length === 0) return
+      setMode(next)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+  return [mode, setMode]
+}
+
+/** 顶部按钮旁的当前模式提示(兼作快捷键备忘) */
+export function GizmoModeHint({mode}: {mode: GizmoMode}) {
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        top: 12,
+        left: '50%',
+        transform: 'translateX(-50%) translateY(44px)',
+        padding: '4px 10px',
+        borderRadius: 6,
+        background: 'rgba(0,0,0,0.55)',
+        color: 'rgba(255,255,255,0.85)',
+        fontSize: 12,
+        pointerEvents: 'none',
+        userSelect: 'none',
+      }}
+    >
+      手柄:{GIZMO_MODE_LABELS[mode]}(W 移动 · E 旋转 · R 缩放)
+    </div>
+  )
+}
+
+/**
+ * 从放置清单里删除一个模型:一次 scrub 提交 = 一步撤销(撤销即模型回来)。
+ * theatre 对象本身删不掉(公开 API 没有删除),会留个空壳在大纲里,
+ * 刷新后消失——和撤销放置的已知行为一样。FBX 文件本体留在 IndexedDB。
+ */
+export function deletePlacement(sheet: ISheet, key: string) {
+  const studio = getStudioSync()
+  if (!studio) return
+  const registry = getRegistry(sheet)
+  const list = readRegistry(registry).filter((e) => e.key !== key)
+  const scrub = studio.scrub()
+  scrub.capture(({set}) => set(registry.props.list, JSON.stringify(list)))
+  scrub.commit()
+}
+
+/**
+ * 场景里右键已放置模型弹出的菜单:移动/旋转/缩放切换(当前模式打勾)+ 删除。
+ * HTML 覆盖层,挂在 Canvas 外;点菜单外任意处、Esc、或执行完动作后关闭。
+ */
+export function ObjectContextMenu({
+  position,
+  mode,
+  onSelectMode,
+  onDelete,
+  onClose,
+}: {
+  position: {x: number; y: number}
+  mode: GizmoMode
+  onSelectMode: (mode: GizmoMode) => void
+  onDelete: () => void
+  onClose: () => void
+}) {
+  useEffect(() => {
+    const onPointerDown = (ev: PointerEvent) => {
+      // 点在菜单内部不关;点的别处都关
+      if (!(ev.target as HTMLElement | null)?.closest('[data-object-menu]'))
+        onClose()
+    }
+    const onKey = (ev: KeyboardEvent) => {
+      if (ev.key === 'Escape') onClose()
+    }
+    // capture:赶在画布的选择/放置逻辑之前,纯关菜单不拦截
+    window.addEventListener('pointerdown', onPointerDown, true)
+    window.addEventListener('keydown', onKey)
+    return () => {
+      window.removeEventListener('pointerdown', onPointerDown, true)
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [onClose])
+
+  const itemStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    padding: '6px 14px 6px 8px',
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.9)',
+    cursor: 'pointer',
+    whiteSpace: 'nowrap',
+    userSelect: 'none',
+  }
+  // 每项前面固定宽度的图标位:有图标放图标,没有就空着,
+  // 保证所有文字左对齐,不随有无选中勾而错位
+  const iconSlotStyle: React.CSSProperties = {
+    width: 18,
+    flexShrink: 0,
+    textAlign: 'center',
+  }
+  const modes: Array<GizmoMode> = ['translate', 'rotate', 'scale']
+  return (
+    <div
+      data-object-menu
+      style={{
+        position: 'fixed',
+        left: position.x,
+        top: position.y,
+        zIndex: 20,
+        minWidth: 140,
+        padding: '4px 0',
+        borderRadius: 8,
+        background: 'rgba(24,24,28,0.96)',
+        border: '1px solid rgba(255,255,255,0.12)',
+        boxShadow: '0 6px 24px rgba(0,0,0,0.5)',
+      }}
+    >
+      {modes.map((m) => (
+        <div
+          key={m}
+          style={itemStyle}
+          onMouseEnter={(e) =>
+            (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')
+          }
+          onMouseLeave={(e) => (e.currentTarget.style.background = '')}
+          onClick={() => {
+            onSelectMode(m)
+            onClose()
+          }}
+        >
+          <span style={iconSlotStyle}>{m === mode ? '✓' : ''}</span>
+          <span>{GIZMO_MODE_LABELS[m]}</span>
+        </div>
+      ))}
+      <div
+        style={{
+          height: 1,
+          margin: '4px 0',
+          background: 'rgba(255,255,255,0.12)',
+        }}
+      />
+      <div
+        style={{...itemStyle, color: '#ff6b6b'}}
+        onMouseEnter={(e) =>
+          (e.currentTarget.style.background = 'rgba(255,107,107,0.12)')
+        }
+        onMouseLeave={(e) => (e.currentTarget.style.background = '')}
+        onClick={() => {
+          onDelete()
+          onClose()
+        }}
+      >
+        <span style={iconSlotStyle}></span>
+        <span>删除</span>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * 选中对象的操作手柄:studio 选中状态里出现登记过的对象时,
+ * 在它的节点上挂手柄(移动三轴/旋转圆环/缩放方块,由 mode 决定);
+ * 取消选中或选中别的,手柄消失。
+ * (登记见 useSelectionGizmoTarget:已放置的模型、Thingy 都在表里)
+ *
+ * 拖动写回和拖相机同一套:按下开一个 scrub,拖动中逐帧 capture
+ * (theatre 状态实时更新,属性面板/同步方都能看到),松手一次 commit
+ * ——一次拖动 = 一步撤销。轨道控制器是 makeDefault,drei 的
+ * TransformControls 拖动期间会自动禁用它,视角不会跟着转。
+ */
+export function SelectionGizmo({
+  hidden,
+  mode,
+}: {
+  hidden?: boolean
+  mode: GizmoMode
+}) {
+  const [target, setTarget] = useState<{
+    obj: ISheetObject<any>
+    node: Object3D
+  } | null>(null)
+  const invalidate = useThree((s) => s.invalidate)
+  const scrubRef = useRef<IScrub | undefined>(undefined)
+
+  useEffect(() => {
+    const studio = getStudioSync()
+    if (!studio) return
+    const sync = () => {
+      const selected = studio.selection.find((item) =>
+        selectionGizmoTargets.has(item as ISheetObject<any>),
+      ) as ISheetObject<any> | undefined
+      setTarget(
+        selected
+          ? {obj: selected, node: selectionGizmoTargets.get(selected)!}
+          : null,
+      )
+      invalidate()
+    }
+    sync()
+    return studio.onSelectionChange(sync)
+  }, [invalidate])
+
+  // 卸载兜底:对象被撤销掉(节点已不在场景里)时不挂手柄
+  if (hidden || !target || !target.node.parent) return null
+  return (
+    <TransformControls
+      object={target.node}
+      mode={mode}
+      onMouseDown={() => {
+        suppressSelectBriefly()
+        scrubRef.current = getStudioSync()?.scrub()
+        invalidate()
+      }}
+      onObjectChange={() => {
+        suppressSelectBriefly()
+        invalidate()
+        const scrub = scrubRef.current
+        if (!scrub) return
+        const node = target.node
+        scrub.capture(({set}) => {
+          // 旋转/缩放写回的是节点本地值:theatre 的 rotation/scale 属性
+          // 本来就是本地空间,和面板里看到的数字一致
+          if (mode === 'rotate') {
+            const r = node.rotation
+            set(target.obj.props.rotation, {x: r.x, y: r.y, z: r.z})
+          } else if (mode === 'scale') {
+            const s = node.scale
+            set(target.obj.props.scale, {x: s.x, y: s.y, z: s.z})
+          } else {
+            const p = node.position
+            set(target.obj.props.position, {x: p.x, y: p.y, z: p.z})
+          }
+        })
+      }}
+      onMouseUp={() => {
+        suppressSelectBriefly()
+        scrubRef.current?.commit()
+        scrubRef.current = undefined
+      }}
+    />
+  )
+}

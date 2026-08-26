@@ -26,16 +26,40 @@ import {useGLTF} from '@react-three/drei'
 import sceneGLB from './scene.glb'
 import {MOUSE, Spherical, Vector3} from 'three'
 import type {Mesh, Object3D} from 'three'
+import {
+  GizmoModeHint,
+  ObjectContextMenu,
+  PlacementButton,
+  PlacementRig,
+  PlacementRigErrorBoundary,
+  PlacedModels,
+  SelectionGizmo,
+  deletePlacement,
+  isSelectSuppressed,
+  useGizmoMode,
+  usePlacementController,
+  usePlacementSurface,
+  useSelectionGizmoTarget,
+} from './PlacementManager'
 
 document.body.style.backgroundColor = '#171717'
 
-function Model({url}: {url: string}) {
+function Model({url, selectLocked}: {url: string; selectLocked?: boolean}) {
   const {nodes} = useGLTF(url) as any
   const thingyObjRef = useRef<ISheetObject<any> | undefined>(undefined)
+  // 登记为放置落点表面:放置 FBX 时射线检测只打这里和已放置的模型
+  const surfaceRef = useRef<Object3D>(null!)
+  usePlacementSurface(surfaceRef)
+  // 登记为选中 gizmo 的附着目标:选中 Thingy 后挂三轴移动箭头
+  const thingyGroupRef = useRef<Object3D>(null!)
+  useSelectionGizmoTarget(thingyObjRef, thingyGroupRef)
 
   // 主画面点选:r3f 对网格做射线检测,点击任意子网格会冒泡到分组。
   // 拖拽转视角后松手不算点击(r3f 的 delta 判定),两者不冲突。
   const selectThingy = (event: ThreeEvent<MouseEvent>) => {
+    // 放置模式下点击是确认落点:不选中,也不拦截事件,让它落到
+    // PlacementRig 的地面网格上完成确认;点 gizmo 箭头穿透过来的误点也吞掉
+    if (selectLocked || isSelectSuppressed()) return
     event.stopPropagation()
     const studio = getStudioSync()
     if (studio && thingyObjRef.current) {
@@ -47,8 +71,14 @@ function Model({url}: {url: string}) {
   // 真正有几何体的是 planet.002 / planet.003 两个子节点。
   // 因此 Thingy 挂在分组上(e.group),拖动它即拖动整个模型。
   return (
-    <group rotation={[-Math.PI / 2, 0, 0]} position={[0, -7, 0]} scale={7}>
+    <group
+      ref={surfaceRef}
+      rotation={[-Math.PI / 2, 0, 0]}
+      position={[0, -7, 0]}
+      scale={7}
+    >
       <e.group
+        ref={thingyGroupRef}
         theatreKey="Example Namespace / Thingy"
         objRef={thingyObjRef}
         onClick={selectThingy}
@@ -350,7 +380,23 @@ function App() {
   const cameraTargetRef = useRef<Mesh>(null!)
   const cameraObjRef = useRef<ISheetObject<any> | undefined>(undefined)
   const targetObjRef = useRef<ISheetObject<any> | undefined>(undefined)
-  const sheet = getProject('Space').sheet('Scene')
+  const project = getProject('Space')
+  const sheet = project.sheet('Scene')
+  const {
+    placing,
+    pendingEntry,
+    startPlacing,
+    cancelPlacing,
+    confirmPlacing,
+    clearPending,
+  } = usePlacementController(project)
+  const [gizmoMode, setGizmoMode] = useGizmoMode()
+  // 右键已放置模型弹出的操作菜单:记录目标条目和光标位置
+  const [objectMenu, setObjectMenu] = useState<{
+    key: string
+    x: number
+    y: number
+  } | null>(null)
 
   return (
     <div
@@ -359,14 +405,34 @@ function App() {
       }}
       style={{
         height: '100vh',
+        position: 'relative',
       }}
     >
+      <PlacementButton placing={placing} onPick={startPlacing} />
+      <GizmoModeHint mode={gizmoMode} />
+      {objectMenu && (
+        <ObjectContextMenu
+          position={{x: objectMenu.x, y: objectMenu.y}}
+          mode={gizmoMode}
+          onSelectMode={setGizmoMode}
+          onDelete={() => {
+            deletePlacement(sheet, objectMenu.key)
+            // 被删的对象留在选中列表里没意义,顺带清掉
+            getStudioSync()?.setSelection([])
+          }}
+          onClose={() => setObjectMenu(null)}
+        />
+      )}
       <Canvas
         dpr={[1.5, 2]}
         linear
         shadows="percentage"
         gl={{preserveDrawingBuffer: true}}
         frameloop="demand"
+        // 点到空处取消选中,gizmo 随之消失;放置模式下点空处是确认落点,不动选中
+        onPointerMissed={() => {
+          if (!placing) getStudioSync()?.setSelection([])
+        }}
       >
         <SheetProvider sheet={sheet}>
           <MainOrbitControls
@@ -415,8 +481,28 @@ function App() {
           </e.mesh>
           <Suspense fallback={null}>
             <RefreshSnapshot />
-            <Model url={sceneGLB} />
+            <Model url={sceneGLB} selectLocked={!!placing} />
           </Suspense>
+          {placing && (
+            <Suspense fallback={null}>
+              <PlacementRigErrorBoundary onCancel={cancelPlacing}>
+                <PlacementRig
+                  placing={placing}
+                  onConfirm={confirmPlacing}
+                  onCancel={cancelPlacing}
+                />
+              </PlacementRigErrorBoundary>
+            </Suspense>
+          )}
+          <PlacedModels
+            sheet={sheet}
+            project={project}
+            pendingEntry={pendingEntry}
+            onPersisted={clearPending}
+            selectLocked={!!placing}
+            onObjectMenu={(key, x, y) => setObjectMenu({key, x, y})}
+          />
+          <SelectionGizmo hidden={!!placing} mode={gizmoMode} />
           <Stars radius={500} depth={50} count={1000} factor={10} />
         </SheetProvider>
       </Canvas>
