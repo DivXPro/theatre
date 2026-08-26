@@ -28,15 +28,35 @@ export function AssetLibraryPanel({
   )
   const [thumbUrls, setThumbUrls] = useState<Record<string, string>>({})
 
-  // 缩略图 URL 懒加载:卡片出现时取 blob URL 并缓存
+  const mountedRef = useRef(true)
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false
+    }
+  }, [])
+
+  // 防止同一缩略图并发多次 getBlobUrl
+  const loadingThumbsRef = useRef<Set<string>>(new Set())
+
+  // 缩略图 URL 懒加载:卡片出现时取 blob URL 并缓存。
+  // URL 生命周期由后端的 session 级缓存管理,组件侧只维护 id->url 映射,
+  // 不在卸载或删除时 revoke,避免其他消费者拿到失效地址。
   const thumbUrl = (entry: ModelEntry): string | undefined => {
     if (!entry.thumbnailId) return undefined
     const cached = thumbUrls[entry.id]
     if (cached) return cached
+    if (loadingThumbsRef.current.has(entry.id)) return undefined
+    loadingThumbsRef.current.add(entry.id)
     void getLibrary()
       .backend.getBlobUrl(entry.thumbnailId)
-      .then((url) => setThumbUrls((m) => ({...m, [entry.id]: url})))
-      .catch(() => {})
+      .then((url) => {
+        loadingThumbsRef.current.delete(entry.id)
+        if (!mountedRef.current) return
+        setThumbUrls((m) => ({...m, [entry.id]: url}))
+      })
+      .catch(() => {
+        loadingThumbsRef.current.delete(entry.id)
+      })
     return undefined
   }
 
@@ -49,10 +69,11 @@ export function AssetLibraryPanel({
         getLibrary().backend,
         realImportDeps(),
       )
+      if (!mountedRef.current) return
       setChoices(p.similar.map(() => 'reuse'))
       setPlan(p)
     } finally {
-      setBusy(false)
+      if (mountedRef.current) setBusy(false)
     }
   }
 
@@ -67,6 +88,7 @@ export function AssetLibraryPanel({
         const blob = await renderThumbnail(item.glb)
         if (!blob) continue
         const thumbnailId = await getLibrary().backend.putBlob(blob)
+        if (!mountedRef.current) return
         const list = (await getLibrary().backend.listEntries(
           'model',
         )) as ModelEntry[]
@@ -76,8 +98,10 @@ export function AssetLibraryPanel({
         if (entry) await getLibrary().putEntry({...entry, thumbnailId})
       }
     } finally {
-      setBusy(false)
-      setPlan(null)
+      if (mountedRef.current) {
+        setBusy(false)
+        setPlan(null)
+      }
     }
   }
 
@@ -91,12 +115,18 @@ export function AssetLibraryPanel({
     if (entry.kind === 'model' && entry.thumbnailId) {
       await getLibrary().backend.deleteBlob(entry.thumbnailId)
     }
+    if (mountedRef.current) {
+      setThumbUrls((m) => {
+        const {[id]: _, ...rest} = m
+        return rest
+      })
+    }
   }
 
   const renameEntry = async (id: string) => {
     const entry = await getLibrary().backend.getEntry(id)
     if (!entry) return
-    const name = window.prompt('重命名', entry.name)
+    const name = window.prompt('重命名', entry.name)?.trim()
     if (name) await getLibrary().renameEntry(id, name)
   }
 
@@ -420,7 +450,7 @@ export function AssetLibraryPanel({
               </div>
               {plan.similar.map((s, idx) => (
                 <div
-                  key={idx}
+                  key={`${s.index}-${s.existingName}`}
                   style={{
                     padding: '8px 10px',
                     marginBottom: 6,
