@@ -21,6 +21,7 @@ import {SkeletonUtils} from 'three-stdlib'
 import {createGLTFLoader} from './assetLibrary/gltfLoader'
 import {getLibrary} from './assetLibrary/library'
 import {entryOptions} from './assetLibrary/options'
+import {registerEditorOnly} from './editorOnly'
 import {disposeObjectTree} from './assetLibrary/dispose'
 import {applyPose, captureBindPose} from './assetLibrary/pose'
 import type {ModelEntry, PoseEntry} from './assetLibrary/types'
@@ -1404,6 +1405,16 @@ export function SelectionGizmo({
   if (hidden || !target || !target.node.parent) return null
   return (
     <TransformControls
+      ref={(controls: any) => {
+        // 箭头本体登记为"仅编辑视角":画中画/镜头视角渲染时不入画。
+        // three 0.185 的 TransformControls 不是 Object3D,可视部分在 getHelper()
+        if (!controls) return
+        const root: Object3D =
+          typeof controls.getHelper === 'function'
+            ? controls.getHelper()
+            : controls
+        return registerEditorOnly(root)
+      }}
       object={target.node}
       mode={mode}
       onMouseDown={() => {

@@ -44,6 +44,7 @@ import {
 } from './PlacementManager'
 import {AssetLibraryPanel} from './assetLibrary/AssetLibraryPanel'
 import {getLibrary} from './assetLibrary/library'
+import {ShotCamera} from './ShotCamera'
 import type {AnimationEntry, ModelEntry, PoseEntry} from './assetLibrary/types'
 import {capturePose} from './assetLibrary/pose'
 import {rigIdOf} from './assetLibrary/rig'
@@ -121,10 +122,13 @@ function MainOrbitControls({
   targetRef,
   cameraObjRef,
   targetObjRef,
+  enabled = true,
 }: {
   targetRef: React.MutableRefObject<Object3D>
   cameraObjRef: React.MutableRefObject<ISheetObject<any> | undefined>
   targetObjRef: React.MutableRefObject<ISheetObject<any> | undefined>
+  /** 镜头视角下停用:轨道控制器绑的是默认相机,不抢镜头画面 */
+  enabled?: boolean
 }) {
   // 用 state 而不是 ref 持有控制器:默认相机切换(makeDefault)时 drei 会
   // 重建 OrbitControls 实例,ref 回调会再次触发,监听才能挂到活着的实例上
@@ -319,6 +323,7 @@ function MainOrbitControls({
     <OrbitControls
       ref={setControls}
       makeDefault // 让 GizmoHelper 能读到 controls.target 并在吸附动画后复位 camera.up
+      enabled={enabled}
       enableDamping={false}
       zoomSpeed={0.5} // 默认 1 每步缩放 5%,调低一档,滚轮/捏合/Ctrl+中键共用
       // 平移方向对齐 Blender("视角跟着鼠标走"),与 OrbitControls 默认相反;
@@ -413,8 +418,20 @@ function App() {
   const cameraTargetRef = useRef<Mesh>(null!)
   const cameraObjRef = useRef<ISheetObject<any> | undefined>(undefined)
   const targetObjRef = useRef<ISheetObject<any> | undefined>(undefined)
+  // 场景摄像机(镜头):独立于编辑主视角,取景用于画中画/镜头视角
+  const shotCameraObjRef = useRef<ISheetObject<any> | undefined>(undefined)
+  const shotTargetObjRef = useRef<ISheetObject<any> | undefined>(undefined)
+  // true = 全屏镜头视角(导演视角让位,轨道控制器/导航块停用)
+  const [shotView, setShotView] = useState(false)
   const project = getProject('Space')
   const sheet = project.sheet('Scene')
+  // 调试/自动化验证挂钩:浏览器里直接读写 sheet 对象与选中态
+  ;(window as any).__cameraShot = {
+    cameraObjRef,
+    targetObjRef,
+    shotCameraObjRef,
+    shotTargetObjRef,
+  }
   const {
     placing,
     pendingEntry,
@@ -596,6 +613,55 @@ function App() {
       >
         {placing ? '放置中:左键确认落点,Esc/右键取消' : '资产库'}
       </button>
+      <button
+        onClick={() => setShotView((v) => !v)}
+        style={{
+          position: 'absolute',
+          top: 12,
+          // 试过放右侧(50%+62):正中小一个隐形的 studio 顶层区域,点击被吞
+          left: 'calc(50% - 152px)',
+          zIndex: 10,
+          padding: '6px 14px',
+          borderRadius: 6,
+          border: '1px solid #444',
+          background: shotView ? '#3a4a63' : '#272730',
+          color: '#eee',
+          cursor: 'pointer',
+          fontSize: 13,
+        }}
+        title="在导演视角和场景摄像机取景之间切换(Blender 的数字键 0)"
+      >
+        {shotView ? '返回导演视角' : '镜头视角'}
+      </button>
+      {!shotView && (
+        <div
+          style={{
+            // 画中画边框:与 ShotCamera 渲染的右下角小窗同位置同尺寸
+            position: 'absolute',
+            right: 16,
+            bottom: 16,
+            width: '28%',
+            aspectRatio: '16 / 9',
+            border: '1px solid #6fb7ff55',
+            borderRadius: 2,
+            pointerEvents: 'none',
+            zIndex: 5,
+          }}
+        >
+          <span
+            style={{
+              position: 'absolute',
+              top: 4,
+              left: 6,
+              fontSize: 11,
+              color: '#6fb7ff',
+              opacity: 0.8,
+            }}
+          >
+            镜头
+          </span>
+        </div>
+      )}
       <GizmoModeHint mode={gizmoMode} />
       {libraryOpen && (
         <AssetLibraryPanel
@@ -643,15 +709,21 @@ function App() {
             targetRef={cameraTargetRef}
             cameraObjRef={cameraObjRef}
             targetObjRef={targetObjRef}
+            enabled={!shotView}
           />
-          <GizmoNav cameraObjRef={cameraObjRef} />
+          {!shotView && <GizmoNav cameraObjRef={cameraObjRef} />}
+          <ShotCamera
+            makeDefault={shotView}
+            cameraObjRef={shotCameraObjRef}
+            targetObjRef={shotTargetObjRef}
+          />
           <fog attach="fog" args={[bg, 16, 30]} />
           <color attach="background" args={[bg]} />
           <ambientLight intensity={0.75} />
           <PerspectiveCamera
             theatreKey="Camera / Camera"
             objRef={cameraObjRef}
-            makeDefault
+            makeDefault={!shotView}
             position={[0, 0, 16]}
             fov={75}
             lookAt={cameraTargetRef}
@@ -706,7 +778,7 @@ function App() {
             selectLocked={!!placing}
             onObjectMenu={(key, x, y) => setObjectMenu({key, x, y})}
           />
-          <SelectionGizmo hidden={!!placing} mode={gizmoMode} />
+          <SelectionGizmo hidden={!!placing || shotView} mode={gizmoMode} />
           <Stars radius={500} depth={50} count={1000} factor={10} />
         </SheetProvider>
       </Canvas>
