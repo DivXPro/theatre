@@ -153,52 +153,78 @@ export async function planImport(
     const rig = rigIdOf(loaded.root)
 
     if (cls !== 'animations-only') {
-      const glb = await deps.exportModel(loaded.root)
-      const contentHash = hashBytes(new Uint8Array(glb))
-      const dup = existing.find(
-        (e): e is ModelEntry =>
-          e.kind === 'model' && e.contentHash === contentHash,
-      )
-      if (!dup) {
-        const stats = meshStats(loaded.root)
-        const boneCount = collectBoneNames(loaded.root).length
-        const index =
-          items.push({
-            type: 'model',
-            name: baseName(file.name),
-            rig,
-            contentHash,
-            boneCount,
-            vertexCount: stats.vertexCount,
-            glb,
-          }) - 1
-        const hit = existing.find(
-          (e): e is ModelEntry =>
-            e.kind === 'model' &&
-            e.rig === rig &&
-            e.vertexCount === stats.vertexCount &&
-            e.boneCount === boneCount &&
-            e.contentHash !== contentHash,
-        )
-        if (hit) {
-          similar.push({
-            index,
-            existingName: hit.name,
-            newName: baseName(file.name),
-          })
-        }
-      } else {
+      let glb: ArrayBuffer | undefined
+      try {
+        glb = await deps.exportModel(loaded.root)
+      } catch (err) {
+        // 导出失败(贴图无效等)只跳过模型,不拖垮整批导入;
+        // 下面的动作提取照常——Mixamo 类文件常常就是冲着动作来的
+        console.warn('[assetLibrary] 模型导出失败', err)
         items.push({
           type: 'skip',
           name: baseName(file.name),
-          reason: '模型已存在(同库中「' + dup.name + '」)',
+          reason: '模型导出失败',
         })
       }
-      // dup 命中:模型跳过,下面的动作照常提取
+      if (glb) {
+        const contentHash = hashBytes(new Uint8Array(glb))
+        const dup = existing.find(
+          (e): e is ModelEntry =>
+            e.kind === 'model' && e.contentHash === contentHash,
+        )
+        if (!dup) {
+          const stats = meshStats(loaded.root)
+          const boneCount = collectBoneNames(loaded.root).length
+          const index =
+            items.push({
+              type: 'model',
+              name: baseName(file.name),
+              rig,
+              contentHash,
+              boneCount,
+              vertexCount: stats.vertexCount,
+              glb,
+            }) - 1
+          const hit = existing.find(
+            (e): e is ModelEntry =>
+              e.kind === 'model' &&
+              e.rig === rig &&
+              e.vertexCount === stats.vertexCount &&
+              e.boneCount === boneCount &&
+              e.contentHash !== contentHash,
+          )
+          if (hit) {
+            similar.push({
+              index,
+              existingName: hit.name,
+              newName: baseName(file.name),
+            })
+          }
+        } else {
+          items.push({
+            type: 'skip',
+            name: baseName(file.name),
+            reason: '模型已存在(同库中「' + dup.name + '」)',
+          })
+        }
+        // dup 命中:模型跳过,下面的动作照常提取
+      }
     }
 
     for (const clip of loaded.animations) {
-      const glb = await deps.exportAnimation(loaded.root, clip)
+      let glb: ArrayBuffer
+      try {
+        glb = await deps.exportAnimation(loaded.root, clip)
+      } catch (err) {
+        // 单条动作导出失败不影响其它动作
+        console.warn('[assetLibrary] 动作导出失败', err)
+        items.push({
+          type: 'skip',
+          name: `${baseName(file.name)}/${clip.name}`,
+          reason: '动作导出失败',
+        })
+        continue
+      }
       const contentHash = hashBytes(new Uint8Array(glb))
       if (
         existing.some(

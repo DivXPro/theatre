@@ -91,6 +91,49 @@ describe('planImport', () => {
     expect(plan.items.map((i) => i.type)).toEqual(['animation'])
   })
 
+  it('模型导出失败:记跳过且不拖垮整批,动作照常提取', async () => {
+    const deps = depsFor({
+      'kate.fbx': {
+        root: skinnedModel('Hips'),
+        animations: [clip('idle')],
+      },
+    })
+    deps.exportModel = async () => {
+      throw new Error('THREE.GLTFExporter: No valid image data found')
+    }
+    // 修复前:planImport 直接拒绝,整批导入无声消失
+    const plan = await planImport([file('kate.fbx')], memoryBackend(), deps)
+    expect(plan.items.map((i) => i.type)).toEqual(['skip', 'animation'])
+    expect(plan.items[0]).toMatchObject({
+      name: 'kate',
+      reason: '模型导出失败',
+    })
+  })
+
+  it('单条动作导出失败:只跳过该条,其余动作保留', async () => {
+    const deps = depsFor({
+      'mix.fbx': {
+        root: skinnedModel('Hips'),
+        animations: [clip('bad'), clip('good')],
+      },
+    })
+    const realExportAnim = deps.exportAnimation
+    deps.exportAnimation = async (root, c) => {
+      if (c.name === 'bad') throw new Error('export boom')
+      return realExportAnim(root, c)
+    }
+    const plan = await planImport([file('mix.fbx')], memoryBackend(), deps)
+    expect(plan.items.map((i) => i.type)).toEqual([
+      'model',
+      'skip',
+      'animation',
+    ])
+    expect(plan.items[1]).toMatchObject({
+      name: 'mix/bad',
+      reason: '动作导出失败',
+    })
+  })
+
   it('完全相同的模型已在库中:跳过模型,只收新动作', async () => {
     // 第一层去重:contentHash 命中。假导出器输出固定字节,先算出会命中的 hash
     const probe = await planImport(

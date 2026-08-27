@@ -1,5 +1,13 @@
-import {Bone, BoxGeometry, Group, Mesh, MeshBasicMaterial} from 'three'
-import {cloneBoneTree} from './exportGLB'
+import {
+  Bone,
+  BoxGeometry,
+  Group,
+  Mesh,
+  MeshBasicMaterial,
+  MeshStandardMaterial,
+  Texture,
+} from 'three'
+import {cloneBoneTree, exportModelGLB, stripInvalidTextures} from './exportGLB'
 
 describe('cloneBoneTree', () => {
   it('只保留骨骼节点(名字/变换),剔除网格', () => {
@@ -33,5 +41,49 @@ describe('cloneBoneTree', () => {
       root.add(b)
     }
     expect(cloneBoneTree(root).children.map((c) => c.name)).toEqual(['L', 'R'])
+  })
+})
+
+describe('stripInvalidTextures', () => {
+  it('image 缺失的贴图被移除,有效贴图保留', () => {
+    const root = new Group()
+    const mat = new MeshStandardMaterial()
+    mat.map = new Texture() // image === null:FBX 引用外部贴图加载失败后的状态
+    mat.normalMap = new Texture()
+    // ImageData 类(带 data + 宽高)是 GLTFExporter 可处理的有效形态
+    const validTex = new Texture({
+      data: new Uint8Array(4),
+      width: 1,
+      height: 1,
+    } as any)
+    mat.emissiveMap = validTex
+    root.add(new Mesh(new BoxGeometry(), mat))
+
+    expect(stripInvalidTextures(root)).toBe(2)
+    expect(mat.map).toBeNull()
+    expect(mat.normalMap).toBeNull()
+    expect(mat.emissiveMap).toBe(validTex)
+  })
+
+  it('多材质数组逐个检查', () => {
+    const root = new Group()
+    const bad = new MeshStandardMaterial({map: new Texture()})
+    const good = new MeshBasicMaterial()
+    root.add(new Mesh(new BoxGeometry(), [bad, good]))
+    expect(stripInvalidTextures(root)).toBe(1)
+    expect(bad.map).toBeNull()
+  })
+})
+
+describe('exportModelGLB', () => {
+  it('贴图无效时剥掉后照常导出(不再抛错拖垮导入)', async () => {
+    const root = new Group()
+    const mat = new MeshStandardMaterial()
+    mat.map = new Texture() // 修复前:GLTFExporter 抛 "No valid image data found"
+    root.add(new Mesh(new BoxGeometry(), mat))
+
+    const glb = await exportModelGLB(root)
+    expect(glb.byteLength).toBeGreaterThan(0)
+    expect(mat.map).toBeNull()
   })
 })
