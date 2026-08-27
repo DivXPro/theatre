@@ -163,18 +163,31 @@ function MainOrbitControls({
       if (!scrub || !cameraObj) return
       const p = controls.object.position
       const t = controls.target
-      scrub.capture(({set}) => {
-        set(cameraObj.props.position, {x: p.x, y: p.y, z: p.z})
-        const targetObj = targetObjRef.current
-        if (targetObj) {
-          set(targetObj.props.position, {x: t.x, y: t.y, z: t.z})
-        }
-      })
+      try {
+        scrub.capture(({set}) => {
+          set(cameraObj.props.position, {x: p.x, y: p.y, z: p.z})
+          const targetObj = targetObjRef.current
+          if (targetObj) {
+            set(targetObj.props.position, {x: t.x, y: t.y, z: t.z})
+          }
+        })
+      } catch (err) {
+        // capture 抛错后 scrub 已被标记为 Discarded(不可再用)。扔掉引用,
+        // 放弃本次拖拽的剩余改动——否则之后每个 change 事件都会重复抛错刷屏
+        console.warn('[camera] 相机 scrub 失效,本次拖拽的剩余改动被放弃', err)
+        scrub = undefined
+      }
     }
     const onEnd = () => {
       draggingRef.current = false
-      scrub?.commit()
+      const s = scrub
       scrub = undefined
+      try {
+        s?.commit()
+      } catch (err) {
+        // scrub 已失效时 commit 会抛错,不能让它阻止引用清理
+        console.warn('[camera] 相机 scrub 提交失败', err)
+      }
     }
 
     controls.addEventListener('start', onStart)
@@ -347,13 +360,27 @@ function GizmoNav({
     if (!studio || !cameraObj) return
     if (!scrubRef.current) scrubRef.current = studio.scrub()
     const p = camera.position
-    scrubRef.current.capture(({set}) => {
-      set(cameraObj.props.position, {x: p.x, y: p.y, z: p.z})
-    })
+    try {
+      scrubRef.current.capture(({set}) => {
+        set(cameraObj.props.position, {x: p.x, y: p.y, z: p.z})
+      })
+    } catch (err) {
+      // capture 抛错后 scrub 已被标记为 Discarded(不可再用)。扔掉引用,
+      // 否则吸附动画剩余每一帧都会重复抛错
+      console.warn('[camera] gizmo scrub 失效,本次吸附的剩余改动被放弃', err)
+      scrubRef.current = undefined
+      return
+    }
     if (commitTimerRef.current) clearTimeout(commitTimerRef.current)
     commitTimerRef.current = setTimeout(() => {
-      scrubRef.current?.commit()
+      const s = scrubRef.current
       scrubRef.current = undefined
+      try {
+        s?.commit()
+      } catch (err) {
+        // scrub 已失效时 commit 会抛错,不能让它阻止引用清理
+        console.warn('[camera] gizmo scrub 提交失败', err)
+      }
     }, 200)
   }, [camera, cameraObjRef])
 

@@ -80,11 +80,15 @@ export default class Scrub implements IScrub {
           ),
         }
         errored = false
+      } catch (err) {
+        // 原实现只提示"回调抛错了"但不带原始错误,排查时无从得知根因
+        console.error(
+          `This scrub's callback threw an error. We're undo-ing all of the changes made by this scrub, and marking it as discarded. Original error:`,
+          err,
+        )
+        throw err
       } finally {
         if (errored) {
-          console.error(
-            `This scrub's callback threw an error. We're undo-ing all of the changes made by this scrub, and marking it as discarded.`,
-          )
           this._state = {type: 'Discarded'}
         }
       }
