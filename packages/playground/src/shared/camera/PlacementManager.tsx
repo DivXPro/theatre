@@ -20,6 +20,7 @@ import type {Group, Mesh, Object3D, AnimationClip, AnimationAction} from 'three'
 import {SkeletonUtils} from 'three-stdlib'
 import {createGLTFLoader} from './assetLibrary/gltfLoader'
 import {getLibrary} from './assetLibrary/library'
+import {entryOptions} from './assetLibrary/options'
 import {disposeObjectTree} from './assetLibrary/dispose'
 import {applyPose, captureBindPose} from './assetLibrary/pose'
 import type {ModelEntry, PoseEntry} from './assetLibrary/types'
@@ -97,8 +98,31 @@ function assetStorageOf(project: IProject): AssetStorage | undefined {
  */
 const fileConfigCache = new Map<string, ReturnType<typeof t.file>>()
 
-const animPropConfig = t.string('', {label: '动作'})
-const posePropConfig = t.string('', {label: '姿势'})
+/**
+ * 动作/姿势下拉配置,按 (属性, 模型库条目 id) 缓存。
+ * 和上面 fileConfigCache 同一个原因:sheet.object 对同一 key 的重复调用
+ * 要求配置 fast-deep-equal(函数按引用比),所以闭包不能每次新建。
+ * 选项函数本身不闭包骨架族,而是闭包模型条目 id,调用时才从库快照解析
+ * rig——配置从首次渲染起引用稳定,快照就绪后筛选自动生效。
+ */
+const literalConfigCache = new Map<string, ReturnType<typeof t.stringLiteral>>()
+
+function literalConfigFor(
+  kind: 'animation' | 'pose',
+  modelEntryId: string | undefined,
+) {
+  const cacheKey = `${kind}:${modelEntryId ?? ''}`
+  let config = literalConfigCache.get(cacheKey)
+  if (!config) {
+    config = t.stringLiteral(
+      '',
+      () => entryOptions(getLibrary().getEntriesSnapshot(), kind, modelEntryId),
+      {label: kind === 'animation' ? '动作' : '姿势', as: 'menu'},
+    )
+    literalConfigCache.set(cacheKey, config)
+  }
+  return config
+}
 
 /** 已放置模型的 theatre 对象 → {PlacementEntry, 场景实例} 映射,
  * App 通过 selection 反查 rig,Task 6 用 instance 抽帧。
@@ -669,9 +693,12 @@ export function PlacedModels({
 }) {
   const list = usePlacementsList(sheet)
   const ready = useProjectReady(project)
-  const entries: Array<PlacementEntry | PendingPlacementEntry> = pendingEntry
-    ? [...list, pendingEntry]
-    : list
+  // pending 提交进清单(list)到 clearPending 之间有一瞬两边都渲染,
+  // React 报 duplicate key;已在清单里的 pending 副本直接跳过
+  const entries: Array<PlacementEntry | PendingPlacementEntry> =
+    pendingEntry && !list.some((e) => e.key === pendingEntry.key)
+      ? [...list, pendingEntry]
+      : list
   if (!ready) return null
   return (
     <>
@@ -858,15 +885,17 @@ function PlacedModelCore({
   onObjectMenu?: (key: string, x: number, y: number) => void
 }) {
   const additionalProps = useMemo(() => {
+    const modelEntryId =
+      sourceType === 'library' ? entry.libraryEntryId : undefined
     const props: Record<string, any> = {
-      animation: animPropConfig,
-      pose: posePropConfig,
+      animation: literalConfigFor('animation', modelEntryId),
+      pose: literalConfigFor('pose', modelEntryId),
     }
     if (sourceType === 'local' && entry.assetId) {
       props.source = fileConfigFor(entry.assetId)
     }
     return props
-  }, [sourceType, entry.assetId])
+  }, [sourceType, entry.assetId, entry.libraryEntryId])
   const {scale, lift} = useNormalizedModel(group)
   const objRef = useRef<ISheetObject<any> | undefined>(undefined)
   const [sheetObject, setSheetObject] = useState<ISheetObject<any> | undefined>(

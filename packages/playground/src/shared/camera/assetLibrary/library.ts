@@ -10,8 +10,31 @@ import type {EntryKind, LibraryBackend, LibraryEntry, RigAlias} from './types'
 export class Library {
   private listeners = new Set<() => void>()
   private queue: Promise<void> = Promise.resolve()
+  private entriesSnapshot: readonly LibraryEntry[] = []
 
-  constructor(readonly backend: LibraryBackend) {}
+  constructor(readonly backend: LibraryBackend) {
+    this.refreshSnapshot()
+  }
+
+  /**
+   * 同步读条目快照:给 stringLiteral 动态选项这类无法 await 的场景用。
+   * 快照在构造时与每次写操作后刷新,读取可能比最新状态差一拍——
+   * 选项是渲染时现取的,下一次渲染即为最新。
+   */
+  getEntriesSnapshot(): readonly LibraryEntry[] {
+    return this.entriesSnapshot
+  }
+
+  private refreshSnapshot(): void {
+    void this.backend.listEntries().then(
+      (list) => {
+        this.entriesSnapshot = list
+      },
+      (err) => {
+        console.warn('[assetLibrary] 条目快照刷新失败', err)
+      },
+    )
+  }
 
   subscribe(fn: () => void): () => void {
     this.listeners.add(fn)
@@ -21,6 +44,7 @@ export class Library {
   }
 
   private emit() {
+    this.refreshSnapshot()
     this.listeners.forEach((fn) => fn())
   }
 

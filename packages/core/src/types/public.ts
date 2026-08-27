@@ -855,7 +855,14 @@ export interface PropTypeConfig_String
 
 export interface PropTypeConfig_StringLiteral<T extends string>
   extends ISimplePropType<'stringLiteral', T> {
-  valuesAndLabels: Record<T, string>
+  /**
+   * The options in `"value": "Label"` format. Either a static record, or a
+   * function returning one — the function form is resolved on every read
+   * (validation and editor render), so the options can change over time
+   * (e.g. entries of an asset library). If the stored value is no longer
+   * among the resolved options, the prop falls back to its default.
+   */
+  valuesAndLabels: Record<T, string> | (() => Record<T, string>)
   as: 'menu' | 'switch'
 }
 

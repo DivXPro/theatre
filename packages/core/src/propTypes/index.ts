@@ -666,8 +666,13 @@ export function stringLiteral<
    * The options. Use the `"value": "Label"` format.
    *
    * An object like `{[value]: Label}`. Example: `{r: "Red", "g": "Green"}`
+   *
+   * Also accepts a function returning such an object, which is resolved on
+   * every read (validation and editor render) — useful for options that
+   * change over time. If the stored value is not among the resolved
+   * options, the prop falls back to `defaultValue`.
    */
-  valuesAndLabels: ValuesAndLabels,
+  valuesAndLabels: ValuesAndLabels | (() => ValuesAndLabels),
   /**
    * opts.as Determines if editor is shown as a menu or a switch. Either 'menu' or 'switch'.  Default: 'menu'
    */
@@ -677,10 +682,14 @@ export function stringLiteral<
     interpolate?: Interpolator<Extract<keyof ValuesAndLabels, string>>
   } = {},
 ): PropTypeConfig_StringLiteral<Extract<keyof ValuesAndLabels, string>> {
+  const isDynamic = typeof valuesAndLabels === 'function'
   return {
     type: 'stringLiteral',
     default: defaultValue,
-    valuesAndLabels: {...valuesAndLabels},
+    // 动态选项存原样(函数),读取时才解析;静态对象照旧拷一份防止外部改动
+    valuesAndLabels: isDynamic
+      ? (valuesAndLabels as $IntentionalAny)
+      : {...(valuesAndLabels as ValuesAndLabels)},
     [propTypeSymbol]: 'TheatrePropType',
     valueType: null as $IntentionalAny,
     as: opts.as ?? 'menu',
@@ -690,7 +699,10 @@ export function stringLiteral<
       json: unknown,
     ): undefined | Extract<keyof ValuesAndLabels, string> {
       if (typeof json !== 'string') return undefined
-      if (Object.prototype.hasOwnProperty.call(valuesAndLabels, json)) {
+      const resolved = isDynamic
+        ? (valuesAndLabels as () => ValuesAndLabels)()
+        : (valuesAndLabels as ValuesAndLabels)
+      if (Object.prototype.hasOwnProperty.call(resolved, json)) {
         return json as $IntentionalAny
       } else {
         return undefined
