@@ -45,6 +45,10 @@ import {
 import {AssetLibraryPanel} from './assetLibrary/AssetLibraryPanel'
 import {getLibrary} from './assetLibrary/library'
 import {ShotCamera} from './ShotCamera'
+import {listSinks} from './videoExport/sinks'
+import type {ExportSink} from './videoExport/sinks'
+import {startShotExport} from './videoExport/exporter'
+import type {ShotExportHandle} from './videoExport/exporter'
 import type {AnimationEntry, ModelEntry, PoseEntry} from './assetLibrary/types'
 import {capturePose} from './assetLibrary/pose'
 import {rigIdOf} from './assetLibrary/rig'
@@ -423,6 +427,12 @@ function App() {
   const shotTargetObjRef = useRef<ISheetObject<any> | undefined>(undefined)
   // true = 全屏镜头视角(导演视角让位,轨道控制器/导航块停用)
   const [shotView, setShotView] = useState(false)
+  // 视频导出:菜单开关 / 进行中的导出句柄 / 导出前的视角(导完恢复)
+  const [exportMenuOpen, setExportMenuOpen] = useState(false)
+  const [exporting, setExporting] = useState(false)
+  const exportHandleRef = useRef<ShotExportHandle | null>(null)
+  const prevShotViewRef = useRef(false)
+  const pendingExportSinkRef = useRef<ExportSink | null>(null)
   const project = getProject('Space')
   const sheet = project.sheet('Scene')
   // 调试/自动化验证挂钩:浏览器里直接读写 sheet 对象与选中态
@@ -469,6 +479,46 @@ function App() {
     sync()
     return studio.onSelectionChange(sync)
   }, [])
+
+  // 导出视频:先切到镜头视角(录 canvas 当前内容),再开始录制;
+  // "另存为"的系统对话框在菜单点击的调用栈里已经弹过,这里只剩录制
+  useEffect(() => {
+    const sink = pendingExportSinkRef.current
+    if (!shotView || !sink) return
+    pendingExportSinkRef.current = null
+    // 页面上只有一个 canvas(快照编辑器的在 shadow DOM 里,查不到)
+    const canvas = document.querySelector('canvas')
+    if (!canvas) return
+    const handle = startShotExport({
+      canvas,
+      sheet,
+      sink,
+      onError: (message) => window.alert(message),
+    })
+    if (!handle) {
+      setShotView(prevShotViewRef.current)
+      return
+    }
+    exportHandleRef.current = handle
+    setExporting(true)
+    handle.done
+      .catch(() => {}) // 出错已通过 onError 提示,这里只收尾
+      .finally(() => {
+        exportHandleRef.current = null
+        setExporting(false)
+        setShotView(prevShotViewRef.current)
+      })
+  }, [shotView, sheet])
+
+  // 导出中按 Esc = 取消(丢弃已录内容)
+  useEffect(() => {
+    if (!exporting) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') exportHandleRef.current?.abort()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [exporting])
 
   // 选中单个库来源模型时,异步查其 rig 给面板过滤动画
   useEffect(() => {
@@ -614,7 +664,11 @@ function App() {
         {placing ? '放置中:左键确认落点,Esc/右键取消' : '资产库'}
       </button>
       <button
-        onClick={() => setShotView((v) => !v)}
+        onClick={() => {
+          // 导出中禁止切视角:录的是 canvas 内容,切走就录进编辑画面了
+          if (exporting) return
+          setShotView((v) => !v)
+        }}
         style={{
           position: 'absolute',
           top: 12,
@@ -625,14 +679,85 @@ function App() {
           borderRadius: 6,
           border: '1px solid #444',
           background: shotView ? '#3a4a63' : '#272730',
-          color: '#eee',
-          cursor: 'pointer',
+          color: exporting ? '#888' : '#eee',
+          cursor: exporting ? 'default' : 'pointer',
           fontSize: 13,
         }}
         title="在导演视角和场景摄像机取景之间切换(Blender 的数字键 0)"
       >
         {shotView ? '返回导演视角' : '镜头视角'}
       </button>
+      <button
+        onClick={() => {
+          if (exporting) {
+            exportHandleRef.current?.finishEarly()
+            return
+          }
+          setExportMenuOpen((v) => !v)
+        }}
+        style={{
+          position: 'absolute',
+          top: 12,
+          // 镜头视角按钮再往左,同样避开隐形 studio 区域
+          left: 'calc(50% - 272px)',
+          zIndex: 10,
+          padding: '6px 14px',
+          borderRadius: 6,
+          border: '1px solid #444',
+          background: exporting ? '#633a3a' : '#272730',
+          color: '#eee',
+          cursor: 'pointer',
+          fontSize: 13,
+        }}
+        title="把镜头取景实时录成视频:序列从头播到尾,录完自动保存"
+      >
+        {exporting ? '停止并保存(Esc 取消)' : '导出视频'}
+      </button>
+      {exportMenuOpen && !exporting && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 46,
+            left: 'calc(50% - 272px)',
+            zIndex: 11,
+            background: '#272730',
+            border: '1px solid #444',
+            borderRadius: 6,
+            padding: 4,
+            minWidth: 220,
+          }}
+        >
+          {listSinks().map((sink) => (
+            <button
+              key={sink.id}
+              onClick={() => {
+                setExportMenuOpen(false)
+                prevShotViewRef.current = shotView
+                // 先切镜头视角,useEffect 里等切完再开录
+                pendingExportSinkRef.current = sink
+                setShotView(true)
+              }}
+              style={{
+                display: 'block',
+                width: '100%',
+                textAlign: 'left',
+                padding: '8px 10px',
+                border: 'none',
+                borderRadius: 4,
+                background: 'transparent',
+                color: '#eee',
+                cursor: 'pointer',
+                fontSize: 13,
+              }}
+            >
+              {sink.label}
+              <span style={{display: 'block', fontSize: 11, color: '#999'}}>
+                {sink.description}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
       {!shotView && (
         <div
           style={{
