@@ -24,6 +24,9 @@ import DetailSimplePropEditor from './DeterminePropEditorForDetail/DetailSimpleP
 const DeterminePropEditorForDetail: React.FC<
   IDeterminePropEditorForDetailProps<PropTypeConfig['type']>
 > = ({propConfig, visualIndentation, pointerToProp, obj}) => {
+  // 配置为 hidden 的属性不在属性面板出现(纯数据底账,只走 API/视口工具,
+  // 比如运镜路径的控制点名单);时间轴等其他界面不受这个标记影响
+  if (propConfig.hidden) return <></>
   if (propConfig.type === 'compound') {
     return (
       <DetailCompoundPropEditor

@@ -798,6 +798,13 @@ export interface IBasePropType<
    * ```
    */
   label: string | undefined
+  /**
+   * If true, the studio's details/properties panel skips this prop entirely
+   * (the prop still exists: readable/writable via the API, persistable,
+   * sequenceable). For data-only "ledger" props that users should never
+   * hand-edit — e.g. a serialized list managed by viewport tools.
+   */
+  hidden?: boolean
   default: ValueType
   /**
    * Each prop config has a `deserializeAndSanitize()` function that deserializes and sanitizes

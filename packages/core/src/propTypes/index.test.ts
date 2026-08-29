@@ -1,4 +1,18 @@
-import {stringLiteral} from './index'
+import {number, string, stringLiteral} from './index'
+
+describe('hidden 选项(属性面板隐藏纯数据属性)', () => {
+  it('hidden 透传进配置;不传则为 undefined', () => {
+    expect(string('[]', {hidden: true}).hidden).toBe(true)
+    expect(string('[]', {hidden: false}).hidden).toBe(false)
+    expect(string('[]').hidden).toBeUndefined()
+    expect(number(0, {hidden: true}).hidden).toBe(true)
+    expect(stringLiteral('a', {a: 'A'}, {hidden: true}).hidden).toBe(true)
+  })
+
+  it('hidden 必须是布尔,否则开发模式下抛错', () => {
+    expect(() => string('[]', {hidden: 1 as never})).toThrow(/opts\.hidden/)
+  })
+})
 
 describe('stringLiteral 动态选项(函数形式)', () => {
   it('函数形式的选项原样存入配置,静态对象则拷贝', () => {
