@@ -22,6 +22,7 @@ import {createGLTFLoader} from './assetLibrary/gltfLoader'
 import {getLibrary} from './assetLibrary/library'
 import {entryOptions} from './assetLibrary/options'
 import {registerEditorOnly} from './editorOnly'
+import {useModalGrab} from './modalGrab'
 import {disposeObjectTree} from './assetLibrary/dispose'
 import {applyPose, captureBindPose} from './assetLibrary/pose'
 import type {ModelEntry, PoseEntry} from './assetLibrary/types'
@@ -197,21 +198,40 @@ export function usePlacementSurface(ref: React.RefObject<Object3D | null>) {
  */
 const selectionGizmoTargets = new Map<ISheetObject<any>, Object3D>()
 
-/** 把 ref 指向的节点登记为选中 gizmo 的附着目标,卸载时自动移除 */
+/**
+ * 登记表变更通知:SelectionGizmo 只在选中变化时重算附着目标,
+ * 但"登记被注销"也要立刻反映(比如路径驱动启用时,正选中的相机
+ * 箭头要马上收起来)——登记/注销都通过这里广播
+ */
+const gizmoRegistryListeners = new Set<() => void>()
+
+function notifyGizmoRegistryChange() {
+  gizmoRegistryListeners.forEach((l) => l())
+}
+
+/**
+ * 把 ref 指向的节点登记为选中 gizmo 的附着目标,卸载时自动移除。
+ * enabled=false 时不登记:驱动被路径接管的对象(沿路径的相机/瞄准点)
+ * 拖了也不生效,箭头干脆不出现(对齐 Blender 约束激活时物体拖不动)
+ */
 export function useSelectionGizmoTarget(
   objRef: React.RefObject<ISheetObject<any> | undefined>,
   nodeRef: React.RefObject<Object3D | null>,
+  enabled = true,
 ) {
   useEffect(() => {
+    if (!enabled) return
     const obj = objRef.current
     const node = nodeRef.current
     if (!obj || !node) return
     selectionGizmoTargets.set(obj, node)
+    notifyGizmoRegistryChange()
     return () => {
       selectionGizmoTargets.delete(obj)
+      notifyGizmoRegistryChange()
     }
-    // 两个 ref 都是挂载后不再变的
-  }, [])
+    // 两个 ref 都是挂载后不再变的;enabled 翻转时注销/重新登记
+  }, [enabled])
 }
 
 /**
@@ -225,7 +245,8 @@ export function isSelectSuppressed() {
   return performance.now() < suppressSelectUntil
 }
 
-function suppressSelectBriefly() {
+/** 拖 gizmo 期间/松手后短暂屏蔽场景点选(路径控制点的手柄也在用) */
+export function suppressSelectBriefly() {
   suppressSelectUntil = performance.now() + 200
 }
 
@@ -1176,8 +1197,9 @@ const GIZMO_MODE_LABELS: Record<GizmoMode, string> = {
 }
 
 /**
- * 快捷键切换 gizmo 模式:W 移动 / E 旋转 / R 缩放。
+ * 快捷键切换 gizmo 模式(对齐 Blender):G 移动 / R 旋转 / S 缩放。
  * 有选中对象时才响应;焦点在输入框时不抢按键(和 studio 快捷键同一套避让)。
+ * G 另有模态抓取(选中对象跟随鼠标,见 SelectionGizmo);R/S 只切模式。
  * 返回 [当前模式, 设置模式]——右键菜单也用设置接口切模式。
  */
 export function useGizmoMode(): [GizmoMode, (mode: GizmoMode) => void] {
@@ -1191,11 +1213,11 @@ export function useGizmoMode(): [GizmoMode, (mode: GizmoMode) => void] {
       )
         return
       const next: GizmoMode | null =
-        ev.code === 'KeyW'
+        ev.code === 'KeyG'
           ? 'translate'
-          : ev.code === 'KeyE'
+          : ev.code === 'KeyR'
             ? 'rotate'
-            : ev.code === 'KeyR'
+            : ev.code === 'KeyS'
               ? 'scale'
               : null
       if (!next) return
@@ -1227,7 +1249,7 @@ export function GizmoModeHint({mode}: {mode: GizmoMode}) {
         userSelect: 'none',
       }}
     >
-      手柄:{GIZMO_MODE_LABELS[mode]}(W 移动 · E 旋转 · R 缩放)
+      手柄:{GIZMO_MODE_LABELS[mode]}(G 移动 · R 旋转 · S 缩放)
     </div>
   )
 }
@@ -1382,6 +1404,9 @@ export function SelectionGizmo({
   } | null>(null)
   const invalidate = useThree((s) => s.invalidate)
   const scrubRef = useRef<IScrub | undefined>(undefined)
+  // G 键模态抓取(Blender):选中对象跟随鼠标(过起点、正对相机的平面),
+  // X/Y/Z 锁轴,左键/回车确认,右键/Esc 废弃弹回;和路径控制点共用一套
+  const {start: startGrab, active: grabActive} = useModalGrab()
 
   useEffect(() => {
     const studio = getStudioSync()
@@ -1398,11 +1423,55 @@ export function SelectionGizmo({
       invalidate()
     }
     sync()
-    return studio.onSelectionChange(sync)
+    // 选中变化、登记表变化(路径驱动启用把相机注销了等)都重算附着目标
+    gizmoRegistryListeners.add(sync)
+    const untapSelection = studio.onSelectionChange(sync)
+    return () => {
+      gizmoRegistryListeners.delete(sync)
+      untapSelection()
+    }
   }, [invalidate])
 
-  // 卸载兜底:对象被撤销掉(节点已不在场景里)时不挂手柄
-  if (hidden || !target || !target.node.parent) return null
+  // G:对当前选中对象起模态抓取(写回 position;旋转/缩放的模态版暂无,
+  // R/S 只切模式)。抓取平面/写回都是世界坐标,落属性时换算回节点本地
+  useEffect(() => {
+    if (hidden || !target) return
+    const onKey = (ev: KeyboardEvent) => {
+      if (ev.code !== 'KeyG') return
+      const el = ev.target as HTMLElement | null
+      if (
+        el &&
+        (el.tagName === 'INPUT' ||
+          el.tagName === 'TEXTAREA' ||
+          el.isContentEditable)
+      )
+        return
+      // 箭头拖动中途不抢
+      if (scrubRef.current) return
+      const {obj, node} = target
+      startGrab({
+        startPos: node.getWorldPosition(new Vector3()),
+        dragging: false,
+        capture: (scrub, worldPos) => {
+          const local = worldPos.clone()
+          const parent = node.parent
+          if (parent) {
+            parent.updateWorldMatrix(true, false)
+            parent.worldToLocal(local)
+          }
+          scrub.capture(({set}) =>
+            set(obj.props.position, {x: local.x, y: local.y, z: local.z}),
+          )
+        },
+      })
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [hidden, target, startGrab])
+
+  // 卸载兜底:对象被撤销掉(节点已不在场景里)时不挂手柄;
+  // 模态抓取期间也不挂:两套拖动不撞车(抓取结束后自动回来)
+  if (hidden || !target || !target.node.parent || grabActive) return null
   return (
     <TransformControls
       ref={(controls: any) => {

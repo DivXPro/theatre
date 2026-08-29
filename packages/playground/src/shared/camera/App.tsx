@@ -10,7 +10,7 @@ import {
   GizmoHelper,
   GizmoViewport,
 } from '@react-three/drei'
-import {getProject, getStudioSync} from '@toy-box/core'
+import {getProject, getStudioSync, val} from '@toy-box/core'
 import type {IScrub, ISheetObject} from '@toy-box/core'
 import React, {
   Suspense,
@@ -45,6 +45,20 @@ import {
 import {AssetLibraryPanel} from './assetLibrary/AssetLibraryPanel'
 import {getLibrary} from './assetLibrary/library'
 import {ShotCamera} from './ShotCamera'
+import {
+  addPathPoint,
+  AIM_PATH_KEY,
+  CameraPath,
+  clearPath,
+  deletePathPoint,
+  getPathMeta,
+  PathPointEditor,
+  pathLabel,
+  POS_PATH_KEY,
+  readPathPoints,
+  translatePath,
+} from './CameraPath'
+import {seedArcPoints} from './pathModel'
 import {listSinks} from './videoExport/sinks'
 import type {ExportSink} from './videoExport/sinks'
 import {startShotExport} from './videoExport/exporter'
@@ -433,6 +447,25 @@ function App() {
   const exportHandleRef = useRef<ShotExportHandle | null>(null)
   const prevShotViewRef = useRef(false)
   const pendingExportSinkRef = useRef<ExportSink | null>(null)
+  // 运镜路径:加点/删点菜单开关
+  const [pathMenuOpen, setPathMenuOpen] = useState(false)
+  // 运镜路径编辑模式:正在编辑的路径 metaKey(同一时刻只编辑一条,
+  // 对齐 Blender 的对象/编辑模式);右键路径线或 Tab 进出
+  const [editingPath, setEditingPath] = useState<string | null>(null)
+  const lastEditedPathRef = useRef<string>(POS_PATH_KEY)
+  const editingPathRef = useRef<string | null>(null)
+  editingPathRef.current = editingPath
+  // 选中的控制点(内部选中,和 studio 选区无关;控制点不是 theatre 对象)
+  const [selectedPathPoint, setSelectedPathPoint] = useState<{
+    metaKey: string
+    key: string
+  } | null>(null)
+  // 右键路径线弹出的菜单:记录目标路径和光标位置
+  const [pathMenu, setPathMenu] = useState<{
+    metaKey: string
+    x: number
+    y: number
+  } | null>(null)
   const project = getProject('Space')
   const sheet = project.sheet('Scene')
   // 调试/自动化验证挂钩:浏览器里直接读写 sheet 对象与选中态
@@ -475,10 +508,169 @@ function App() {
       ) as ISheetObject<any> | undefined
       setSelectedPlacement(placement ?? null)
       setSelectionCount(studio.selection.length)
+      // 选中了 theatre 对象 → 控制点取消选中(两套手柄不同时出现);
+      // 路径编辑模式保持(编辑态是"粘"的,同 Blender)
+      if (studio.selection.length > 0) setSelectedPathPoint(null)
     }
     sync()
     return studio.onSelectionChange(sync)
   }, [])
+
+  // 进入/退出路径编辑模式(右键菜单和 Tab 共用)
+  const enterPathEdit = useCallback((metaKey: string) => {
+    setEditingPath(metaKey)
+    lastEditedPathRef.current = metaKey
+    // 编辑路径时清掉对象选中:对象 gizmo 和控制点 gizmo 不同时出现
+    getStudioSync()?.setSelection([])
+  }, [])
+  const exitPathEdit = useCallback(() => {
+    setEditingPath(null)
+    setSelectedPathPoint(null)
+  }, [])
+
+  // Tab 进出编辑模式(Blender 同款);输入框里不抢 Tab(留给焦点跳转)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return
+      const target = e.target as HTMLElement | null
+      if (
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable)
+      ) {
+        return
+      }
+      e.preventDefault()
+      if (editingPathRef.current) {
+        exitPathEdit()
+      } else if (!shotView) {
+        // 有选中的路径就编辑它(Blender:Tab 作用于选中物),
+        // 没有才回退到最后编辑的那条
+        const studio = getStudioSync()
+        const selectedPath =
+          studio &&
+          [POS_PATH_KEY, AIM_PATH_KEY].find((k) =>
+            (studio.selection as unknown[]).includes(getPathMeta(sheet, k)),
+          )
+        enterPathEdit(selectedPath || lastEditedPathRef.current)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [sheet, shotView, enterPathEdit, exitPathEdit])
+
+  // 切镜头视角自动退出编辑模式(路径在镜头视角本就全部隐藏)
+  useEffect(() => {
+    if (shotView) exitPathEdit()
+  }, [shotView, exitPathEdit])
+
+  // 调试/自动化验证挂钩:读当前编辑态、直接进出编辑模式
+  useEffect(() => {
+    ;(window as any).__cameraPathEdit = {
+      enter: enterPathEdit,
+      exit: exitPathEdit,
+      current: () => editingPathRef.current,
+    }
+  }, [enterPathEdit, exitPathEdit])
+
+  // 运镜路径菜单动作:加点(空路径先播种)、删除选中的控制点。
+  // 播种时同一次提交把驱动切到"沿路径"(Blender 的约束加上即生效):
+  // 相机/Target 当场归路径管、移动箭头锁定;想手动在属性面板切回即可
+  const addPosPathPoint = useCallback(() => {
+    const cam = shotCameraObjRef.current
+    const target = shotTargetObjRef.current
+    // 空路径播种:从当前机位出发绕目标画一段弧,立即可用
+    const seed =
+      cam && target
+        ? seedArcPoints(val(cam.props.position), val(target.props.position))
+        : undefined
+    addPathPoint(sheet, POS_PATH_KEY, seed, (set) => {
+      if (cam) set(cam.props.moveMode, 'path')
+    })
+    // 加点后直接进入编辑模式,马上能看到/拖到这个点
+    enterPathEdit(POS_PATH_KEY)
+  }, [sheet, enterPathEdit])
+
+  const addAimPathPoint = useCallback(() => {
+    const cam = shotCameraObjRef.current
+    const target = shotTargetObjRef.current
+    // 聚焦路径播种:目标处一个点 = 锁死主体,随时再加点变扫视
+    const seed = target ? [val(target.props.position)] : undefined
+    addPathPoint(sheet, AIM_PATH_KEY, seed, (set) => {
+      if (cam) set(cam.props.aimMode, 'path')
+    })
+    enterPathEdit(AIM_PATH_KEY)
+  }, [sheet, enterPathEdit])
+
+  const removePathPoint = useCallback(() => {
+    if (
+      selectedPathPoint &&
+      deletePathPoint(sheet, selectedPathPoint.metaKey, selectedPathPoint.key)
+    ) {
+      setSelectedPathPoint(null)
+    } else {
+      window.alert('先进入路径编辑模式(右键路径线或按 Tab),点选一个控制点')
+    }
+  }, [sheet, selectedPathPoint])
+
+  // 删除整条路径:名单清空(撤销可整条找回);正在编辑/选中了它的点
+  // 就一并退出/清掉。已经是空路径时不动作
+  const removePath = useCallback(
+    (metaKey: string) => {
+      if (readPathPoints(sheet, metaKey).length === 0) {
+        window.alert(`${pathLabel(metaKey)}已经是空的`)
+        return
+      }
+      clearPath(sheet, metaKey)
+      if (editingPath === metaKey) exitPathEdit()
+      if (selectedPathPoint?.metaKey === metaKey) setSelectedPathPoint(null)
+    },
+    [sheet, editingPath, selectedPathPoint, exitPathEdit],
+  )
+
+  // 对齐(Blender 吸附工作流的对应物):手动机位和路径是两份数据,
+  // 路径驱动时手动那份被忽略,可能悄悄岔开;两个动作一键对齐。
+  // 各一次 scrub 提交 = 一步撤销
+  const alignCameraToPathStart = useCallback(() => {
+    const cam = shotCameraObjRef.current
+    const pts = readPathPoints(sheet, POS_PATH_KEY)
+    const studio = getStudioSync()
+    if (!cam || pts.length === 0 || !studio) return
+    const p = pts[0]!.position
+    const scrub = studio.scrub()
+    scrub.capture(({set}) => set(cam.props.position, {x: p.x, y: p.y, z: p.z}))
+    scrub.commit()
+  }, [sheet])
+
+  const movePathToCamera = useCallback(() => {
+    const cam = shotCameraObjRef.current
+    const pts = readPathPoints(sheet, POS_PATH_KEY)
+    if (!cam || pts.length === 0) return
+    const c = val(cam.props.position)
+    const p = pts[0]!.position
+    translatePath(sheet, POS_PATH_KEY, {
+      x: c.x - p.x,
+      y: c.y - p.y,
+      z: c.z - p.z,
+    })
+  }, [sheet])
+
+  // 路径上的进度标记读 Shot/Camera 的进度属性(对象还没建好时报 0)
+  const posProgressOf = useCallback(
+    () =>
+      shotCameraObjRef.current
+        ? val(shotCameraObjRef.current.props.posProgress)
+        : 0,
+    [],
+  )
+  const aimProgressOf = useCallback(
+    () =>
+      shotCameraObjRef.current
+        ? val(shotCameraObjRef.current.props.aimProgress)
+        : 0,
+    [],
+  )
 
   // 导出视频:先切到镜头视角(录 canvas 当前内容),再开始录制;
   // "另存为"的系统对话框在菜单点击的调用栈里已经弹过,这里只剩录制
@@ -713,6 +905,104 @@ function App() {
       >
         {exporting ? '停止并保存(Esc 取消)' : '导出视频'}
       </button>
+      <button
+        onClick={() => setPathMenuOpen((v) => !v)}
+        style={{
+          position: 'absolute',
+          top: 12,
+          // 导出视频按钮再往左,同样避开隐形 studio 区域
+          left: 'calc(50% - 392px)',
+          zIndex: 10,
+          padding: '6px 14px',
+          borderRadius: 6,
+          border: '1px solid #444',
+          background: '#272730',
+          color: '#eee',
+          cursor: 'pointer',
+          fontSize: 13,
+        }}
+        title="运镜路径:机位/聚焦各一条;右键路径线或按 Tab 进入编辑模式,拖控制点和贝塞尔手柄摆路径;播种后自动沿路径驱动(属性面板可切回手动),进度打关键帧调运镜节奏"
+      >
+        路径
+      </button>
+      {pathMenuOpen && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 46,
+            left: 'calc(50% - 392px)',
+            zIndex: 11,
+            background: '#272730',
+            border: '1px solid #444',
+            borderRadius: 6,
+            padding: 4,
+            minWidth: 220,
+          }}
+        >
+          {[
+            {
+              label: '机位路径 · 加点',
+              desc: '第一次点:从当前机位播种一段环绕弧,并自动切到沿路径驱动',
+              onClick: addPosPathPoint,
+            },
+            {
+              label: '聚焦路径 · 加点',
+              desc: '第一次点:在目标处放一个点(锁死主体),并自动切到沿路径驱动',
+              onClick: addAimPathPoint,
+            },
+            {
+              label: '相机对齐到路径起点',
+              desc: '把手动机位设成机位路径的第一个点',
+              onClick: alignCameraToPathStart,
+            },
+            {
+              label: '路径平移到相机',
+              desc: '整条机位路径平移,起点落到当前手动机位',
+              onClick: movePathToCamera,
+            },
+            {
+              label: '机位路径 · 删除',
+              desc: '整条删除(控制点全清);撤销可整条找回',
+              onClick: () => removePath(POS_PATH_KEY),
+            },
+            {
+              label: '聚焦路径 · 删除',
+              desc: '整条删除(控制点全清);撤销可整条找回',
+              onClick: () => removePath(AIM_PATH_KEY),
+            },
+            {
+              label: '删除选中的控制点',
+              desc: '编辑模式(右键路径线/Tab)里先点选一个控制点',
+              onClick: removePathPoint,
+            },
+          ].map((item) => (
+            <button
+              key={item.label}
+              onClick={() => {
+                setPathMenuOpen(false)
+                item.onClick()
+              }}
+              style={{
+                display: 'block',
+                width: '100%',
+                textAlign: 'left',
+                padding: '8px 10px',
+                border: 'none',
+                borderRadius: 4,
+                background: 'transparent',
+                color: '#eee',
+                cursor: 'pointer',
+                fontSize: 13,
+              }}
+            >
+              {item.label}
+              <span style={{display: 'block', fontSize: 11, color: '#999'}}>
+                {item.desc}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
       {exportMenuOpen && !exporting && (
         <div
           style={{
@@ -818,6 +1108,32 @@ function App() {
           onClose={() => setObjectMenu(null)}
         />
       )}
+      {pathMenu && (
+        <PathContextMenu
+          position={{x: pathMenu.x, y: pathMenu.y}}
+          metaKey={pathMenu.metaKey}
+          editing={editingPath === pathMenu.metaKey}
+          onToggleEdit={() => {
+            if (editingPath === pathMenu.metaKey) {
+              exitPathEdit()
+            } else {
+              enterPathEdit(pathMenu.metaKey)
+            }
+          }}
+          onDelete={() => removePath(pathMenu.metaKey)}
+          onClose={() => setPathMenu(null)}
+        />
+      )}
+      {editingPath &&
+        selectedPathPoint &&
+        selectedPathPoint.metaKey === editingPath &&
+        !shotView && (
+          <PathPointEditor
+            sheet={sheet}
+            metaKey={editingPath}
+            pointKey={selectedPathPoint.key}
+          />
+        )}
       <Canvas
         dpr={[1.5, 2]}
         linear
@@ -827,6 +1143,8 @@ function App() {
         // 点到空处取消选中,gizmo 随之消失;放置模式下点空处是确认落点,不动选中
         onPointerMissed={() => {
           if (!placing) getStudioSync()?.setSelection([])
+          // 控制点也取消选中,但路径编辑模式保持(编辑态是"粘"的)
+          setSelectedPathPoint(null)
         }}
       >
         <SheetProvider sheet={sheet}>
@@ -841,6 +1159,39 @@ function App() {
             makeDefault={shotView}
             cameraObjRef={shotCameraObjRef}
             targetObjRef={shotTargetObjRef}
+            onPathContextMenu={(metaKey, x, y) => setPathMenu({metaKey, x, y})}
+          />
+          <CameraPath
+            metaKey={POS_PATH_KEY}
+            color={0xffcc33}
+            hidden={shotView}
+            editing={editingPath === POS_PATH_KEY}
+            selectedKey={
+              selectedPathPoint?.metaKey === POS_PATH_KEY
+                ? selectedPathPoint.key
+                : null
+            }
+            onSelectPoint={(key) =>
+              setSelectedPathPoint(key ? {metaKey: POS_PATH_KEY, key} : null)
+            }
+            onContextMenu={(metaKey, x, y) => setPathMenu({metaKey, x, y})}
+            progressOf={posProgressOf}
+          />
+          <CameraPath
+            metaKey={AIM_PATH_KEY}
+            color={0xffcc33}
+            hidden={shotView}
+            editing={editingPath === AIM_PATH_KEY}
+            selectedKey={
+              selectedPathPoint?.metaKey === AIM_PATH_KEY
+                ? selectedPathPoint.key
+                : null
+            }
+            onSelectPoint={(key) =>
+              setSelectedPathPoint(key ? {metaKey: AIM_PATH_KEY, key} : null)
+            }
+            onContextMenu={(metaKey, x, y) => setPathMenu({metaKey, x, y})}
+            progressOf={aimProgressOf}
           />
           <fog attach="fog" args={[bg, 16, 30]} />
           <color attach="background" args={[bg]} />
@@ -907,6 +1258,119 @@ function App() {
           <Stars radius={500} depth={50} count={1000} factor={10} />
         </SheetProvider>
       </Canvas>
+    </div>
+  )
+}
+
+/**
+ * 路径线的右键菜单:进出编辑模式(Tab 是同款快捷键,菜单里标出来)。
+ * 样式对齐 ObjectContextMenu。
+ */
+function PathContextMenu({
+  position,
+  metaKey,
+  editing,
+  onToggleEdit,
+  onDelete,
+  onClose,
+}: {
+  position: {x: number; y: number}
+  metaKey: string
+  editing: boolean
+  onToggleEdit: () => void
+  onDelete: () => void
+  onClose: () => void
+}) {
+  useEffect(() => {
+    const onPointerDown = (ev: PointerEvent) => {
+      if (!(ev.target as HTMLElement | null)?.closest('[data-path-menu]'))
+        onClose()
+    }
+    const onKey = (ev: KeyboardEvent) => {
+      if (ev.key === 'Escape') onClose()
+    }
+    window.addEventListener('pointerdown', onPointerDown, true)
+    window.addEventListener('keydown', onKey)
+    return () => {
+      window.removeEventListener('pointerdown', onPointerDown, true)
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [onClose])
+
+  return (
+    <div
+      data-path-menu
+      style={{
+        position: 'fixed',
+        left: position.x,
+        top: position.y,
+        zIndex: 20,
+        minWidth: 160,
+        padding: '4px 0',
+        borderRadius: 8,
+        background: 'rgba(24,24,28,0.96)',
+        border: '1px solid rgba(255,255,255,0.12)',
+        boxShadow: '0 6px 24px rgba(0,0,0,0.5)',
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          padding: '6px 14px 6px 12px',
+          fontSize: 13,
+          color: 'rgba(255,255,255,0.9)',
+          cursor: 'pointer',
+          whiteSpace: 'nowrap',
+          userSelect: 'none',
+        }}
+        onMouseEnter={(e) =>
+          (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')
+        }
+        onMouseLeave={(e) => (e.currentTarget.style.background = '')}
+        onClick={() => {
+          onToggleEdit()
+          onClose()
+        }}
+      >
+        <span>
+          {editing ? '退出编辑' : '编辑路径'}({pathLabel(metaKey)})
+        </span>
+        <span
+          style={{marginLeft: 12, fontSize: 11, color: 'rgba(255,255,255,0.4)'}}
+        >
+          Tab
+        </span>
+      </div>
+      <div
+        style={{
+          height: 1,
+          margin: '4px 0',
+          background: 'rgba(255,255,255,0.12)',
+        }}
+      />
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          padding: '6px 14px 6px 12px',
+          fontSize: 13,
+          color: '#ff6b6b',
+          cursor: 'pointer',
+          whiteSpace: 'nowrap',
+          userSelect: 'none',
+        }}
+        onMouseEnter={(e) =>
+          (e.currentTarget.style.background = 'rgba(255,107,107,0.12)')
+        }
+        onMouseLeave={(e) => (e.currentTarget.style.background = '')}
+        onClick={() => {
+          onDelete()
+          onClose()
+        }}
+      >
+        <span>删除路径({pathLabel(metaKey)})</span>
+      </div>
     </div>
   )
 }
