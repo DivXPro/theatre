@@ -9,8 +9,10 @@ import {
   BufferAttribute,
   BufferGeometry,
   DoubleSide,
+  Euler,
   LineBasicMaterial,
   LineSegments,
+  Matrix4,
   Mesh,
   MeshBasicMaterial,
   Object3D,
@@ -20,27 +22,24 @@ import {
 import type {PerspectiveCamera as PerspectiveCameraImpl} from 'three'
 import {registerEditorOnly, withEditorOnlyHidden} from './editorOnly'
 import {useSelectionGizmoTarget} from './PlacementManager'
-import {
-  AIM_PATH_KEY,
-  POS_PATH_KEY,
-  samplePathPoint,
-  usePathHasPoints,
-} from './CameraPath'
+import {POS_PATH_KEY, samplePathPoint, usePathHasPoints} from './CameraPath'
 
 /**
  * 场景摄像机(shot camera):独立于编辑主视角的"镜头",取景画面用于
  * 画中画预览和之后的视频导出,对标 Blender 的场景 Camera 对象。
  *
  * - theatre 对象 Shot/Camera(位置/旋转/fov 可上时间轴)+ Shot/Target
- *   (瞄准点),朝向每帧 lookAt 瞄准代理,和主相机同一套语义
- * - 运镜驱动(见 shotCameraAdditionalProps):机位/朝向都可以切到
- *   "沿路径",由 CameraPath 的曲线 + 本对象的 0~1 进度属性驱动,
+ *   (瞄准点),朝向始终 lookAt Target——对齐 Blender 的 Track To 约束:
+ *   相机没有"朝向模式",目标怎么动是它的自由(Target 的移动直接在
+ *   时间轴上给 position 打关键帧,不需要单独的路径对象)
+ * - 运镜驱动:机位可以切到"沿路径"(Shot/Camera 的 moveMode+
+ *   posProgress),由 CameraPath 的曲线 + 0~1 进度属性驱动,
  *   进度打关键帧 = 调运镜节奏;路径为空时回退手动,不产生异常画面
  * - 编辑器里的视锥示意:从相机顶点拉 4 条线到固定距离的末端平面,
  *   平面画成半透明色块(自绘 LineSegments + 半透明 Plane,不用
  *   CameraHelper——它无法被 scene.clone() 复制,r3f 快照编辑器克隆
  *   场景时必炸),点线或色块即选中摄像机,挂三轴箭头拖动摆机位;
- *   Target 线框小方块同理。机位/朝向被路径接管时箭头不出现
+ *   Target 线框小方块同理。机位被路径接管时相机箭头不出现
  *   (对齐 Blender 的约束:驱动期间物体拖不动,要挪就挪路径/进度)
  * - 画中画:右下角小窗实时渲染镜头取景;切到"镜头视角"时全屏取景
  * - 视锥线/手柄/选中箭头都登记进 editorOnly,画中画与镜头视角渲染时
@@ -56,26 +55,27 @@ const FRUSTUM_DISPLAY_LENGTH = 3
 const FRUSTUM_FILL_OPACITY = 0.12
 
 /**
- * 运镜驱动的四个属性,挂在 Shot/Camera 对象上(模块级常量:
+ * 运镜驱动属性,挂在 Shot/Camera 对象上(模块级常量:
  * sheet.object 重复调用要求配置 deep-equal,函数按引用比,
  * 每次 render 新建会在热更新后炸"called twice with different config")。
  * moveMode=path 时机位由机位路径 + posProgress 驱动,position 属性被忽略;
- * aimMode=path 时朝向由聚焦路径 + aimProgress 驱动,否则看 Target。
- * 两个进度分开打关键帧:聚焦可以比机位先到位/晚半拍,这是运镜呼吸感的来源。
+ * 进度打关键帧 = 调运镜节奏。
+ * trackTarget=false = 解除朝向绑定(对齐 Blender 关掉 Track To 约束):
+ * 解绑瞬间把当前朝向定格进 rotation 属性,画面不跳。
+ * targetHidden=true = 软删除 Target(真删要绕过 React 声明式重建,代价
+ * 不值;开关放相机面板是因为它是"镜头机组"的设置):Target 网格隐藏、
+ * 不可点、不挂移动箭头,绑定的相机自动解脱保持当前朝向;对象还在
+ * 大纲里,改回来就恢复。
  */
 const shotCameraAdditionalProps = {
+  trackTarget: t.boolean(true, {label: '朝向绑定 Target'}),
+  targetHidden: t.boolean(false, {label: '删除 Target(可恢复)'}),
   moveMode: t.stringLiteral(
     'manual',
     {manual: '手动', path: '沿机位路径'},
     {label: '机位驱动'},
   ),
-  aimMode: t.stringLiteral(
-    'target',
-    {target: '目标点', path: '沿聚焦路径'},
-    {label: '朝向驱动'},
-  ),
   posProgress: t.number(0, {range: [0, 1], label: '机位进度'}),
-  aimProgress: t.number(0, {range: [0, 1], label: '聚焦进度'}),
 }
 
 /** 视锥线:末端平面矩形 4 段 + 顶点→平面 4 角 = 8 段 */
@@ -145,6 +145,29 @@ function updateFrustum(
   fill.scale.set(2 * w, 2 * h, 1)
 }
 
+/** 响应式读对象的某个标量属性(值没变就返回原引用,不触发重渲染) */
+function useObjPropScalar<T>(
+  objRef: MutableRefObject<ISheetObject<any> | undefined>,
+  prop: string,
+  fallback: T,
+): T {
+  const [value, setValue] = useState<T>(fallback)
+  useEffect(() => {
+    const obj = objRef.current
+    if (!obj) return
+    // onValuesChange 任何值变都会来(播放中的进度属性每帧都变),
+    // 值没变就返回原引用,不触发重渲染
+    const update = () => {
+      const next = val(obj.props[prop]) as T
+      setValue((prev) => (prev === next ? prev : next))
+    }
+    update()
+    return obj.onValuesChange(update)
+    // objRef 由下面的 wrapper 挂载时填充,效果跑时已就绪
+  }, [objRef, prop])
+  return value
+}
+
 export function ShotCamera({
   makeDefault,
   cameraObjRef,
@@ -155,82 +178,106 @@ export function ShotCamera({
   makeDefault: boolean
   cameraObjRef: MutableRefObject<ISheetObject<any> | undefined>
   targetObjRef: MutableRefObject<ISheetObject<any> | undefined>
-  /** 右键相机/Target:弹绑定路径的编辑菜单(机位路径绑相机,聚焦路径绑 Target) */
+  /** 右键相机:弹机位路径的编辑菜单(和右键路径线本身弹的是同一个) */
   onPathContextMenu?: (metaKey: string, x: number, y: number) => void
 }) {
   const camRef = useRef<PerspectiveCameraImpl>(null!)
   const targetRef = useRef<Mesh>(null!)
-  // 瞄准代理:wrapper 的 lookAt 每帧读它的位置。瞄准目标(Target 方块
-  // 或聚焦路径上的点)在优先级 -1 先写进代理,wrapper 优先级 0 的
-  // lookAt 读到的就是本帧的值,朝向不晚一帧
+  // 瞄准代理:wrapper 的 lookAt 每帧读它的位置。Target 的位置在优先级
+  // -1 先写进代理,wrapper 优先级 0 的 lookAt 读到的就是本帧的值,
+  // 朝向不晚一帧
   const aimRef = useRef<Object3D>(new Object3D())
   const frustum = useMemo(makeFrustumLines, [])
   const frustumFill = useMemo(makeFrustumFill, [])
 
-  // 驱动锁(对齐 Blender 的约束语义):机位/朝向被路径接管期间,
-  // 相机/Target 拖了也不生效,干脆不登记选中 gizmo——箭头和 G 抓取
+  // 驱动锁(对齐 Blender 的约束语义):机位被路径接管期间,
+  // 相机拖了也不生效,干脆不登记选中 gizmo——箭头和 G 抓取
   // 都不出现,从源头消灭"拖了没反应、数据还悄悄岔开"的假动作。
   // 空路径驱动自动回退手动,不锁
   const sheet = useCurrentSheet()!
   const posPathHasPoints = usePathHasPoints(sheet, POS_PATH_KEY)
-  const aimPathHasPoints = usePathHasPoints(sheet, AIM_PATH_KEY)
-  const [driveModes, setDriveModes] = useState({move: 'manual', aim: 'target'})
-  useEffect(() => {
-    const obj = cameraObjRef.current
-    if (!obj) return
-    // onValuesChange 任何值变都会来(播放中的进度属性每帧都变),
-    // 模式没变就返回原引用,不触发重渲染
-    const update = () =>
-      setDriveModes((prev) => {
-        const move = val(obj.props.moveMode)
-        const aim = val(obj.props.aimMode)
-        return prev.move === move && prev.aim === aim ? prev : {move, aim}
-      })
-    update()
-    return obj.onValuesChange(update)
-    // objRef 由下面的 PerspectiveCamera wrapper 挂载时填充,效果跑时已就绪
-  }, [cameraObjRef])
-  const camDriveLocked = driveModes.move === 'path' && posPathHasPoints
-  const targetDriveLocked = driveModes.aim === 'path' && aimPathHasPoints
+  const camMoveMode = useObjPropScalar<string>(
+    cameraObjRef,
+    'moveMode',
+    'manual',
+  )
+  const camDriveLocked = camMoveMode === 'path' && posPathHasPoints
 
-  // 选中后挂三轴移动箭头:摄像机本体和瞄准点都能拖(路径接管时除外,见上)
+  // 朝向绑定(Track To):trackTarget 是相机面板上的开关;Target 被软删
+  // (相机面板的 targetHidden)时绑定自动失效——两种失效都把当前朝向
+  // 定格进 rotation 属性,画面不跳(对齐 Blender:约束失效,物体保持
+  // 当前变换)
+  const trackTarget = useObjPropScalar(cameraObjRef, 'trackTarget', true)
+  const targetHidden = useObjPropScalar(cameraObjRef, 'targetHidden', false)
+  const tracking = trackTarget && !targetHidden
+  // 失效瞬间定格:theatre 值变化会触发包装器全量应用属性,过期的
+  // rotation 可能已把相机顶回——但位置没变,用瞄准点位置重算朝向
+  // (Matrix4.lookAt 与相机 lookAt 同语义:-Z 朝目标),就是用户看到
+  // 的最后画面。不存"上一帧四元数":按需渲染下可能没有上一帧
+  const prevTrackingRef = useRef<boolean | null>(null)
+  const capturePosTmp = useRef(new Vector3())
+  useEffect(() => {
+    const prev = prevTrackingRef.current
+    prevTrackingRef.current = tracking
+    // prev=null 是挂载后的首次跑(持久态恢复:trackTarget 初值 fallback
+    // 是 true,恢复出 false 会假摔一次)——持久态里的 rotation 本来
+    // 就是对的,跳过
+    if (prev !== true || tracking) return
+    const cam = camRef.current
+    const obj = cameraObjRef.current
+    const studio = getStudioSync()
+    if (!cam || !obj || !studio) return
+    // 此刻包装器刚全量应用过属性、帧驱动还没跑:机位被路径接管时
+    // cam.position 是过期的 position 属性值,不是画面里的真实机位——
+    // 真实机位用路径采样重算;瞄准点直接读 Target 网格(包装器同步
+    // 应用过属性,比每帧镜像的 aimRef 新)
+    const sampled = capturePosTmp.current
+    const from =
+      val(obj.props.moveMode) === 'path' &&
+      samplePathPoint(POS_PATH_KEY, val(obj.props.posProgress), sampled)
+        ? sampled
+        : cam.position
+    const m = new Matrix4().lookAt(from, targetRef.current.position, cam.up)
+    const e = new Euler().setFromRotationMatrix(m, 'XYZ')
+    const scrub = studio.scrub()
+    scrub.capture(({set}) => set(obj.props.rotation, {x: e.x, y: e.y, z: e.z}))
+    scrub.commit()
+  }, [tracking, cameraObjRef])
+
+  // 选中后挂三轴移动箭头:摄像机本体和瞄准点都能拖(机位被路径接管时
+  // 相机除外,见上;Target 被软删后也不可拖)
   useSelectionGizmoTarget(cameraObjRef, camRef, !camDriveLocked)
-  useSelectionGizmoTarget(targetObjRef, targetRef, !targetDriveLocked)
+  useSelectionGizmoTarget(targetObjRef, targetRef, !targetHidden)
 
   // 运镜驱动(优先级 -1,赶在 wrapper 的 lookAt 之前):
-  // 机位路径非空且 moveMode=path → 机位取路径上 posProgress 处;
-  // aimMode=path 且聚焦路径非空 → 瞄准取聚焦路径上 aimProgress 处,
-  // 否则瞄准 Target。路径为空时自动回退,不会出现"相机消失"
+  // 机位路径非空且 moveMode=path → 机位取路径上 posProgress 处。
+  // 相机始终 lookAt Target 本体;路径为空时自动回退手动,不会出现
+  // "相机消失"
   const pathSampleTmp = useRef(new Vector3())
   useFrame(() => {
     const cam = camRef.current
-    const obj = cameraObjRef.current
-    if (!cam || !obj) return
+    const camObj = cameraObjRef.current
+    if (!cam || !camObj) return
     const tmp = pathSampleTmp.current
     if (
-      val(obj.props.moveMode) === 'path' &&
-      samplePathPoint(POS_PATH_KEY, val(obj.props.posProgress), tmp)
+      val(camObj.props.moveMode) === 'path' &&
+      samplePathPoint(POS_PATH_KEY, val(camObj.props.posProgress), tmp)
     ) {
       cam.position.copy(tmp)
     }
-    if (
-      val(obj.props.aimMode) === 'path' &&
-      samplePathPoint(AIM_PATH_KEY, val(obj.props.aimProgress), tmp)
-    ) {
-      aimRef.current.position.copy(tmp)
-    } else if (targetRef.current) {
+    if (targetRef.current) {
       aimRef.current.position.copy(targetRef.current.position)
     }
   }, -1)
 
   // 视锥线/显示面/瞄准点手柄只在编辑视角出现;镜头视角全屏时人已经在镜头里,直接藏
+  // (Target 的可见性走下面 e.mesh 的 visible 属性:镜头视角或软删时都藏)
   useEffect(() => registerEditorOnly(frustum), [frustum])
   useEffect(() => registerEditorOnly(frustumFill), [frustumFill])
   useEffect(() => registerEditorOnly(targetRef.current), [])
   useEffect(() => {
     frustum.visible = !makeDefault
     frustumFill.visible = !makeDefault
-    if (targetRef.current) targetRef.current.visible = !makeDefault
   }, [makeDefault, frustum, frustumFill])
 
   useFrame(() => {
@@ -255,8 +302,8 @@ export function ShotCamera({
       }
     }
 
-  // 右键 = 选中 + 弹绑定路径的菜单(相机→机位路径,Target→聚焦路径),
-  // 和右键路径线本身弹的是同一个菜单
+  // 右键相机 = 选中 + 弹机位路径的菜单,和右键路径线本身弹的是同一个
+  // (Target 没有右键菜单:软删走相机面板的开关)
   const contextMenu =
     (
       objRef: MutableRefObject<ISheetObject<any> | undefined>,
@@ -289,7 +336,7 @@ export function ShotCamera({
         fov={50}
         near={0.1}
         far={60}
-        lookAt={aimRef}
+        lookAt={tracking ? aimRef : undefined}
         additionalProps={shotCameraAdditionalProps}
       >
         <primitive
@@ -308,8 +355,8 @@ export function ShotCamera({
         objRef={targetObjRef}
         ref={targetRef}
         position={[0, 1, 0]}
-        onClick={select(targetObjRef)}
-        onContextMenu={contextMenu(targetObjRef, AIM_PATH_KEY)}
+        visible={!targetHidden && !makeDefault}
+        onClick={targetHidden ? undefined : select(targetObjRef)}
       >
         <boxGeometry args={[0.25, 0.25, 0.25]} />
         <meshBasicMaterial color="#ffb020" wireframe />

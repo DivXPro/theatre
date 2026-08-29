@@ -185,7 +185,7 @@ describe('sampleEntries / sampleCurve', () => {
     expect(sampleEntries([], 0.5, out)).toBe(false)
   })
 
-  it('1 个点时任何进度都取它(聚焦锁单点)', () => {
+  it('1 个点时任何进度都取它(单点路径)', () => {
     const entries = [pt('P1', 1, 2, 3)]
     for (const u of [0, 0.3, 1]) {
       expect(sampleEntries(entries, u, out)).toBe(true)

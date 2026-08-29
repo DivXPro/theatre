@@ -39,7 +39,7 @@ import {
 import type {PathPointEntry, Vec3Like} from './pathModel'
 
 /**
- * 运镜路径:一条可编辑的空间曲线,机位/聚焦各用一条(同一个组件两次)。
+ * 运镜路径:一条可编辑的空间曲线(机位用,同一个组件将来可复用)。
  * 模型对齐 Blender 的曲线:
  *
  * - 控制点是纯数据,存在 `${metaKey}` 对象的 points 文本属性里(JSON 底账,
@@ -55,10 +55,10 @@ import type {PathPointEntry, Vec3Like} from './pathModel'
  */
 
 export const POS_PATH_KEY = 'Shot / Pos Path'
-export const AIM_PATH_KEY = 'Shot / Aim Path'
 
+/** 路径的显示名(目前只有机位路径一条;菜单/浮条里展示用) */
 export function pathLabel(metaKey: string): string {
-  return metaKey === AIM_PATH_KEY ? '聚焦路径' : '机位路径'
+  return '机位路径'
 }
 
 /** 路径线折线的顶点缓冲容量(段数多了会自动降低每段细分,不会溢出) */
@@ -171,7 +171,7 @@ const pathRegistry = new Map<string, RegisteredPath>()
 
 /**
  * 按进度在路径上取点(弧长等比)。路径为空返回 false,调用方回退到
- * 手动驱动;单点路径任何进度都取那个点(聚焦锁主体)。
+ * 手动驱动;单点路径任何进度都取那个点。
  */
 export function samplePathPoint(
   metaKey: string,
@@ -193,9 +193,8 @@ export function samplePathPoint(
 // 加点/删点(工具栏按钮调;一次 scrub 提交 = 一步撤销)
 
 /**
- * 加一个控制点:路径为空时用 seed 播种(机位路径=绕目标的弧,
- * 聚焦路径=目标处单点),否则沿最后一段方向延伸。seed 为空且名单
- * 为空时不动作。
+ * 加一个控制点:路径为空时用 seed 播种(机位路径=绕目标的弧),
+ * 否则沿最后一段方向延伸。seed 为空且名单为空时不动作。
  *
  * onSeeded:路径从无到有(播种)时,在同一次提交里顺带写入(比如
  * 自动把驱动切到"沿路径"——Blender 的约束加上即生效,不存在

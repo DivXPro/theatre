@@ -47,7 +47,6 @@ import {getLibrary} from './assetLibrary/library'
 import {ShotCamera} from './ShotCamera'
 import {
   addPathPoint,
-  AIM_PATH_KEY,
   CameraPath,
   clearPath,
   deletePathPoint,
@@ -78,6 +77,14 @@ function Model({url, selectLocked}: {url: string; selectLocked?: boolean}) {
   // 登记为选中 gizmo 的附着目标:选中 Thingy 后挂三轴移动箭头
   const thingyGroupRef = useRef<Object3D>(null!)
   useSelectionGizmoTarget(thingyObjRef, thingyGroupRef)
+  // 两个碎片子网格同样登记:大纲里单独选中它们时也有箭头、可按 G
+  // (视口点碎片会冒泡选中整个 Thingy,单独选只能走大纲,和 Blender 一致)
+  const debris1ObjRef = useRef<ISheetObject<any> | undefined>(undefined)
+  const debris1Ref = useRef<Mesh>(null!)
+  useSelectionGizmoTarget(debris1ObjRef, debris1Ref)
+  const debris2ObjRef = useRef<ISheetObject<any> | undefined>(undefined)
+  const debris2Ref = useRef<Mesh>(null!)
+  useSelectionGizmoTarget(debris2ObjRef, debris2Ref)
 
   // 主画面点选:r3f 对网格做射线检测,点击任意子网格会冒泡到分组。
   // 拖拽转视角后松手不算点击(r3f 的 delta 判定),两者不冲突。
@@ -111,6 +118,8 @@ function Model({url, selectLocked}: {url: string; selectLocked?: boolean}) {
       >
         <e.mesh
           theatreKey="Example Namespace / Thingy / Debris 2"
+          objRef={debris2ObjRef}
+          ref={debris2Ref}
           receiveShadow
           castShadow
           geometry={nodes.planet002.geometry}
@@ -118,6 +127,8 @@ function Model({url, selectLocked}: {url: string; selectLocked?: boolean}) {
         />
         <e.mesh
           theatreKey="Example Namespace / Thingy / Debris 1"
+          objRef={debris1ObjRef}
+          ref={debris1Ref}
           geometry={nodes.planet003.geometry}
           material={nodes.planet003.material}
         />
@@ -460,7 +471,7 @@ function App() {
     metaKey: string
     key: string
   } | null>(null)
-  // 右键路径线弹出的菜单:记录目标路径和光标位置
+  // 右键路径线弹出的菜单:记录路径和光标位置
   const [pathMenu, setPathMenu] = useState<{
     metaKey: string
     x: number
@@ -550,9 +561,11 @@ function App() {
         const studio = getStudioSync()
         const selectedPath =
           studio &&
-          [POS_PATH_KEY, AIM_PATH_KEY].find((k) =>
-            (studio.selection as unknown[]).includes(getPathMeta(sheet, k)),
+          (studio.selection as unknown[]).includes(
+            getPathMeta(sheet, POS_PATH_KEY),
           )
+            ? POS_PATH_KEY
+            : undefined
         enterPathEdit(selectedPath || lastEditedPathRef.current)
       }
     }
@@ -576,7 +589,7 @@ function App() {
 
   // 运镜路径菜单动作:加点(空路径先播种)、删除选中的控制点。
   // 播种时同一次提交把驱动切到"沿路径"(Blender 的约束加上即生效):
-  // 相机/Target 当场归路径管、移动箭头锁定;想手动在属性面板切回即可
+  // 相机当场归路径管、移动箭头锁定;想手动在属性面板切回即可
   const addPosPathPoint = useCallback(() => {
     const cam = shotCameraObjRef.current
     const target = shotTargetObjRef.current
@@ -592,16 +605,47 @@ function App() {
     enterPathEdit(POS_PATH_KEY)
   }, [sheet, enterPathEdit])
 
-  const addAimPathPoint = useCallback(() => {
+  // Target 软删/恢复:真删要绕过 React 声明式重建(theatre 对象由组件
+  // 挂载时声明,删了下一帧就回来),所以"删除"= 相机面板上的
+  // targetHidden 标志(开关放相机面板:它是"镜头机组"的设置)。
+  // 对象还在大纲里,随时能改回来;一次 scrub 提交 = 一步撤销
+  const restoreTarget = useCallback(() => {
     const cam = shotCameraObjRef.current
-    const target = shotTargetObjRef.current
-    // 聚焦路径播种:目标处一个点 = 锁死主体,随时再加点变扫视
-    const seed = target ? [val(target.props.position)] : undefined
-    addPathPoint(sheet, AIM_PATH_KEY, seed, (set) => {
-      if (cam) set(cam.props.aimMode, 'path')
-    })
-    enterPathEdit(AIM_PATH_KEY)
-  }, [sheet, enterPathEdit])
+    const studio = getStudioSync()
+    if (!cam || !studio) return
+    const scrub = studio.scrub()
+    scrub.capture(({set}) => set(cam.props.targetHidden, false))
+    scrub.commit()
+  }, [shotCameraObjRef])
+
+  // 缺失提示:绑定了朝向但 Target 已被删 → 顶部浮条提醒 + 一键恢复
+  const [targetMissing, setTargetMissing] = useState(false)
+  useEffect(() => {
+    let offCam: (() => void) | undefined
+    let cancelled = false
+    // Canvas 是独立的 React root,里面 editable 填 objRef 的时机不受
+    // 本 root 的 effect 顺序保证——首帧可能还没填,逐帧重试到挂上为止
+    const trySubscribe = () => {
+      if (cancelled) return
+      const cam = shotCameraObjRef.current
+      if (!cam) {
+        requestAnimationFrame(trySubscribe)
+        return
+      }
+      const update = () =>
+        setTargetMissing(
+          Boolean(val(cam.props.trackTarget)) &&
+            Boolean(val(cam.props.targetHidden)),
+        )
+      update()
+      offCam = cam.onValuesChange(update)
+    }
+    trySubscribe()
+    return () => {
+      cancelled = true
+      offCam?.()
+    }
+  }, [shotCameraObjRef])
 
   const removePathPoint = useCallback(() => {
     if (
@@ -661,13 +705,6 @@ function App() {
     () =>
       shotCameraObjRef.current
         ? val(shotCameraObjRef.current.props.posProgress)
-        : 0,
-    [],
-  )
-  const aimProgressOf = useCallback(
-    () =>
-      shotCameraObjRef.current
-        ? val(shotCameraObjRef.current.props.aimProgress)
         : 0,
     [],
   )
@@ -921,7 +958,7 @@ function App() {
           cursor: 'pointer',
           fontSize: 13,
         }}
-        title="运镜路径:机位/聚焦各一条;右键路径线或按 Tab 进入编辑模式,拖控制点和贝塞尔手柄摆路径;播种后自动沿路径驱动(属性面板可切回手动),进度打关键帧调运镜节奏"
+        title="运镜路径:右键路径线或按 Tab 进入编辑模式,拖控制点和贝塞尔手柄摆路径;播种后自动沿路径驱动(属性面板可切回手动),进度打关键帧调运镜节奏"
       >
         路径
       </button>
@@ -946,11 +983,6 @@ function App() {
               onClick: addPosPathPoint,
             },
             {
-              label: '聚焦路径 · 加点',
-              desc: '第一次点:在目标处放一个点(锁死主体),并自动切到沿路径驱动',
-              onClick: addAimPathPoint,
-            },
-            {
               label: '相机对齐到路径起点',
               desc: '把手动机位设成机位路径的第一个点',
               onClick: alignCameraToPathStart,
@@ -964,11 +996,6 @@ function App() {
               label: '机位路径 · 删除',
               desc: '整条删除(控制点全清);撤销可整条找回',
               onClick: () => removePath(POS_PATH_KEY),
-            },
-            {
-              label: '聚焦路径 · 删除',
-              desc: '整条删除(控制点全清);撤销可整条找回',
-              onClick: () => removePath(AIM_PATH_KEY),
             },
             {
               label: '删除选中的控制点',
@@ -1124,6 +1151,42 @@ function App() {
           onClose={() => setPathMenu(null)}
         />
       )}
+      {targetMissing && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 12,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 10,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            padding: '6px 14px',
+            background: '#3a2a2a',
+            border: '1px solid #a55',
+            borderRadius: 6,
+            color: '#ffd9d9',
+            fontSize: 13,
+          }}
+        >
+          <span>Target 已删除,相机保持当前朝向</span>
+          <button
+            onClick={restoreTarget}
+            style={{
+              padding: '3px 10px',
+              borderRadius: 4,
+              border: '1px solid #a55',
+              background: 'transparent',
+              color: '#ffd9d9',
+              cursor: 'pointer',
+              fontSize: 12,
+            }}
+          >
+            重新添加 Target
+          </button>
+        </div>
+      )}
       {editingPath &&
         selectedPathPoint &&
         selectedPathPoint.metaKey === editingPath &&
@@ -1176,22 +1239,6 @@ function App() {
             }
             onContextMenu={(metaKey, x, y) => setPathMenu({metaKey, x, y})}
             progressOf={posProgressOf}
-          />
-          <CameraPath
-            metaKey={AIM_PATH_KEY}
-            color={0xffcc33}
-            hidden={shotView}
-            editing={editingPath === AIM_PATH_KEY}
-            selectedKey={
-              selectedPathPoint?.metaKey === AIM_PATH_KEY
-                ? selectedPathPoint.key
-                : null
-            }
-            onSelectPoint={(key) =>
-              setSelectedPathPoint(key ? {metaKey: AIM_PATH_KEY, key} : null)
-            }
-            onContextMenu={(metaKey, x, y) => setPathMenu({metaKey, x, y})}
-            progressOf={aimProgressOf}
           />
           <fog attach="fog" args={[bg, 16, 30]} />
           <color attach="background" args={[bg]} />

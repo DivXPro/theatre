@@ -234,7 +234,7 @@ export function sampleCurve(
 
 /**
  * 按进度在名单上取点。0 个点返回 false(调用方回退到手动驱动);
- * 1 个点时任何进度都取它(聚焦锁单点,不用为了聚焦硬凑两个点)。
+ * 1 个点时任何进度都取它(单点路径不用硬凑两个点)。
  * 每次都重建曲线,只适合一次性调用;每帧采样请 buildCurve 后 sampleCurve。
  */
 export function sampleEntries(
