@@ -1,5 +1,5 @@
 import type Sheet from '@toy-box/core/sheets/Sheet'
-import {usePrism} from '@toy-box/react'
+import {usePrism, useVal} from '@toy-box/react'
 import {val} from '@toy-box/dataverse'
 import React from 'react'
 import styled from 'styled-components'
@@ -7,6 +7,9 @@ import {ObjectItem} from './ObjectItem'
 import type SheetObject from '@toy-box/core/sheetObjects/SheetObject'
 import BaseItem from '@toy-box/studio/panels/OutlinePanel/BaseItem'
 import {useCollapseStateInOutlinePanel} from '@toy-box/studio/panels/OutlinePanel/outlinePanelUtils'
+import getStudio from '@toy-box/studio/getStudio'
+import {outlineSelection} from '@toy-box/studio/selectors'
+import useChordial from '@toy-box/studio/uiComponents/chordial/useChodrial'
 
 export const Li = styled.li<{$isSelected: boolean}>`
   color: ${(props) => (props.$isSelected ? 'white' : 'hsl(1, 1%, 80%)')};
@@ -99,6 +102,21 @@ function Namespace(props: {
     />
   )
 
+  // 同名对象 + 子命名空间并存时只画一行:行就是对象本体(点选/右键和
+  // ObjectItem 一致),行首箭头展开子节点;折叠状态沿用命名空间路径键
+  if (object && nestedChildrenElt) {
+    return (
+      <MergedObjectItem
+        sheetObject={object}
+        label={label}
+        depth={props.visualIndentation}
+        collapsed={collapsed}
+        setIsCollapsed={setCollapsed}
+        children={nestedChildrenElt}
+      />
+    )
+  }
+
   return (
     <React.Fragment key={`${label} - ${props.visualIndentation}`}>
       {sameNameElt}
@@ -115,6 +133,46 @@ function Namespace(props: {
         />
       )}
     </React.Fragment>
+  )
+}
+
+/**
+ * 同名对象与文件夹合并后的那一行:本体是对象(点选/右键行为和
+ * ObjectItem 一致),行首箭头负责展开/折叠子命名空间。
+ */
+const MergedObjectItem: React.FC<{
+  sheetObject: SheetObject
+  label: string
+  depth: number
+  collapsed: boolean
+  setIsCollapsed: (v: boolean) => void
+  children?: React.ReactNode
+}> = ({sheetObject, label, depth, collapsed, setIsCollapsed, children}) => {
+  const select = () => {
+    getStudio()!.transaction(({stateEditors}) => {
+      stateEditors.studio.historic.panels.outline.selection.set([
+        {...sheetObject.address, type: 'SheetObject'},
+      ])
+    })
+  }
+  const selection = useVal(outlineSelection)
+  const {targetRef} = useChordial(() => ({
+    title: `Object: ${sheetObject.address.objectKey}`,
+    items: [],
+  }))
+  return (
+    <BaseItem
+      select={select}
+      label={label}
+      depth={depth}
+      headerRef={targetRef}
+      selectionStatus={
+        selection.includes(sheetObject) ? 'selected' : 'not-selected'
+      }
+      children={children}
+      collapsed={collapsed}
+      setIsCollapsed={setIsCollapsed}
+    />
   )
 }
 
