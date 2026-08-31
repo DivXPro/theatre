@@ -11,12 +11,16 @@ import {
   GizmoViewport,
 } from '@react-three/drei'
 import {getProject, getStudioSync, val} from '@toy-box/core'
+import {privateAPI} from '@toy-box/core/privateAPIs'
+import getDeep from '@toy-box/utils/getDeep'
+import {usePrism} from '@toy-box/react'
 import type {IScrub, ISheetObject} from '@toy-box/core'
 import React, {
   Suspense,
   useCallback,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react'
@@ -24,7 +28,7 @@ import {Canvas, useFrame, useThree} from '@react-three/fiber'
 import type {ThreeEvent} from '@react-three/fiber'
 import {useGLTF} from '@react-three/drei'
 import sceneGLB from './scene.glb'
-import {MOUSE, Spherical, Vector3} from 'three'
+import {MOUSE, Raycaster, Spherical, Vector2, Vector3} from 'three'
 import type {Mesh, Object3D} from 'three'
 import {
   GizmoModeHint,
@@ -55,6 +59,7 @@ import {
   pathLabel,
   POS_PATH_KEY,
   readPathPoints,
+  samplePathPoint,
   translatePath,
 } from './CameraPath'
 import {seedArcPoints} from './pathModel'
@@ -461,9 +466,8 @@ function App() {
   // 运镜路径:加点/删点菜单开关
   const [pathMenuOpen, setPathMenuOpen] = useState(false)
   // 运镜路径编辑模式:正在编辑的路径 metaKey(同一时刻只编辑一条,
-  // 对齐 Blender 的对象/编辑模式);右键路径线或 Tab 进出
+  // 对齐 Blender 的对象/编辑模式);右键路径线或选中路径后按 Tab 进出
   const [editingPath, setEditingPath] = useState<string | null>(null)
-  const lastEditedPathRef = useRef<string>(POS_PATH_KEY)
   const editingPathRef = useRef<string | null>(null)
   editingPathRef.current = editingPath
   // 选中的控制点(内部选中,和 studio 选区无关;控制点不是 theatre 对象)
@@ -519,25 +523,44 @@ function App() {
       ) as ISheetObject<any> | undefined
       setSelectedPlacement(placement ?? null)
       setSelectionCount(studio.selection.length)
-      // 选中了 theatre 对象 → 控制点取消选中(两套手柄不同时出现);
-      // 路径编辑模式保持(编辑态是"粘"的,同 Blender)
+      // 选中了 theatre 对象 → 控制点取消选中(两套手柄不同时出现)
       if (studio.selection.length > 0) setSelectedPathPoint(null)
+      // 编辑中的路径失焦(选中切到了别的对象)→ 退出编辑模式,对齐
+      // Blender(编辑模式跟着活动物体走);尊重用户的新选中,不回头
+      // 重选路径。空选中不退:进入编辑和点选控制点时选中本就是空的
+      const editing = editingPathRef.current
+      if (
+        editing &&
+        studio.selection.length > 0 &&
+        !(studio.selection as unknown[]).includes(getPathMeta(sheet, editing))
+      ) {
+        setEditingPath(null)
+      }
     }
     sync()
     return studio.onSelectionChange(sync)
-  }, [])
+  }, [sheet])
 
   // 进入/退出路径编辑模式(右键菜单和 Tab 共用)
   const enterPathEdit = useCallback((metaKey: string) => {
     setEditingPath(metaKey)
-    lastEditedPathRef.current = metaKey
     // 编辑路径时清掉对象选中:对象 gizmo 和控制点 gizmo 不同时出现
     getStudioSync()?.setSelection([])
   }, [])
   const exitPathEdit = useCallback(() => {
+    const editing = editingPathRef.current
+    setEditingPath(null)
+    setSelectedPathPoint(null)
+    // 退出编辑后重新选中路径本体(对齐 Blender:Tab 出编辑模式物体保持
+    // 选中),整体移动箭头随之出现
+    if (editing) getStudioSync()?.setSelection([getPathMeta(sheet, editing)])
+  }, [sheet])
+  // 失焦式退出(点空白/选中切走):尊重现场,不回头重选路径
+  const exitPathEditOnBlur = useCallback(() => {
     setEditingPath(null)
     setSelectedPathPoint(null)
   }, [])
+  const isPathEditing = useCallback(() => editingPathRef.current !== null, [])
 
   // Tab 进出编辑模式(Blender 同款);输入框里不抢 Tab(留给焦点跳转)
   useEffect(() => {
@@ -556,8 +579,8 @@ function App() {
       if (editingPathRef.current) {
         exitPathEdit()
       } else if (!shotView) {
-        // 有选中的路径就编辑它(Blender:Tab 作用于选中物),
-        // 没有才回退到最后编辑的那条
+        // Tab 只在选中路径时进入编辑模式(Blender:Tab 作用于选中物;
+        // 没选中就什么都不做,避免凭空进入一个看不见的编辑态)
         const studio = getStudioSync()
         const selectedPath =
           studio &&
@@ -566,7 +589,7 @@ function App() {
           )
             ? POS_PATH_KEY
             : undefined
-        enterPathEdit(selectedPath || lastEditedPathRef.current)
+        if (selectedPath) enterPathEdit(selectedPath)
       }
     }
     window.addEventListener('keydown', onKey)
@@ -578,12 +601,16 @@ function App() {
     if (shotView) exitPathEdit()
   }, [shotView, exitPathEdit])
 
-  // 调试/自动化验证挂钩:读当前编辑态、直接进出编辑模式
+  // 调试/自动化验证挂钩:读当前编辑态、直接进出编辑模式、选中控制点
+  // (点选 3D 小目标在自动化下太脆——相机一飘就点空,选中路径走这里)
   useEffect(() => {
     ;(window as any).__cameraPathEdit = {
       enter: enterPathEdit,
       exit: exitPathEdit,
       current: () => editingPathRef.current,
+      selectPoint: (metaKey: string, key: string | null) =>
+        setSelectedPathPoint(key ? {metaKey, key} : null),
+      keyframes: () => progressKeyframesRef.current,
     }
   }, [enterPathEdit, exitPathEdit])
 
@@ -675,39 +702,81 @@ function App() {
 
   // 对齐(Blender 吸附工作流的对应物):手动机位和路径是两份数据,
   // 路径驱动时手动那份被忽略,可能悄悄岔开;两个动作一键对齐。
-  // 各一次 scrub 提交 = 一步撤销
+  // 各一次 scrub 提交 = 一步撤销。
+  // 控制点存的是局部坐标,世界位置走 samplePathPoint(含路径整体变换)
   const alignCameraToPathStart = useCallback(() => {
     const cam = shotCameraObjRef.current
-    const pts = readPathPoints(sheet, POS_PATH_KEY)
     const studio = getStudioSync()
-    if (!cam || pts.length === 0 || !studio) return
-    const p = pts[0]!.position
+    if (!cam || !studio) return
+    const tmp = new Vector3()
+    if (!samplePathPoint(POS_PATH_KEY, 0, tmp)) return
     const scrub = studio.scrub()
-    scrub.capture(({set}) => set(cam.props.position, {x: p.x, y: p.y, z: p.z}))
+    scrub.capture(({set}) =>
+      set(cam.props.position, {x: tmp.x, y: tmp.y, z: tmp.z}),
+    )
     scrub.commit()
-  }, [sheet])
+  }, [])
 
   const movePathToCamera = useCallback(() => {
     const cam = shotCameraObjRef.current
-    const pts = readPathPoints(sheet, POS_PATH_KEY)
-    if (!cam || pts.length === 0) return
+    if (!cam) return
+    const tmp = new Vector3()
+    if (!samplePathPoint(POS_PATH_KEY, 0, tmp)) return
     const c = val(cam.props.position)
-    const p = pts[0]!.position
     translatePath(sheet, POS_PATH_KEY, {
-      x: c.x - p.x,
-      y: c.y - p.y,
-      z: c.z - p.z,
+      x: c.x - tmp.x,
+      y: c.y - tmp.y,
+      z: c.z - tmp.z,
     })
   }, [sheet])
 
-  // 路径上的进度标记读 Shot/Camera 的进度属性(对象还没建好时报 0)
-  const posProgressOf = useCallback(
-    () =>
-      shotCameraObjRef.current
-        ? val(shotCameraObjRef.current.props.posProgress)
-        : 0,
-    [],
+  // 路径上的进度标记读 Pos Path 对象的行进进度(对象还没建好时报 0)
+  const posPathMeta = useMemo(() => getPathMeta(sheet, POS_PATH_KEY), [sheet])
+  const pathProgressOf = useCallback(
+    () => (posPathMeta ? val(posPathMeta.props.progress) : 0),
+    [posPathMeta],
   )
+
+  // 钉到播放头:把控制点的抵达时间变成时间轴上的标准关键帧。
+  // 首钉先把路径的行进进度转成序列轨道(之后 set 写的就是播放头处的
+  // 关键帧,属性面板的菱形和 theatre 默认行为一致),再在当前播放头打
+  // 值=锚点的关键帧;拖关键帧 = 改抵达时间,删关键帧 = 解钉,撤销照常
+  const pinPathPointAtPlayhead = useCallback(
+    (u: number) => {
+      const studio = getStudioSync()
+      if (!studio) return
+      const hasTrack =
+        typeof getDeep(
+          privateAPI(posPathMeta)
+            .template.getMapOfValidSequenceTracks_forStudio()
+            .getValue(),
+          ['progress'],
+        ) === 'string'
+      if (!hasTrack) {
+        studio.transaction(({sequenceProp}) =>
+          sequenceProp(posPathMeta.props.progress),
+        )
+      }
+      const scrub = studio.scrub()
+      scrub.capture(({set}) => set(posPathMeta.props.progress, u))
+      scrub.commit()
+    },
+    [posPathMeta],
+  )
+
+  // 行进进度轨道的关键帧(响应式:打帧/拖帧/删帧/撤销都反映),
+  // 路径浮条用它列出选中控制点钉在了哪些时间
+  const progressKeyframes = usePrism(
+    () =>
+      privateAPI(posPathMeta)
+        .sheet.getSequence()
+        .getKeyframesOfSimpleProp(posPathMeta.props.progress)
+        .map((k) => ({position: k.position, value: k.value as number})),
+    [posPathMeta],
+  )
+  // 调试挂钩读最新值用(上面 __cameraPathEdit 的 effect 声明在前,直引会 TDZ)
+  const progressKeyframesRef = useRef(progressKeyframes)
+  progressKeyframesRef.current = progressKeyframes
 
   // 导出视频:先切到镜头视角(录 canvas 当前内容),再开始录制;
   // "另存为"的系统对话框在菜单点击的调用栈里已经弹过,这里只剩录制
@@ -958,7 +1027,7 @@ function App() {
           cursor: 'pointer',
           fontSize: 13,
         }}
-        title="运镜路径:右键路径线或按 Tab 进入编辑模式,拖控制点和贝塞尔手柄摆路径;播种后自动沿路径驱动(属性面板可切回手动),进度打关键帧调运镜节奏"
+        title="运镜路径:右键路径线或选中路径后按 Tab 进入编辑模式,拖控制点和贝塞尔手柄摆路径;播种后自动沿路径驱动(属性面板可切回手动),进度打关键帧调运镜节奏"
       >
         路径
       </button>
@@ -1195,6 +1264,10 @@ function App() {
             sheet={sheet}
             metaKey={editingPath}
             pointKey={selectedPathPoint.key}
+            onPinAtPlayhead={
+              editingPath === POS_PATH_KEY ? pinPathPointAtPlayhead : undefined
+            }
+            progressKeyframes={progressKeyframes}
           />
         )}
       <Canvas
@@ -1218,6 +1291,10 @@ function App() {
             enabled={!shotView}
           />
           {!shotView && <GizmoNav cameraObjRef={cameraObjRef} />}
+          <ExitPathEditOnEmptyClick
+            isEditing={isPathEditing}
+            onExit={exitPathEditOnBlur}
+          />
           <ShotCamera
             makeDefault={shotView}
             cameraObjRef={shotCameraObjRef}
@@ -1226,7 +1303,8 @@ function App() {
           />
           <CameraPath
             metaKey={POS_PATH_KEY}
-            color={0xffcc33}
+            // 普通态蓝色;选中/编辑的黄色档位在 CameraPath 内部
+            color={0x4a90d9}
             hidden={shotView}
             editing={editingPath === POS_PATH_KEY}
             selectedKey={
@@ -1238,7 +1316,7 @@ function App() {
               setSelectedPathPoint(key ? {metaKey: POS_PATH_KEY, key} : null)
             }
             onContextMenu={(metaKey, x, y) => setPathMenu({metaKey, x, y})}
-            progressOf={posProgressOf}
+            progressOf={pathProgressOf}
           />
           <fog attach="fog" args={[bg, 16, 30]} />
           <color attach="background" args={[bg]} />
@@ -1420,6 +1498,67 @@ function PathContextMenu({
       </div>
     </div>
   )
+}
+
+/**
+ * 路径编辑模式下点到真空 = 路径失焦,退出编辑模式(和"选中切到别的
+ * 对象"同一条失焦规则,对齐 Blender 编辑模式跟活动物体走)。
+ * 不挂在 Canvas 的 onPointerMissed 上:r3f 的"未命中"判定在递归命中
+ * 和交互集合上和我们想要的不完全是一回事,自己监听画布 click、自己做
+ * 一次射线检查,命中对象沿父链找得到事件处理器就不算空点。
+ * 拖过的点击(转视角/gizmo/拖手柄)不算;gizmo 点按有屏蔽窗口兜底。
+ */
+function ExitPathEditOnEmptyClick({
+  isEditing,
+  onExit,
+}: {
+  isEditing: () => boolean
+  onExit: () => void
+}) {
+  const gl = useThree((s) => s.gl)
+  const camera = useThree((s) => s.camera)
+  const scene = useThree((s) => s.scene)
+  useEffect(() => {
+    const raycaster = new Raycaster()
+    const ndc = new Vector2()
+    let downAt: [number, number] | null = null
+    const onDown = (e: PointerEvent) => {
+      downAt = [e.clientX, e.clientY]
+    }
+    const onClick = (e: MouseEvent) => {
+      if (!isEditing()) return
+      if (isSelectSuppressed()) return
+      // 按下和抬起位置差太多 = 拖拽收尾,不是点
+      if (
+        downAt &&
+        Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 4
+      )
+        return
+      const rect = gl.domElement.getBoundingClientRect()
+      ndc.set(
+        ((e.clientX - rect.left) / rect.width) * 2 - 1,
+        -(((e.clientY - rect.top) / rect.height) * 2 - 1),
+      )
+      raycaster.setFromCamera(ndc, camera)
+      const hits = raycaster.intersectObjects(scene.children, true)
+      for (const h of hits) {
+        let o: Object3D | null = h.object
+        while (o) {
+          const handlers = (o as any).__r3f?.handlers
+          if (handlers && Object.keys(handlers).length > 0) return
+          o = o.parent
+        }
+      }
+      onExit()
+    }
+    window.addEventListener('pointerdown', onDown, true)
+    gl.domElement.addEventListener('click', onClick)
+    return () => {
+      window.removeEventListener('pointerdown', onDown, true)
+      gl.domElement.removeEventListener('click', onClick)
+    }
+  }, [gl, camera, scene, isEditing, onExit])
+  return null
 }
 
 export default App

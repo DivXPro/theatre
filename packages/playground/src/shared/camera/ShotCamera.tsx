@@ -22,7 +22,13 @@ import {
 import type {PerspectiveCamera as PerspectiveCameraImpl} from 'three'
 import {registerEditorOnly, withEditorOnlyHidden} from './editorOnly'
 import {useSelectionGizmoTarget} from './PlacementManager'
-import {POS_PATH_KEY, samplePathPoint, usePathHasPoints} from './CameraPath'
+import {
+  POS_PATH_KEY,
+  getPathMeta,
+  pathObjectName,
+  samplePathPoint,
+  usePathHasPoints,
+} from './CameraPath'
 
 /**
  * 场景摄像机(shot camera):独立于编辑主视角的"镜头",取景画面用于
@@ -32,8 +38,9 @@ import {POS_PATH_KEY, samplePathPoint, usePathHasPoints} from './CameraPath'
  *   (瞄准点),朝向始终 lookAt Target——对齐 Blender 的 Track To 约束:
  *   相机没有"朝向模式",目标怎么动是它的自由(Target 的移动直接在
  *   时间轴上给 position 打关键帧,不需要单独的路径对象)
- * - 运镜驱动:机位可以切到"沿路径"(Shot/Camera 的 moveMode+
- *   posProgress),由 CameraPath 的曲线 + 0~1 进度属性驱动,
+ * - 运镜驱动:机位可以切到"沿路径"(Shot/Camera 的 moveMode 开关,
+ *   对齐 Blender 的约束跟随),由 CameraPath 的曲线 + 路径对象的
+ *   行进进度(0~1,对齐曲线侧的 Evaluation Time)驱动,
  *   进度打关键帧 = 调运镜节奏;路径为空时回退手动,不产生异常画面
  * - 编辑器里的视锥示意:从相机顶点拉 4 条线到固定距离的末端平面,
  *   平面画成半透明色块(自绘 LineSegments + 半透明 Plane,不用
@@ -58,8 +65,11 @@ const FRUSTUM_FILL_OPACITY = 0.12
  * 运镜驱动属性,挂在 Shot/Camera 对象上(模块级常量:
  * sheet.object 重复调用要求配置 deep-equal,函数按引用比,
  * 每次 render 新建会在热更新后炸"called twice with different config")。
- * moveMode=path 时机位由机位路径 + posProgress 驱动,position 属性被忽略;
- * 进度打关键帧 = 调运镜节奏。
+ *
+ * 分工对齐 Blender 的 Follow Path:**跟随开关归相机**(moveMode=path 时
+ * 机位由机位路径驱动,position 属性被忽略),**行进进度归路径**
+ * (Pos Path 对象的 progress 属性,打关键帧 = 调运镜节奏;
+ * 对齐曲线侧的 Evaluation Time)。路径为空时回退手动,不产生异常画面。
  * trackTarget=false = 解除朝向绑定(对齐 Blender 关掉 Track To 约束):
  * 解绑瞬间把当前朝向定格进 rotation 属性,画面不跳。
  * targetHidden=true = 软删除 Target(真删要绕过 React 声明式重建,代价
@@ -72,10 +82,11 @@ const shotCameraAdditionalProps = {
   targetHidden: t.boolean(false, {label: '删除 Target(可恢复)'}),
   moveMode: t.stringLiteral(
     'manual',
-    {manual: '手动', path: '沿机位路径'},
+    // 选项 = 手动 / 路径对象的真名(对齐 Blender 约束的目标选择:
+    // 选的是"跟随谁",显示对象在大纲里的名字)
+    {manual: '手动', path: pathObjectName(POS_PATH_KEY)},
     {label: '机位驱动'},
   ),
-  posProgress: t.number(0, {range: [0, 1], label: '机位进度'}),
 }
 
 /** 视锥线:末端平面矩形 4 段 + 顶点→平面 4 角 = 8 段 */
@@ -195,6 +206,8 @@ export function ShotCamera({
   // 都不出现,从源头消灭"拖了没反应、数据还悄悄岔开"的假动作。
   // 空路径驱动自动回退手动,不锁
   const sheet = useCurrentSheet()!
+  // 行进进度在路径对象上(对齐 Blender:进度的家是曲线,不是相机)
+  const posPathMeta = useMemo(() => getPathMeta(sheet, POS_PATH_KEY), [sheet])
   const posPathHasPoints = usePathHasPoints(sheet, POS_PATH_KEY)
   const camMoveMode = useObjPropScalar<string>(
     cameraObjRef,
@@ -234,7 +247,7 @@ export function ShotCamera({
     const sampled = capturePosTmp.current
     const from =
       val(obj.props.moveMode) === 'path' &&
-      samplePathPoint(POS_PATH_KEY, val(obj.props.posProgress), sampled)
+      samplePathPoint(POS_PATH_KEY, val(posPathMeta.props.progress), sampled)
         ? sampled
         : cam.position
     const m = new Matrix4().lookAt(from, targetRef.current.position, cam.up)
@@ -242,7 +255,7 @@ export function ShotCamera({
     const scrub = studio.scrub()
     scrub.capture(({set}) => set(obj.props.rotation, {x: e.x, y: e.y, z: e.z}))
     scrub.commit()
-  }, [tracking, cameraObjRef])
+  }, [tracking, cameraObjRef, posPathMeta])
 
   // 选中后挂三轴移动箭头:摄像机本体和瞄准点都能拖(机位被路径接管时
   // 相机除外,见上;Target 被软删后也不可拖)
@@ -250,7 +263,7 @@ export function ShotCamera({
   useSelectionGizmoTarget(targetObjRef, targetRef, !targetHidden)
 
   // 运镜驱动(优先级 -1,赶在 wrapper 的 lookAt 之前):
-  // 机位路径非空且 moveMode=path → 机位取路径上 posProgress 处。
+  // 机位路径非空且 moveMode=path → 机位取路径上行进进度处。
   // 相机始终 lookAt Target 本体;路径为空时自动回退手动,不会出现
   // "相机消失"
   const pathSampleTmp = useRef(new Vector3())
@@ -261,7 +274,7 @@ export function ShotCamera({
     const tmp = pathSampleTmp.current
     if (
       val(camObj.props.moveMode) === 'path' &&
-      samplePathPoint(POS_PATH_KEY, val(camObj.props.posProgress), tmp)
+      samplePathPoint(POS_PATH_KEY, val(posPathMeta.props.progress), tmp)
     ) {
       cam.position.copy(tmp)
     }
