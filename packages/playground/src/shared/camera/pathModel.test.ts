@@ -1,10 +1,14 @@
-import {Vector3} from 'three'
+import {Matrix4, Quaternion, Vector3} from 'three'
 import {
   autoHandles,
   buildCurve,
   buildLinePositions,
+  composePathMatrix,
+  directionArrowMatrices,
   effectiveHandles,
+  effectiveUs,
   extendPathPoint,
+  IDENTITY_PATH_TRANSFORM,
   nextPointKey,
   parsePathPoints,
   sampleEntries,
@@ -12,8 +16,10 @@ import {
   serializePathPoints,
   withDraggedHandle,
   withMovedPoint,
+  withMovedU,
+  withResetU,
 } from './pathModel'
-import type {PathPointEntry} from './pathModel'
+import type {PathPointEntry, PathTransform} from './pathModel'
 
 const pt = (key: string, x: number, y = 0, z = 0): PathPointEntry => ({
   key,
@@ -47,6 +53,21 @@ describe('parsePathPoints / serializePathPoints', () => {
       '[{"key":"P1","position":{"x":1,"y":2,"z":3},"handles":{"left":{"x":"bad"}}}]',
     )
     expect(parsed).toEqual([{key: 'P1', position: {x: 1, y: 2, z: 3}}])
+  })
+
+  it('进度锚点 u 往返一致;坏 u 丢弃,越界夹回 0~1', () => {
+    const parsed = parsePathPoints(
+      '[{"key":"P1","position":{"x":0,"y":0,"z":0},"u":0.3},' +
+        '{"key":"P2","position":{"x":1,"y":0,"z":0},"u":"bad"},' +
+        '{"key":"P3","position":{"x":2,"y":0,"z":0},"u":7}]',
+    )
+    expect(parsed[0]!.u).toBe(0.3)
+    expect(parsed[1]!.u).toBeUndefined()
+    expect(parsed[2]!.u).toBe(1)
+    // 显式 u 序列化后再读回来不变
+    const round = parsePathPoints(serializePathPoints(parsed))
+    expect(round[0]!.u).toBe(0.3)
+    expect(round[2]!.u).toBe(1)
   })
 })
 
@@ -178,6 +199,85 @@ describe('withDraggedHandle', () => {
   })
 })
 
+describe('effectiveUs / 锚点采样', () => {
+  const out = new Vector3()
+
+  it('无显式锚点:端点 0/1,单调,与弧长等比采样结果一致', () => {
+    const entries = [pt('P1', 0), pt('P2', 3, 4, 0), pt('P3', 6, 4, 0)]
+    const us = effectiveUs(entries)
+    expect(us[0]).toBe(0)
+    expect(us[2]).toBe(1)
+    expect(us[1]!).toBeGreaterThan(0)
+    expect(us[1]!).toBeLessThan(1)
+    // 全部自动时和旧的全程弧长采样一致(弧长是数值近似,两者细分档不同,放到小数点后 3 位)
+    const curve = buildCurve(entries)!
+    for (const p of [0, 0.25, 0.5, 0.75, 1]) {
+      const legacy = curve.getPointAt(p)
+      sampleEntries(entries, p, out)
+      expect(out.x).toBeCloseTo(legacy.x, 3)
+      expect(out.y).toBeCloseTo(legacy.y, 3)
+      expect(out.z).toBeCloseTo(legacy.z, 3)
+    }
+  })
+
+  it('显式锚点生效:进度=u 时正好落在该点上,其余点自动插值', () => {
+    // 共线四点,弧长分数本来是 0, 1/3, 2/3, 1;把 P2 钉到 0.5
+    const entries = [
+      pt('P1', 0),
+      {...pt('P2', 1), u: 0.5},
+      pt('P3', 2),
+      pt('P4', 3),
+    ]
+    const us = effectiveUs(entries)
+    expect(us[1]).toBe(0.5)
+    // P3 在锚点 P2(0.5) 和终点(1) 之间按弧长比例:(2-1)/(3-1)=0.5 → 0.75
+    expect(us[2]!).toBeCloseTo(0.75, 6)
+    // 进度 0.5 正好过 P2
+    sampleEntries(entries, 0.5, out)
+    expect(out.x).toBeCloseTo(1, 6)
+    // 进度 0.75 正好过 P3
+    sampleEntries(entries, 0.75, out)
+    expect(out.x).toBeCloseTo(2, 6)
+    // 0.25 落在 P1→P2 段中点(局部弧长一半)
+    sampleEntries(entries, 0.25, out)
+    expect(out.x).toBeCloseTo(0.5, 3)
+  })
+
+  it('违反单调的显式锚点被夹到前锚点值', () => {
+    const entries = [
+      pt('P1', 0),
+      {...pt('P2', 1), u: 0.6},
+      {...pt('P3', 2), u: 0.2},
+      pt('P4', 3),
+    ]
+    const us = effectiveUs(entries)
+    expect(us[1]).toBe(0.6)
+    expect(us[2]).toBe(0.6)
+    // 夹出来的零宽段采样不炸,连续过渡
+    sampleEntries(entries, 0.6, out)
+    expect(Number.isFinite(out.x)).toBe(true)
+  })
+
+  it('withMovedU:写入并夹在相邻锚点之间;端点不可调', () => {
+    const entries = [pt('P1', 0), pt('P2', 1), pt('P3', 2)]
+    const next = withMovedU(entries, 'P2', 0.9)
+    expect(next[1]!.u).toBeCloseTo(0.9, 6)
+    // 超过右邻(1)被夹回
+    const clamped = withMovedU(entries, 'P2', 5)
+    expect(clamped[1]!.u).toBeLessThan(1)
+    // 端点不动
+    expect(withMovedU(entries, 'P1', 0.5)[0]!.u).toBeUndefined()
+  })
+
+  it('withResetU:清掉显式锚点回自动', () => {
+    const entries = [pt('P1', 0), {...pt('P2', 1), u: 0.5}, pt('P3', 2)]
+    const next = withResetU(entries, 'P2')
+    expect(next[1]!.u).toBeUndefined()
+    // 其他点不动,无 u 的点返回原引用
+    expect(next[0]).toBe(entries[0])
+  })
+})
+
 describe('sampleEntries / sampleCurve', () => {
   const out = new Vector3()
 
@@ -263,5 +363,116 @@ describe('buildCurve', () => {
   it('不足两个点返回 null', () => {
     expect(buildCurve([])).toBeNull()
     expect(buildCurve([pt('P1', 0)])).toBeNull()
+  })
+})
+
+describe('composePathMatrix(路径整体变换)', () => {
+  const tr = (over: Partial<PathTransform>): PathTransform => ({
+    position: {x: 0, y: 0, z: 0},
+    rotation: {x: 0, y: 0, z: 0},
+    scale: {x: 1, y: 1, z: 1},
+    ...over,
+  })
+  const apply = (t: PathTransform, x: number, y: number, z: number) =>
+    new Vector3(x, y, z).applyMatrix4(composePathMatrix(t, new Matrix4()))
+
+  it('单位变换:局部 = 世界(老场景无缝过渡)', () => {
+    const p = apply(IDENTITY_PATH_TRANSFORM, 8, 4.5, -2)
+    expect(p.x).toBeCloseTo(8, 10)
+    expect(p.y).toBeCloseTo(4.5, 10)
+    expect(p.z).toBeCloseTo(-2, 10)
+  })
+
+  it('平移:所有点统一位移', () => {
+    const p = apply(tr({position: {x: 2, y: -1, z: 0.5}}), 8, 4.5, -2)
+    expect(p.x).toBeCloseTo(10, 10)
+    expect(p.y).toBeCloseTo(3.5, 10)
+    expect(p.z).toBeCloseTo(-1.5, 10)
+  })
+
+  it('绕 Y 转 90°:+x 轴转到 -z 轴', () => {
+    const p = apply(tr({rotation: {x: 0, y: Math.PI / 2, z: 0}}), 1, 0, 0)
+    expect(p.x).toBeCloseTo(0, 10)
+    expect(p.z).toBeCloseTo(-1, 10)
+  })
+
+  it('组合顺序 = 缩放→旋转→平移(同 three 的 Object3D)', () => {
+    const p = apply(
+      tr({
+        position: {x: 10, y: 0, z: 0},
+        rotation: {x: 0, y: Math.PI / 2, z: 0},
+        scale: {x: 2, y: 2, z: 2},
+      }),
+      1,
+      0,
+      0,
+    )
+    // (1,0,0) → 缩放 (2,0,0) → 旋转 (0,0,-2) → 平移 (10,0,-2)
+    expect(p.x).toBeCloseTo(10, 10)
+    expect(p.z).toBeCloseTo(-2, 10)
+  })
+
+  it('逆矩阵往返:世界→局部→世界 还原(拖拽写回靠这个)', () => {
+    const t = tr({
+      position: {x: 3, y: -1, z: 2},
+      rotation: {x: 0.3, y: -0.7, z: 0.1},
+      scale: {x: 2, y: 0.5, z: 1.5},
+    })
+    const m = composePathMatrix(t, new Matrix4())
+    const inv = m.clone().invert()
+    const world = new Vector3(7, 2, -4)
+    const roundTrip = world.clone().applyMatrix4(inv).applyMatrix4(m)
+    expect(roundTrip.distanceTo(world)).toBeLessThan(1e-10)
+  })
+})
+
+describe('directionArrowMatrices(方向箭头)', () => {
+  const decompose = (m: Matrix4) => {
+    const pos = new Vector3()
+    const q = new Quaternion()
+    const s = new Vector3()
+    m.decompose(pos, q, s)
+    return {pos, q}
+  }
+
+  it('空曲线/单点 → 没有箭头', () => {
+    expect(directionArrowMatrices(null, 64)).toEqual([])
+    expect(directionArrowMatrices(buildCurve([pt('P1', 0)]), 64)).toEqual([])
+  })
+
+  it('直线沿 +x:箭头全在线上,朝向 +x(单位圆锥从 +Y 转过去)', () => {
+    const curve = buildCurve([pt('P1', 0), pt('P2', 10)])!
+    const mats = directionArrowMatrices(curve, 64)
+    // 长 10,间距 1.5 → 7 个
+    expect(mats.length).toBe(7)
+    for (const m of mats) {
+      const {pos, q} = decompose(m)
+      expect(pos.y).toBeCloseTo(0, 10)
+      expect(pos.z).toBeCloseTo(0, 10)
+      expect(pos.x).toBeGreaterThan(0)
+      expect(pos.x).toBeLessThan(10)
+      const dir = new Vector3(0, 1, 0).applyQuaternion(q)
+      expect(dir.x).toBeCloseTo(1, 5)
+      expect(dir.y).toBeCloseTo(0, 5)
+    }
+    // 沿行进方向 x 单调递增(箭头顺序 = 行进顺序)
+    for (let i = 1; i < mats.length; i++) {
+      expect(decompose(mats[i]!).pos.x).toBeGreaterThan(
+        decompose(mats[i - 1]!).pos.x,
+      )
+    }
+  })
+
+  it('反向曲线:箭头指向反过来(-x)', () => {
+    const curve = buildCurve([pt('P1', 10), pt('P2', 0)])!
+    const {q} = decompose(directionArrowMatrices(curve, 64)[0]!)
+    const dir = new Vector3(0, 1, 0).applyQuaternion(q)
+    expect(dir.x).toBeCloseTo(-1, 5)
+  })
+
+  it('总数不超容量上限', () => {
+    const entries = Array.from({length: 20}, (_, i) => pt(`P${i + 1}`, i * 5))
+    const mats = directionArrowMatrices(buildCurve(entries), 5)
+    expect(mats.length).toBe(5)
   })
 })

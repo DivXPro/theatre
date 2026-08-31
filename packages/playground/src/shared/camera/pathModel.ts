@@ -1,4 +1,11 @@
-import {CubicBezierCurve3, CurvePath, Vector3} from 'three'
+import {
+  CubicBezierCurve3,
+  CurvePath,
+  Euler,
+  Matrix4,
+  Quaternion,
+  Vector3,
+} from 'three'
 import type {Vector3 as Vector3Type} from 'three'
 
 /**
@@ -24,6 +31,13 @@ export type PathPointEntry = {
   key: string
   position: Vec3Like
   handles?: HandlePair
+  /**
+   * 全程进度锚点(0~1):这个点位于运镜进度的什么位置。
+   * 缺省 = 自动(弧长等比);显式设置后,行进进度走到这个值时
+   * 相机正好过这个点——"把点钉到时间轴"钉的就是它(在时间轴上
+   * 给行进进度打一个值=u 的关键帧)。端点恒为 0/1,不设。
+   */
+  u?: number
 }
 
 const isVec3 = (v: unknown): v is Vec3Like =>
@@ -44,7 +58,12 @@ export function parsePathPoints(json: string): PathPointEntry[] {
         e.handles && isVec3(e.handles.left) && isVec3(e.handles.right)
           ? {left: e.handles.left, right: e.handles.right}
           : undefined
-      entries.push({key: e.key, position: e.position, handles})
+      // 进度锚点:只收 0~1 的有限数,坏值丢弃(回自动)
+      const u =
+        typeof e.u === 'number' && Number.isFinite(e.u)
+          ? Math.min(1, Math.max(0, e.u))
+          : undefined
+      entries.push({key: e.key, position: e.position, handles, u})
     }
     return entries
   } catch {
@@ -223,19 +242,148 @@ export function buildCurve(
 
 const clamp01 = (u: number) => Math.min(1, Math.max(0, u))
 
-/** 在已构建的曲线上按进度取点(弧长等比:0.5 = 全长一半,速度感均匀) */
+// ---------------------------------------------------------------------------
+// 路径整体变换(Blender 物体模式的对应物):路径对象带位置/旋转/缩放属性,
+// 控制点存的是相对路径原点的局部坐标;世界位置 = 矩阵 × 局部。
+
+/** 路径对象的变换属性(旋转是弧度 XYZ 欧拉,和场景里其他对象一致) */
+export type PathTransform = {
+  position: Vec3Like
+  rotation: Vec3Like
+  scale: Vec3Like
+}
+
+/** 默认变换:单位阵,局部坐标 = 世界坐标(老场景的点无缝过渡) */
+export const IDENTITY_PATH_TRANSFORM: PathTransform = {
+  position: {x: 0, y: 0, z: 0},
+  rotation: {x: 0, y: 0, z: 0},
+  scale: {x: 1, y: 1, z: 1},
+}
+
+/**
+ * 组合路径的局部→世界矩阵(顺序同 three 的 Object3D:缩放→旋转→平移)。
+ * 世界 = out × 局部;拖拽写回用 out 的逆矩阵(世界→局部)。
+ */
+export function composePathMatrix(tr: PathTransform, out: Matrix4): Matrix4 {
+  return out.compose(
+    new Vector3(tr.position.x, tr.position.y, tr.position.z),
+    new Quaternion().setFromEuler(
+      new Euler(tr.rotation.x, tr.rotation.y, tr.rotation.z, 'XYZ'),
+    ),
+    new Vector3(tr.scale.x, tr.scale.y, tr.scale.z),
+  )
+}
+
+/**
+ * 每个控制点生效的全程进度锚点(0~1,单调不减,端点恒 0/1):
+ * - 没有显式 u 的点 = 自动:按弧长在前后锚点之间等比插值
+ *   (一个锚点都没有时 = 全程弧长等比,和老行为数学等价)
+ * - 显式 u 违反单调(比前一个锚点小)时被夹到前锚点值
+ */
+export function effectiveUs(
+  entries: readonly PathPointEntry[],
+  curve?: CurvePath<Vector3> | null,
+): number[] {
+  const n = entries.length
+  if (n === 0) return []
+  if (n === 1) return [0]
+  const c = curve === undefined ? buildCurve(entries) : curve
+  // 各点的弧长分数(自动锚点的插值依据)
+  const fracs = new Array<number>(n).fill(0)
+  if (c) {
+    const lens = c.curves.map((seg) => seg.getLength())
+    const total = lens.reduce((a, b) => a + b, 0)
+    let acc = 0
+    for (let i = 1; i < n; i++) {
+      acc += lens[i - 1] ?? 0
+      fracs[i] = total > 1e-9 ? acc / total : i / (n - 1)
+    }
+  } else {
+    for (let i = 1; i < n; i++) fracs[i] = i / (n - 1)
+  }
+  const us = new Array<number>(n).fill(NaN)
+  us[0] = 0
+  us[n - 1] = 1
+  // 把 (a, b] 之间还没值的自动点按弧长分数插到 [ua, ub]
+  const fillSpan = (a: number, b: number, ua: number, ub: number) => {
+    for (let i = a + 1; i < b; i++) {
+      if (!Number.isNaN(us[i]!)) continue
+      const span = fracs[b]! - fracs[a]!
+      const t = span > 1e-9 ? (fracs[i]! - fracs[a]!) / span : (i - a) / (b - a)
+      us[i] = ua + (ub - ua) * t
+    }
+  }
+  let anchorIdx = 0
+  let anchorU = 0
+  for (let i = 1; i < n - 1; i++) {
+    const explicit = entries[i]!.u
+    if (explicit === undefined) continue
+    const u = Math.min(1, Math.max(anchorU, clamp01(explicit)))
+    fillSpan(anchorIdx, i, anchorU, u)
+    us[i] = u
+    anchorIdx = i
+    anchorU = u
+  }
+  fillSpan(anchorIdx, n - 1, anchorU, 1)
+  return us
+}
+
+/** 调控制点的进度锚点(夹到相邻点锚点之间,保住单调);端点恒 0/1 不可调 */
+export function withMovedU(
+  entries: readonly PathPointEntry[],
+  key: string,
+  u: number,
+  curve?: CurvePath<Vector3> | null,
+): PathPointEntry[] {
+  const idx = entries.findIndex((e) => e.key === key)
+  if (idx <= 0 || idx >= entries.length - 1) return entries.slice()
+  const us = effectiveUs(entries, curve)
+  const lo = us[idx - 1]! + 0.001
+  const hi = us[idx + 1]! - 0.001
+  const clamped = Math.min(Math.max(u, lo), Math.max(lo, hi))
+  return entries.map((e, i) => (i === idx ? {...e, u: clamped} : e))
+}
+
+/** 清掉显式锚点,回到自动(弧长等比) */
+export function withResetU(
+  entries: readonly PathPointEntry[],
+  key: string,
+): PathPointEntry[] {
+  return entries.map((e) => {
+    if (e.key !== key || e.u === undefined) return e
+    const {u: _dropped, ...rest} = e
+    return rest
+  })
+}
+
+/**
+ * 在已构建的曲线上按进度取点。锚点分段映射:进度 p 落在哪两个点的
+ * 生效锚点之间,就在那一段贝塞尔里按弧长等比取点;锚点全部自动时
+ * 与全程弧长等比(旧 getPointAt)数学等价。
+ */
 export function sampleCurve(
   curve: CurvePath<Vector3>,
-  u: number,
+  us: readonly number[],
+  p: number,
   out: Vector3Type,
 ): void {
-  curve.getPointAt(clamp01(u), out as Vector3)
+  const t = clamp01(p)
+  const n = us.length
+  if (n < 2) return
+  // t 所在段:边界恰好等于右锚点时留在左段(local=1,正好取到控制点)
+  let i = 0
+  while (i < n - 2 && t > us[i + 1]!) i++
+  const ua = us[i]!
+  const ub = us[i + 1]!
+  const local = ub - ua > 1e-9 ? clamp01((t - ua) / (ub - ua)) : 0
+  curve.curves[i]!.getPointAt(local, out as Vector3)
 }
 
 /**
  * 按进度在名单上取点。0 个点返回 false(调用方回退到手动驱动);
  * 1 个点时任何进度都取它(单点路径不用硬凑两个点)。
- * 每次都重建曲线,只适合一次性调用;每帧采样请 buildCurve 后 sampleCurve。
+ * 每次都重建曲线,只适合一次性调用;每帧采样请 buildCurve +
+ * effectiveUs 后 sampleCurve。
  */
 export function sampleEntries(
   entries: readonly PathPointEntry[],
@@ -248,7 +396,8 @@ export function sampleEntries(
     out.set(p.x, p.y, p.z)
     return true
   }
-  sampleCurve(buildCurve(entries)!, u, out)
+  const curve = buildCurve(entries)!
+  sampleCurve(curve, effectiveUs(entries, curve), u, out)
   return true
 }
 
@@ -279,4 +428,41 @@ export function buildLinePositions(
     out[i * 3 + 2] = sampled[i]!.z
   }
   return count
+}
+
+/**
+ * 方向箭头的放置矩阵(局部坐标,Blender 曲线方向刻度的对应物):
+ * 沿曲线按弧长间距撒小箭头,每个矩阵把单位圆锥(默认朝 +Y)转到
+ * 该处切线方向——箭头指向 = 行进进度 0→1 的方向。每段至少 1 个,
+ * 段长按 ARROW_SPACING 加档,总数不超 maxCount(实例缓冲容量)。
+ */
+export const ARROW_SPACING = 1.5
+
+export function directionArrowMatrices(
+  curve: CurvePath<Vector3> | null,
+  maxCount: number,
+): Matrix4[] {
+  if (!curve) return []
+  const out: Matrix4[] = []
+  const up = new Vector3(0, 1, 0)
+  const pos = new Vector3()
+  const tan = new Vector3()
+  const one = new Vector3(1, 1, 1)
+  for (const seg of curve.curves) {
+    const len = seg.getLength()
+    const count = Math.max(1, Math.min(8, Math.round(len / ARROW_SPACING)))
+    for (let k = 0; k < count && out.length < maxCount; k++) {
+      const t = (k + 0.5) / count
+      seg.getPointAt(t, pos)
+      seg.getTangentAt(t, tan)
+      out.push(
+        new Matrix4().compose(
+          pos.clone(),
+          new Quaternion().setFromUnitVectors(up, tan),
+          one,
+        ),
+      )
+    }
+  }
+  return out
 }
