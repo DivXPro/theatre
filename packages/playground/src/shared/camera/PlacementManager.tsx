@@ -1197,6 +1197,8 @@ export function GizmoModeHint({mode}: {mode: GizmoMode}) {
         fontSize: 12,
         pointerEvents: 'none',
         userSelect: 'none',
+        // 与镜头视角顶条同档:DOM 顺序上 Canvas 在更后面,不设层级会被画布盖住
+        zIndex: 10,
       }}
     >
       手柄:{GIZMO_MODE_LABELS[mode]}(G 移动 · R 旋转 · S 缩放)
