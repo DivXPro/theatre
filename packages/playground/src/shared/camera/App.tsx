@@ -32,7 +32,6 @@ import {MOUSE, Raycaster, Spherical, Vector2, Vector3} from 'three'
 import type {Mesh, Object3D} from 'three'
 import {
   GizmoModeHint,
-  ObjectContextMenu,
   PlacementRig,
   PlacementRigErrorBoundary,
   PlacedModels,
@@ -46,21 +45,38 @@ import {
   usePlacementSurface,
   useSelectionGizmoTarget,
 } from './PlacementManager'
+import {CanvasContextMenu} from './contextMenu'
+import {
+  buildCameraMenuItems,
+  buildObjectMenuItems,
+  buildPathMenuItems,
+  buildPathPanelActions,
+} from './menuModel'
+import {TopToolbar} from './TopToolbar'
 import {AssetLibraryPanel} from './assetLibrary/AssetLibraryPanel'
 import {getLibrary} from './assetLibrary/library'
 import {ShotCamera} from './ShotCamera'
+import {
+  addCameraToRegistry,
+  nextCameraEntry,
+  removeCamera,
+  useCamerasList,
+} from './cameraRegistry'
 import {
   addPathPoint,
   CameraPath,
   clearPath,
   deletePathPoint,
   getPathMeta,
+  PathEditBar,
   PathPointEditor,
   pathLabel,
   POS_PATH_KEY,
   readPathPoints,
   samplePathPoint,
+  setPathPanelActions,
   translatePath,
+  usePathHasPoints,
 } from './CameraPath'
 import {seedArcPoints} from './pathModel'
 import {listSinks} from './videoExport/sinks'
@@ -457,14 +473,57 @@ function App() {
   const shotTargetObjRef = useRef<ISheetObject<any> | undefined>(undefined)
   // true = 全屏镜头视角(导演视角让位,轨道控制器/导航块停用)
   const [shotView, setShotView] = useState(false)
-  // 视频导出:菜单开关 / 进行中的导出句柄 / 导出前的视角(导完恢复)
-  const [exportMenuOpen, setExportMenuOpen] = useState(false)
+  // 视频导出:进行中的导出句柄 / 导出前的视角(导完恢复)
   const [exporting, setExporting] = useState(false)
   const exportHandleRef = useRef<ShotExportHandle | null>(null)
   const prevShotViewRef = useRef(false)
   const pendingExportSinkRef = useRef<ExportSink | null>(null)
-  // 运镜路径:加点/删点菜单开关
-  const [pathMenuOpen, setPathMenuOpen] = useState(false)
+
+  const project = getProject('Space')
+  const sheet = project.sheet('Scene')
+
+  // 相机清单:P1 上限一台(工具条置灰控制);P2 多相机时这里改成
+  // "活动相机"(右键查看此镜头 = 设为活动),refs 也要按实例分开
+  const cameras = useCamerasList(sheet)
+  const activeCamera = cameras.length > 0 ? cameras[0] : null
+
+  // 添加相机:新机位/朝向/瞄准点都取当前导演视角(用户正看着的画面)
+  const addCamera = useCallback(() => {
+    if (cameras.length > 0) return
+    const entry = nextCameraEntry(cameras)
+    const mainCam = cameraObjRef.current
+    const mainTarget = targetObjRef.current
+    const seed =
+      mainCam && mainTarget
+        ? {
+            position: val(mainCam.props.position),
+            rotation: val(mainCam.props.rotation),
+            targetPosition: val(mainTarget.props.position),
+          }
+        : undefined
+    addCameraToRegistry(sheet, entry, seed)
+  }, [cameras, sheet])
+
+  // 删除相机(右键菜单):真删——持久数据清掉、大纲行消失、回到无相机态
+  const deleteCamera = useCallback(() => {
+    const entry = cameras[0]
+    if (!entry) return
+    removeCamera(sheet, entry, {
+      camera: shotCameraObjRef.current,
+      target: shotTargetObjRef.current,
+    })
+  }, [cameras, sheet])
+
+  // 无相机:镜头视角强制退出(没有镜头可看)
+  useEffect(() => {
+    if (!activeCamera && shotView && !exporting) setShotView(false)
+  }, [activeCamera, shotView, exporting])
+
+  // 导出中途相机被删:取消录制(丢弃)
+  useEffect(() => {
+    if (exporting && !activeCamera) exportHandleRef.current?.abort()
+  }, [exporting, activeCamera])
+
   // 运镜路径编辑模式:正在编辑的路径 metaKey(同一时刻只编辑一条,
   // 对齐 Blender 的对象/编辑模式);右键路径线或选中路径后按 Tab 进出
   const [editingPath, setEditingPath] = useState<string | null>(null)
@@ -481,8 +540,10 @@ function App() {
     x: number
     y: number
   } | null>(null)
-  const project = getProject('Space')
-  const sheet = project.sheet('Scene')
+  // 右键场景摄像机弹出的菜单:记录光标位置
+  const [cameraMenu, setCameraMenu] = useState<{x: number; y: number} | null>(
+    null,
+  )
   // 调试/自动化验证挂钩:浏览器里直接读写 sheet 对象与选中态
   ;(window as any).__cameraShot = {
     cameraObjRef,
@@ -506,6 +567,26 @@ function App() {
     x: number
     y: number
   } | null>(null)
+
+  // 菜单关闭回调:稳定的引用,避免 CanvasContextMenu 不必要的重渲染
+  const closeObjectMenu = useCallback(() => setObjectMenu(null), [])
+  const closePathMenu = useCallback(() => setPathMenu(null), [])
+  const closeCameraMenu = useCallback(() => setCameraMenu(null), [])
+
+  // 导出目标在运行环境稳定后不再变化,useMemo 避免每次渲染重建数组
+  const exportSinks = useMemo(() => listSinks(), [])
+  const handlePickExportSink = useCallback(
+    (sink: ExportSink) => {
+      prevShotViewRef.current = shotView
+      pendingExportSinkRef.current = sink
+      setShotView(true)
+    },
+    [shotView],
+  )
+  const handleStopExport = useCallback(
+    () => exportHandleRef.current?.finishEarly(),
+    [],
+  )
 
   // 跟踪 studio 选中状态,用于动作 tab 的套用与过滤
   const [selectedPlacement, setSelectedPlacement] =
@@ -614,38 +695,28 @@ function App() {
     }
   }, [enterPathEdit, exitPathEdit])
 
-  // 运镜路径菜单动作:加点(空路径先播种)、删除选中的控制点。
-  // 播种时同一次提交把驱动切到"沿路径"(Blender 的约束加上即生效):
-  // 相机当场归路径管、移动箭头锁定;想手动在属性面板切回即可
+  // 添加路径:空路径从当前机位播种一段环绕弧,然后进编辑模式。
+  // 不自动切相机驱动(用户决策:驱动与否只在相机面板配)
   const addPosPathPoint = useCallback(() => {
     const cam = shotCameraObjRef.current
     const target = shotTargetObjRef.current
-    // 空路径播种:从当前机位出发绕目标画一段弧,立即可用
+    const mainCam = cameraObjRef.current
+    const mainTarget = targetObjRef.current
     const seed =
       cam && target
         ? seedArcPoints(val(cam.props.position), val(target.props.position))
-        : undefined
-    addPathPoint(sheet, POS_PATH_KEY, seed, (set) => {
-      if (cam) set(cam.props.moveMode, 'path')
-    })
-    // 加点后直接进入编辑模式,马上能看到/拖到这个点
+        : mainCam && mainTarget
+          ? seedArcPoints(
+              val(mainCam.props.position),
+              val(mainTarget.props.position),
+            )
+          : undefined
+    addPathPoint(sheet, POS_PATH_KEY, seed)
     enterPathEdit(POS_PATH_KEY)
   }, [sheet, enterPathEdit])
 
-  // Target 软删/恢复:真删要绕过 React 声明式重建(theatre 对象由组件
-  // 挂载时声明,删了下一帧就回来),所以"删除"= 相机面板上的
-  // targetHidden 标志(开关放相机面板:它是"镜头机组"的设置)。
-  // 对象还在大纲里,随时能改回来;一次 scrub 提交 = 一步撤销
-  const restoreTarget = useCallback(() => {
-    const cam = shotCameraObjRef.current
-    const studio = getStudioSync()
-    if (!cam || !studio) return
-    const scrub = studio.scrub()
-    scrub.capture(({set}) => set(cam.props.targetHidden, false))
-    scrub.commit()
-  }, [shotCameraObjRef])
-
-  // 缺失提示:绑定了朝向但 Target 已被删 → 顶部浮条提醒 + 一键恢复
+  // 缺失提示:绑定了朝向但 Target 已被删 → 工具条下方纯文字提醒;
+  // 恢复动作在相机面板动作区(恢复 Target),提示条不带按钮
   const [targetMissing, setTargetMissing] = useState(false)
   useEffect(() => {
     let offCam: (() => void) | undefined
@@ -654,6 +725,10 @@ function App() {
     // 本 root 的 effect 顺序保证——首帧可能还没填,逐帧重试到挂上为止
     const trySubscribe = () => {
       if (cancelled) return
+      if (!activeCamera) {
+        setTargetMissing(false)
+        return
+      }
       const cam = shotCameraObjRef.current
       if (!cam) {
         requestAnimationFrame(trySubscribe)
@@ -672,16 +747,14 @@ function App() {
       cancelled = true
       offCam?.()
     }
-  }, [shotCameraObjRef])
+  }, [shotCameraObjRef, activeCamera])
 
-  const removePathPoint = useCallback(() => {
+  const deleteSelectedPathPoint = useCallback(() => {
     if (
       selectedPathPoint &&
       deletePathPoint(sheet, selectedPathPoint.metaKey, selectedPathPoint.key)
     ) {
       setSelectedPathPoint(null)
-    } else {
-      window.alert('先进入路径编辑模式(右键路径线或按 Tab),点选一个控制点')
     }
   }, [sheet, selectedPathPoint])
 
@@ -700,23 +773,11 @@ function App() {
     [sheet, editingPath, selectedPathPoint, exitPathEdit],
   )
 
-  // 对齐(Blender 吸附工作流的对应物):手动机位和路径是两份数据,
-  // 路径驱动时手动那份被忽略,可能悄悄岔开;两个动作一键对齐。
-  // 各一次 scrub 提交 = 一步撤销。
-  // 控制点存的是局部坐标,世界位置走 samplePathPoint(含路径整体变换)
-  const alignCameraToPathStart = useCallback(() => {
-    const cam = shotCameraObjRef.current
-    const studio = getStudioSync()
-    if (!cam || !studio) return
-    const tmp = new Vector3()
-    if (!samplePathPoint(POS_PATH_KEY, 0, tmp)) return
-    const scrub = studio.scrub()
-    scrub.capture(({set}) =>
-      set(cam.props.position, {x: tmp.x, y: tmp.y, z: tmp.z}),
-    )
-    scrub.commit()
-  }, [])
-
+  // 路径上的进度标记读 Pos Path 对象的行进进度(对象还没建好时报 0)
+  const posPathMeta = useMemo(() => getPathMeta(sheet, POS_PATH_KEY), [sheet])
+  // 路径面板动作区:路径平移到相机(空路径不出按钮);
+  // 动作配置必须 useMemo 缓存引用,重复注册同引用是幂等的
+  const posPathHasPoints = usePathHasPoints(sheet, POS_PATH_KEY)
   const movePathToCamera = useCallback(() => {
     const cam = shotCameraObjRef.current
     if (!cam) return
@@ -729,9 +790,17 @@ function App() {
       z: c.z - tmp.z,
     })
   }, [sheet])
-
-  // 路径上的进度标记读 Pos Path 对象的行进进度(对象还没建好时报 0)
-  const posPathMeta = useMemo(() => getPathMeta(sheet, POS_PATH_KEY), [sheet])
+  const pathPanelActions = useMemo(
+    () =>
+      buildPathPanelActions({
+        hasPoints: posPathHasPoints,
+        onMovePathToCamera: movePathToCamera,
+      }),
+    [posPathHasPoints, movePathToCamera],
+  )
+  useEffect(() => {
+    setPathPanelActions(sheet, POS_PATH_KEY, pathPanelActions)
+  }, [sheet, pathPanelActions])
   const pathProgressOf = useCallback(
     () => (posPathMeta ? val(posPathMeta.props.progress) : 0),
     [posPathMeta],
@@ -817,6 +886,17 @@ function App() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [exporting])
+
+  // 镜头视角下 Esc 返回导演视角(导出中 Esc 是取消导出,见上面的导出 effect;
+  // 两个 effect 不共存:导出中 exporting=true 时本 effect 不挂)
+  useEffect(() => {
+    if (!shotView || exporting) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShotView(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [shotView, exporting])
 
   // 选中单个库来源模型时,异步查其 rig 给面板过滤动画
   useEffect(() => {
@@ -941,210 +1021,20 @@ function App() {
         position: 'relative',
       }}
     >
-      <button
-        disabled={!!placing}
-        onClick={() => setLibraryOpen((v) => !v)}
-        style={{
-          position: 'absolute',
-          top: 12,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 10,
-          padding: '6px 14px',
-          borderRadius: 6,
-          border: '1px solid #444',
-          background: placing ? '#333' : '#272730',
-          color: placing ? '#888' : '#eee',
-          cursor: placing ? 'default' : 'pointer',
-          fontSize: 13,
-        }}
-      >
-        {placing ? '放置中:左键确认落点,Esc/右键取消' : '资产库'}
-      </button>
-      <button
-        onClick={() => {
-          // 导出中禁止切视角:录的是 canvas 内容,切走就录进编辑画面了
-          if (exporting) return
-          setShotView((v) => !v)
-        }}
-        style={{
-          position: 'absolute',
-          top: 12,
-          // 试过放右侧(50%+62):正中小一个隐形的 studio 顶层区域,点击被吞
-          left: 'calc(50% - 152px)',
-          zIndex: 10,
-          padding: '6px 14px',
-          borderRadius: 6,
-          border: '1px solid #444',
-          background: shotView ? '#3a4a63' : '#272730',
-          color: exporting ? '#888' : '#eee',
-          cursor: exporting ? 'default' : 'pointer',
-          fontSize: 13,
-        }}
-        title="在导演视角和场景摄像机取景之间切换(Blender 的数字键 0)"
-      >
-        {shotView ? '返回导演视角' : '镜头视角'}
-      </button>
-      <button
-        onClick={() => {
-          if (exporting) {
-            exportHandleRef.current?.finishEarly()
-            return
-          }
-          setExportMenuOpen((v) => !v)
-        }}
-        style={{
-          position: 'absolute',
-          top: 12,
-          // 镜头视角按钮再往左,同样避开隐形 studio 区域
-          left: 'calc(50% - 272px)',
-          zIndex: 10,
-          padding: '6px 14px',
-          borderRadius: 6,
-          border: '1px solid #444',
-          background: exporting ? '#633a3a' : '#272730',
-          color: '#eee',
-          cursor: 'pointer',
-          fontSize: 13,
-        }}
-        title="把镜头取景实时录成视频:序列从头播到尾,录完自动保存"
-      >
-        {exporting ? '停止并保存(Esc 取消)' : '导出视频'}
-      </button>
-      <button
-        onClick={() => setPathMenuOpen((v) => !v)}
-        style={{
-          position: 'absolute',
-          top: 12,
-          // 导出视频按钮再往左,同样避开隐形 studio 区域
-          left: 'calc(50% - 392px)',
-          zIndex: 10,
-          padding: '6px 14px',
-          borderRadius: 6,
-          border: '1px solid #444',
-          background: '#272730',
-          color: '#eee',
-          cursor: 'pointer',
-          fontSize: 13,
-        }}
-        title="运镜路径:右键路径线或选中路径后按 Tab 进入编辑模式,拖控制点和贝塞尔手柄摆路径;播种后自动沿路径驱动(属性面板可切回手动),进度打关键帧调运镜节奏"
-      >
-        路径
-      </button>
-      {pathMenuOpen && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 46,
-            left: 'calc(50% - 392px)',
-            zIndex: 11,
-            background: '#272730',
-            border: '1px solid #444',
-            borderRadius: 6,
-            padding: 4,
-            minWidth: 220,
-          }}
-        >
-          {[
-            {
-              label: '机位路径 · 加点',
-              desc: '第一次点:从当前机位播种一段环绕弧,并自动切到沿路径驱动',
-              onClick: addPosPathPoint,
-            },
-            {
-              label: '相机对齐到路径起点',
-              desc: '把手动机位设成机位路径的第一个点',
-              onClick: alignCameraToPathStart,
-            },
-            {
-              label: '路径平移到相机',
-              desc: '整条机位路径平移,起点落到当前手动机位',
-              onClick: movePathToCamera,
-            },
-            {
-              label: '机位路径 · 删除',
-              desc: '整条删除(控制点全清);撤销可整条找回',
-              onClick: () => removePath(POS_PATH_KEY),
-            },
-            {
-              label: '删除选中的控制点',
-              desc: '编辑模式(右键路径线/Tab)里先点选一个控制点',
-              onClick: removePathPoint,
-            },
-          ].map((item) => (
-            <button
-              key={item.label}
-              onClick={() => {
-                setPathMenuOpen(false)
-                item.onClick()
-              }}
-              style={{
-                display: 'block',
-                width: '100%',
-                textAlign: 'left',
-                padding: '8px 10px',
-                border: 'none',
-                borderRadius: 4,
-                background: 'transparent',
-                color: '#eee',
-                cursor: 'pointer',
-                fontSize: 13,
-              }}
-            >
-              {item.label}
-              <span style={{display: 'block', fontSize: 11, color: '#999'}}>
-                {item.desc}
-              </span>
-            </button>
-          ))}
-        </div>
-      )}
-      {exportMenuOpen && !exporting && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 46,
-            left: 'calc(50% - 272px)',
-            zIndex: 11,
-            background: '#272730',
-            border: '1px solid #444',
-            borderRadius: 6,
-            padding: 4,
-            minWidth: 220,
-          }}
-        >
-          {listSinks().map((sink) => (
-            <button
-              key={sink.id}
-              onClick={() => {
-                setExportMenuOpen(false)
-                prevShotViewRef.current = shotView
-                // 先切镜头视角,useEffect 里等切完再开录
-                pendingExportSinkRef.current = sink
-                setShotView(true)
-              }}
-              style={{
-                display: 'block',
-                width: '100%',
-                textAlign: 'left',
-                padding: '8px 10px',
-                border: 'none',
-                borderRadius: 4,
-                background: 'transparent',
-                color: '#eee',
-                cursor: 'pointer',
-                fontSize: 13,
-              }}
-            >
-              {sink.label}
-              <span style={{display: 'block', fontSize: 11, color: '#999'}}>
-                {sink.description}
-              </span>
-            </button>
-          ))}
-        </div>
-      )}
-      {!shotView && (
+      <TopToolbar
+        placing={!!placing}
+        onOpenLibrary={() => setLibraryOpen((v) => !v)}
+        addPathEnabled={!posPathHasPoints}
+        onAddPath={addPosPathPoint}
+        addCameraEnabled={cameras.length === 0}
+        onAddCamera={addCamera}
+        exportSinks={exportSinks}
+        exporting={exporting}
+        onPickExportSink={handlePickExportSink}
+        onStopExport={handleStopExport}
+        exportDisabled={!activeCamera}
+      />
+      {!shotView && activeCamera && (
         <div
           style={{
             // 画中画边框:与 ShotCamera 渲染的右下角小窗同位置同尺寸
@@ -1174,6 +1064,26 @@ function App() {
         </div>
       )}
       <GizmoModeHint mode={gizmoMode} />
+      {shotView && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 12,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            padding: '4px 10px',
+            borderRadius: 6,
+            background: 'rgba(0,0,0,0.55)',
+            color: 'rgba(255,255,255,0.85)',
+            fontSize: 12,
+            pointerEvents: 'none',
+            userSelect: 'none',
+            zIndex: 10,
+          }}
+        >
+          镜头视角 · Esc 返回导演视角
+        </div>
+      )}
       {libraryOpen && (
         <AssetLibraryPanel
           onPlaceModel={(entry: ModelEntry) => {
@@ -1192,39 +1102,53 @@ function App() {
         />
       )}
       {objectMenu && (
-        <ObjectContextMenu
+        <CanvasContextMenu
           position={{x: objectMenu.x, y: objectMenu.y}}
-          mode={gizmoMode}
-          onSelectMode={setGizmoMode}
-          onDelete={() => {
-            deletePlacement(sheet, objectMenu.key)
-            // 被删的对象留在选中列表里没意义,顺带清掉
-            getStudioSync()?.setSelection([])
-          }}
-          onClose={() => setObjectMenu(null)}
+          items={buildObjectMenuItems({
+            mode: gizmoMode,
+            onSelectMode: setGizmoMode,
+            onDelete: () => {
+              deletePlacement(sheet, objectMenu.key)
+              // 被删的对象留在选中列表里没意义，顺带清掉
+              getStudioSync()?.setSelection([])
+            },
+          })}
+          onClose={closeObjectMenu}
         />
       )}
       {pathMenu && (
-        <PathContextMenu
+        <CanvasContextMenu
           position={{x: pathMenu.x, y: pathMenu.y}}
-          metaKey={pathMenu.metaKey}
-          editing={editingPath === pathMenu.metaKey}
-          onToggleEdit={() => {
-            if (editingPath === pathMenu.metaKey) {
-              exitPathEdit()
-            } else {
-              enterPathEdit(pathMenu.metaKey)
-            }
-          }}
-          onDelete={() => removePath(pathMenu.metaKey)}
-          onClose={() => setPathMenu(null)}
+          items={buildPathMenuItems({
+            metaKey: pathMenu.metaKey,
+            editing: editingPath === pathMenu.metaKey,
+            onToggleEdit: () => {
+              if (editingPath === pathMenu.metaKey) {
+                exitPathEdit()
+              } else {
+                enterPathEdit(pathMenu.metaKey)
+              }
+            },
+            onDelete: () => removePath(pathMenu.metaKey),
+          })}
+          onClose={closePathMenu}
+        />
+      )}
+      {cameraMenu && (
+        <CanvasContextMenu
+          position={cameraMenu}
+          items={buildCameraMenuItems({
+            onViewShot: () => setShotView(true),
+            onDeleteCamera: deleteCamera,
+          })}
+          onClose={closeCameraMenu}
         />
       )}
       {targetMissing && (
         <div
           style={{
             position: 'absolute',
-            top: 12,
+            top: 52,
             left: '50%',
             transform: 'translateX(-50%)',
             zIndex: 10,
@@ -1239,22 +1163,17 @@ function App() {
             fontSize: 13,
           }}
         >
-          <span>Target 已删除,相机保持当前朝向</span>
-          <button
-            onClick={restoreTarget}
-            style={{
-              padding: '3px 10px',
-              borderRadius: 4,
-              border: '1px solid #a55',
-              background: 'transparent',
-              color: '#ffd9d9',
-              cursor: 'pointer',
-              fontSize: 12,
-            }}
-          >
-            重新添加 Target
-          </button>
+          <span>Target 已删除,相机保持当前朝向(相机面板可恢复)</span>
         </div>
+      )}
+      {editingPath && !shotView && (
+        <PathEditBar
+          hasSelection={
+            !!selectedPathPoint && selectedPathPoint.metaKey === editingPath
+          }
+          onAddPoint={addPosPathPoint}
+          onDeleteSelected={deleteSelectedPathPoint}
+        />
       )}
       {editingPath &&
         selectedPathPoint &&
@@ -1295,12 +1214,17 @@ function App() {
             isEditing={isPathEditing}
             onExit={exitPathEditOnBlur}
           />
-          <ShotCamera
-            makeDefault={shotView}
-            cameraObjRef={shotCameraObjRef}
-            targetObjRef={shotTargetObjRef}
-            onPathContextMenu={(metaKey, x, y) => setPathMenu({metaKey, x, y})}
-          />
+          {cameras.map((entry) => (
+            <ShotCamera
+              key={entry.cameraKey}
+              cameraKey={entry.cameraKey}
+              targetKey={entry.targetKey}
+              makeDefault={shotView}
+              cameraObjRef={shotCameraObjRef}
+              targetObjRef={shotTargetObjRef}
+              onCameraContextMenu={(x, y) => setCameraMenu({x, y})}
+            />
+          ))}
           <CameraPath
             metaKey={POS_PATH_KEY}
             // 普通态蓝色;选中/编辑的黄色档位在 CameraPath 内部
@@ -1383,119 +1307,6 @@ function App() {
           <Stars radius={500} depth={50} count={1000} factor={10} />
         </SheetProvider>
       </Canvas>
-    </div>
-  )
-}
-
-/**
- * 路径线的右键菜单:进出编辑模式(Tab 是同款快捷键,菜单里标出来)。
- * 样式对齐 ObjectContextMenu。
- */
-function PathContextMenu({
-  position,
-  metaKey,
-  editing,
-  onToggleEdit,
-  onDelete,
-  onClose,
-}: {
-  position: {x: number; y: number}
-  metaKey: string
-  editing: boolean
-  onToggleEdit: () => void
-  onDelete: () => void
-  onClose: () => void
-}) {
-  useEffect(() => {
-    const onPointerDown = (ev: PointerEvent) => {
-      if (!(ev.target as HTMLElement | null)?.closest('[data-path-menu]'))
-        onClose()
-    }
-    const onKey = (ev: KeyboardEvent) => {
-      if (ev.key === 'Escape') onClose()
-    }
-    window.addEventListener('pointerdown', onPointerDown, true)
-    window.addEventListener('keydown', onKey)
-    return () => {
-      window.removeEventListener('pointerdown', onPointerDown, true)
-      window.removeEventListener('keydown', onKey)
-    }
-  }, [onClose])
-
-  return (
-    <div
-      data-path-menu
-      style={{
-        position: 'fixed',
-        left: position.x,
-        top: position.y,
-        zIndex: 20,
-        minWidth: 160,
-        padding: '4px 0',
-        borderRadius: 8,
-        background: 'rgba(24,24,28,0.96)',
-        border: '1px solid rgba(255,255,255,0.12)',
-        boxShadow: '0 6px 24px rgba(0,0,0,0.5)',
-      }}
-    >
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          padding: '6px 14px 6px 12px',
-          fontSize: 13,
-          color: 'rgba(255,255,255,0.9)',
-          cursor: 'pointer',
-          whiteSpace: 'nowrap',
-          userSelect: 'none',
-        }}
-        onMouseEnter={(e) =>
-          (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')
-        }
-        onMouseLeave={(e) => (e.currentTarget.style.background = '')}
-        onClick={() => {
-          onToggleEdit()
-          onClose()
-        }}
-      >
-        <span>
-          {editing ? '退出编辑' : '编辑路径'}({pathLabel(metaKey)})
-        </span>
-        <span
-          style={{marginLeft: 12, fontSize: 11, color: 'rgba(255,255,255,0.4)'}}
-        >
-          Tab
-        </span>
-      </div>
-      <div
-        style={{
-          height: 1,
-          margin: '4px 0',
-          background: 'rgba(255,255,255,0.12)',
-        }}
-      />
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          padding: '6px 14px 6px 12px',
-          fontSize: 13,
-          color: '#ff6b6b',
-          cursor: 'pointer',
-          whiteSpace: 'nowrap',
-          userSelect: 'none',
-        }}
-        onMouseEnter={(e) =>
-          (e.currentTarget.style.background = 'rgba(255,107,107,0.12)')
-        }
-        onMouseLeave={(e) => (e.currentTarget.style.background = '')}
-        onClick={() => {
-          onDelete()
-          onClose()
-        }}
-      >
-        <span>删除路径({pathLabel(metaKey)})</span>
-      </div>
     </div>
   )
 }

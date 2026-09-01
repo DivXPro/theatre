@@ -65,9 +65,10 @@ export const OrthographicCamera = editable(
           // how could we make it possible for users to do something like this too?
           const snapshot = editorStore.getState().editablesSnapshot
           if (snapshot) {
+            // 快照之后动态挂载的 editable 不在快照里,没有代理可同步,跳过
             snapshot[
               cameraRef.current.userData.__storeKey
-            ].proxyObject?.rotation.copy(cameraRef.current.rotation)
+            ]?.proxyObject?.rotation.copy(cameraRef.current.rotation)
           }
         }
       })

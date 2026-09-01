@@ -1,7 +1,14 @@
 import {editable as e, PerspectiveCamera, useCurrentSheet} from '@toy-box/r3f'
 import {getStudioSync, types as t, val} from '@toy-box/core'
 import type {ISheetObject} from '@toy-box/core'
-import React, {useEffect, useMemo, useRef, useState} from 'react'
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import type {MutableRefObject} from 'react'
 import {useFrame, useThree} from '@react-three/fiber'
 import type {ThreeEvent} from '@react-three/fiber'
@@ -29,6 +36,8 @@ import {
   samplePathPoint,
   usePathHasPoints,
 } from './CameraPath'
+import {buildCameraPanelActions} from './menuModel'
+import {consumeCameraSeed} from './cameraRegistry'
 
 /**
  * 场景摄像机(shot camera):独立于编辑主视角的"镜头",取景画面用于
@@ -180,17 +189,21 @@ function useObjPropScalar<T>(
 }
 
 export function ShotCamera({
+  cameraKey,
+  targetKey,
   makeDefault,
   cameraObjRef,
   targetObjRef,
-  onPathContextMenu,
+  onCameraContextMenu,
 }: {
+  cameraKey: string
+  targetKey: string
   /** true = 镜头视角全屏(主相机让位);false = 编辑视角,右下角画中画 */
   makeDefault: boolean
   cameraObjRef: MutableRefObject<ISheetObject<any> | undefined>
   targetObjRef: MutableRefObject<ISheetObject<any> | undefined>
-  /** 右键相机:弹机位路径的编辑菜单(和右键路径线本身弹的是同一个) */
-  onPathContextMenu?: (metaKey: string, x: number, y: number) => void
+  /** 右键相机:弹出相机菜单 */
+  onCameraContextMenu?: (x: number, y: number) => void
 }) {
   const camRef = useRef<PerspectiveCameraImpl>(null!)
   const targetRef = useRef<Mesh>(null!)
@@ -200,6 +213,36 @@ export function ShotCamera({
   const aimRef = useRef<Object3D>(new Object3D())
   const frustum = useMemo(makeFrustumLines, [])
   const frustumFill = useMemo(makeFrustumFill, [])
+
+  // 新相机落地即取景:添加时从导演视角捕获的种子(机位/朝向/瞄准点),
+  // 挂载后消费一次——此后相机数据归面板/拖拽/时间轴管,种子不再介入
+  useLayoutEffect(() => {
+    const seed = consumeCameraSeed(cameraKey)
+    const camObj = cameraObjRef.current
+    const targetObj = targetObjRef.current
+    if (!seed || !camObj || !targetObj) return
+    const studio = getStudioSync()
+    if (!studio) return
+    const scrub = studio.scrub()
+    scrub.capture(({set}) => {
+      set(camObj.props.position, seed.position)
+      set(camObj.props.rotation, seed.rotation)
+      set(targetObj.props.position, seed.targetPosition)
+    })
+    scrub.commit()
+    // cameraObjRef/targetObjRef 是稳定引用;子组件(editable)的 layout
+    // effect 先跑,到这里 objRef 已填好
+  }, [cameraKey])
+
+  // 卸载即清空 App 侧的对象引用:editable 只填不清,注册表移除相机后
+  // ref 若仍指向已删除的对象,播种/再删除等逻辑会读到失效数据
+  useEffect(
+    () => () => {
+      cameraObjRef.current = undefined
+      targetObjRef.current = undefined
+    },
+    [cameraObjRef, targetObjRef],
+  )
 
   // 驱动锁(对齐 Blender 的约束语义):机位被路径接管期间,
   // 相机拖了也不生效,干脆不登记选中 gizmo——箭头和 G 抓取
@@ -256,6 +299,42 @@ export function ShotCamera({
     scrub.capture(({set}) => set(obj.props.rotation, {x: e.x, y: e.y, z: e.z}))
     scrub.commit()
   }, [tracking, cameraObjRef, posPathMeta])
+
+  // 面板动作区(属性后的按钮):把 App 的旧菜单动作下沉到相机面板
+  const alignToPathStart = useCallback(() => {
+    const obj = cameraObjRef.current
+    const studio = getStudioSync()
+    if (!obj || !studio) return
+    const tmp = new Vector3()
+    if (!samplePathPoint(POS_PATH_KEY, 0, tmp)) return
+    const scrub = studio.scrub()
+    scrub.capture(({set}) =>
+      set(obj.props.position, {x: tmp.x, y: tmp.y, z: tmp.z}),
+    )
+    scrub.commit()
+  }, [cameraObjRef])
+
+  const restoreTarget = useCallback(() => {
+    const obj = cameraObjRef.current
+    const studio = getStudioSync()
+    if (!obj || !studio) return
+    const scrub = studio.scrub()
+    scrub.capture(({set}) => set(obj.props.targetHidden, false))
+    scrub.commit()
+  }, [cameraObjRef])
+
+  // 面板动作区(属性后的按钮):动作配置必须 useMemo 缓存引用,
+  // 否则 editable 的 effect 每 render 重跑(见 Global Constraints)
+  const objectActions = useMemo(
+    () =>
+      buildCameraPanelActions({
+        hasPoints: posPathHasPoints,
+        targetHidden,
+        onAlignToPathStart: alignToPathStart,
+        onRestoreTarget: restoreTarget,
+      }),
+    [posPathHasPoints, targetHidden, alignToPathStart, restoreTarget],
+  )
 
   // 选中后挂三轴移动箭头:摄像机本体和瞄准点都能拖(机位被路径接管时
   // 相机除外,见上;Target 被软删后也不可拖)
@@ -315,32 +394,25 @@ export function ShotCamera({
       }
     }
 
-  // 右键相机 = 选中 + 弹机位路径的菜单,和右键路径线本身弹的是同一个
+  // 右键相机 = 选中 + 弹出相机菜单
   // (Target 没有右键菜单:软删走相机面板的开关)
   const contextMenu =
-    (
-      objRef: MutableRefObject<ISheetObject<any> | undefined>,
-      metaKey: string,
-    ) =>
+    (objRef: MutableRefObject<ISheetObject<any> | undefined>) =>
     (event: ThreeEvent<MouseEvent>) => {
-      if (!onPathContextMenu) return
+      if (!onCameraContextMenu) return
       event.stopPropagation()
       event.nativeEvent.preventDefault()
       const studio = getStudioSync()
       if (studio && objRef.current) {
         studio.setSelection([objRef.current])
       }
-      onPathContextMenu(
-        metaKey,
-        event.nativeEvent.clientX,
-        event.nativeEvent.clientY,
-      )
+      onCameraContextMenu(event.nativeEvent.clientX, event.nativeEvent.clientY)
     }
 
   return (
     <>
       <PerspectiveCamera
-        theatreKey="Shot / Camera"
+        theatreKey={cameraKey}
         objRef={cameraObjRef}
         ref={camRef}
         makeDefault={makeDefault}
@@ -351,20 +423,21 @@ export function ShotCamera({
         far={60}
         lookAt={tracking ? aimRef : undefined}
         additionalProps={shotCameraAdditionalProps}
+        objectActions={objectActions}
       >
         <primitive
           object={frustum}
           onClick={select(cameraObjRef)}
-          onContextMenu={contextMenu(cameraObjRef, POS_PATH_KEY)}
+          onContextMenu={contextMenu(cameraObjRef)}
         />
         <primitive
           object={frustumFill}
           onClick={select(cameraObjRef)}
-          onContextMenu={contextMenu(cameraObjRef, POS_PATH_KEY)}
+          onContextMenu={contextMenu(cameraObjRef)}
         />
       </PerspectiveCamera>
       <e.mesh
-        theatreKey="Shot / Target"
+        theatreKey={targetKey}
         objRef={targetObjRef}
         ref={targetRef}
         position={[0, 1, 0]}

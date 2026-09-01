@@ -16,7 +16,7 @@ import type {EditableFactoryConfig} from './editableFactoryConfigUtils'
 import type {ThreeElements} from '@react-three/fiber'
 import {makeStoreKey} from './utils'
 import type {$FixMe, $IntentionalAny} from '../types'
-import type {ISheetObject} from '@toy-box/core'
+import type {ISheetObject, SheetObjectActionsConfig} from '@toy-box/core'
 import {notify} from '@toy-box/core'
 import {useCurrentRafDriver} from './RafDriverProvider'
 
@@ -34,6 +34,7 @@ const createEditable = <Keys extends keyof ThreeElements>(
       theatreKey: string
       visible?: boolean | 'editor'
       additionalProps?: $FixMe
+      objectActions?: SheetObjectActionsConfig
       objRef?: $FixMe
     } & (T extends 'primitive'
         ? {
@@ -60,6 +61,7 @@ const createEditable = <Keys extends keyof ThreeElements>(
         visible,
         editableType,
         additionalProps,
+        objectActions,
         objRef,
         ...props
       }: Props,
@@ -136,36 +138,29 @@ Then you can use it in your JSX like any other editable component. Note the make
       // create sheet object and add editable to store
       useLayoutEffect(() => {
         if (!sheet) return
+        const objectConfig = Object.assign(
+          {
+            ...additionalProps,
+          },
+          // @ts-ignore
+          ...Object.values(config[actualType].props).map(
+            // @ts-ignore
+            (value) => value.type,
+          ),
+        )
         if (sheetObject) {
-          sheet.object(
-            theatreKey,
-            Object.assign(
-              {
-                ...additionalProps,
-              },
-              // @ts-ignore
-              ...Object.values(config[actualType].props).map(
-                // @ts-ignore
-                (value) => value.type,
-              ),
-            ),
-            {reconfigure: true},
-          )
+          sheet.object(theatreKey, objectConfig, {
+            reconfigure: true,
+            // 面板动作区(属性后的按钮):core 机制,重复调用同 config 时只更新 actions
+            __actions__THIS_API_IS_UNSTABLE_AND_WILL_CHANGE_IN_THE_NEXT_VERSION:
+              objectActions,
+          })
           return
         } else {
-          const sheetObject = sheet.object(
-            theatreKey,
-            Object.assign(
-              {
-                ...additionalProps,
-              },
-              // @ts-ignore
-              ...Object.values(config[actualType].props).map(
-                // @ts-ignore
-                (value) => value.type,
-              ),
-            ),
-          )
+          const sheetObject = sheet.object(theatreKey, objectConfig, {
+            __actions__THIS_API_IS_UNSTABLE_AND_WILL_CHANGE_IN_THE_NEXT_VERSION:
+              objectActions,
+          })
           allRegisteredObjects.add(sheetObject)
           setSheetObject(sheetObject)
 
@@ -182,7 +177,7 @@ Then you can use it in your JSX like any other editable component. Note the make
             objectConfig: config[actualType],
           })
         }
-      }, [sheet, storeKey, additionalProps])
+      }, [sheet, storeKey, additionalProps, objectActions])
 
       // store initial values of props
       useLayoutEffect(() => {
@@ -265,6 +260,7 @@ Then you can use it in your JSX like any other editable component. Note the make
         theatreKey: string
         visible?: boolean | 'editor'
         additionalProps?: $FixMe
+        objectActions?: SheetObjectActionsConfig
         objRef?: $FixMe
         // not exactly sure how to get the type of the threejs object itself
         ref?: Ref<unknown>
@@ -277,6 +273,7 @@ Then you can use it in your JSX like any other editable component. Note the make
         theatreKey: string
         visible?: boolean | 'editor'
         additionalProps?: $FixMe
+        objectActions?: SheetObjectActionsConfig
         objRef?: $FixMe
         editableType: keyof ThreeElements
         // not exactly sure how to get the type of the threejs object itself

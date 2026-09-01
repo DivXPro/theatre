@@ -428,55 +428,6 @@ export function usePlacementController(project: IProject) {
   }
 }
 
-/** 页面顶部的入口按钮(HTML 覆盖层,放在 Canvas 外) */
-export function PlacementButton({
-  placing,
-  onPick,
-}: {
-  placing: PlacingState | null
-  onPick: (file: File) => void
-}) {
-  const inputRef = useRef<HTMLInputElement>(null)
-  return (
-    <div
-      style={{
-        position: 'absolute',
-        top: 12,
-        left: '50%',
-        transform: 'translateX(-50%)',
-        zIndex: 10,
-      }}
-    >
-      <input
-        ref={inputRef}
-        type="file"
-        accept=".fbx"
-        style={{display: 'none'}}
-        onChange={(ev) => {
-          const file = ev.target.files?.[0]
-          if (file) onPick(file)
-          ev.target.value = ''
-        }}
-      />
-      <button
-        disabled={!!placing}
-        onClick={() => inputRef.current?.click()}
-        style={{
-          padding: '6px 14px',
-          borderRadius: 6,
-          border: '1px solid #444',
-          background: placing ? '#333' : '#272730',
-          color: placing ? '#888' : '#eee',
-          cursor: placing ? 'default' : 'pointer',
-          fontSize: 13,
-        }}
-      >
-        {placing ? '放置中:左键确认落点,Esc/右键取消' : '放置 FBX 模型'}
-      </button>
-    </div>
-  )
-}
-
 /**
  * 放置模式下的 Canvas 内容:半透明 ghost 跟随光标。
  * 事件走 canvas 的 DOM 监听 + 手动射线检测,不用不可见网格接事件——
@@ -1190,7 +1141,7 @@ class PlacedModelErrorBoundary extends React.Component<
 /** gizmo 的三种操作模式 */
 export type GizmoMode = 'translate' | 'rotate' | 'scale'
 
-const GIZMO_MODE_LABELS: Record<GizmoMode, string> = {
+export const GIZMO_MODE_LABELS: Record<GizmoMode, string> = {
   translate: '移动',
   rotate: '旋转',
   scale: '缩放',
@@ -1237,9 +1188,8 @@ export function GizmoModeHint({mode}: {mode: GizmoMode}) {
     <div
       style={{
         position: 'absolute',
-        top: 12,
-        left: '50%',
-        transform: 'translateX(-50%) translateY(44px)',
+        bottom: 12,
+        left: 12,
         padding: '4px 10px',
         borderRadius: 6,
         background: 'rgba(0,0,0,0.55)',
@@ -1267,117 +1217,6 @@ export function deletePlacement(sheet: ISheet, key: string) {
   const scrub = studio.scrub()
   scrub.capture(({set}) => set(registry.props.list, JSON.stringify(list)))
   scrub.commit()
-}
-
-/**
- * 场景里右键已放置模型弹出的菜单:移动/旋转/缩放切换(当前模式打勾)+ 删除。
- * HTML 覆盖层,挂在 Canvas 外;点菜单外任意处、Esc、或执行完动作后关闭。
- */
-export function ObjectContextMenu({
-  position,
-  mode,
-  onSelectMode,
-  onDelete,
-  onClose,
-}: {
-  position: {x: number; y: number}
-  mode: GizmoMode
-  onSelectMode: (mode: GizmoMode) => void
-  onDelete: () => void
-  onClose: () => void
-}) {
-  useEffect(() => {
-    const onPointerDown = (ev: PointerEvent) => {
-      // 点在菜单内部不关;点的别处都关
-      if (!(ev.target as HTMLElement | null)?.closest('[data-object-menu]'))
-        onClose()
-    }
-    const onKey = (ev: KeyboardEvent) => {
-      if (ev.key === 'Escape') onClose()
-    }
-    // capture:赶在画布的选择/放置逻辑之前,纯关菜单不拦截
-    window.addEventListener('pointerdown', onPointerDown, true)
-    window.addEventListener('keydown', onKey)
-    return () => {
-      window.removeEventListener('pointerdown', onPointerDown, true)
-      window.removeEventListener('keydown', onKey)
-    }
-  }, [onClose])
-
-  const itemStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    padding: '6px 14px 6px 8px',
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.9)',
-    cursor: 'pointer',
-    whiteSpace: 'nowrap',
-    userSelect: 'none',
-  }
-  // 每项前面固定宽度的图标位:有图标放图标,没有就空着,
-  // 保证所有文字左对齐,不随有无选中勾而错位
-  const iconSlotStyle: React.CSSProperties = {
-    width: 18,
-    flexShrink: 0,
-    textAlign: 'center',
-  }
-  const modes: Array<GizmoMode> = ['translate', 'rotate', 'scale']
-  return (
-    <div
-      data-object-menu
-      style={{
-        position: 'fixed',
-        left: position.x,
-        top: position.y,
-        zIndex: 20,
-        minWidth: 140,
-        padding: '4px 0',
-        borderRadius: 8,
-        background: 'rgba(24,24,28,0.96)',
-        border: '1px solid rgba(255,255,255,0.12)',
-        boxShadow: '0 6px 24px rgba(0,0,0,0.5)',
-      }}
-    >
-      {modes.map((m) => (
-        <div
-          key={m}
-          style={itemStyle}
-          onMouseEnter={(e) =>
-            (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')
-          }
-          onMouseLeave={(e) => (e.currentTarget.style.background = '')}
-          onClick={() => {
-            onSelectMode(m)
-            onClose()
-          }}
-        >
-          <span style={iconSlotStyle}>{m === mode ? '✓' : ''}</span>
-          <span>{GIZMO_MODE_LABELS[m]}</span>
-        </div>
-      ))}
-      <div
-        style={{
-          height: 1,
-          margin: '4px 0',
-          background: 'rgba(255,255,255,0.12)',
-        }}
-      />
-      <div
-        style={{...itemStyle, color: '#ff6b6b'}}
-        onMouseEnter={(e) =>
-          (e.currentTarget.style.background = 'rgba(255,107,107,0.12)')
-        }
-        onMouseLeave={(e) => (e.currentTarget.style.background = '')}
-        onClick={() => {
-          onDelete()
-          onClose()
-        }}
-      >
-        <span style={iconSlotStyle}></span>
-        <span>删除</span>
-      </div>
-    </div>
-  )
 }
 
 /**

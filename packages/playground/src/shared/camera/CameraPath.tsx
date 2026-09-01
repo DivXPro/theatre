@@ -4,6 +4,7 @@ import {privateAPI} from '@toy-box/core/privateAPIs'
 import getStudioInternal from '@toy-box/studio/getStudio'
 import getDeep from '@toy-box/utils/getDeep'
 import type {IScrub, ISheet, ISheetObject} from '@toy-box/core'
+import type {SheetObjectActionsConfig} from '@toy-box/core/types/public'
 import React, {useEffect, useMemo, useRef, useState} from 'react'
 import {useFrame, useThree} from '@react-three/fiber'
 import type {ThreeEvent} from '@react-three/fiber'
@@ -75,7 +76,8 @@ import type {PathPointEntry, PathTransform, Vec3Like} from './pathModel'
  *   左键/回车确认,右键/Esc 取消
  * - 选中的控制点显示贝塞尔手柄(小圆点+连线):按住小圆点直接拖;
  *   默认自动(平滑穿过),拖动后转手动,两手柄方向共线(Blender 的"对齐");
- *   App 层另有数值浮条(显示的是局部坐标)。
+ *   App 层另有数值浮条(显示的是局部坐标);点级增删在编辑浮条
+ *   (PathEditBar:加点/删除选中点),不进全局菜单。
  *   控制点/手柄都是屏幕恒定大小的实心标记(深度测试关掉、画在最上层),
  *   对齐 Blender 的屏幕空间编辑 UI:任何缩放级别下同样清晰、同样好点
  * - 拖动/增删都是一次 scrub 提交 = 一步撤销;镜头视角下整体隐藏
@@ -152,6 +154,24 @@ export function getPathMeta(sheet: ISheet, metaKey: string) {
   // 名单对象从这里直接读(同 __cameraShot 的用法)
   ;((window as any).__cameraPathMeta ??= {})[metaKey] = meta
   return meta
+}
+
+/**
+ * 给路径对象挂面板动作(属性后的按钮区,core 的 __actions__ 机制)。
+ * 重复调用同 key 同 config 只更新 actions;actions 传 {} = 清空。
+ * 调用前必须保证 getPathMeta 跑过(metaConfigCache 里有 config)。
+ */
+export function setPathPanelActions(
+  sheet: ISheet,
+  metaKey: string,
+  actions: SheetObjectActionsConfig,
+) {
+  const config = metaConfigCache.get(metaKey)
+  if (!config) return
+  sheet.object(metaKey, config, {
+    __actions__THIS_API_IS_UNSTABLE_AND_WILL_CHANGE_IN_THE_NEXT_VERSION:
+      actions,
+  })
 }
 
 /** 响应式读名单:scrub 提交/撤销/同步都会触发 onValuesChange */
@@ -959,6 +979,66 @@ export function CameraPath({
 }
 
 // ---------------------------------------------------------------------------
+// 路径编辑模式的工具浮条:加点/删点。点级操作的家——全局菜单不出现
+// 这些(见菜单设计文档)。选中点的数值/锚点编辑在它下面的 PathPointEditor。
+
+export function PathEditBar({
+  hasSelection,
+  onAddPoint,
+  onDeleteSelected,
+}: {
+  hasSelection: boolean
+  onAddPoint: () => void
+  onDeleteSelected: () => void
+}) {
+  const btn = (disabled: boolean): React.CSSProperties => ({
+    padding: '3px 10px',
+    borderRadius: 4,
+    border: '1px solid #555',
+    background: 'transparent',
+    color: disabled ? '#777' : '#eee',
+    cursor: disabled ? 'default' : 'pointer',
+    fontSize: 12,
+  })
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        top: 56,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        zIndex: 11,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        padding: '6px 12px',
+        background: '#272730',
+        border: '1px solid #444',
+        borderRadius: 6,
+        fontSize: 12,
+        color: '#eee',
+      }}
+    >
+      <button
+        style={btn(false)}
+        onClick={onAddPoint}
+        title="在路径末尾续一个控制点"
+      >
+        加点
+      </button>
+      <button
+        style={btn(!hasSelection)}
+        disabled={!hasSelection}
+        onClick={onDeleteSelected}
+        title={hasSelection ? '删除选中的控制点' : '先点选一个控制点'}
+      >
+        删除选中点
+      </button>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // 数值浮条:编辑模式下选中控制点时的 X/Y/Z 数字输入(Blender N 面板的对应物),
 // 外加进度锚点 u 的微调(不改路径形状、只改这个点在全程进度中的位置 =
 // 局部变速)和"钉到播放头"(抵达时间变成时间轴上的标准关键帧)
@@ -1026,7 +1106,7 @@ export function PathPointEditor({
     <div
       style={{
         position: 'absolute',
-        top: 56,
+        top: 96,
         left: '50%',
         transform: 'translateX(-50%)',
         zIndex: 11,
