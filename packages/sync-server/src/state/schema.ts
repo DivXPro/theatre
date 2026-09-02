@@ -811,11 +811,18 @@ export namespace stateEditors {
               p.sheetId
             ]
           if (!sheetState) return
-          delete sheetState.staticOverrides.byObject[p.objectKey]
+          // saaz 的 deleteProperty 陷阱对不存在的 map 项返回 false
+          // (delete 抛 TypeError 并中止整个事务)——"忘了它"是幂等语义,
+          // 没有就当已经忘了;照 setPrimitivePropAsStatic 先查后删的先例
+          if (sheetState.staticOverrides.byObject[p.objectKey] !== undefined) {
+            delete sheetState.staticOverrides.byObject[p.objectKey]
+          }
 
           const sequence = sheetState.sequence
           if (!sequence) return
-          delete sequence.tracksByObject[p.objectKey]
+          if (sequence.tracksByObject[p.objectKey] !== undefined) {
+            delete sequence.tracksByObject[p.objectKey]
+          }
         }
 
         export function forgetSheet(
