@@ -43,11 +43,11 @@ import {consumeCameraSeed} from './cameraRegistry'
  * 场景摄像机(shot camera):独立于编辑主视角的"镜头",取景画面用于
  * 画中画预览和之后的视频导出,对标 Blender 的场景 Camera 对象。
  *
- * - theatre 对象 Shot/Camera(位置/旋转/fov 可上时间轴)+ Shot/Target
+ * - theatre 对象 Shot Camera(位置/旋转/fov 可上时间轴)+ Shot Target
  *   (瞄准点),朝向始终 lookAt Target——对齐 Blender 的 Track To 约束:
  *   相机没有"朝向模式",目标怎么动是它的自由(Target 的移动直接在
  *   时间轴上给 position 打关键帧,不需要单独的路径对象)
- * - 运镜驱动:机位可以切到"沿路径"(Shot/Camera 的 moveMode 开关,
+ * - 运镜驱动:机位可以切到"沿路径"(Shot Camera 的 moveMode 开关,
  *   对齐 Blender 的约束跟随),由 CameraPath 的曲线 + 路径对象的
  *   行进进度(0~1,对齐曲线侧的 Evaluation Time)驱动,
  *   进度打关键帧 = 调运镜节奏;路径为空时回退手动,不产生异常画面
@@ -71,7 +71,7 @@ const FRUSTUM_DISPLAY_LENGTH = 3
 const FRUSTUM_FILL_OPACITY = 0.12
 
 /**
- * 运镜驱动属性,挂在 Shot/Camera 对象上(模块级常量:
+ * 运镜驱动属性,挂在 Shot Camera 对象上(模块级常量:
  * sheet.object 重复调用要求配置 deep-equal,函数按引用比,
  * 每次 render 新建会在热更新后炸"called twice with different config")。
  *

@@ -25,7 +25,7 @@ test('路径右键菜单:编辑(带 Tab 标注)与删除,编辑中显示退出�
   const onToggleEdit = jest.fn()
   const onDelete = jest.fn()
   const items = buildPathMenuItems({
-    metaKey: 'Shot / Pos Path',
+    metaKey: 'Pos Path',
     editing: false,
     onToggleEdit,
     onDelete,
@@ -37,7 +37,7 @@ test('路径右键菜单:编辑(带 Tab 标注)与删除,编辑中显示退出�
   expect(String((items[2] as any).label)).toContain('删除路径')
 
   const editingItems = buildPathMenuItems({
-    metaKey: 'Shot / Pos Path',
+    metaKey: 'Pos Path',
     editing: true,
     onToggleEdit,
     onDelete,

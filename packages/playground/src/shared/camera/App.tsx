@@ -65,19 +65,27 @@ import {
 import {
   addPathPoint,
   CameraPath,
-  clearPath,
   deletePathPoint,
   getPathMeta,
   PathEditBar,
   PathPointEditor,
-  pathLabel,
+  pathExists,
   POS_PATH_KEY,
   readPathPoints,
   samplePathPoint,
   setPathPanelActions,
   translatePath,
+  usePathExists,
   usePathHasPoints,
 } from './CameraPath'
+import {
+  addPathToRegistry,
+  nextPathEntry,
+  readPathEntries,
+  getPathsRegistry,
+  removePathFromRegistry,
+  usePathsList,
+} from './pathRegistry'
 import {seedArcPoints} from './pathModel'
 import {listSinks} from './videoExport/sinks'
 import type {ExportSink} from './videoExport/sinks'
@@ -663,8 +671,11 @@ function App() {
         // Tab 只在选中路径时进入编辑模式(Blender:Tab 作用于选中物;
         // 没选中就什么都不做,避免凭空进入一个看不见的编辑态)
         const studio = getStudioSync()
+        // 路径可能不存在(注册表驱动,没点就不建)——先探测再取句柄,
+        // getPathMeta 查不存在会顺手创建
         const selectedPath =
           studio &&
+          pathExists(sheet, POS_PATH_KEY) &&
           (studio.selection as unknown[]).includes(
             getPathMeta(sheet, POS_PATH_KEY),
           )
@@ -695,8 +706,10 @@ function App() {
     }
   }, [enterPathEdit, exitPathEdit])
 
-  // 添加路径:空路径从当前机位播种一段环绕弧,然后进编辑模式。
-  // 不自动切相机驱动(用户决策:驱动与否只在相机面板配)
+  // 添加路径:注册表加一行并播种一段环绕弧(从当前机位),然后进编辑
+  // 模式。先播种再登记——组件挂载时点已就位,路径对象不会以空名单
+  // 亮过相("没点就不出现")。不自动切相机驱动(用户决策:驱动与否
+  // 只在相机面板配)
   const addPosPathPoint = useCallback(() => {
     const cam = shotCameraObjRef.current
     const target = shotTargetObjRef.current
@@ -711,8 +724,10 @@ function App() {
               val(mainTarget.props.position),
             )
           : undefined
-    addPathPoint(sheet, POS_PATH_KEY, seed)
-    enterPathEdit(POS_PATH_KEY)
+    const entry = nextPathEntry(readPathEntries(getPathsRegistry(sheet)))
+    addPathPoint(sheet, entry.pathKey, seed)
+    addPathToRegistry(sheet, entry)
+    enterPathEdit(entry.pathKey)
   }, [sheet, enterPathEdit])
 
   // 缺失提示:绑定了朝向但 Target 已被删 → 工具条下方纯文字提醒;
@@ -749,32 +764,62 @@ function App() {
     }
   }, [shotCameraObjRef, activeCamera])
 
+  // 删除整条路径:注册表真删(forgetObject + detach + 清单移除,撤销
+  // 两步完整回滚);正在编辑/选中了它的点就一并退出/清掉——用失焦式
+  // 退出(不回头重选,对象已经没了,重选会把它又建出来)
+  const removePath = useCallback(
+    (metaKey: string) => {
+      removePathFromRegistry(sheet, {pathKey: metaKey})
+      if (editingPath === metaKey) exitPathEditOnBlur()
+      if (selectedPathPoint?.metaKey === metaKey) setSelectedPathPoint(null)
+    },
+    [sheet, editingPath, selectedPathPoint, exitPathEditOnBlur],
+  )
+
   const deleteSelectedPathPoint = useCallback(() => {
+    if (!selectedPathPoint) return
+    // 删掉最后一个点 = 删除整条路径("没点就不出现")
+    if (readPathPoints(sheet, selectedPathPoint.metaKey).length <= 1) {
+      removePath(selectedPathPoint.metaKey)
+      return
+    }
     if (
-      selectedPathPoint &&
       deletePathPoint(sheet, selectedPathPoint.metaKey, selectedPathPoint.key)
     ) {
       setSelectedPathPoint(null)
     }
-  }, [sheet, selectedPathPoint])
+  }, [sheet, selectedPathPoint, removePath])
 
-  // 删除整条路径:名单清空(撤销可整条找回);正在编辑/选中了它的点
-  // 就一并退出/清掉。已经是空路径时不动作
-  const removePath = useCallback(
-    (metaKey: string) => {
-      if (readPathPoints(sheet, metaKey).length === 0) {
-        window.alert(`${pathLabel(metaKey)}已经是空的`)
-        return
-      }
-      clearPath(sheet, metaKey)
-      if (editingPath === metaKey) exitPathEdit()
-      if (selectedPathPoint?.metaKey === metaKey) setSelectedPathPoint(null)
-    },
-    [sheet, editingPath, selectedPathPoint, exitPathEdit],
+  // 路径注册表:P1 上限一条(添加按钮随之置灰),清单第一项即活动路径
+  const paths = usePathsList(sheet)
+  // 路径对象只在注册后存在("没点就不出现"):探测不创建——
+  // sheet.object 查不存在会顺手创建,那是这里要躲开的
+  const posPathExists = usePathExists(sheet, POS_PATH_KEY)
+  // 进度标记/打帧都读 Pos Path 对象的行进进度;对象不存在时为 null,
+  // 各消费方按 null 兜底(报 0/不渲染)
+  const posPathMeta = useMemo(
+    () => (posPathExists ? getPathMeta(sheet, POS_PATH_KEY) : null),
+    [sheet, posPathExists],
   )
-
-  // 路径上的进度标记读 Pos Path 对象的行进进度(对象还没建好时报 0)
-  const posPathMeta = useMemo(() => getPathMeta(sheet, POS_PATH_KEY), [sheet])
+  // 启动自检:对象在但注册表没有 = 孤儿(老结构残留的空路径对象),
+  // 真删——"没点就不出现"。P1 只有 Pos Path 一个 key 要查
+  useEffect(() => {
+    if (posPathExists && !paths.some((e) => e.pathKey === POS_PATH_KEY)) {
+      removePathFromRegistry(sheet, {pathKey: POS_PATH_KEY})
+    }
+  }, [sheet, posPathExists, paths])
+  // 路径被移除(含对端同步删除)时,它的编辑态/选中点一并清掉。
+  // 判定加"对象也没了":添加路径时对象先于注册表行出现(播种在登记
+  // 之前),只看清单会在那个瞬间误退刚进入的编辑态
+  useEffect(() => {
+    if (
+      editingPath &&
+      !paths.some((e) => e.pathKey === editingPath) &&
+      !pathExists(sheet, editingPath)
+    ) {
+      exitPathEditOnBlur()
+    }
+  }, [sheet, editingPath, paths, exitPathEditOnBlur])
   // 路径面板动作区:路径平移到相机(空路径不出按钮);
   // 动作配置必须 useMemo 缓存引用,重复注册同引用是幂等的
   const posPathHasPoints = usePathHasPoints(sheet, POS_PATH_KEY)
@@ -799,8 +844,11 @@ function App() {
     [posPathHasPoints, movePathToCamera],
   )
   useEffect(() => {
-    setPathPanelActions(sheet, POS_PATH_KEY, pathPanelActions)
-  }, [sheet, pathPanelActions])
+    // setPathPanelActions 内部走 sheet.object,对象不存在会顺手创建,
+    // 必须登记在案(注册表里有)才注册动作
+    if (posPathExists)
+      setPathPanelActions(sheet, POS_PATH_KEY, pathPanelActions)
+  }, [sheet, posPathExists, pathPanelActions])
   const pathProgressOf = useCallback(
     () => (posPathMeta ? val(posPathMeta.props.progress) : 0),
     [posPathMeta],
@@ -813,7 +861,7 @@ function App() {
   const pinPathPointAtPlayhead = useCallback(
     (u: number) => {
       const studio = getStudioSync()
-      if (!studio) return
+      if (!studio || !posPathMeta) return
       const hasTrack =
         typeof getDeep(
           privateAPI(posPathMeta)
@@ -837,10 +885,12 @@ function App() {
   // 路径浮条用它列出选中控制点钉在了哪些时间
   const progressKeyframes = usePrism(
     () =>
-      privateAPI(posPathMeta)
-        .sheet.getSequence()
-        .getKeyframesOfSimpleProp(posPathMeta.props.progress)
-        .map((k) => ({position: k.position, value: k.value as number})),
+      posPathMeta
+        ? privateAPI(posPathMeta)
+            .sheet.getSequence()
+            .getKeyframesOfSimpleProp(posPathMeta.props.progress)
+            .map((k) => ({position: k.position, value: k.value as number}))
+        : [],
     [posPathMeta],
   )
   // 调试挂钩读最新值用(上面 __cameraPathEdit 的 effect 声明在前,直引会 TDZ)
@@ -1024,7 +1074,7 @@ function App() {
       <TopToolbar
         placing={!!placing}
         onOpenLibrary={() => setLibraryOpen((v) => !v)}
-        addPathEnabled={!posPathHasPoints}
+        addPathEnabled={paths.length === 0}
         onAddPath={addPosPathPoint}
         addCameraEnabled={cameras.length === 0}
         onAddCamera={addCamera}
@@ -1225,23 +1275,26 @@ function App() {
               onCameraContextMenu={(x, y) => setCameraMenu({x, y})}
             />
           ))}
-          <CameraPath
-            metaKey={POS_PATH_KEY}
-            // 普通态蓝色;选中/编辑的黄色档位在 CameraPath 内部
-            color={0x4a90d9}
-            hidden={shotView}
-            editing={editingPath === POS_PATH_KEY}
-            selectedKey={
-              selectedPathPoint?.metaKey === POS_PATH_KEY
-                ? selectedPathPoint.key
-                : null
-            }
-            onSelectPoint={(key) =>
-              setSelectedPathPoint(key ? {metaKey: POS_PATH_KEY, key} : null)
-            }
-            onContextMenu={(metaKey, x, y) => setPathMenu({metaKey, x, y})}
-            progressOf={pathProgressOf}
-          />
+          {paths.map((entry) => (
+            <CameraPath
+              key={entry.pathKey}
+              metaKey={entry.pathKey}
+              // 普通态蓝色;选中/编辑的黄色档位在 CameraPath 内部
+              color={0x4a90d9}
+              hidden={shotView}
+              editing={editingPath === entry.pathKey}
+              selectedKey={
+                selectedPathPoint?.metaKey === entry.pathKey
+                  ? selectedPathPoint.key
+                  : null
+              }
+              onSelectPoint={(key) =>
+                setSelectedPathPoint(key ? {metaKey: entry.pathKey, key} : null)
+              }
+              onContextMenu={(metaKey, x, y) => setPathMenu({metaKey, x, y})}
+              progressOf={pathProgressOf}
+            />
+          ))}
           <fog attach="fog" args={[bg, 16, 30]} />
           <color attach="background" args={[bg]} />
           <ambientLight intensity={0.75} />

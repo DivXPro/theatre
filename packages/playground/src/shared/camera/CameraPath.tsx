@@ -83,7 +83,7 @@ import type {PathPointEntry, PathTransform, Vec3Like} from './pathModel'
  * - 拖动/增删都是一次 scrub 提交 = 一步撤销;镜头视角下整体隐藏
  */
 
-export const POS_PATH_KEY = 'Shot / Pos Path'
+export const POS_PATH_KEY = 'Pos Path'
 
 /** 路径的显示名(目前只有机位路径一条;菜单/浮条里展示用) */
 export function pathLabel(metaKey: string): string {
@@ -174,12 +174,18 @@ export function setPathPanelActions(
   })
 }
 
-/** 响应式读名单:scrub 提交/撤销/同步都会触发 onValuesChange */
-function usePathPointEntries(meta: ISheetObject<{points: string}>) {
+/** 响应式读名单:meta 为 null(对象不存在)时按空名单算 */
+function usePathPointEntries(
+  meta: ISheetObject<{points: string}> | null,
+): PathPointEntry[] {
   const [entries, setEntries] = useState<PathPointEntry[]>(() =>
-    parsePathPoints(meta.value.points),
+    meta ? parsePathPoints(meta.value.points) : [],
   )
   useEffect(() => {
+    if (!meta) {
+      setEntries([])
+      return
+    }
     setEntries(parsePathPoints(meta.value.points))
     return meta.onValuesChange(() =>
       setEntries(parsePathPoints(meta.value.points)),
@@ -189,11 +195,37 @@ function usePathPointEntries(meta: ISheetObject<{points: string}>) {
 }
 
 /**
- * 响应式:路径是否有控制点。空路径时驱动自动回退手动(见 ShotCamera),
- * 相机仍可拖;ShotCamera 用它决定要不要锁掉移动箭头
+ * 路径对象是否存在(只探测,不创建):走内部对象表——sheet.object
+ * 查不存在就会顺手创建,那是"没点就不出现"要躲开的
+ */
+export function pathExists(sheet: ISheet, metaKey: string): boolean {
+  return (privateAPI(sheet) as any).getObject(metaKey) != null
+}
+
+/** 响应式存在性:订阅内部对象表,任何途径增删对象都会触发 */
+export function usePathExists(sheet: ISheet, metaKey: string): boolean {
+  const [exists, setExists] = useState(() => pathExists(sheet, metaKey))
+  useEffect(() => {
+    setExists(pathExists(sheet, metaKey))
+    return onChange((privateAPI(sheet) as any).objectsP, () =>
+      setExists(pathExists(sheet, metaKey)),
+    )
+  }, [sheet, metaKey])
+  return exists
+}
+
+/**
+ * 响应式:路径是否有控制点。对象不存在(未注册/已删除)时算没有,
+ * 绝不顺手创建——创建只发生在注册表加行后的组件挂载。
+ * 空路径时驱动自动回退手动(见 ShotCamera),相机仍可拖;
+ * ShotCamera 用它决定要不要锁掉移动箭头
  */
 export function usePathHasPoints(sheet: ISheet, metaKey: string): boolean {
-  const meta = useMemo(() => getPathMeta(sheet, metaKey), [sheet, metaKey])
+  const exists = usePathExists(sheet, metaKey)
+  const meta = useMemo(
+    () => (exists ? getPathMeta(sheet, metaKey) : null),
+    [sheet, metaKey, exists],
+  )
   return usePathPointEntries(meta).length > 0
 }
 
@@ -368,21 +400,6 @@ export function readPathPoints(
 }
 
 /**
- * 删除整条路径(名单清空)。路径对象本身留着(它是渲染时按需创建的,
- * 删了下一帧也会以空名单重建),所以"删除"就是清空——一次 scrub 提交
- * = 一步撤销,撤销即整条回来
- */
-export function clearPath(sheet: ISheet, metaKey: string) {
-  const studio = getStudioSync()
-  if (!studio) return
-  const meta = getPathMeta(sheet, metaKey)
-  if (parsePathPoints(meta.value.points).length === 0) return
-  const scrub = studio.scrub()
-  scrub.capture(({set}) => set(meta.props.points, serializePathPoints([])))
-  scrub.commit()
-}
-
-/**
  * 整条路径平移 delta:改路径对象的位置属性(Blender 物体模式的整体
  * 移动),控制点的局部数据不动。一次 scrub 提交 = 一步撤销
  */
@@ -500,11 +517,21 @@ export function CameraPath({
   onSelectPoint: (key: string | null) => void
   /** 右键路径线:弹编辑模式菜单 */
   onContextMenu: (metaKey: string, x: number, y: number) => void
-  /** 读当前进度(0~1),给进度标记用;来源是 Shot/Camera 的进度属性 */
+  /** 读当前进度(0~1),给进度标记用;来源是 Shot Camera 的进度属性 */
   progressOf: () => number
 }) {
   const sheet = useCurrentSheet()!
   const meta = useMemo(() => getPathMeta(sheet, metaKey), [sheet, metaKey])
+  // 卸载即脱离:注册表移除(含撤销"添加路径")会卸载本组件;路径对象
+  // 不是 editable,不自动脱离,这里兜底。removePathFromRegistry 已显式
+  // 脱离过的话,探测到不存在就跳过(detachObject 对不存在的 key 只告警,
+  // 但没必要刷那条警告)
+  useEffect(
+    () => () => {
+      if (pathExists(sheet, metaKey)) sheet.detachObject(metaKey)
+    },
+    [sheet, metaKey],
+  )
   const entries = usePathPointEntries(meta)
   useKeepPointsPropStatic(meta)
   const curve = useMemo(() => buildCurve(entries), [entries])
@@ -586,6 +613,16 @@ export function CameraPath({
   useEffect(() => registerEditorOnly(arrows), [arrows])
   useEffect(() => registerEditorOnly(originMarker), [originMarker])
 
+  // 调试/自动化验证挂钩:浏览器里直接摸线对象(射线/包围球排查用),
+  // 与 __cameraPathEdit 同套;卸载自清
+  useEffect(() => {
+    const bag = ((window as any).__cameraPathLines ??= {})
+    bag[metaKey] = {line, pathRoot}
+    return () => {
+      delete bag[metaKey]
+    }
+  }, [line, pathRoot, metaKey])
+
   // 名单变化 → 重写路径线顶点 + 重铺方向箭头(不用每帧:纯数据,变了才重建)
   useEffect(() => {
     const attr = line.geometry.getAttribute('position') as BufferAttribute
@@ -646,10 +683,17 @@ export function CameraPath({
 
   // 进度标记 + 手柄连线:每帧跟(进度属性可能在上时间轴播放)
   useFrame(() => {
-    const showMarker = !hidden && !!curve
+    // 只有一个点时没有曲线也没有线,进度标记钉在那个点上充当落点标识,
+    // 否则单点路径在视口里完全不可见、不可选(只能从大纲进);
+    // 编辑模式下控制点圆点已在,不叠这个标记
+    const showMarker =
+      !hidden && (curve ? true : entries.length > 0 && !editing)
     marker.visible = showMarker
     if (showMarker && curve) {
       sampleCurve(curve, us, progressOf(), marker.position)
+    } else if (showMarker) {
+      const p = entries[0]!.position
+      marker.position.set(p.x, p.y, p.z)
     }
     // 手柄连线两端直接读节点当前位置:拖拽中也严丝合缝
     const pointNode = selectedKey
@@ -783,6 +827,19 @@ export function CameraPath({
     ? pointNodesRef.current.get(selectedKey)
     : undefined
 
+  // 点手柄的 controls 实例(ref 回调里填),给"节点被移除即摘手柄"用
+  const pointGizmoRef = useRef<{detach?: () => void} | null>(null)
+  // 手柄附着的点网格被移出场景(删点/撤销/整条路径卸载)时立刻摘手柄:
+  // gizmoTarget 是渲染期读 ref 算出来的,删除点的那次渲染还会拿到已死的
+  // 网格,React 下一次渲染才摘掉——空窗期 helper 每帧更新会撞 three 的
+  // "must be a part of the scene graph" 报错。'removed' 事件同步于移除
+  useEffect(() => {
+    if (!gizmoTarget) return
+    const detach = () => pointGizmoRef.current?.detach?.()
+    gizmoTarget.addEventListener('removed', detach)
+    return () => gizmoTarget.removeEventListener('removed', detach)
+  }, [gizmoTarget])
+
   const onGizmoDown = () => {
     suppressSelectBriefly()
     scrubRef.current = getStudioSync()?.scrub()
@@ -850,6 +907,38 @@ export function CameraPath({
       })
     }
 
+  // 点线(或单点落点标记)= 选中这条路径;右键 = 路径菜单。
+  // 线和标记共用一套,行为不分载体
+  const handlePathClick = (event: ThreeEvent<MouseEvent>) => {
+    // 镜头视角下路径不可见,不响应(线还在原地,只是没画)
+    if (hidden || isSelectSuppressed()) return
+    event.stopPropagation()
+    if (editing) {
+      // 编辑模式:点标记正好坐在曲线上,线 1 个世界单位的命中
+      // 半径总会先吃到瞄准标记的点击——从同一次射线的全部命中
+      // 里找到点标记并转发;其余点击就地吞掉,不穿透选中后面
+      // 的东西(Blender 编辑模式:其他物体不响应视口点击)
+      for (const hit of event.intersections) {
+        for (const [key, node] of pointNodesRef.current) {
+          if (hit.object === node) {
+            selectPointByKey(key)
+            return
+          }
+        }
+      }
+      return
+    }
+    // 点线 = 选中这条路径(名单对象):大纲高亮、Tab/右键随之作用到它
+    getStudioSync()?.setSelection([meta])
+  }
+  const handlePathContextMenu = (event: ThreeEvent<MouseEvent>) => {
+    // 镜头视角下路径不可见,右键不响应(线还在原地,只是没画)
+    if (hidden) return
+    event.stopPropagation()
+    event.nativeEvent.preventDefault()
+    onContextMenu(metaKey, event.nativeEvent.clientX, event.nativeEvent.clientY)
+  }
+
   return (
     <>
       {/* 路径的一切可视内容都挂在变换分组下,组内一律局部坐标;
@@ -857,41 +946,15 @@ export function CameraPath({
       <primitive object={pathRoot}>
         <primitive
           object={line}
-          onClick={(event: ThreeEvent<MouseEvent>) => {
-            // 镜头视角下路径不可见,不响应(线还在原地,只是没画)
-            if (hidden || isSelectSuppressed()) return
-            event.stopPropagation()
-            if (editing) {
-              // 编辑模式:点标记正好坐在曲线上,线 1 个世界单位的命中
-              // 半径总会先吃到瞄准标记的点击——从同一次射线的全部命中
-              // 里找到点标记并转发;其余点击就地吞掉,不穿透选中后面
-              // 的东西(Blender 编辑模式:其他物体不响应视口点击)
-              for (const hit of event.intersections) {
-                for (const [key, node] of pointNodesRef.current) {
-                  if (hit.object === node) {
-                    selectPointByKey(key)
-                    return
-                  }
-                }
-              }
-              return
-            }
-            // 点线 = 选中这条路径(名单对象):大纲高亮、Tab/右键随之作用到它
-            getStudioSync()?.setSelection([meta])
-          }}
-          onContextMenu={(event: ThreeEvent<MouseEvent>) => {
-            // 镜头视角下路径不可见,右键不响应(线还在原地,只是没画)
-            if (hidden) return
-            event.stopPropagation()
-            event.nativeEvent.preventDefault()
-            onContextMenu(
-              metaKey,
-              event.nativeEvent.clientX,
-              event.nativeEvent.clientY,
-            )
-          }}
+          onClick={handlePathClick}
+          onContextMenu={handlePathContextMenu}
         />
-        <primitive object={marker} />
+        {/* 进度标记;单点路径时兼任落点标识,所以也要能点/右键 */}
+        <primitive
+          object={marker}
+          onClick={handlePathClick}
+          onContextMenu={handlePathContextMenu}
+        />
         <primitive object={arrows} />
         <primitive object={originMarker} />
         {editing &&
@@ -958,6 +1021,7 @@ export function CameraPath({
       {editing && !hidden && !grabActive && gizmoTarget && (
         <TransformControls
           ref={(controls: any) => {
+            pointGizmoRef.current = controls
             // 箭头本体登记为"仅编辑视角":画中画/镜头视角渲染时不入画。
             // three 0.185 的 TransformControls 不是 Object3D,可视部分在 getHelper()
             if (!controls) return

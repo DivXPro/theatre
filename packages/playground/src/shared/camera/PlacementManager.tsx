@@ -1245,6 +1245,7 @@ export function SelectionGizmo({
   } | null>(null)
   const invalidate = useThree((s) => s.invalidate)
   const scrubRef = useRef<IScrub | undefined>(undefined)
+  const controlsRef = useRef<{detach?: () => void} | null>(null)
   // G 键模态抓取(Blender):选中对象跟随鼠标(过起点、正对相机的平面),
   // X/Y/Z 锁轴,左键/回车确认,右键/Esc 废弃弹回;和路径控制点共用一套
   const {start: startGrab, active: grabActive} = useModalGrab()
@@ -1310,12 +1311,29 @@ export function SelectionGizmo({
     return () => window.removeEventListener('keydown', onKey)
   }, [hidden, target, startGrab])
 
+  // 附着节点被移出场景(对象被删/卸载)时立刻摘掉手柄:否则 React
+  // 重渲染前的空窗期里,helper 每帧更新都会撞 three 的
+  // "The attached 3D object must be a part of the scene graph" 报错
+  // (删选中的相机必现一次)。three 的 'removed' 事件和节点移除同步,
+  // 比等选中通知→setState→重渲染快一个帧
+  useEffect(() => {
+    if (!target) return
+    const node = target.node
+    const detach = () => {
+      controlsRef.current?.detach?.()
+      setTarget((t) => (t && t.node === node ? null : t))
+    }
+    node.addEventListener('removed', detach)
+    return () => node.removeEventListener('removed', detach)
+  }, [target])
+
   // 卸载兜底:对象被撤销掉(节点已不在场景里)时不挂手柄;
   // 模态抓取期间也不挂:两套拖动不撞车(抓取结束后自动回来)
   if (hidden || !target || !target.node.parent || grabActive) return null
   return (
     <TransformControls
       ref={(controls: any) => {
+        controlsRef.current = controls
         // 箭头本体登记为"仅编辑视角":画中画/镜头视角渲染时不入画。
         // three 0.185 的 TransformControls 不是 Object3D,可视部分在 getHelper()
         if (!controls) return

@@ -12,8 +12,8 @@ import {getStudioSync, types as t, val} from '@toy-box/core'
 import type {ISheet, ISheetObject} from '@toy-box/core'
 import {useEffect, useMemo, useState} from 'react'
 
-/** 注册表对象的 theatre key(大纲里显示为 "Cameras" 行,和 Placements 同款) */
-export const CAMERAS_REGISTRY_KEY = 'Shot / Cameras'
+/** 注册表对象的 theatre key(大纲顶层 "Cameras" 行,和 Placements 同款) */
+export const CAMERAS_REGISTRY_KEY = 'Cameras'
 
 /** 一台相机 = 一对 theatre 对象;清单里只存 key */
 export type CameraEntry = {cameraKey: string; targetKey: string}
@@ -25,10 +25,10 @@ export type CameraSeed = {
   targetPosition: {x: number; y: number; z: number}
 }
 
-/** 第一台沿用既有 key:老场景的相机数据就是这个名字 */
+/** 第一台的 key:相机对收在一个文件夹里,与导演相机的 "Camera" 组区分 */
 const FIRST_CAMERA: CameraEntry = {
-  cameraKey: 'Shot / Camera',
-  targetKey: 'Shot / Target',
+  cameraKey: 'Shot Camera / Camera',
+  targetKey: 'Shot Camera / Target',
 }
 
 export function getCamerasRegistry(sheet: ISheet) {
@@ -58,14 +58,14 @@ export function readCameraEntries(registry: ISheetObject<any>): CameraEntry[] {
   return parseCameraEntries(val(registry.props.list) as string)
 }
 
-/** 多相机(P2)的命名:第一台用既有 key,之后 Camera 2 / Camera 3… */
+/** 多相机(P2)的命名:第一台 Shot Camera,之后 Shot Camera 2 / 3… */
 export function nextCameraEntry(existing: readonly CameraEntry[]): CameraEntry {
   if (existing.length === 0) return FIRST_CAMERA
   const used = new Set(existing.map((e) => e.cameraKey))
   for (let n = 2; ; n++) {
-    const cameraKey = `Shot / Camera ${n}`
+    const cameraKey = `Shot Camera ${n} / Camera`
     if (!used.has(cameraKey)) {
-      return {cameraKey, targetKey: `Shot / Target ${n}`}
+      return {cameraKey, targetKey: `Shot Camera ${n} / Target`}
     }
   }
 }
