@@ -34,12 +34,14 @@ import type {PerspectiveCamera as PerspectiveCameraImpl} from 'three'
 import {registerEditorOnly, withEditorOnlyHidden} from './editorOnly'
 import {useSelectionGizmoTarget} from './PlacementManager'
 import {
-  POS_PATH_KEY,
   getPathMeta,
   pathObjectName,
   samplePathPoint,
+  usePathExists,
   usePathHasPoints,
 } from './CameraPath'
+import {resolveBoundPathKey, isBindingStale} from './pathBinding'
+import {usePathsList} from './pathRegistry'
 import {buildCameraPanelActions} from './menuModel'
 import {consumeCameraSeed} from './cameraRegistry'
 
@@ -51,8 +53,8 @@ import {consumeCameraSeed} from './cameraRegistry'
  *   (瞄准点),朝向始终 lookAt Target——对齐 Blender 的 Track To 约束:
  *   相机没有"朝向模式",目标怎么动是它的自由(Target 的移动直接在
  *   时间轴上给 position 打关键帧,不需要单独的路径对象)
- * - 运镜驱动:机位可以切到"沿路径"(Shot Camera 的 moveMode 开关,
- *   对齐 Blender 的约束跟随),由 CameraPath 的曲线 + 路径对象的
+ * - 运镜驱动:机位可以切到"沿路径"(moveMode=path 时沿 pathKey 绑定
+ *   的路径,对齐 Blender 的约束跟随),由 CameraPath 的曲线 + 路径对象的
  *   行进进度(0~1,对齐曲线侧的 Evaluation Time)驱动,
  *   进度打关键帧 = 调运镜节奏;路径为空时回退手动,不产生异常画面
  * - 编辑器里的视锥示意:从相机顶点拉 4 条线到固定距离的末端平面,
@@ -80,8 +82,8 @@ const FRUSTUM_FILL_OPACITY = 0.12
  * 每次 render 新建会在热更新后炸"called twice with different config")。
  *
  * 分工对齐 Blender 的 Follow Path:**跟随开关归相机**(moveMode=path 时
- * 机位由机位路径驱动,position 属性被忽略),**行进进度归路径**
- * (Pos Path 对象的 progress 属性,打关键帧 = 调运镜节奏;
+ * 机位由 pathKey 绑定的路径驱动,position 属性被忽略),**行进进度归路径**
+ * (绑定路径对象的 progress 属性,打关键帧 = 调运镜节奏;
  * 对齐曲线侧的 Evaluation Time)。路径为空时回退手动,不产生异常画面。
  * trackTarget=false = 解除朝向绑定(对齐 Blender 关掉 Track To 约束):
  * 解绑瞬间把当前朝向定格进 rotation 属性,画面不跳。
@@ -95,11 +97,14 @@ const shotCameraAdditionalProps = {
   targetHidden: t.boolean(false, {label: '删除 Target(可恢复)'}),
   moveMode: t.stringLiteral(
     'manual',
-    // 选项 = 手动 / 路径对象的真名(对齐 Blender 约束的目标选择:
-    // 选的是"跟随谁",显示对象在大纲里的名字)
-    {manual: '手动', path: pathObjectName(POS_PATH_KEY)},
+    // 选项标签保持通用:配置是模块级常量(deep-equal 约束),
+    // 动态路径清单塞不进来;绑定哪条路径由 pathKey 表达
+    {manual: '手动', path: '路径'},
     {label: '机位驱动'},
   ),
+  // 绑定路径的 key(注册表里的 pathKey);空 = 未绑定。
+  // 主交互入口是面板动作区的绑定按钮,这个文本框只当兜底
+  pathKey: t.string('', {label: '绑定路径'}),
 }
 
 /** 视锥线:末端平面矩形 4 段 + 顶点→平面 4 角 = 8 段 */
@@ -195,20 +200,25 @@ function useObjPropScalar<T>(
 export function ShotCamera({
   cameraKey,
   targetKey,
-  makeDefault,
+  isActive,
+  shotView,
   cameraObjRef,
   targetObjRef,
   onCameraContextMenu,
 }: {
   cameraKey: string
   targetKey: string
-  /** true = 镜头视角全屏(主相机让位);false = 编辑视角,右下角画中画 */
-  makeDefault: boolean
+  /** 活动相机:画中画/镜头视角全屏/导出都只对它生效 */
+  isActive: boolean
+  /** 镜头视角全屏中(此时非活动相机的视锥/Target 也全部隐藏) */
+  shotView: boolean
   cameraObjRef: MutableRefObject<ISheetObject<any> | undefined>
   targetObjRef: MutableRefObject<ISheetObject<any> | undefined>
   /** 右键相机:弹出相机菜单 */
   onCameraContextMenu?: (x: number, y: number) => void
 }) {
+  // true = 镜头视角全屏(主相机让位);false = 编辑视角,右下角画中画
+  const makeDefault = shotView && isActive
   const camRef = useRef<PerspectiveCameraImpl>(null!)
   const targetRef = useRef<Mesh>(null!)
   // 瞄准代理:wrapper 的 lookAt 每帧读它的位置。Target 的位置在优先级
@@ -253,15 +263,70 @@ export function ShotCamera({
   // 都不出现,从源头消灭"拖了没反应、数据还悄悄岔开"的假动作。
   // 空路径驱动自动回退手动,不锁
   const sheet = useCurrentSheet()!
-  // 行进进度在路径对象上(对齐 Blender:进度的家是曲线,不是相机)
-  const posPathMeta = useMemo(() => getPathMeta(sheet, POS_PATH_KEY), [sheet])
-  const posPathHasPoints = usePathHasPoints(sheet, POS_PATH_KEY)
+  // 绑定解析:moveMode=path 时沿 pathKey 绑定的路径;空 pathKey 回退
+  // legacy 'Pos Path'(见 pathBinding.ts);进度仍在路径对象上(共享进度)
+  const paths = usePathsList(sheet)
+  const registeredKeys = useMemo(() => paths.map((e) => e.pathKey), [paths])
   const camMoveMode = useObjPropScalar<string>(
     cameraObjRef,
     'moveMode',
     'manual',
   )
-  const camDriveLocked = camMoveMode === 'path' && posPathHasPoints
+  const camPathKey = useObjPropScalar<string>(cameraObjRef, 'pathKey', '')
+  const boundKey = resolveBoundPathKey(camMoveMode, camPathKey, registeredKeys)
+  // boundKey 为 null 时用 '' 探测(getObject('') 恒不存在,不创建)
+  const boundPathExists = usePathExists(sheet, boundKey ?? '')
+  const boundHasPoints = usePathHasPoints(sheet, boundKey ?? '')
+  // getPathMeta 会顺手创建不存在的对象,只有探测到存在才取
+  const boundMeta = useMemo(
+    () => (boundKey && boundPathExists ? getPathMeta(sheet, boundKey) : null),
+    [sheet, boundKey, boundPathExists],
+  )
+  const camDriveLocked = boundKey !== null && boundHasPoints
+
+  // 绑定失效看护:绑定的路径被删(本地删除/对端同步删除都会走到)→
+  // 回退手动并清绑定,机位定格当前位置(对齐 Blender:约束目标被删,
+  // 物体保持当前变换)。空路径(没控制点)不算失效,维持绑定
+  useEffect(() => {
+    if (!isBindingStale(camMoveMode, camPathKey, registeredKeys)) return
+    const obj = cameraObjRef.current
+    const studio = getStudioSync()
+    if (!obj || !studio) return
+    const scrub = studio.scrub()
+    scrub.capture(({set}) => {
+      set(obj.props.moveMode, 'manual')
+      set(obj.props.pathKey, '')
+    })
+    scrub.commit()
+  }, [camMoveMode, camPathKey, registeredKeys, cameraObjRef])
+
+  // 绑定/解绑:一次 scrub 同时写 pathKey 和 moveMode,
+  // 不留"绑了但没生效"的中间态
+  const bindPath = useCallback(
+    (pathKey: string) => {
+      const obj = cameraObjRef.current
+      const studio = getStudioSync()
+      if (!obj || !studio) return
+      const scrub = studio.scrub()
+      scrub.capture(({set}) => {
+        set(obj.props.pathKey, pathKey)
+        set(obj.props.moveMode, 'path')
+      })
+      scrub.commit()
+    },
+    [cameraObjRef],
+  )
+  const unbindPath = useCallback(() => {
+    const obj = cameraObjRef.current
+    const studio = getStudioSync()
+    if (!obj || !studio) return
+    const scrub = studio.scrub()
+    scrub.capture(({set}) => {
+      set(obj.props.moveMode, 'manual')
+      set(obj.props.pathKey, '')
+    })
+    scrub.commit()
+  }, [cameraObjRef])
 
   // 朝向绑定(Track To):trackTarget 是相机面板上的开关;Target 被软删
   // (相机面板的 targetHidden)时绑定自动失效——两种失效都把当前朝向
@@ -293,8 +358,8 @@ export function ShotCamera({
     // 应用过属性,比每帧镜像的 aimRef 新)
     const sampled = capturePosTmp.current
     const from =
-      val(obj.props.moveMode) === 'path' &&
-      samplePathPoint(POS_PATH_KEY, val(posPathMeta.props.progress), sampled)
+      boundMeta &&
+      samplePathPoint(boundKey!, val(boundMeta.props.progress), sampled)
         ? sampled
         : cam.position
     const m = new Matrix4().lookAt(from, targetRef.current.position, cam.up)
@@ -302,21 +367,21 @@ export function ShotCamera({
     const scrub = studio.scrub()
     scrub.capture(({set}) => set(obj.props.rotation, {x: e.x, y: e.y, z: e.z}))
     scrub.commit()
-  }, [tracking, cameraObjRef, posPathMeta])
+  }, [tracking, cameraObjRef, boundKey, boundMeta])
 
   // 面板动作区(属性后的按钮):把 App 的旧菜单动作下沉到相机面板
   const alignToPathStart = useCallback(() => {
     const obj = cameraObjRef.current
     const studio = getStudioSync()
-    if (!obj || !studio) return
+    if (!obj || !studio || !boundKey) return
     const tmp = new Vector3()
-    if (!samplePathPoint(POS_PATH_KEY, 0, tmp)) return
+    if (!samplePathPoint(boundKey, 0, tmp)) return
     const scrub = studio.scrub()
     scrub.capture(({set}) =>
       set(obj.props.position, {x: tmp.x, y: tmp.y, z: tmp.z}),
     )
     scrub.commit()
-  }, [cameraObjRef])
+  }, [cameraObjRef, boundKey])
 
   const restoreTarget = useCallback(() => {
     const obj = cameraObjRef.current
@@ -332,12 +397,28 @@ export function ShotCamera({
   const objectActions = useMemo(
     () =>
       buildCameraPanelActions({
-        hasPoints: posPathHasPoints,
+        hasPoints: boundHasPoints,
         targetHidden,
         onAlignToPathStart: alignToPathStart,
         onRestoreTarget: restoreTarget,
+        bindablePaths: registeredKeys.map((pathKey) => ({
+          pathKey,
+          label: pathObjectName(pathKey),
+        })),
+        boundPathKey: boundKey,
+        onBindPath: bindPath,
+        onUnbindPath: unbindPath,
       }),
-    [posPathHasPoints, targetHidden, alignToPathStart, restoreTarget],
+    [
+      boundHasPoints,
+      targetHidden,
+      alignToPathStart,
+      restoreTarget,
+      registeredKeys,
+      boundKey,
+      bindPath,
+      unbindPath,
+    ],
   )
 
   // 选中后挂三轴移动箭头:摄像机本体和瞄准点都能拖(机位被路径接管时
@@ -356,8 +437,8 @@ export function ShotCamera({
     if (!cam || !camObj) return
     const tmp = pathSampleTmp.current
     if (
-      val(camObj.props.moveMode) === 'path' &&
-      samplePathPoint(POS_PATH_KEY, val(posPathMeta.props.progress), tmp)
+      boundMeta &&
+      samplePathPoint(boundKey!, val(boundMeta.props.progress), tmp)
     ) {
       cam.position.copy(tmp)
     }
@@ -372,9 +453,9 @@ export function ShotCamera({
   useEffect(() => registerEditorOnly(frustumFill), [frustumFill])
   useEffect(() => registerEditorOnly(targetRef.current), [])
   useEffect(() => {
-    frustum.visible = !makeDefault
-    frustumFill.visible = !makeDefault
-  }, [makeDefault, frustum, frustumFill])
+    frustum.visible = !shotView
+    frustumFill.visible = !shotView
+  }, [shotView, frustum, frustumFill])
 
   useFrame(() => {
     if (camRef.current && frustum.visible) {
@@ -382,10 +463,10 @@ export function ShotCamera({
     }
   })
 
-  // 调试/自动化验证挂钩:浏览器里直接读 three 相机本体
+  // 调试/自动化验证挂钩:浏览器里直接读 three 相机本体(只写活动相机的)
   useEffect(() => {
-    ;(window as any).__shotCam3 = camRef.current
-  }, [])
+    if (isActive) (window as any).__shotCam3 = camRef.current
+  }, [isActive])
 
   // 点视锥线 = 选中摄像机;点 Target 方块 = 选中瞄准点
   const select =
@@ -445,13 +526,13 @@ export function ShotCamera({
         objRef={targetObjRef}
         ref={targetRef}
         position={[0, 1, 0]}
-        visible={!targetHidden && !makeDefault}
+        visible={!targetHidden && !shotView}
         onClick={targetHidden ? undefined : select(targetObjRef)}
       >
         <boxGeometry args={[0.25, 0.25, 0.25]} />
         <meshBasicMaterial color="#ffb020" wireframe />
       </e.mesh>
-      <ShotCameraRenderer camRef={camRef} pip={!makeDefault} />
+      {isActive && <ShotCameraRenderer camRef={camRef} pip={!makeDefault} />}
     </>
   )
 }

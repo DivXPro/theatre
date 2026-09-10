@@ -1269,7 +1269,8 @@ function App() {
               key={entry.cameraKey}
               cameraKey={entry.cameraKey}
               targetKey={entry.targetKey}
-              makeDefault={shotView}
+              isActive={entry.cameraKey === cameras[0]?.cameraKey}
+              shotView={shotView}
               cameraObjRef={shotCameraObjRef}
               targetObjRef={shotTargetObjRef}
               onCameraContextMenu={(x, y) => setCameraMenu({x, y})}
