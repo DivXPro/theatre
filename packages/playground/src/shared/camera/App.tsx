@@ -24,6 +24,7 @@ import React, {
   useRef,
   useState,
 } from 'react'
+import type {MutableRefObject} from 'react'
 import {Canvas, useFrame, useThree} from '@react-three/fiber'
 import type {ThreeEvent} from '@react-three/fiber'
 import {useGLTF} from '@react-three/drei'
@@ -62,6 +63,7 @@ import {
   removeCamera,
   useCamerasList,
 } from './cameraRegistry'
+import type {CameraEntry} from './cameraRegistry'
 import {
   addPathPoint,
   CameraPath,
@@ -469,6 +471,13 @@ function GizmoNav({
   )
 }
 
+// 每台相机一对 objRef(多相机:单对 ref 会被 map 里的实例互相覆盖)。
+// 普通对象即可,不进 React 渲染——可放 Map 里按 key 取
+type ShotObjRefs = {
+  camera: MutableRefObject<ISheetObject<any> | undefined>
+  target: MutableRefObject<ISheetObject<any> | undefined>
+}
+
 function App() {
   const bgs = ['#272730', '#b7c5d1']
   const [bgIndex, setBgIndex] = useState(0)
@@ -476,9 +485,18 @@ function App() {
   const cameraTargetRef = useRef<Mesh>(null!)
   const cameraObjRef = useRef<ISheetObject<any> | undefined>(undefined)
   const targetObjRef = useRef<ISheetObject<any> | undefined>(undefined)
-  // 场景摄像机(镜头):独立于编辑主视角,取景用于画中画/镜头视角
-  const shotCameraObjRef = useRef<ISheetObject<any> | undefined>(undefined)
-  const shotTargetObjRef = useRef<ISheetObject<any> | undefined>(undefined)
+  // 场景摄像机(镜头):独立于编辑主视角,取景用于画中画/镜头视角。
+  // 每台相机一对 objRef,按 cameraKey 取(单对 ref 会被多实例互相覆盖)
+  const shotRefsMapRef = useRef(new Map<string, ShotObjRefs>())
+  const getShotRefs = (cameraKey: string): ShotObjRefs => {
+    const map = shotRefsMapRef.current
+    let refs = map.get(cameraKey)
+    if (!refs) {
+      refs = {camera: {current: undefined}, target: {current: undefined}}
+      map.set(cameraKey, refs)
+    }
+    return refs
+  }
   // true = 全屏镜头视角(导演视角让位,轨道控制器/导航块停用)
   const [shotView, setShotView] = useState(false)
   // 视频导出:进行中的导出句柄 / 导出前的视角(导完恢复)
@@ -490,14 +508,27 @@ function App() {
   const project = getProject('Space')
   const sheet = project.sheet('Scene')
 
-  // 相机清单:P1 上限一台(工具条置灰控制);P2 多相机时这里改成
-  // "活动相机"(右键查看此镜头 = 设为活动),refs 也要按实例分开
   const cameras = useCamerasList(sheet)
-  const activeCamera = cameras.length > 0 ? cameras[0] : null
+  // 活动相机:画中画/镜头视角/导出只对它生效(右键「查看此镜头」= 设活动)。
+  // 持久化没必要(session 态);key 失效(被删)时顺位回退清单第一台
+  const [activeCameraKey, setActiveCameraKey] = useState<string | null>(null)
+  const activeCamera =
+    cameras.find((e) => e.cameraKey === activeCameraKey) ?? cameras[0] ?? null
+
+  // 相机被删(含对端同步):清掉它的 ref slot,不留失效引用
+  useEffect(() => {
+    const map = shotRefsMapRef.current
+    for (const key of [...map.keys()]) {
+      if (!cameras.some((e) => e.cameraKey === key)) map.delete(key)
+    }
+  }, [cameras])
+
+  const activeShotRefs = activeCamera
+    ? getShotRefs(activeCamera.cameraKey)
+    : undefined
 
   // 添加相机:新机位/朝向/瞄准点都取当前导演视角(用户正看着的画面)
   const addCamera = useCallback(() => {
-    if (cameras.length > 0) return
     const entry = nextCameraEntry(cameras)
     const mainCam = cameraObjRef.current
     const mainTarget = targetObjRef.current
@@ -510,27 +541,38 @@ function App() {
           }
         : undefined
     addCameraToRegistry(sheet, entry, seed)
+    // 新相机落地即活动(用户刚加的就是他想看的)
+    setActiveCameraKey(entry.cameraKey)
   }, [cameras, sheet])
 
-  // 删除相机(右键菜单):真删——持久数据清掉、大纲行消失、回到无相机态
-  const deleteCamera = useCallback(() => {
-    const entry = cameras[0]
-    if (!entry) return
-    removeCamera(sheet, entry, {
-      camera: shotCameraObjRef.current,
-      target: shotTargetObjRef.current,
-    })
-  }, [cameras, sheet])
+  // 删除相机(右键菜单):真删——持久数据清掉、大纲行消失;
+  // 活动相机被删时 activeCamera 推导自动顺位给清单第一台
+  const deleteCamera = useCallback(
+    (entry: CameraEntry) => {
+      const refs = shotRefsMapRef.current.get(entry.cameraKey)
+      removeCamera(sheet, entry, {
+        camera: refs?.camera.current,
+        target: refs?.target.current,
+      })
+    },
+    [sheet],
+  )
 
   // 无相机:镜头视角强制退出(没有镜头可看)
   useEffect(() => {
     if (!activeCamera && shotView && !exporting) setShotView(false)
   }, [activeCamera, shotView, exporting])
 
-  // 导出中途相机被删:取消录制(丢弃)
+  // 导出锁定开录时的相机;它中途被删(本地/对端)就中止录制(丢弃)
+  const exportCameraKeyRef = useRef<string | null>(null)
   useEffect(() => {
-    if (exporting && !activeCamera) exportHandleRef.current?.abort()
-  }, [exporting, activeCamera])
+    if (
+      exporting &&
+      !cameras.some((e) => e.cameraKey === exportCameraKeyRef.current)
+    ) {
+      exportHandleRef.current?.abort()
+    }
+  }, [exporting, cameras])
 
   // 运镜路径编辑模式:正在编辑的路径 metaKey(同一时刻只编辑一条,
   // 对齐 Blender 的对象/编辑模式);右键路径线或选中路径后按 Tab 进出
@@ -548,16 +590,18 @@ function App() {
     x: number
     y: number
   } | null>(null)
-  // 右键场景摄像机弹出的菜单:记录光标位置
-  const [cameraMenu, setCameraMenu] = useState<{x: number; y: number} | null>(
-    null,
-  )
+  // 右键场景摄像机弹出的菜单:记录是哪台相机和光标位置
+  const [cameraMenu, setCameraMenu] = useState<{
+    cameraKey: string
+    x: number
+    y: number
+  } | null>(null)
   // 调试/自动化验证挂钩:浏览器里直接读写 sheet 对象与选中态
   ;(window as any).__cameraShot = {
     cameraObjRef,
     targetObjRef,
-    shotCameraObjRef,
-    shotTargetObjRef,
+    shotRefs: shotRefsMapRef.current,
+    activeKey: () => activeCamera?.cameraKey ?? null,
   }
   const {
     placing,
@@ -711,8 +755,9 @@ function App() {
   // 亮过相("没点就不出现")。不自动切相机驱动(用户决策:驱动与否
   // 只在相机面板配)
   const addPosPathPoint = useCallback(() => {
-    const cam = shotCameraObjRef.current
-    const target = shotTargetObjRef.current
+    // 播种来源保持现状:镜头相机优先,主视角兜底(取活动相机的 refs)
+    const cam = activeShotRefs?.camera.current
+    const target = activeShotRefs?.target.current
     const mainCam = cameraObjRef.current
     const mainTarget = targetObjRef.current
     const seed =
@@ -728,7 +773,7 @@ function App() {
     addPathPoint(sheet, entry.pathKey, seed)
     addPathToRegistry(sheet, entry)
     enterPathEdit(entry.pathKey)
-  }, [sheet, enterPathEdit])
+  }, [sheet, enterPathEdit, activeShotRefs])
 
   // 缺失提示:绑定了朝向但 Target 已被删 → 工具条下方纯文字提醒;
   // 恢复动作在相机面板动作区(恢复 Target),提示条不带按钮
@@ -744,7 +789,7 @@ function App() {
         setTargetMissing(false)
         return
       }
-      const cam = shotCameraObjRef.current
+      const cam = activeShotRefs?.camera.current
       if (!cam) {
         requestAnimationFrame(trySubscribe)
         return
@@ -762,7 +807,7 @@ function App() {
       cancelled = true
       offCam?.()
     }
-  }, [shotCameraObjRef, activeCamera])
+  }, [activeCamera])
 
   // 删除整条路径:注册表真删(forgetObject + detach + 清单移除,撤销
   // 两步完整回滚);正在编辑/选中了它的点就一并退出/清掉——用失焦式
@@ -824,7 +869,7 @@ function App() {
   // 动作配置必须 useMemo 缓存引用,重复注册同引用是幂等的
   const posPathHasPoints = usePathHasPoints(sheet, POS_PATH_KEY)
   const movePathToCamera = useCallback(() => {
-    const cam = shotCameraObjRef.current
+    const cam = activeShotRefs?.camera.current
     if (!cam) return
     const tmp = new Vector3()
     if (!samplePathPoint(POS_PATH_KEY, 0, tmp)) return
@@ -834,7 +879,7 @@ function App() {
       y: c.y - tmp.y,
       z: c.z - tmp.z,
     })
-  }, [sheet])
+  }, [sheet, activeShotRefs])
   const pathPanelActions = useMemo(
     () =>
       buildPathPanelActions({
@@ -906,6 +951,7 @@ function App() {
     // 页面上只有一个 canvas(快照编辑器的在 shadow DOM 里,查不到)
     const canvas = document.querySelector('canvas')
     if (!canvas) return
+    exportCameraKeyRef.current = activeCamera?.cameraKey ?? null
     const handle = startShotExport({
       canvas,
       sheet,
@@ -925,7 +971,7 @@ function App() {
         setExporting(false)
         setShotView(prevShotViewRef.current)
       })
-  }, [shotView, sheet])
+  }, [shotView, sheet, activeCamera])
 
   // 导出中按 Esc = 取消(丢弃已录内容)
   useEffect(() => {
@@ -1076,7 +1122,7 @@ function App() {
         onOpenLibrary={() => setLibraryOpen((v) => !v)}
         addPathEnabled={paths.length === 0}
         onAddPath={addPosPathPoint}
-        addCameraEnabled={cameras.length === 0}
+        addCameraEnabled={true}
         onAddCamera={addCamera}
         exportSinks={exportSinks}
         exporting={exporting}
@@ -1188,8 +1234,17 @@ function App() {
         <CanvasContextMenu
           position={cameraMenu}
           items={buildCameraMenuItems({
-            onViewShot: () => setShotView(true),
-            onDeleteCamera: deleteCamera,
+            // 查看此镜头 = 设为活动 + 进镜头视角
+            onViewShot: () => {
+              setActiveCameraKey(cameraMenu.cameraKey)
+              setShotView(true)
+            },
+            onDeleteCamera: () => {
+              const entry = cameras.find(
+                (e) => e.cameraKey === cameraMenu.cameraKey,
+              )
+              if (entry) deleteCamera(entry)
+            },
           })}
           onClose={closeCameraMenu}
         />
@@ -1269,11 +1324,13 @@ function App() {
               key={entry.cameraKey}
               cameraKey={entry.cameraKey}
               targetKey={entry.targetKey}
-              isActive={entry.cameraKey === cameras[0]?.cameraKey}
+              isActive={entry.cameraKey === activeCamera?.cameraKey}
               shotView={shotView}
-              cameraObjRef={shotCameraObjRef}
-              targetObjRef={shotTargetObjRef}
-              onCameraContextMenu={(x, y) => setCameraMenu({x, y})}
+              cameraObjRef={getShotRefs(entry.cameraKey).camera}
+              targetObjRef={getShotRefs(entry.cameraKey).target}
+              onCameraContextMenu={(x, y) =>
+                setCameraMenu({cameraKey: entry.cameraKey, x, y})
+              }
             />
           ))}
           {paths.map((entry) => (
