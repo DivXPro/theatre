@@ -14,7 +14,7 @@ import {getProject, getStudioSync, val} from '@dreamerbird/core'
 import {privateAPI} from '@dreamerbird/core/privateAPIs'
 import getDeep from '@dreamerbird/utils/getDeep'
 import {usePrism} from '@dreamerbird/react'
-import type {IScrub, ISheetObject} from '@dreamerbird/core'
+import type {IScrub, ISheet, ISheetObject} from '@dreamerbird/core'
 import React, {
   Suspense,
   useCallback,
@@ -674,6 +674,9 @@ function App() {
     return studio.onSelectionChange(sync)
   }, [sheet])
 
+  // 路径注册表清单:每条已注册路径一个 CameraPath + 一套面板动作
+  const paths = usePathsList(sheet)
+
   // 进入/退出路径编辑模式(右键菜单和 Tab 共用)
   const enterPathEdit = useCallback((metaKey: string) => {
     setEditingPath(metaKey)
@@ -715,22 +718,23 @@ function App() {
         // Tab 只在选中路径时进入编辑模式(Blender:Tab 作用于选中物;
         // 没选中就什么都不做,避免凭空进入一个看不见的编辑态)
         const studio = getStudioSync()
-        // 路径可能不存在(注册表驱动,没点就不建)——先探测再取句柄,
-        // getPathMeta 查不存在会顺手创建
+        // 选中注册表里任意一条路径的本体 → Tab 进编辑(Blender:Tab 作用于
+        // 选中物)。先探测再取句柄:getPathMeta 查不存在会顺手创建
         const selectedPath =
           studio &&
-          pathExists(sheet, POS_PATH_KEY) &&
-          (studio.selection as unknown[]).includes(
-            getPathMeta(sheet, POS_PATH_KEY),
-          )
-            ? POS_PATH_KEY
-            : undefined
+          paths.find(
+            (e) =>
+              pathExists(sheet, e.pathKey) &&
+              (studio.selection as unknown[]).includes(
+                getPathMeta(sheet, e.pathKey),
+              ),
+          )?.pathKey
         if (selectedPath) enterPathEdit(selectedPath)
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [sheet, shotView, enterPathEdit, exitPathEdit])
+  }, [sheet, shotView, enterPathEdit, exitPathEdit, paths])
 
   // 切镜头视角自动退出编辑模式(路径在镜头视角本就全部隐藏)
   useEffect(() => {
@@ -750,14 +754,17 @@ function App() {
     }
   }, [enterPathEdit, exitPathEdit])
 
-  // 添加路径:注册表加一行并播种一段环绕弧(从当前机位),然后进编辑
-  // 模式。先播种再登记——组件挂载时点已就位,路径对象不会以空名单
-  // 亮过相("没点就不出现")。不自动切相机驱动(用户决策:驱动与否
-  // 只在相机面板配)
+  // 添加路径:注册表加一行并播种一段环绕弧(从活动相机机位,无相机时
+  // 退回主视角机位),然后进编辑模式。先播种再登记——组件挂载时点已就位,
+  // 路径对象不会以空名单亮过相("没点就不出现")。不自动切相机驱动
+  // (用户决策:驱动与否只在相机面板配)
   const addPosPathPoint = useCallback(() => {
-    // 播种来源保持现状:镜头相机优先,主视角兜底(取活动相机的 refs)
-    const cam = activeShotRefs?.camera.current
-    const target = activeShotRefs?.target.current
+    const cam = activeCamera
+      ? shotRefsMapRef.current.get(activeCamera.cameraKey)?.camera.current
+      : undefined
+    const target = activeCamera
+      ? shotRefsMapRef.current.get(activeCamera.cameraKey)?.target.current
+      : undefined
     const mainCam = cameraObjRef.current
     const mainTarget = targetObjRef.current
     const seed =
@@ -773,7 +780,7 @@ function App() {
     addPathPoint(sheet, entry.pathKey, seed)
     addPathToRegistry(sheet, entry)
     enterPathEdit(entry.pathKey)
-  }, [sheet, enterPathEdit, activeShotRefs])
+  }, [sheet, activeCamera, enterPathEdit])
 
   // 缺失提示:绑定了朝向但 Target 已被删 → 工具条下方纯文字提醒;
   // 恢复动作在相机面板动作区(恢复 Target),提示条不带按钮
@@ -835,19 +842,11 @@ function App() {
     }
   }, [sheet, selectedPathPoint, removePath])
 
-  // 路径注册表:P1 上限一条(添加按钮随之置灰),清单第一项即活动路径
-  const paths = usePathsList(sheet)
   // 路径对象只在注册后存在("没点就不出现"):探测不创建——
   // sheet.object 查不存在会顺手创建,那是这里要躲开的
   const posPathExists = usePathExists(sheet, POS_PATH_KEY)
-  // 进度标记/打帧都读 Pos Path 对象的行进进度;对象不存在时为 null,
-  // 各消费方按 null 兜底(报 0/不渲染)
-  const posPathMeta = useMemo(
-    () => (posPathExists ? getPathMeta(sheet, POS_PATH_KEY) : null),
-    [sheet, posPathExists],
-  )
   // 启动自检:对象在但注册表没有 = 孤儿(老结构残留的空路径对象),
-  // 真删——"没点就不出现"。P1 只有 Pos Path 一个 key 要查
+  // 真删——"没点就不出现"。legacy 只查 Pos Path 一个 key
   useEffect(() => {
     if (posPathExists && !paths.some((e) => e.pathKey === POS_PATH_KEY)) {
       removePathFromRegistry(sheet, {pathKey: POS_PATH_KEY})
@@ -865,38 +864,61 @@ function App() {
       exitPathEditOnBlur()
     }
   }, [sheet, editingPath, paths, exitPathEditOnBlur])
-  // 路径面板动作区:路径平移到相机(空路径不出按钮);
-  // 动作配置必须 useMemo 缓存引用,重复注册同引用是幂等的
-  const posPathHasPoints = usePathHasPoints(sheet, POS_PATH_KEY)
-  const movePathToCamera = useCallback(() => {
-    const cam = activeShotRefs?.camera.current
-    if (!cam) return
-    const tmp = new Vector3()
-    if (!samplePathPoint(POS_PATH_KEY, 0, tmp)) return
-    const c = val(cam.props.position)
-    translatePath(sheet, POS_PATH_KEY, {
-      x: c.x - tmp.x,
-      y: c.y - tmp.y,
-      z: c.z - tmp.z,
-    })
-  }, [sheet, activeShotRefs])
-  const pathPanelActions = useMemo(
+
+  // 正在编辑的路径对象(钉帧/关键帧列表都按它算;对象不存在为 null)
+  const editingPathExists = usePathExists(sheet, editingPath ?? '')
+  const editingPathMeta = useMemo(
     () =>
-      buildPathPanelActions({
-        hasPoints: posPathHasPoints,
-        onMovePathToCamera: movePathToCamera,
-      }),
-    [posPathHasPoints, movePathToCamera],
+      editingPath && editingPathExists ? getPathMeta(sheet, editingPath) : null,
+    [sheet, editingPath, editingPathExists],
   )
-  useEffect(() => {
-    // setPathPanelActions 内部走 sheet.object,对象不存在会顺手创建,
-    // 必须登记在案(注册表里有)才注册动作
-    if (posPathExists)
-      setPathPanelActions(sheet, POS_PATH_KEY, pathPanelActions)
-  }, [sheet, posPathExists, pathPanelActions])
+
+  // 每条路径的进度读取(进度标记用):按 key 读对应路径对象,
+  // 对象不存在时报 0(共享进度:进度只在路径对象上)
   const pathProgressOf = useCallback(
-    () => (posPathMeta ? val(posPathMeta.props.progress) : 0),
-    [posPathMeta],
+    (pathKey: string) => () =>
+      pathExists(sheet, pathKey)
+        ? (val(getPathMeta(sheet, pathKey).props.progress) as number)
+        : 0,
+    [sheet],
+  )
+
+  // 路径平移到活动相机机位(采样起点对齐相机;空路径采样失败不出手)
+  const movePathToCamera = useCallback(
+    (pathKey: string) => {
+      const cam = activeCamera
+        ? shotRefsMapRef.current.get(activeCamera.cameraKey)?.camera.current
+        : undefined
+      if (!cam) return
+      const tmp = new Vector3()
+      if (!samplePathPoint(pathKey, 0, tmp)) return
+      const c = val(cam.props.position)
+      translatePath(sheet, pathKey, {
+        x: c.x - tmp.x,
+        y: c.y - tmp.y,
+        z: c.z - tmp.z,
+      })
+    },
+    [sheet, activeCamera],
+  )
+
+  // 绑定到活动相机:一次 scrub 同时写 pathKey 和 moveMode(同 ShotCamera
+  // 的 bindPath;这里是无相机面板时的入口)
+  const bindPathToActiveCamera = useCallback(
+    (pathKey: string) => {
+      const studio = getStudioSync()
+      const cam = activeCamera
+        ? shotRefsMapRef.current.get(activeCamera.cameraKey)?.camera.current
+        : undefined
+      if (!studio || !cam) return
+      const scrub = studio.scrub()
+      scrub.capture(({set}) => {
+        set(cam.props.pathKey, pathKey)
+        set(cam.props.moveMode, 'path')
+      })
+      scrub.commit()
+    },
+    [activeCamera],
   )
 
   // 钉到播放头:把控制点的抵达时间变成时间轴上的标准关键帧。
@@ -906,37 +928,37 @@ function App() {
   const pinPathPointAtPlayhead = useCallback(
     (u: number) => {
       const studio = getStudioSync()
-      if (!studio || !posPathMeta) return
+      if (!studio || !editingPathMeta) return
       const hasTrack =
         typeof getDeep(
-          privateAPI(posPathMeta)
+          privateAPI(editingPathMeta)
             .template.getMapOfValidSequenceTracks_forStudio()
             .getValue(),
           ['progress'],
         ) === 'string'
       if (!hasTrack) {
         studio.transaction(({sequenceProp}) =>
-          sequenceProp(posPathMeta.props.progress),
+          sequenceProp(editingPathMeta.props.progress),
         )
       }
       const scrub = studio.scrub()
-      scrub.capture(({set}) => set(posPathMeta.props.progress, u))
+      scrub.capture(({set}) => set(editingPathMeta.props.progress, u))
       scrub.commit()
     },
-    [posPathMeta],
+    [editingPathMeta],
   )
 
   // 行进进度轨道的关键帧(响应式:打帧/拖帧/删帧/撤销都反映),
   // 路径浮条用它列出选中控制点钉在了哪些时间
   const progressKeyframes = usePrism(
     () =>
-      posPathMeta
-        ? privateAPI(posPathMeta)
+      editingPathMeta
+        ? privateAPI(editingPathMeta)
             .sheet.getSequence()
-            .getKeyframesOfSimpleProp(posPathMeta.props.progress)
+            .getKeyframesOfSimpleProp(editingPathMeta.props.progress)
             .map((k) => ({position: k.position, value: k.value as number}))
         : [],
-    [posPathMeta],
+    [editingPathMeta],
   )
   // 调试挂钩读最新值用(上面 __cameraPathEdit 的 effect 声明在前,直引会 TDZ)
   const progressKeyframesRef = useRef(progressKeyframes)
@@ -1120,7 +1142,7 @@ function App() {
       <TopToolbar
         placing={!!placing}
         onOpenLibrary={() => setLibraryOpen((v) => !v)}
-        addPathEnabled={paths.length === 0}
+        addPathEnabled={true}
         onAddPath={addPosPathPoint}
         addCameraEnabled={true}
         onAddCamera={addCamera}
@@ -1225,6 +1247,16 @@ function App() {
                 enterPathEdit(pathMenu.metaKey)
               }
             },
+            // 有活动相机且它没绑这条时才出「绑定到活动相机」
+            onBindToActiveCamera: (() => {
+              const cam = activeCamera
+                ? shotRefsMapRef.current.get(activeCamera.cameraKey)?.camera
+                    .current
+                : undefined
+              if (!cam) return undefined
+              if (val(cam.props.pathKey) === pathMenu.metaKey) return undefined
+              return () => bindPathToActiveCamera(pathMenu.metaKey)
+            })(),
             onDelete: () => removePath(pathMenu.metaKey),
           })}
           onClose={closePathMenu}
@@ -1276,7 +1308,9 @@ function App() {
           hasSelection={
             !!selectedPathPoint && selectedPathPoint.metaKey === editingPath
           }
-          onAddPoint={addPosPathPoint}
+          onAddPoint={() => {
+            if (editingPath) addPathPoint(sheet, editingPath, undefined)
+          }}
           onDeleteSelected={deleteSelectedPathPoint}
         />
       )}
@@ -1288,9 +1322,7 @@ function App() {
             sheet={sheet}
             metaKey={editingPath}
             pointKey={selectedPathPoint.key}
-            onPinAtPlayhead={
-              editingPath === POS_PATH_KEY ? pinPathPointAtPlayhead : undefined
-            }
+            onPinAtPlayhead={pinPathPointAtPlayhead}
             progressKeyframes={progressKeyframes}
           />
         )}
@@ -1334,6 +1366,14 @@ function App() {
             />
           ))}
           {paths.map((entry) => (
+            <PathPanelActionsRegistrar
+              key={`actions-${entry.pathKey}`}
+              sheet={sheet}
+              pathKey={entry.pathKey}
+              onMovePathToCamera={movePathToCamera}
+            />
+          ))}
+          {paths.map((entry) => (
             <CameraPath
               key={entry.pathKey}
               metaKey={entry.pathKey}
@@ -1350,7 +1390,7 @@ function App() {
                 setSelectedPathPoint(key ? {metaKey: entry.pathKey, key} : null)
               }
               onContextMenu={(metaKey, x, y) => setPathMenu({metaKey, x, y})}
-              progressOf={pathProgressOf}
+              progressOf={pathProgressOf(entry.pathKey)}
             />
           ))}
           <fog attach="fog" args={[bg, 16, 30]} />
@@ -1420,6 +1460,37 @@ function App() {
       </Canvas>
     </div>
   )
+}
+
+/**
+ * 给单条已注册路径挂面板动作(「路径平移到相机」):hasPoints 要响应式
+ * (加点/删点/撤销都反映),每条路径一个实例,避开 hooks 不能按动态清单
+ * 调用的问题
+ */
+function PathPanelActionsRegistrar({
+  sheet,
+  pathKey,
+  onMovePathToCamera,
+}: {
+  sheet: ISheet
+  pathKey: string
+  onMovePathToCamera: (pathKey: string) => void
+}) {
+  const hasPoints = usePathHasPoints(sheet, pathKey)
+  const actions = useMemo(
+    () =>
+      buildPathPanelActions({
+        hasPoints,
+        onMovePathToCamera: () => onMovePathToCamera(pathKey),
+      }),
+    [hasPoints, onMovePathToCamera, pathKey],
+  )
+  useEffect(() => {
+    // setPathPanelActions 内部走 sheet.object,查不存在会顺手创建——
+    // 必须登记在册(注册表里有)才注册动作;本组件只在 paths.map 里渲染
+    if (pathExists(sheet, pathKey)) setPathPanelActions(sheet, pathKey, actions)
+  }, [sheet, pathKey, actions])
+  return null
 }
 
 /**
