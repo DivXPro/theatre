@@ -25,6 +25,8 @@ export function buildPathMenuItems(opts: {
   editing: boolean
   onToggleEdit: () => void
   onDelete: () => void
+  /** 提供时出「绑定到活动相机」(无活动相机/已绑给活动相机时调用方不传) */
+  onBindToActiveCamera?: () => void
 }): ContextMenuItem[] {
   return [
     {
@@ -32,6 +34,15 @@ export function buildPathMenuItems(opts: {
       label: opts.editing ? '退出编辑(Tab)' : '编辑路径(Tab)',
       callback: () => opts.onToggleEdit(),
     },
+    ...(opts.onBindToActiveCamera
+      ? [
+          {
+            type: 'normal',
+            label: '绑定到活动相机',
+            callback: opts.onBindToActiveCamera,
+          } as ContextMenuItem,
+        ]
+      : []),
     {type: 'separator'},
     {
       type: 'normal',
@@ -66,6 +77,13 @@ export function buildCameraPanelActions(opts: {
   targetHidden: boolean
   onAlignToPathStart: () => void
   onRestoreTarget: () => void
+  /** 多路径绑定(P2):可绑的路径清单与当前绑定。
+   *  theatre 属性配置是静态的,路径清单是动态的——绑定选择器不能做成
+   *  属性下拉,放面板动作区(动作是动态注册的) */
+  bindablePaths?: readonly {pathKey: string; label: string}[]
+  boundPathKey?: string | null
+  onBindPath?: (pathKey: string) => void
+  onUnbindPath?: () => void
 }): SheetObjectActionsConfig {
   const actions: SheetObjectActionsConfig = {}
   // 空路径没有"起点"可对齐,不出按钮(actions 无 disabled 概念,用不出现表达)
@@ -74,6 +92,13 @@ export function buildCameraPanelActions(opts: {
   }
   if (opts.targetHidden) {
     actions['恢复 Target'] = () => opts.onRestoreTarget()
+  }
+  if (opts.boundPathKey && opts.onUnbindPath) {
+    actions['解绑路径'] = () => opts.onUnbindPath!()
+  }
+  for (const p of opts.bindablePaths ?? []) {
+    if (p.pathKey === opts.boundPathKey) continue
+    actions[`绑定到 ${p.label}`] = () => opts.onBindPath?.(p.pathKey)
   }
   return actions
 }

@@ -101,3 +101,72 @@ test('导出菜单:每个 sink 一项,点击回传 sink', () => {
   ;(items[1] as any).callback?.({} as any)
   expect(onPick).toHaveBeenCalledWith(sinks[1])
 })
+
+test('路径右键菜单:提供 onBindToActiveCamera 时出「绑定到活动相机」', () => {
+  const onBind = jest.fn()
+  const items = buildPathMenuItems({
+    metaKey: 'Pos Path 2',
+    editing: false,
+    onToggleEdit: jest.fn(),
+    onDelete: jest.fn(),
+    onBindToActiveCamera: onBind,
+  })
+  // [编辑路径(Tab), 绑定到活动相机, separator, 删除路径]
+  expect(items.map((i) => i.type)).toEqual([
+    'normal',
+    'normal',
+    'separator',
+    'normal',
+  ])
+  expect((items[1] as any).label).toBe('绑定到活动相机')
+  ;(items[1] as any).callback?.({} as any)
+  expect(onBind).toHaveBeenCalled()
+
+  // 不提供时结构不变(向后兼容)
+  const plain = buildPathMenuItems({
+    metaKey: 'Pos Path 2',
+    editing: false,
+    onToggleEdit: jest.fn(),
+    onDelete: jest.fn(),
+  })
+  expect(plain.map((i) => i.type)).toEqual(['normal', 'separator', 'normal'])
+})
+
+test('相机面板动作:未绑定时每条可绑路径一个按钮;已绑定出解绑', () => {
+  const onBindPath = jest.fn()
+  const onUnbindPath = jest.fn()
+  const unbound = buildCameraPanelActions({
+    hasPoints: false,
+    targetHidden: false,
+    onAlignToPathStart: jest.fn(),
+    onRestoreTarget: jest.fn(),
+    bindablePaths: [
+      {pathKey: 'Pos Path', label: 'Pos Path'},
+      {pathKey: 'Pos Path 2', label: 'Pos Path 2'},
+    ],
+    boundPathKey: null,
+    onBindPath,
+    onUnbindPath,
+  })
+  expect(Object.keys(unbound)).toEqual(['绑定到 Pos Path', '绑定到 Pos Path 2'])
+  unbound['绑定到 Pos Path 2']({} as any)
+  expect(onBindPath).toHaveBeenCalledWith('Pos Path 2')
+
+  const bound = buildCameraPanelActions({
+    hasPoints: false,
+    targetHidden: false,
+    onAlignToPathStart: jest.fn(),
+    onRestoreTarget: jest.fn(),
+    bindablePaths: [
+      {pathKey: 'Pos Path', label: 'Pos Path'},
+      {pathKey: 'Pos Path 2', label: 'Pos Path 2'},
+    ],
+    boundPathKey: 'Pos Path',
+    onBindPath,
+    onUnbindPath,
+  })
+  // 已绑定的那条不再出「绑定到」,改出「解绑路径」
+  expect(Object.keys(bound)).toEqual(['解绑路径', '绑定到 Pos Path 2'])
+  bound['解绑路径']({} as any)
+  expect(onUnbindPath).toHaveBeenCalled()
+})
