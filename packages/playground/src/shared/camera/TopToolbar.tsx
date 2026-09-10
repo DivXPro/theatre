@@ -24,9 +24,7 @@ function buttonStyle(disabled: boolean, danger = false): React.CSSProperties {
 export function TopToolbar({
   placing,
   onOpenLibrary,
-  addCameraEnabled,
   onAddCamera,
-  addPathEnabled,
   onAddPath,
   exportSinks,
   exporting,
@@ -36,9 +34,7 @@ export function TopToolbar({
 }: {
   placing: boolean
   onOpenLibrary: () => void
-  addCameraEnabled: boolean
   onAddCamera: () => void
-  addPathEnabled: boolean
   onAddPath: () => void
   exportSinks: readonly ExportSink[]
   exporting: boolean
@@ -73,26 +69,16 @@ export function TopToolbar({
         {placing ? '放置中:左键确认落点,Esc/右键取消' : '添加模型'}
       </button>
       <button
-        disabled={!addCameraEnabled}
         onClick={onAddCamera}
-        style={buttonStyle(!addCameraEnabled)}
-        title={
-          addCameraEnabled
-            ? '从当前导演视角创建一台相机'
-            : '已存在相机;多相机将在后续版本开放'
-        }
+        style={buttonStyle(false)}
+        title="从当前导演视角创建一台相机(落地即活动相机)"
       >
         添加相机
       </button>
       <button
-        disabled={!addPathEnabled}
         onClick={onAddPath}
-        style={buttonStyle(!addPathEnabled)}
-        title={
-          addPathEnabled
-            ? '从当前机位播种一段环绕弧,并进入编辑模式'
-            : '已存在路径;多路径将在后续版本开放'
-        }
+        style={buttonStyle(false)}
+        title="从活动相机机位播种一段环绕弧,并进入编辑模式"
       >
         添加路径
       </button>

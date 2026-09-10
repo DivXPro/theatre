@@ -1142,9 +1142,7 @@ function App() {
       <TopToolbar
         placing={!!placing}
         onOpenLibrary={() => setLibraryOpen((v) => !v)}
-        addPathEnabled={true}
         onAddPath={addPosPathPoint}
-        addCameraEnabled={true}
         onAddCamera={addCamera}
         exportSinks={exportSinks}
         exporting={exporting}
