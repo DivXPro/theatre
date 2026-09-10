@@ -842,16 +842,21 @@ function App() {
     }
   }, [sheet, selectedPathPoint, removePath])
 
-  // 路径对象只在注册后存在("没点就不出现"):探测不创建——
-  // sheet.object 查不存在会顺手创建,那是这里要躲开的
-  const posPathExists = usePathExists(sheet, POS_PATH_KEY)
-  // 启动自检:对象在但注册表没有 = 孤儿(老结构残留的空路径对象),
-  // 真删——"没点就不出现"。legacy 只查 Pos Path 一个 key
+  // 启动自检(只在挂载时跑一次):对象在但注册表没有 = 孤儿(老结构
+  // 残留的空路径对象),真删——"没点就不出现"。legacy 只查 Pos Path 一个
+  // key。用非创建式探测 pathExists + 现场重读注册表,不用渲染期快照:
+  // 响应式写法会在"添加路径后对象先于注册表行出现"的瞬间误判刚加的
+  // 路径为孤儿并把它删掉
   useEffect(() => {
-    if (posPathExists && !paths.some((e) => e.pathKey === POS_PATH_KEY)) {
+    if (
+      pathExists(sheet, POS_PATH_KEY) &&
+      !readPathEntries(getPathsRegistry(sheet)).some(
+        (e) => e.pathKey === POS_PATH_KEY,
+      )
+    ) {
       removePathFromRegistry(sheet, {pathKey: POS_PATH_KEY})
     }
-  }, [sheet, posPathExists, paths])
+  }, [sheet])
   // 路径被移除(含对端同步删除)时,它的编辑态/选中点一并清掉。
   // 判定加"对象也没了":添加路径时对象先于注册表行出现(播种在登记
   // 之前),只看清单会在那个瞬间误退刚进入的编辑态
