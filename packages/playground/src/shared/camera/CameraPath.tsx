@@ -202,16 +202,18 @@ export function pathExists(sheet: ISheet, metaKey: string): boolean {
   return (privateAPI(sheet) as any).getObject(metaKey) != null
 }
 
-/** 响应式存在性:订阅内部对象表,任何途径增删对象都会触发 */
+/** 响应式存在性:订阅内部对象表,任何途径增删对象都会触发。
+ *  返回渲染期直读的实时值(state 只负责触发重渲染)——
+ *  key 切换时不存在"上一 key 的过期存在性"窗口 */
 export function usePathExists(sheet: ISheet, metaKey: string): boolean {
-  const [exists, setExists] = useState(() => pathExists(sheet, metaKey))
+  const [, setProbe] = useState(0)
   useEffect(() => {
-    setExists(pathExists(sheet, metaKey))
+    setProbe((n) => n + 1)
     return onChange((privateAPI(sheet) as any).objectsP, () =>
-      setExists(pathExists(sheet, metaKey)),
+      setProbe((n) => n + 1),
     )
   }, [sheet, metaKey])
-  return exists
+  return pathExists(sheet, metaKey)
 }
 
 /**
