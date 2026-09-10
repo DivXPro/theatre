@@ -1,6 +1,6 @@
-import {Atom} from '@toy-box/dataverse'
-import {useVal} from '@toy-box/react'
-import type {$FixMe, $IntentionalAny} from '@toy-box/core/types/public'
+import {Atom} from '@dreamerbird/dataverse'
+import {useVal} from '@dreamerbird/react'
+import type {$FixMe, $IntentionalAny} from '@dreamerbird/core/types/public'
 import React from 'react'
 import {createPortal} from 'react-dom'
 

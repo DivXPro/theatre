@@ -1,10 +1,10 @@
-import type {SequenceEditorTree_Sheet} from '@toy-box/studio/panels/SequenceEditorPanel/layout/tree'
-import {usePrism} from '@toy-box/react'
+import type {SequenceEditorTree_Sheet} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/tree'
+import {usePrism} from '@dreamerbird/react'
 import React from 'react'
 import LeftSheetObjectRow from './SheetObjectRow'
 import AnyCompositeRow from './AnyCompositeRow'
-import {setCollapsedSheetItem} from '@toy-box/studio/panels/SequenceEditorPanel/DopeSheet/setCollapsedSheetObjectOrCompoundProp'
-import uniqueKeyForAnyObject from '@toy-box/utils/uniqueKeyForAnyObject'
+import {setCollapsedSheetItem} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/setCollapsedSheetObjectOrCompoundProp'
+import uniqueKeyForAnyObject from '@dreamerbird/utils/uniqueKeyForAnyObject'
 
 const SheetRow: React.FC<{
   leaf: SequenceEditorTree_Sheet

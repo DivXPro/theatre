@@ -1,6 +1,6 @@
 import React, {useEffect, useRef} from 'react'
 import type {CSSProperties} from 'react'
-import {types} from '@toy-box/core'
+import {types} from '@dreamerbird/core'
 import {Box3D} from './Box3D'
 import {remote} from './Remote'
 

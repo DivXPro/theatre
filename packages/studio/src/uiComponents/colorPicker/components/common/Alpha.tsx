@@ -4,10 +4,10 @@ import type {Interaction} from './Interactive'
 import {Interactive} from './Interactive'
 import {Pointer} from './Pointer'
 
-import {hsvaToHslaString} from '@toy-box/studio/uiComponents/colorPicker/utils/convert'
-import {clamp} from '@toy-box/studio/uiComponents/colorPicker/utils/clamp'
-import {round} from '@toy-box/studio/uiComponents/colorPicker/utils/round'
-import type {HsvaColor} from '@toy-box/studio/uiComponents/colorPicker/types'
+import {hsvaToHslaString} from '@dreamerbird/studio/uiComponents/colorPicker/utils/convert'
+import {clamp} from '@dreamerbird/studio/uiComponents/colorPicker/utils/clamp'
+import {round} from '@dreamerbird/studio/uiComponents/colorPicker/utils/round'
+import type {HsvaColor} from '@dreamerbird/studio/uiComponents/colorPicker/types'
 import styled from 'styled-components'
 
 const Container = styled.div`

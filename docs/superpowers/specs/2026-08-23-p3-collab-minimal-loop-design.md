@@ -71,9 +71,9 @@ front 代码零改动(协作与单人间唯一区别是 `SaazBackInterface` 实�
 
 | 组件 | 职责 | 依赖 |
 |---|---|---|
-| `@toy-box/sync-server` | 自托管状态服务器;内存 SaazBack;AUTH_DISABLED 鉴权开关;env 简化 | saaz/core/utils/trpc/ws |
-| `@toy-box/studio` | serverUrl 分流;SyncServerLink 连接状态信号;断线徽标 | core/saaz/react/trpc |
-| `@toy-box/playground` | sync demo 改 ws URL;sync-collab e2e | studio/core/sync-server(仅测试) |
+| `@dreamerbird/sync-server` | 自托管状态服务器;内存 SaazBack;AUTH_DISABLED 鉴权开关;env 简化 | saaz/core/utils/trpc/ws |
+| `@dreamerbird/studio` | serverUrl 分流;SyncServerLink 连接状态信号;断线徽标 | core/saaz/react/trpc |
+| `@dreamerbird/playground` | sync demo 改 ws URL;sync-collab e2e | studio/core/sync-server(仅测试) |
 
 ## 4. 组件级设计
 

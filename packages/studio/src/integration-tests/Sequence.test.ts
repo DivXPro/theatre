@@ -1,10 +1,10 @@
-import {setupTestSheet} from '@toy-box/studio/integration-tests/testUtils'
-import {encodePathToProp} from '@toy-box/utils/pathToProp'
+import {setupTestSheet} from '@dreamerbird/studio/integration-tests/testUtils'
+import {encodePathToProp} from '@dreamerbird/utils/pathToProp'
 import type {
   ObjectAddressKey,
   SequenceTrackId,
-} from '@toy-box/core/types/public'
-import {__private} from '@toy-box/core'
+} from '@dreamerbird/core/types/public'
+import {__private} from '@dreamerbird/core'
 
 const {keyframeUtils} = __private
 

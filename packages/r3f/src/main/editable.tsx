@@ -16,8 +16,8 @@ import type {EditableFactoryConfig} from './editableFactoryConfigUtils'
 import type {ThreeElements} from '@react-three/fiber'
 import {makeStoreKey} from './utils'
 import type {$FixMe, $IntentionalAny} from '../types'
-import type {ISheetObject, SheetObjectActionsConfig} from '@toy-box/core'
-import {notify} from '@toy-box/core'
+import type {ISheetObject, SheetObjectActionsConfig} from '@dreamerbird/core'
+import {notify} from '@dreamerbird/core'
 import {useCurrentRafDriver} from './RafDriverProvider'
 
 const createEditable = <Keys extends keyof ThreeElements>(

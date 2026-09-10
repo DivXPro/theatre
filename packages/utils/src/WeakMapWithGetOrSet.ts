@@ -1,4 +1,4 @@
-import type {$IntentionalAny} from '@toy-box/utils/types'
+import type {$IntentionalAny} from '@dreamerbird/utils/types'
 
 /**
  * A wrapper around a WeakMap that adds a convenient `getOrSet` method.

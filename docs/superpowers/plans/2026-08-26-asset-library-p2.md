@@ -6,7 +6,7 @@
 
 **Architecture:** 姿势是库里的 `PoseEntry`(bones 内联,无 blob),一期已注册 `pose` theatre 属性。本期在 PlacedModelCore 加"停止时应用姿势"的联动逻辑(播放且动画非空时动画优先,与规格一致);抽帧存姿势 = 读取选中实例的骨骼状态生成 PoseEntry 入库;硬化项集中在 blob 生命周期与异步竞态。
 
-**Tech Stack:** three.js(SkeletonUtils/AnimationMixer)、@toy-box/core(theatre props/scrub)、IndexedDB(fake-indexeddb 测试)、jest(jest-esbuild)
+**Tech Stack:** three.js(SkeletonUtils/AnimationMixer)、@dreamerbird/core(theatre props/scrub)、IndexedDB(fake-indexeddb 测试)、jest(jest-esbuild)
 
 **Spec:** docs/superpowers/specs/2026-08-26-asset-library-design.md(分期 P2 节 + "姿势 / 动作的应用规则"节为绑定依据)
 

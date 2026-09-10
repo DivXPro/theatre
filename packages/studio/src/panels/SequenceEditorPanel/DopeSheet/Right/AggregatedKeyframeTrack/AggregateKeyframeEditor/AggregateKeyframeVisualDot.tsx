@@ -1,9 +1,9 @@
 import React from 'react'
-import {AggregateKeyframePositionIsSelected} from '@toy-box/studio/panels/SequenceEditorPanel/DopeSheet/Right/AggregatedKeyframeTrack/AggregatedKeyframeTrack'
-import {PresenceFlag} from '@toy-box/studio/uiComponents/usePresence'
+import {AggregateKeyframePositionIsSelected} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/Right/AggregatedKeyframeTrack/AggregatedKeyframeTrack'
+import {PresenceFlag} from '@dreamerbird/studio/uiComponents/usePresence'
 import styled from 'styled-components'
-import {absoluteDims} from '@toy-box/studio/utils/absoluteDims'
-import {pointerEventsAutoInNormalMode} from '@toy-box/studio/css'
+import {absoluteDims} from '@dreamerbird/studio/utils/absoluteDims'
+import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
 
 const DOT_SIZE_PX = 16
 const DOT_HOVER_SIZE_PX = DOT_SIZE_PX + 2

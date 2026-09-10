@@ -7,11 +7,11 @@ import React, {
   useRef,
   useState,
 } from 'react'
-import theatre, {getStudioSync} from '@toy-box/core'
+import theatre, {getStudioSync} from '@dreamerbird/core'
 // 1.0 init 流程:studio 在被 import 时才向 core 注册,缺了这行 init({studio: true}) 永远不就绪
-import '@toy-box/studio'
-import type {ISheet} from '@toy-box/core'
-import {types} from '@toy-box/core'
+import '@dreamerbird/studio'
+import type {ISheet} from '@dreamerbird/core'
+import {types} from '@dreamerbird/core'
 import type {ITurtle} from './turtle'
 import {drawTurtlePlan, makeTurtlePlan} from './turtle'
 

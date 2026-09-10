@@ -1,10 +1,10 @@
-import type {$FixMe} from '@toy-box/core/types/public'
-import type {Pointer} from '@toy-box/dataverse'
-import {getPointerParts} from '@toy-box/dataverse'
+import type {$FixMe} from '@dreamerbird/core/types/public'
+import type {Pointer} from '@dreamerbird/dataverse'
+import {getPointerParts} from '@dreamerbird/dataverse'
 import type {Studio} from './Studio'
 import type {CommitOrDiscardOrRecapture} from './StudioStore/StudioStore'
-import type {IScrub, IScrubApi} from '@toy-box/core'
-import {__private} from '@toy-box/core'
+import type {IScrub, IScrubApi} from '@dreamerbird/core'
+import {__private} from '@dreamerbird/core'
 const {forEachPropDeep} = __private.propTypeUtils
 const {isSheetObject} = __private.instanceTypes
 

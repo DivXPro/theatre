@@ -1,5 +1,5 @@
-import {useVal} from '@toy-box/react'
-import getStudio from '@toy-box/studio/getStudio'
+import {useVal} from '@dreamerbird/react'
+import getStudio from '@dreamerbird/studio/getStudio'
 import React from 'react'
 import styled from 'styled-components'
 

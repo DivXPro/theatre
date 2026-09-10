@@ -1,5 +1,5 @@
-import {Atom} from '@toy-box/dataverse'
-import useRefAndState from '@toy-box/studio/utils/useRefAndState'
+import {Atom} from '@dreamerbird/dataverse'
+import useRefAndState from '@dreamerbird/studio/utils/useRefAndState'
 import {useCallback, useEffect, useMemo} from 'react'
 
 let lastTooltipId = 0

@@ -1,24 +1,24 @@
-import {usePrism} from '@toy-box/react'
-import type {Pointer} from '@toy-box/dataverse'
-import {val} from '@toy-box/dataverse'
+import {usePrism} from '@dreamerbird/react'
+import type {Pointer} from '@dreamerbird/dataverse'
+import {val} from '@dreamerbird/dataverse'
 import React, {useMemo, useRef} from 'react'
 import styled from 'styled-components'
-import type {SequenceEditorPanelLayout} from '@toy-box/studio/panels/SequenceEditorPanel/layout/layout'
-import {zIndexes} from '@toy-box/studio/panels/SequenceEditorPanel/SequenceEditorPanel'
-import {topStripHeight} from '@toy-box/studio/panels/SequenceEditorPanel/RightOverlay/TopStrip'
-import useRefAndState from '@toy-box/studio/utils/useRefAndState'
-import type {CommitOrDiscardOrRecapture} from '@toy-box/studio/StudioStore/StudioStore'
-import useDrag from '@toy-box/studio/uiComponents/useDrag'
-import getStudio from '@toy-box/studio/getStudio'
-import usePopover from '@toy-box/studio/uiComponents/Popover/usePopover'
+import type {SequenceEditorPanelLayout} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/layout'
+import {zIndexes} from '@dreamerbird/studio/panels/SequenceEditorPanel/SequenceEditorPanel'
+import {topStripHeight} from '@dreamerbird/studio/panels/SequenceEditorPanel/RightOverlay/TopStrip'
+import useRefAndState from '@dreamerbird/studio/utils/useRefAndState'
+import type {CommitOrDiscardOrRecapture} from '@dreamerbird/studio/StudioStore/StudioStore'
+import useDrag from '@dreamerbird/studio/uiComponents/useDrag'
+import getStudio from '@dreamerbird/studio/getStudio'
+import usePopover from '@dreamerbird/studio/uiComponents/Popover/usePopover'
 import {
   includeLockFrameStampAttrs,
   useLockFrameStampPosition,
-} from '@toy-box/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
+} from '@dreamerbird/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
 import {GoChevronLeft, GoChevronRight} from 'react-icons/go'
 import LengthEditorPopover from './LengthEditorPopover'
-import {pointerEventsAutoInNormalMode} from '@toy-box/studio/css'
-import BasicPopover from '@toy-box/studio/uiComponents/Popover/BasicPopover'
+import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
+import BasicPopover from '@dreamerbird/studio/uiComponents/Popover/BasicPopover'
 
 const coverWidth = 1000
 

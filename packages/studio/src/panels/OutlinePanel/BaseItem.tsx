@@ -1,9 +1,9 @@
-import type {$FixMe, VoidFn} from '@toy-box/core/types/public'
+import type {$FixMe, VoidFn} from '@dreamerbird/core/types/public'
 import React from 'react'
 import styled, {css} from 'styled-components'
-import noop from '@toy-box/utils/noop'
-import {pointerEventsAutoInNormalMode} from '@toy-box/studio/css'
-import {ChevronDown, Package} from '@toy-box/studio/uiComponents/icons'
+import noop from '@dreamerbird/utils/noop'
+import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
+import {ChevronDown, Package} from '@dreamerbird/studio/uiComponents/icons'
 
 export const Container = styled.li`
   margin: 0;

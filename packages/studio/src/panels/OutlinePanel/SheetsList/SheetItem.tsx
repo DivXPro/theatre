@@ -1,7 +1,7 @@
-import type Project from '@toy-box/core/projects/Project'
+import type Project from '@dreamerbird/core/projects/Project'
 
-import {usePrism} from '@toy-box/react'
-import {val} from '@toy-box/dataverse'
+import {usePrism} from '@dreamerbird/react'
+import {val} from '@dreamerbird/dataverse'
 import React from 'react'
 import styled from 'styled-components'
 import {SheetInstanceItem} from './SheetInstanceItem'

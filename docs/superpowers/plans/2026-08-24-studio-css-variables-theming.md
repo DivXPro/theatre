@@ -17,7 +17,7 @@
 -  polished 的 `lighten`/`transparentize`/`darken` 等函数无法处理 `var()`,调用点按各任务说明单独处理。
 - 提交信息遵循仓库 conventional commits(如 `refactor(studio): ...`),按任务分批提交。
 - jest 只匹配 `packages/*/src/**/*.test.ts`(不含 `.tsx`),守卫测试文件必须是 `.test.ts`。
-- 每个任务提交前跑:`yarn jest packages/studio/src/cssVariables.test.ts` 与 `yarn workspace @toy-box/studio typecheck`。
+- 每个任务提交前跑:`yarn jest packages/studio/src/cssVariables.test.ts` 与 `yarn workspace @dreamerbird/studio typecheck`。
 
 ## 已核实的代码事实(实现时不必重查)
 
@@ -27,7 +27,7 @@
 - `panelUtils.panelBorder` 除 `css.tsx` 外无消费方,保留导出、仅改内部实现。
 - 背景值分布:`#282b2f` 与 `rgba(40, 43, 47, 0.95)`、`rgba(40, 43, 47, 0.8)` 三种写法并存,共 8 个文件(Task 2 逐一列出)。
 - `DetailCompoundPropEditor.tsx:110` 为 `transparentize(0.05, '#282b2f')`,等价于 0.95 不透明,替换为 `var(--theatre-panel-bg-95)`。
-- 验证环境:`yarn jest`(根目录)、`yarn workspace @toy-box/studio typecheck`、playground 手动验证用 `yarn workspace @theatre/playground serve`(vite,包名以 `packages/playground/package.json` 为准)。
+- 验证环境:`yarn jest`(根目录)、`yarn workspace @dreamerbird/studio typecheck`、playground 手动验证用 `yarn workspace @theatre/playground serve`(vite,包名以 `packages/playground/package.json` 为准)。
 
 ---
 
@@ -179,7 +179,7 @@ rm packages/studio/src/UIRoot/ProvideTheme.tsx
 
 Run: `yarn jest packages/studio/src/cssVariables.test.ts`
 Expected: PASS
-Run: `yarn workspace @toy-box/studio typecheck`
+Run: `yarn workspace @dreamerbird/studio typecheck`
 Expected: 通过
 
 - [ ] **Step 7: 提交**
@@ -255,7 +255,7 @@ grep -n '#282b2f\|rgba(40, 43, 47' packages/studio/src/notify.tsx \
 - [ ] **Step 3: 验证并提交**
 
 Run: `yarn jest packages/studio/src/cssVariables.test.ts` → PASS
-Run: `yarn workspace @toy-box/studio typecheck` → 通过
+Run: `yarn workspace @dreamerbird/studio typecheck` → 通过
 
 ```bash
 git add -u packages/studio/src
@@ -340,7 +340,7 @@ grep -rn '#fff\b\|#ccc\b\|#888\b\|#888888\|color: white' packages/studio/src --i
 - [ ] **Step 3: 验证并提交**
 
 Run: `yarn jest packages/studio/src/cssVariables.test.ts` → PASS
-Run: `yarn workspace @toy-box/studio typecheck` → 通过
+Run: `yarn workspace @dreamerbird/studio typecheck` → 通过
 
 ```bash
 git add -u packages/studio/src
@@ -406,7 +406,7 @@ grep -n 'rgba(0, 0, 0, 0.25)' packages/studio/src/notify.tsx packages/studio/src
 - [ ] **Step 3: 验证并提交**
 
 Run: `yarn jest packages/studio/src/cssVariables.test.ts` → PASS
-Run: `yarn workspace @toy-box/studio typecheck` → 通过
+Run: `yarn workspace @dreamerbird/studio typecheck` → 通过
 
 ```bash
 git add -u packages/studio/src
@@ -464,7 +464,7 @@ font: var(--theatre-font-size) var(--theatre-font-family);
 - [ ] **Step 3: 验证并提交**
 
 Run: `yarn jest packages/studio/src/cssVariables.test.ts` → PASS
-Run: `yarn workspace @toy-box/studio typecheck` → 通过
+Run: `yarn workspace @dreamerbird/studio typecheck` → 通过
 
 ```bash
 git add -u packages/studio/src
@@ -530,7 +530,7 @@ Studio 的 UI 渲染在 Shadow DOM 中,但以下 CSS 自定义属性可以穿透
 
 Run: `yarn jest packages/studio/src/cssVariables.test.ts` → 全部 PASS
 Run: `yarn jest packages/studio` → studio 既有测试不回归
-Run: `yarn workspace @toy-box/studio typecheck` → 通过
+Run: `yarn workspace @dreamerbird/studio typecheck` → 通过
 
 - [ ] **Step 3: playground 手动验证(人工执行,记录结果)**
 

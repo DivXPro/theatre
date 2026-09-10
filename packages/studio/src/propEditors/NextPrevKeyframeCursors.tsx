@@ -1,12 +1,12 @@
-import type {VoidFn} from '@toy-box/core/types/public'
-import {pointerEventsAutoInNormalMode} from '@toy-box/studio/css'
+import type {VoidFn} from '@dreamerbird/core/types/public'
+import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
 import {transparentize} from 'polished'
 import React from 'react'
 import styled, {css} from 'styled-components'
-import {PresenceFlag} from '@toy-box/studio/uiComponents/usePresence'
-import usePresence from '@toy-box/studio/uiComponents/usePresence'
-import type {StudioSheetItemKey} from '@toy-box/core/types/private'
-import type {BasicKeyframe} from '@toy-box/core'
+import {PresenceFlag} from '@dreamerbird/studio/uiComponents/usePresence'
+import usePresence from '@dreamerbird/studio/uiComponents/usePresence'
+import type {StudioSheetItemKey} from '@dreamerbird/core/types/private'
+import type {BasicKeyframe} from '@dreamerbird/core'
 
 export type NearbyKeyframesControls = {
   prev?: Pick<BasicKeyframe, 'position'> & {

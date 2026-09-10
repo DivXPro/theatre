@@ -1,4 +1,4 @@
-import {getStudioSync} from '@toy-box/core'
+import {getStudioSync} from '@dreamerbird/core'
 import type {UseDragOpts} from './useDrag'
 import useDrag from './useDrag'
 import React, {useLayoutEffect, useMemo, useRef, useState} from 'react'
@@ -6,9 +6,9 @@ import type {
   IProject,
   ISheet,
   ShorthandCompoundPropsToInitialValue,
-} from '@toy-box/core'
-import {onChange, types} from '@toy-box/core'
-import type {IScrub, IStudio} from '@toy-box/core'
+} from '@dreamerbird/core'
+import {onChange, types} from '@dreamerbird/core'
+import type {IScrub, IStudio} from '@dreamerbird/core'
 
 const textInterpolate = (left: string, right: string, progression: number) => {
   if (!left || right.startsWith(left)) {

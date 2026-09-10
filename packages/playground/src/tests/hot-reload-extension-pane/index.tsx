@@ -1,11 +1,11 @@
-import type {IExtension} from '@toy-box/core'
-import theatre from '@toy-box/core'
-import '@toy-box/studio'
-import '@toy-box/core'
+import type {IExtension} from '@dreamerbird/core'
+import theatre from '@dreamerbird/core'
+import '@dreamerbird/studio'
+import '@dreamerbird/core'
 import {extensionButton} from '../../shared/utils/useExtensionButton'
 
 const ext1: IExtension = {
-  id: '@toy-box/hello-world-extension',
+  id: '@dreamerbird/hello-world-extension',
   toolbars: {},
   panes: [],
 }

@@ -1,5 +1,5 @@
-import type {CoreBits} from '@toy-box/core/CoreBundle'
-import type {$IntentionalAny, InitOpts} from '@toy-box/core/types/public'
+import type {CoreBits} from '@dreamerbird/core/CoreBundle'
+import type {$IntentionalAny, InitOpts} from '@dreamerbird/core/types/public'
 import type {StudioOpts} from './Studio'
 
 export const DEFAULT_PERSISTENCE_KEY = 'theatre-0.4'
@@ -51,7 +51,7 @@ export function sanitizeOpts(
     if (!rafDriverPrivateApi) {
       // TODO - need to educate the user about this edge case
       throw new Error(
-        'parameter `rafDriver` in `theatre.init({studio: true, rafDriver})` seems to come from a different version of `@toy-box/core` than the version that is attached to `@toy-box/studio`',
+        'parameter `rafDriver` in `theatre.init({studio: true, rafDriver})` seems to come from a different version of `@dreamerbird/core` than the version that is attached to `@dreamerbird/studio`',
       )
     }
     storeOpts.rafDriver = rafDriverPrivateApi

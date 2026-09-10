@@ -1,4 +1,4 @@
-import {basicFSM} from '@toy-box/utils/basicFSM'
+import {basicFSM} from '@dreamerbird/utils/basicFSM'
 
 export const mousedownActor = basicFSM<[isDown: boolean], boolean>((t) => {
   function toggle(original: boolean) {

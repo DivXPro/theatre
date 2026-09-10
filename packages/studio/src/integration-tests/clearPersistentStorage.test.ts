@@ -1,6 +1,6 @@
 import 'fake-indexeddb/auto'
-import {deriveSaazNames} from '@toy-box/studio/StudioStore/saazNames'
-import {clearPersistentStorageFor} from '@toy-box/studio/StudioStore/clearPersistentStorage'
+import {deriveSaazNames} from '@dreamerbird/studio/StudioStore/saazNames'
+import {clearPersistentStorageFor} from '@dreamerbird/studio/StudioStore/clearPersistentStorage'
 
 test('clearPersistentStorage deletes the saaz IDB databases for the key', async () => {
   const {openDB} = await import('idb')

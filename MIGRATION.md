@@ -6,29 +6,29 @@ Theatre.js 1.0 是这个 fork 的首个主版本。本指南分两部分:Part 1 
 
 ### scope 改名
 
-所有包的 npm scope 从 `@theatre/*` 改为 `@toy-box/*`。
+所有包的 npm scope 从 `@theatre/*` 改为 `@dreamerbird/*`。
 
 ```diff
 - npm install @theatre/core @theatre/studio
-+ npm install @toy-box/core @toy-box/studio
++ npm install @dreamerbird/core @dreamerbird/studio
 ```
 
 ```diff
 - import {getProject} from '@theatre/core'
 - import studio from '@theatre/studio'
-+ import {getProject} from '@toy-box/core'
-+ import '@toy-box/studio'
++ import {getProject} from '@dreamerbird/core'
++ import '@dreamerbird/studio'
 ```
 
-受影响的包:`core`、`studio`、`dataverse`、`react`、`r3f`、`utils`、`browser-bundles`。`@theatre/theatric` → `@toy-box/theatric`。
+受影响的包:`core`、`studio`、`dataverse`、`react`、`r3f`、`utils`、`browser-bundles`。`@theatre/theatric` → `@dreamerbird/theatric`。
 
 ### init() 流程
 
 1.0 定稿了初始化顺序:`getStudio()` 现在要求先 `init()`,顺序相反会抛 `You seem to have called getStudio() before init()`。
 
 ```diff
-+ import '@toy-box/studio'   // 副作用注册 studio bundle
-  import theatre from '@toy-box/core'
++ import '@dreamerbird/studio'   // 副作用注册 studio bundle
+  import theatre from '@dreamerbird/core'
 
 + void theatre.init({studio: true})
   void theatre.getStudio().then((studio) => {
@@ -36,20 +36,20 @@ Theatre.js 1.0 是这个 fork 的首个主版本。本指南分两部分:Part 1 
   })
 ```
 
-要点:先 `init({studio: true, ...})`,再 `getStudio()`;并确保 `import '@toy-box/studio'` 副作用存在,否则 `getStudioSync()` 返回 `undefined`。
+要点:先 `init({studio: true, ...})`,再 `getStudio()`;并确保 `import '@dreamerbird/studio'` 副作用存在,否则 `getStudioSync()` 返回 `undefined`。
 
 ### 被删 / 改的 API
 
 - three.js 0.155+:`BoxBufferGeometry` 已移除,改用 `BoxGeometry`(r3f 用户把 `<boxBufferGeometry>` 改成 `<boxGeometry>`)。
-- **`@toy-box/r3f` 升级到 `@react-three/fiber` 9**:需要 react 19 + `@react-three/fiber@^9` + `@react-three/drei@^10`(three ≥ 0.156)。仍在 react 18 的项目请留在旧版 r3f。配套升级命令:
+- **`@dreamerbird/r3f` 升级到 `@react-three/fiber` 9**:需要 react 19 + `@react-three/fiber@^9` + `@react-three/drei@^10`(three ≥ 0.156)。仍在 react 18 的项目请留在旧版 r3f。配套升级命令:
   ```bash
-  npm install react@^19 react-dom@^19 three @react-three/fiber@^9 @react-three/drei@^10 @toy-box/r3f
+  npm install react@^19 react-dom@^19 three @react-three/fiber@^9 @react-three/drei@^10 @dreamerbird/r3f
   ```
   fiber 9 移除了 `<line>` JSX 元素(与 SVG 重名),`<e.line>` 随之移除,请改用 `<e.lineSegments>` / `<e.lineLoop>`,或用 drei 的 `Line` 组件包一层 `editable()`。
 
 ### 常见问题
 
-- **`getStudioSync()` 返回 undefined**:缺 `import '@toy-box/studio'` 副作用 import,见「init() 流程」。
+- **`getStudioSync()` 返回 undefined**:缺 `import '@dreamerbird/studio'` 副作用 import,见「init() 流程」。
 - **自托管 sync-server 起不来**:minimal loop 需要 `AUTH_DISABLED=true`;auth-on 则必须配 `DATABASE_URL`/`APP_URL`(dev 下还要 `DEV_DB_PORT`/`DEV_DB_PASSWORD`)。
 
 ## Part 2 内部架构说明

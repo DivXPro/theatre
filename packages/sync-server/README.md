@@ -1,7 +1,7 @@
 # sync-server
 
 A self-hostable state server for Theatre.js collaboration. It exposes
-`@toy-box/saaz` through tRPC (WebSocket), so multiple browsers connected to
+`@dreamerbird/saaz` through tRPC (WebSocket), so multiple browsers connected to
 one server see each other's edits in real time.
 
 ## Self-hosted minimal loop (no app, no postgres)
@@ -37,6 +37,6 @@ The app and postgres are only needed for the authenticated, hosted path:
 
 ## Implementation status
 
-- [x] Expose `@toy-box/saaz` through tRPC.
+- [x] Expose `@dreamerbird/saaz` through tRPC.
 - [x] `AUTH_DISABLED` env switch for self-hosted operation.
 - [ ] Store `SaazBack`'s state in the DB

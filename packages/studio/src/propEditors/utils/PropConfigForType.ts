@@ -1,4 +1,4 @@
-import type {PropTypeConfig} from '@toy-box/core/types/public'
+import type {PropTypeConfig} from '@dreamerbird/core/types/public'
 
 export type PropConfigForType<K extends PropTypeConfig['type']> = Extract<
   PropTypeConfig,

@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import {pointerEventsAutoInNormalMode} from '@toy-box/studio/css'
+import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
 import React from 'react'
 
 export const Container = styled.button<{

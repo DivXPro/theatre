@@ -1,4 +1,4 @@
-import {devStringify} from '@toy-box/utils/devStringify'
+import {devStringify} from '@dreamerbird/utils/devStringify'
 
 type AllowedMessageTypes = string | number | object
 

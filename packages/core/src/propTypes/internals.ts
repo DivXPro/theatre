@@ -1,13 +1,13 @@
-import {InvalidArgumentError} from '@toy-box/utils/errors'
-import type {$IntentionalAny} from '@toy-box/core/types/public'
-import userReadableTypeOfValue from '@toy-box/utils/userReadableTypeOfValue'
+import {InvalidArgumentError} from '@dreamerbird/utils/errors'
+import type {$IntentionalAny} from '@dreamerbird/core/types/public'
+import userReadableTypeOfValue from '@dreamerbird/utils/userReadableTypeOfValue'
 import {isPlainObject} from 'lodash-es'
 import {
   propTypeSymbol,
   type PropTypeConfig,
   type UnknownShorthandCompoundProps,
   type UnknownValidCompoundProps,
-} from '@toy-box/core/types/public'
+} from '@dreamerbird/core/types/public'
 import * as t from './index'
 
 export function isLonghandPropType(t: unknown): t is PropTypeConfig {

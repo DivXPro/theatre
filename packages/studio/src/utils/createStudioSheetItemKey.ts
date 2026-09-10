@@ -1,9 +1,9 @@
-import type SheetObject from '@toy-box/core/sheetObjects/SheetObject'
-import type {PathToProp} from '@toy-box/utils/pathToProp'
-import stableValueHash from '@toy-box/utils/stableJsonStringify'
-import type Sheet from '@toy-box/core/sheets/Sheet'
-import type {KeyframeId, SequenceTrackId} from '@toy-box/core/types/public'
-import type {StudioSheetItemKey} from '@toy-box/core/types/private'
+import type SheetObject from '@dreamerbird/core/sheetObjects/SheetObject'
+import type {PathToProp} from '@dreamerbird/utils/pathToProp'
+import stableValueHash from '@dreamerbird/utils/stableJsonStringify'
+import type Sheet from '@dreamerbird/core/sheets/Sheet'
+import type {KeyframeId, SequenceTrackId} from '@dreamerbird/core/types/public'
+import type {StudioSheetItemKey} from '@dreamerbird/core/types/private'
 
 /**
  * This will not necessarily maintain consistent key values if any

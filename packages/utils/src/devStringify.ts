@@ -1,4 +1,4 @@
-import {tightJsonStringify} from '@toy-box/utils/tightJsonStringify'
+import {tightJsonStringify} from '@dreamerbird/utils/tightJsonStringify'
 
 /**
  * Stringifies any value given. If an object is given and `indentJSON` is true,

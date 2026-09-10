@@ -1,9 +1,9 @@
-import {Atom} from '@toy-box/dataverse'
-import {useVal} from '@toy-box/react'
+import {Atom} from '@dreamerbird/dataverse'
+import {useVal} from '@dreamerbird/react'
 /* eslint-disable import/no-extraneous-dependencies */
-import type {IExtension} from '@toy-box/core/types/public'
-import getStudio from '@toy-box/studio/getStudio'
-import type {ToolsetConfig} from '@toy-box/core/types/public'
+import type {IExtension} from '@dreamerbird/core/types/public'
+import getStudio from '@dreamerbird/studio/getStudio'
+import type {ToolsetConfig} from '@dreamerbird/core/types/public'
 import React, {useLayoutEffect, useMemo} from 'react'
 
 import styled from 'styled-components'

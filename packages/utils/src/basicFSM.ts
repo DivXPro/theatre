@@ -1,6 +1,6 @@
-import type {$IntentionalAny} from '@toy-box/utils/types'
-import type {Pointer} from '@toy-box/dataverse'
-import {Atom} from '@toy-box/dataverse'
+import type {$IntentionalAny} from '@dreamerbird/utils/types'
+import type {Pointer} from '@dreamerbird/dataverse'
+import {Atom} from '@dreamerbird/dataverse'
 
 type TakeFn<EventType> = (e: EventType) => void
 type TransitionFn<EventType, ContextType> = (

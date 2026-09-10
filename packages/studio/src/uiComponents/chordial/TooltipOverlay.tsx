@@ -1,11 +1,11 @@
 import React from 'react'
-import type {$IntentionalAny} from '@toy-box/core/types/public'
-import {val} from '@toy-box/dataverse'
-import {usePrism, useVal} from '@toy-box/react'
+import type {$IntentionalAny} from '@dreamerbird/core/types/public'
+import {val} from '@dreamerbird/dataverse'
+import {usePrism, useVal} from '@dreamerbird/react'
 import styled from 'styled-components'
-import usePopoverPosition from '@toy-box/studio/uiComponents/Popover/usePopoverPosition'
+import usePopoverPosition from '@dreamerbird/studio/uiComponents/Popover/usePopoverPosition'
 import {useTransition, animated, easings} from '@react-spring/web'
-import {pointerEventsAutoInNormalMode} from '@toy-box/studio/css'
+import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
 import {tooltipTarget} from './tooltipActor'
 
 export const TooltipOverlay: React.FC<{}> = () => {

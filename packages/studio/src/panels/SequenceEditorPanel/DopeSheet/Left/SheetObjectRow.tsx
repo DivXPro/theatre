@@ -1,9 +1,9 @@
-import type {SequenceEditorTree_SheetObject} from '@toy-box/studio/panels/SequenceEditorPanel/layout/tree'
+import type {SequenceEditorTree_SheetObject} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/tree'
 import React from 'react'
 import AnyCompositeRow from './AnyCompositeRow'
 import {decideRowByPropType} from './PropWithChildrenRow'
-import {setCollapsedSheetItem} from '@toy-box/studio/panels/SequenceEditorPanel/DopeSheet/setCollapsedSheetObjectOrCompoundProp'
-import getStudio from '@toy-box/studio/getStudio'
+import {setCollapsedSheetItem} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/setCollapsedSheetObjectOrCompoundProp'
+import getStudio from '@dreamerbird/studio/getStudio'
 
 const LeftSheetObjectRow: React.FC<{
   leaf: SequenceEditorTree_SheetObject

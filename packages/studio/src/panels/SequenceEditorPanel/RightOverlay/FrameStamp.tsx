@@ -1,16 +1,16 @@
-import type {SequenceEditorPanelLayout} from '@toy-box/studio/panels/SequenceEditorPanel/layout/layout'
-import {usePrism, useVal} from '@toy-box/react'
-import type {Pointer} from '@toy-box/dataverse'
-import {val} from '@toy-box/dataverse'
+import type {SequenceEditorPanelLayout} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/layout'
+import {usePrism, useVal} from '@dreamerbird/react'
+import type {Pointer} from '@dreamerbird/dataverse'
+import {val} from '@dreamerbird/dataverse'
 import React from 'react'
 import styled from 'styled-components'
-import {stampsGridTheme} from '@toy-box/studio/panels/SequenceEditorPanel/FrameGrid/StampsGrid'
-import {zIndexes} from '@toy-box/studio/panels/SequenceEditorPanel/SequenceEditorPanel'
+import {stampsGridTheme} from '@dreamerbird/studio/panels/SequenceEditorPanel/FrameGrid/StampsGrid'
+import {zIndexes} from '@dreamerbird/studio/panels/SequenceEditorPanel/SequenceEditorPanel'
 import {topStripTheme} from './TopStrip'
 import {
   FrameStampPositionType,
   useFrameStampPositionD,
-} from '@toy-box/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
+} from '@dreamerbird/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
 
 const Container = styled.div`
   position: absolute;

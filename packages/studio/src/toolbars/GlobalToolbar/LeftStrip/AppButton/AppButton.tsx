@@ -1,10 +1,10 @@
-import {pointerEventsAutoInNormalMode} from '@toy-box/studio/css'
-import useChordial from '@toy-box/studio/uiComponents/chordial/useChodrial'
+import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
+import useChordial from '@dreamerbird/studio/uiComponents/chordial/useChodrial'
 import React from 'react'
 import styled from 'styled-components'
-import logo from '@toy-box/studio/assets/logo.png'
-import DropdownChevron from '@toy-box/studio/uiComponents/icons/DropdownChevron'
-import BaseMenu from '@toy-box/studio/uiComponents/simpleContextMenu/ContextMenu/BaseMenu'
+import logo from '@dreamerbird/studio/assets/logo.png'
+import DropdownChevron from '@dreamerbird/studio/uiComponents/icons/DropdownChevron'
+import BaseMenu from '@dreamerbird/studio/uiComponents/simpleContextMenu/ContextMenu/BaseMenu'
 
 const Container = styled.div`
   height: 100%;

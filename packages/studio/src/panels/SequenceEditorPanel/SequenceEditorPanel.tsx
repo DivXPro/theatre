@@ -1,8 +1,8 @@
-import {outlineSelection} from '@toy-box/studio/selectors'
-import {usePrism} from '@toy-box/react'
-import {valToAtom} from '@toy-box/utils/valToAtom'
-import type {Pointer} from '@toy-box/dataverse'
-import {prism, val} from '@toy-box/dataverse'
+import {outlineSelection} from '@dreamerbird/studio/selectors'
+import {usePrism} from '@dreamerbird/react'
+import {valToAtom} from '@dreamerbird/utils/valToAtom'
+import type {Pointer} from '@dreamerbird/dataverse'
+import {prism, val} from '@dreamerbird/dataverse'
 import React, {useState} from 'react'
 import styled from 'styled-components'
 
@@ -11,13 +11,15 @@ import GraphEditor from './GraphEditor/GraphEditor'
 import type {PanelDims, SequenceEditorPanelLayout} from './layout/layout'
 import {sequenceEditorPanelLayout} from './layout/layout'
 import RightOverlay from './RightOverlay/RightOverlay'
-import BasePanel, {usePanel} from '@toy-box/studio/panels/BasePanel/BasePanel'
-import type {PanelPosition} from '@toy-box/core/types/private'
-import PanelDragZone from '@toy-box/studio/panels/BasePanel/PanelDragZone'
-import PanelWrapper from '@toy-box/studio/panels/BasePanel/PanelWrapper'
+import BasePanel, {
+  usePanel,
+} from '@dreamerbird/studio/panels/BasePanel/BasePanel'
+import type {PanelPosition} from '@dreamerbird/core/types/private'
+import PanelDragZone from '@dreamerbird/studio/panels/BasePanel/PanelDragZone'
+import PanelWrapper from '@dreamerbird/studio/panels/BasePanel/PanelWrapper'
 import FrameStampPositionProvider from './FrameStampPositionProvider'
-import type SheetObject from '@toy-box/core/sheetObjects/SheetObject'
-import type Sheet from '@toy-box/core/sheets/Sheet'
+import type SheetObject from '@dreamerbird/core/sheetObjects/SheetObject'
+import type Sheet from '@dreamerbird/core/sheets/Sheet'
 import {uniq} from 'lodash-es'
 import GraphEditorToggle from './GraphEditorToggle'
 import {
@@ -25,10 +27,10 @@ import {
   TitleBar,
   TitleBar_Piece,
   TitleBar_Punctuation,
-} from '@toy-box/studio/panels/BasePanel/common'
-import {usePresenceListenersOnRootElement} from '@toy-box/studio/uiComponents/usePresence'
-import type {UIPanelId} from '@toy-box/core/types/private'
-import {__private} from '@toy-box/core'
+} from '@dreamerbird/studio/panels/BasePanel/common'
+import {usePresenceListenersOnRootElement} from '@dreamerbird/studio/uiComponents/usePresence'
+import type {UIPanelId} from '@dreamerbird/core/types/private'
+import {__private} from '@dreamerbird/core'
 const {isSheet, isSheetObject} = __private.instanceTypes
 
 const Container = styled(PanelWrapper)`

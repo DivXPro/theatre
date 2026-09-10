@@ -5,7 +5,7 @@ import type {
   StudioSheetItemKey,
   UIPanelId,
   GraphEditorColors,
-} from '@toy-box/core/types/private'
+} from '@dreamerbird/core/types/private'
 
 import type {
   ProjectAddress,
@@ -23,15 +23,15 @@ import type {
   SerializablePrimitive,
   SerializableValue,
   IRange,
-} from '@toy-box/core/types/public'
+} from '@dreamerbird/core/types/public'
 
 import {
   encodePathToProp,
   commonRootOfPathsToProps,
-} from '@toy-box/utils/pathToProp'
-import removePathFromObject from '@toy-box/utils/removePathFromObject'
-import {transformNumber} from '@toy-box/utils/transformNumber'
-import type {$IntentionalAny} from '@toy-box/utils/types'
+} from '@dreamerbird/utils/pathToProp'
+import removePathFromObject from '@dreamerbird/utils/removePathFromObject'
+import {transformNumber} from '@dreamerbird/utils/transformNumber'
+import type {$IntentionalAny} from '@dreamerbird/utils/types'
 import findLastIndex from 'lodash-es/findLastIndex'
 import keyBy from 'lodash-es/keyBy'
 import pullFromArray from 'lodash-es/pull'
@@ -44,18 +44,18 @@ import type {
   StudioAhistoricState,
   StudioHistoricStateSequenceEditorMarker,
   StudioState,
-} from '@toy-box/core/types/private/studio'
+} from '@dreamerbird/core/types/private/studio'
 import {clamp, cloneDeep} from 'lodash-es'
-import {pointableSetUtil} from '@toy-box/utils/PointableSet'
-import type {ProjectState_Historic} from '@toy-box/core/types/private/core'
-import {current} from '@toy-box/saaz'
+import {pointableSetUtil} from '@dreamerbird/utils/PointableSet'
+import type {ProjectState_Historic} from '@dreamerbird/core/types/private/core'
+import {current} from '@dreamerbird/saaz'
 import type {Draft as _Draft} from 'immer'
 import type {
   EditorDefinitionToEditorInvocable,
   Schema,
-} from '@toy-box/saaz/src/types'
+} from '@dreamerbird/saaz/src/types'
 import {nanoid as generateNonSecure} from 'nanoid/non-secure'
-import {__private} from '@toy-box/core'
+import {__private} from '@dreamerbird/core'
 
 const {keyframeUtils} = __private
 

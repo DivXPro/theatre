@@ -1,5 +1,5 @@
-import {prism} from '@toy-box/dataverse'
-import type {$IntentionalAny} from '@toy-box/utils/types'
+import {prism} from '@dreamerbird/dataverse'
+import type {$IntentionalAny} from '@dreamerbird/utils/types'
 
 /**
  * A prism hook that runs fn() into a prism() call and returns the result

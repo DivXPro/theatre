@@ -1,9 +1,12 @@
-import {prism, val} from '@toy-box/dataverse'
-import SimpleCache from '@toy-box/utils/SimpleCache'
-import type {$IntentionalAny, StrictRecord} from '@toy-box/core/types/public'
+import {prism, val} from '@dreamerbird/dataverse'
+import SimpleCache from '@dreamerbird/utils/SimpleCache'
+import type {
+  $IntentionalAny,
+  StrictRecord,
+} from '@dreamerbird/core/types/public'
 import type {Studio} from './Studio'
-import type {PaneInstanceId, PaneInstance} from '@toy-box/core/types/public'
-import {emptyObject} from '@toy-box/utils'
+import type {PaneInstanceId, PaneInstance} from '@dreamerbird/core/types/public'
+import {emptyObject} from '@dreamerbird/utils'
 
 export default class PaneManager {
   private readonly _cache = new SimpleCache()
@@ -69,7 +72,7 @@ export default class PaneManager {
     const core = this._studio.core
     if (!core) {
       throw new Error(
-        `Can't create a pane because @toy-box/core is not yet loaded`,
+        `Can't create a pane because @dreamerbird/core is not yet loaded`,
       )
     }
 
@@ -104,7 +107,7 @@ export default class PaneManager {
     const core = this._studio.core
     if (!core) {
       throw new Error(
-        `Can't do this yet because @toy-box/core is not yet loaded`,
+        `Can't do this yet because @dreamerbird/core is not yet loaded`,
       )
     }
 

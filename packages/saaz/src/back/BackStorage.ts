@@ -1,4 +1,4 @@
-import {defer} from '@toy-box/utils/defer'
+import {defer} from '@dreamerbird/utils/defer'
 import type {BackStorageAdapter, FullSnapshot, $IntentionalAny} from '../types'
 
 // The idle value of the save queue. Referenced by identity so `save()` can

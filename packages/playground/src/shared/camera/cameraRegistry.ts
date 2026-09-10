@@ -8,8 +8,8 @@
  * 即创建对象、大纲行出现);删除 = forgetObject 清持久数据 + 注册表
  * 移除(组件卸载 → detachObject → 大纲行消失)。
  */
-import {getStudioSync, types as t, val} from '@toy-box/core'
-import type {ISheet, ISheetObject} from '@toy-box/core'
+import {getStudioSync, types as t, val} from '@dreamerbird/core'
+import type {ISheet, ISheetObject} from '@dreamerbird/core'
 import {useEffect, useMemo, useState} from 'react'
 
 /** 注册表对象的 theatre key(大纲顶层 "Cameras" 行,和 Placements 同款) */

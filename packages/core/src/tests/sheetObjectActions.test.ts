@@ -1,6 +1,6 @@
-import {privateAPI} from '@toy-box/core/privateAPIs'
-import {getProject} from '@toy-box/core'
-import {globals} from '@toy-box/core/globals'
+import {privateAPI} from '@dreamerbird/core/privateAPIs'
+import {getProject} from '@dreamerbird/core'
+import {globals} from '@dreamerbird/core/globals'
 
 test('sheet.object 重复调用带 actions 会更新模板上的 actions', () => {
   const project = getProject('test-sheet-obj-actions', {

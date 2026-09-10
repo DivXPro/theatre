@@ -14,11 +14,11 @@
  
 </p>
 
-> **1.0**:本 fork 的 npm scope 为 `@toy-box/*`。从 0.7 升级见 [MIGRATION.md](MIGRATION.md)。
+> **1.0**:本 fork 的 npm scope 为 `@dreamerbird/*`。从 0.7 升级见 [MIGRATION.md](MIGRATION.md)。
 
 > **This is a community fork** of [theatre-js/theatre](https://github.com/theatre-js/theatre),
 > which paused public development at 0.7.x. This fork continues toward a 1.0 release
-> published under the `@toy-box` npm scope. Apache-2.0 license and original
+> published under the `@dreamerbird` npm scope. Apache-2.0 license and original
 > attribution are preserved. See `docs/superpowers/specs/2026-08-21-theatre-1.0-release-design.md`.
 
 Theatre.js is an animation library for high-fidelity motion graphics. It is
@@ -106,9 +106,9 @@ here :)
 
 Your use of Theatre.js is governed under the Apache License Version 2.0:
 
-- Theatre's core (`@toy-box/core`) is released under the Apache License. Same
+- Theatre's core (`@dreamerbird/core`) is released under the Apache License. Same
   goes for most packages in this repository.
-- The studio (`@toy-box/studio`) is released under the AGPL 3.0 License. This is
+- The studio (`@dreamerbird/studio`) is released under the AGPL 3.0 License. This is
   the package that you use to edit your animations, setup your scenes, etc. You
   only use the studio during design/development. Your project's final bundle
-  only includes `@toy-box/core`, so only the Apache License applies.
+  only includes `@dreamerbird/core`, so only the Apache License applies.

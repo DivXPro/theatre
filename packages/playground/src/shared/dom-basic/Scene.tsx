@@ -1,7 +1,7 @@
 import React, {useEffect, useRef} from 'react'
 import type {CSSProperties} from 'react'
-import {types} from '@toy-box/core'
-import type {IProject} from '@toy-box/core'
+import {types} from '@dreamerbird/core'
+import type {IProject} from '@dreamerbird/core'
 import {Box3D, BoxSize} from './Box3D'
 
 // Scene

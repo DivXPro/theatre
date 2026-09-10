@@ -1,5 +1,5 @@
-import type {Pointer} from '@toy-box/dataverse'
-import {getPointerParts, pointer} from '@toy-box/dataverse'
+import type {Pointer} from '@dreamerbird/dataverse'
+import {getPointerParts, pointer} from '@dreamerbird/dataverse'
 import lodashSet from 'lodash-es/set'
 
 /**

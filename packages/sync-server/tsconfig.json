@@ -8,10 +8,10 @@
     "baseUrl": ".",
     "composite": true,
     "paths": {
-      "@toy-box/utils/*": ["../utils/src/*"],
-      "@toy-box/app/*": ["../app/src/*"],
-      "@toy-box/core/*": ["../core/src/*"],
-      "@toy-box/core": ["../core/src/index.ts"]
+      "@dreamerbird/utils/*": ["../utils/src/*"],
+      "@dreamerbird/app/*": ["../app/src/*"],
+      "@dreamerbird/core/*": ["../core/src/*"],
+      "@dreamerbird/core": ["../core/src/index.ts"]
     }
   },
   "references": [

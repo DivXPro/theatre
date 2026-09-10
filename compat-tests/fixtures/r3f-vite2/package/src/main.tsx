@@ -1,6 +1,6 @@
 import ReactDOM from 'react-dom/client'
-import studio from '@toy-box/studio'
-import extension from '@toy-box/r3f/dist/extension'
+import studio from '@dreamerbird/studio'
+import extension from '@dreamerbird/r3f/dist/extension'
 import App from './App/App'
 
 if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {

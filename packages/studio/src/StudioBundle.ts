@@ -1,5 +1,5 @@
-import type CoreBundle from '@toy-box/core/CoreBundle'
-import type {CoreBits} from '@toy-box/core/CoreBundle'
+import type CoreBundle from '@dreamerbird/core/CoreBundle'
+import type {CoreBits} from '@dreamerbird/core/CoreBundle'
 import type {Studio} from './Studio'
 
 export default class StudioBundle {

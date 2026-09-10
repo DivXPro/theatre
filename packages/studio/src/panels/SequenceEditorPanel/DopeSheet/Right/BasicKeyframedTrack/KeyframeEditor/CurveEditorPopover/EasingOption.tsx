@@ -1,11 +1,11 @@
-import useTooltip from '@toy-box/studio/uiComponents/Popover/useTooltip'
+import useTooltip from '@dreamerbird/studio/uiComponents/Popover/useTooltip'
 import React from 'react'
 import styled, {css} from 'styled-components'
 import {handlesFromCssCubicBezierArgs} from './shared'
 import SVGCurveSegment from './SVGCurveSegment'
 import {mergeRefs} from 'react-merge-refs'
 import {COLOR_BASE} from './colors'
-import BasicPopover from '@toy-box/studio/uiComponents/Popover/BasicPopover'
+import BasicPopover from '@dreamerbird/studio/uiComponents/Popover/BasicPopover'
 
 const Wrapper = styled.div<{$isSelected: boolean}>`
   position: relative;

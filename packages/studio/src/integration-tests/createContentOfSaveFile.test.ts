@@ -8,19 +8,19 @@
  */
 import * as fs from 'node:fs'
 import * as path from 'node:path'
-import {__private, getProject, val} from '@toy-box/core'
-import {shallowValidateOnDiskState} from '@toy-box/core/projects/Project'
-import {globals} from '@toy-box/core/globals'
-import {setupTestSheet} from '@toy-box/studio/integration-tests/testUtils'
-import getStudio from '@toy-box/studio/getStudio'
-import {encodePathToProp} from '@toy-box/utils/pathToProp'
-import * as t from '@toy-box/core/propTypes'
+import {__private, getProject, val} from '@dreamerbird/core'
+import {shallowValidateOnDiskState} from '@dreamerbird/core/projects/Project'
+import {globals} from '@dreamerbird/core/globals'
+import {setupTestSheet} from '@dreamerbird/studio/integration-tests/testUtils'
+import getStudio from '@dreamerbird/studio/getStudio'
+import {encodePathToProp} from '@dreamerbird/utils/pathToProp'
+import * as t from '@dreamerbird/core/propTypes'
 import type {
   ObjectAddressKey,
   OnDiskState,
   ProjectId,
   SequenceTrackId,
-} from '@toy-box/core/types/public'
+} from '@dreamerbird/core/types/public'
 
 const {keyframeUtils} = __private
 const {asKeyframeId, asSequenceTrackId} = __private.ids

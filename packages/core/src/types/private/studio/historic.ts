@@ -1,4 +1,4 @@
-import type {ProjectState_Historic} from '@toy-box/core/types/private/core'
+import type {ProjectState_Historic} from '@dreamerbird/core/types/private/core'
 import type {
   ProjectAddress,
   SheetAddress,
@@ -6,20 +6,20 @@ import type {
   WithoutSheetInstance,
   PaneInstanceId,
   SequenceMarkerId,
-} from '@toy-box/core/types/public'
-import type {PathToProp_Encoded} from '@toy-box/utils/pathToProp'
-import type {StrictRecord} from '@toy-box/core/types/public'
-import type {PointableSet} from '@toy-box/utils/PointableSet'
+} from '@dreamerbird/core/types/public'
+import type {PathToProp_Encoded} from '@dreamerbird/utils/pathToProp'
+import type {StrictRecord} from '@dreamerbird/core/types/public'
+import type {PointableSet} from '@dreamerbird/utils/PointableSet'
 import type {
   ObjectAddressKey,
   ProjectId,
   SheetId,
   SheetInstanceId,
-} from '@toy-box/core/types/public'
+} from '@dreamerbird/core/types/public'
 import type {
   UIPanelId,
   GraphEditorColors,
-} from '@toy-box/core/types/private/studio'
+} from '@dreamerbird/core/types/private/studio'
 
 export type PanelPosition = {
   edges: {

@@ -1,12 +1,12 @@
-import {setupTestSheet} from '@toy-box/studio/integration-tests/testUtils'
-import {encodePathToProp} from '@toy-box/utils/pathToProp'
+import {setupTestSheet} from '@dreamerbird/studio/integration-tests/testUtils'
+import {encodePathToProp} from '@dreamerbird/utils/pathToProp'
 import type {
   ObjectAddressKey,
   SequenceTrackId,
-} from '@toy-box/core/types/public'
-import type {$IntentionalAny} from '@toy-box/core/types/public'
-import {iterateOver} from '@toy-box/dataverse'
-import {__private} from '@toy-box/core'
+} from '@dreamerbird/core/types/public'
+import type {$IntentionalAny} from '@dreamerbird/core/types/public'
+import {iterateOver} from '@dreamerbird/dataverse'
+import {__private} from '@dreamerbird/core'
 const {asSequenceTrackId} = __private.ids
 
 describe(`SheetObjectTemplate`, () => {

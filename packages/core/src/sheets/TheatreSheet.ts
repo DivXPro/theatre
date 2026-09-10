@@ -1,15 +1,15 @@
-import {privateAPI, setPrivateAPI} from '@toy-box/core/privateAPIs'
-import {compound} from '@toy-box/core/propTypes'
-import type Sheet from '@toy-box/core/sheets/Sheet'
-import type {SheetAddress} from '@toy-box/core/types/public'
-import {InvalidArgumentError} from '@toy-box/utils/errors'
-import {validateAndSanitiseSlashedPathOrThrow} from '@toy-box/utils/slashedPaths'
-import type {$FixMe, $IntentionalAny} from '@toy-box/core/types/public'
-import userReadableTypeOfValue from '@toy-box/utils/userReadableTypeOfValue'
+import {privateAPI, setPrivateAPI} from '@dreamerbird/core/privateAPIs'
+import {compound} from '@dreamerbird/core/propTypes'
+import type Sheet from '@dreamerbird/core/sheets/Sheet'
+import type {SheetAddress} from '@dreamerbird/core/types/public'
+import {InvalidArgumentError} from '@dreamerbird/utils/errors'
+import {validateAndSanitiseSlashedPathOrThrow} from '@dreamerbird/utils/slashedPaths'
+import type {$FixMe, $IntentionalAny} from '@dreamerbird/core/types/public'
+import userReadableTypeOfValue from '@dreamerbird/utils/userReadableTypeOfValue'
 import deepEqual from 'fast-deep-equal'
-import type SheetObject from '@toy-box/core/sheetObjects/SheetObject'
-import type {ObjectAddressKey} from '@toy-box/core/types/public'
-import {notify} from '@toy-box/core/utils/notify'
+import type SheetObject from '@dreamerbird/core/sheetObjects/SheetObject'
+import type {ObjectAddressKey} from '@dreamerbird/core/types/public'
+import {notify} from '@dreamerbird/core/utils/notify'
 import type {
   IProject,
   ISheet,
@@ -17,7 +17,7 @@ import type {
   ISheetObject,
   ISequence,
   UnknownShorthandCompoundProps,
-} from '@toy-box/core/types/public'
+} from '@dreamerbird/core/types/public'
 
 const weakMapOfUnsanitizedProps = new WeakMap<
   SheetObject,

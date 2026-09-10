@@ -1,15 +1,15 @@
-import {theme} from '@toy-box/studio/css'
+import {theme} from '@dreamerbird/studio/css'
 import type {
   SequenceEditorTree_PrimitiveProp,
   SequenceEditorTree_PropWithChildren,
   SequenceEditorTree_Sheet,
   SequenceEditorTree_SheetObject,
-} from '@toy-box/studio/panels/SequenceEditorPanel/layout/tree'
-import type {VoidFn} from '@toy-box/core/types/public'
+} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/tree'
+import type {VoidFn} from '@dreamerbird/core/types/public'
 import React, {useRef} from 'react'
 import {HiOutlineChevronRight} from 'react-icons/hi'
 import styled from 'styled-components'
-import {propNameTextCSS} from '@toy-box/studio/propEditors/utils/propNameTextCSS'
+import {propNameTextCSS} from '@dreamerbird/studio/propEditors/utils/propNameTextCSS'
 import {usePropHighlightMouseEnter} from './usePropHighlightMouseEnter'
 
 export const LeftRowContainer = styled.li<{$depth: number}>`

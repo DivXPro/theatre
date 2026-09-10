@@ -1,21 +1,21 @@
-import type {BasicKeyframe} from '@toy-box/core/types/public'
+import type {BasicKeyframe} from '@dreamerbird/core/types/public'
 import type {
   DopeSheetSelection,
   SequenceEditorPanelLayout,
-} from '@toy-box/studio/panels/SequenceEditorPanel/layout/layout'
+} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/layout'
 import type {
   SequenceEditorTree_PropWithChildren,
   SequenceEditorTree_Sheet,
   SequenceEditorTree_SheetObject,
-} from '@toy-box/studio/panels/SequenceEditorPanel/layout/tree'
-import type {Pointer} from '@toy-box/dataverse'
-import {val} from '@toy-box/dataverse'
+} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/tree'
+import type {Pointer} from '@dreamerbird/dataverse'
+import {val} from '@dreamerbird/dataverse'
 import React from 'react'
 import styled from 'styled-components'
-import type {SequenceTrackId} from '@toy-box/core/types/public'
-import type {AggregateKeyframePositionIsSelected} from '@toy-box/studio/panels/SequenceEditorPanel/DopeSheet/Right/AggregatedKeyframeTrack/AggregatedKeyframeTrack'
-import type {KeyframeWithTrack} from '@toy-box/studio/panels/SequenceEditorPanel/DopeSheet/Right/collectAggregateKeyframes'
-import type {SheetObjectAddress} from '@toy-box/core/types/public'
+import type {SequenceTrackId} from '@dreamerbird/core/types/public'
+import type {AggregateKeyframePositionIsSelected} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/Right/AggregatedKeyframeTrack/AggregatedKeyframeTrack'
+import type {KeyframeWithTrack} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/Right/collectAggregateKeyframes'
+import type {SheetObjectAddress} from '@dreamerbird/core/types/public'
 import {AggregateKeyframeConnector} from './AggregateKeyframeConnector'
 import {useAggregateKeyframeEditorUtils} from './useAggregateKeyframeEditorUtils'
 import {AggregateKeyframeDot} from './AggregateKeyframeDot'

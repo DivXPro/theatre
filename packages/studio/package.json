@@ -1,5 +1,5 @@
 {
-  "name": "@toy-box/studio",
+  "name": "@dreamerbird/studio",
   "version": "1.0.0",
   "license": "AGPL-3.0-only",
   "description": "Motion design editor for the web",
@@ -27,19 +27,19 @@
   },
   "sideEffects": true,
   "peerDependencies": {
-    "@toy-box/core": "*"
+    "@dreamerbird/core": "*"
   },
   "dependencies": {
-    "@toy-box/dataverse": "workspace:*"
+    "@dreamerbird/dataverse": "workspace:*"
   },
   "devDependencies": {
+    "@dreamerbird/app": "workspace:*",
+    "@dreamerbird/react": "workspace:*",
+    "@dreamerbird/saaz": "workspace:*",
+    "@dreamerbird/sync-server": "workspace:*",
+    "@dreamerbird/utils": "workspace:*",
     "@react-spring/web": "^9.7.3",
     "@styled/typescript-styled-plugin": "^1.0.1",
-    "@toy-box/app": "workspace:*",
-    "@toy-box/react": "workspace:*",
-    "@toy-box/saaz": "workspace:*",
-    "@toy-box/sync-server": "workspace:*",
-    "@toy-box/utils": "workspace:*",
     "@trpc/client": "^10.43.0",
     "@types/jest": "^26.0.24",
     "@types/marked": "^4.0.7",

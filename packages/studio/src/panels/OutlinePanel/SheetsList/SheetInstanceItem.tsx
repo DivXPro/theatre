@@ -1,13 +1,13 @@
-import getStudio from '@toy-box/studio/getStudio'
-import {outlineSelection} from '@toy-box/studio/selectors'
-import {useVal} from '@toy-box/react'
+import getStudio from '@dreamerbird/studio/getStudio'
+import {outlineSelection} from '@dreamerbird/studio/selectors'
+import {useVal} from '@dreamerbird/react'
 import React, {useCallback} from 'react'
 import styled from 'styled-components'
-import ObjectsList from '@toy-box/studio/panels/OutlinePanel/ObjectsList/ObjectsList'
-import BaseItem from '@toy-box/studio/panels/OutlinePanel/BaseItem'
-import type Sheet from '@toy-box/core/sheets/Sheet'
-import {useCollapseStateInOutlinePanel} from '@toy-box/studio/panels/OutlinePanel/outlinePanelUtils'
-import useChordial from '@toy-box/studio/uiComponents/chordial/useChodrial'
+import ObjectsList from '@dreamerbird/studio/panels/OutlinePanel/ObjectsList/ObjectsList'
+import BaseItem from '@dreamerbird/studio/panels/OutlinePanel/BaseItem'
+import type Sheet from '@dreamerbird/core/sheets/Sheet'
+import {useCollapseStateInOutlinePanel} from '@dreamerbird/studio/panels/OutlinePanel/outlinePanelUtils'
+import useChordial from '@dreamerbird/studio/uiComponents/chordial/useChodrial'
 
 const Head = styled.div`
   display: flex;

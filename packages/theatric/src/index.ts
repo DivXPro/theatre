@@ -4,11 +4,11 @@ import type {
   ISheetObject,
   UnknownShorthandCompoundProps,
   IStudio,
-} from '@toy-box/core'
-import {val, init, getStudioSync} from '@toy-box/core'
-import {getProject} from '@toy-box/core'
-import type {Pointer} from '@toy-box/dataverse'
-import {isPointer} from '@toy-box/dataverse'
+} from '@dreamerbird/core'
+import {val, init, getStudioSync} from '@dreamerbird/core'
+import {getProject} from '@dreamerbird/core'
+import type {Pointer} from '@dreamerbird/dataverse'
+import {isPointer} from '@dreamerbird/dataverse'
 import isEqualWith from 'lodash-es/isEqualWith'
 import isEqual from 'lodash-es/isEqual'
 import {useEffect, useMemo, useState, useRef} from 'react'
@@ -27,7 +27,7 @@ if (process.env.NODE_ENV === 'development') {
   // Load the studio bundle (importing it registers the bundle with core), and
   // only then call init() — calling getStudio() before init() throws.
   // Kept behind the NODE_ENV check so production builds treeshake the studio.
-  void import('@toy-box/studio').then(() => {
+  void import('@dreamerbird/studio').then(() => {
     void init({studio: true})
   })
 }
@@ -326,7 +326,7 @@ export function useControls<Config extends ControlsAndButtons>(
   return {...values, ...$setAndGet}
 }
 
-export {types} from '@toy-box/core'
+export {types} from '@dreamerbird/core'
 
 export const button = (onClick: Button['onClick']) => {
   return {

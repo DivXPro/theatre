@@ -1,20 +1,20 @@
-import type Project from '@toy-box/core/projects/Project'
-import Sequence from '@toy-box/core/sequences/Sequence'
-import type SheetObject from '@toy-box/core/sheetObjects/SheetObject'
-import TheatreSheet from '@toy-box/core/sheets/TheatreSheet'
-import type {SheetAddress} from '@toy-box/core/types/public'
-import {Atom, prism, val} from '@toy-box/dataverse'
+import type Project from '@dreamerbird/core/projects/Project'
+import Sequence from '@dreamerbird/core/sequences/Sequence'
+import type SheetObject from '@dreamerbird/core/sheetObjects/SheetObject'
+import TheatreSheet from '@dreamerbird/core/sheets/TheatreSheet'
+import type {SheetAddress} from '@dreamerbird/core/types/public'
+import {Atom, prism, val} from '@dreamerbird/dataverse'
 import type SheetTemplate from './SheetTemplate'
 import type {
   ObjectAddressKey,
   SheetInstanceId,
-} from '@toy-box/core/types/public'
-import type {StrictRecord} from '@toy-box/core/types/public'
+} from '@dreamerbird/core/types/public'
+import type {StrictRecord} from '@dreamerbird/core/types/public'
 import {isInteger} from 'lodash-es'
 import type {
   SheetObjectActionsConfig,
   SheetObjectPropTypeConfig,
-} from '@toy-box/core/types/public'
+} from '@dreamerbird/core/types/public'
 
 type SheetObjectMap = StrictRecord<ObjectAddressKey, SheetObject>
 

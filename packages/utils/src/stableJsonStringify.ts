@@ -1,5 +1,5 @@
 import {isPlainObject} from 'lodash-es'
-import type {$IntentionalAny} from '@toy-box/utils/types'
+import type {$IntentionalAny} from '@dreamerbird/utils/types'
 
 /**
  * Like JSON.stringify, but sorts the keys of objects so the stringified value

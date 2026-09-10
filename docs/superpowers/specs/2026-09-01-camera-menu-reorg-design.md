@@ -80,7 +80,7 @@ DetailPanel 渲染属性后,收集所有扩展对当前选中对象返回的动�
 | 已放置模型 | gizmo 模式三选;删除(现状保留) |
 
 菜单实现统一改用 studio 的 `useMenu`/`ContextMenu`
-(`@toy-box/studio/uiComponents/simpleContextMenu`),
+(`@dreamerbird/studio/uiComponents/simpleContextMenu`),
 删掉 PathContextMenu/ObjectContextMenu 两套手写样式;
 ObjectContextMenu 的 gizmo 模式三段选择用 ContextMenu 的自定义节点保留。
 

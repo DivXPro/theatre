@@ -1,17 +1,17 @@
 import React from 'react'
-import usePopover from '@toy-box/studio/uiComponents/Popover/usePopover'
-import BasicPopover from '@toy-box/studio/uiComponents/Popover/BasicPopover'
+import usePopover from '@dreamerbird/studio/uiComponents/Popover/usePopover'
+import BasicPopover from '@dreamerbird/studio/uiComponents/Popover/BasicPopover'
 import {DeterminePropEditorForKeyframeTree} from './DeterminePropEditorForSingleKeyframe'
-import type {SequenceTrackId} from '@toy-box/core/types/public'
-import type SheetObject from '@toy-box/core/sheetObjects/SheetObject'
+import type {SequenceTrackId} from '@dreamerbird/core/types/public'
+import type SheetObject from '@dreamerbird/core/sheetObjects/SheetObject'
 import type {
   PropTypeConfig_AllSimples,
   PropTypeConfig_Compound,
   PropTypeConfig_Enum,
   UnknownValidCompoundProps,
   BasicKeyframe,
-} from '@toy-box/core/types/public'
-import type {PathToProp} from '@toy-box/utils/pathToProp'
+} from '@dreamerbird/core/types/public'
+import type {PathToProp} from '@dreamerbird/utils/pathToProp'
 
 /** The editor that pops up when directly clicking a Keyframe. */
 export function useKeyframeInlineEditorPopover(

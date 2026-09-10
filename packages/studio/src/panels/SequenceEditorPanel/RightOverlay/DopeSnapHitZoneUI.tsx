@@ -1,10 +1,10 @@
-import {pointerEventsAutoInNormalMode} from '@toy-box/studio/css'
-import {lockedCursorCssVarName} from '@toy-box/studio/uiComponents/PointerEventsHandler'
+import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
+import {lockedCursorCssVarName} from '@dreamerbird/studio/uiComponents/PointerEventsHandler'
 import {css} from 'styled-components'
 import SnapCursor from './SnapCursor.svg'
-import {absoluteDims} from '@toy-box/studio/utils/absoluteDims'
+import {absoluteDims} from '@dreamerbird/studio/utils/absoluteDims'
 import DopeSnap from './DopeSnap'
-import {includeLockFrameStampAttrs} from '@toy-box/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
+import {includeLockFrameStampAttrs} from '@dreamerbird/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
 
 const HIT_ZONE_SIZE_PX = 12
 const SNAP_CURSOR_SIZE_PX = 34

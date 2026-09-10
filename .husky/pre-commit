@@ -2,10 +2,10 @@
 . "$(dirname "$0")/_/husky.sh"
 
 yarn lint-staged
-yarn workspace @toy-box/dataverse run precommit
+yarn workspace @dreamerbird/dataverse run precommit
 
 # if there are unstaged changes in ./packages/dataverse/docs, fail
 if ! git diff --quiet --exit-code -- docs; then
-  echo "Please run 'yarn workspace @toy-box/dataverse run doc' and commit the changes to the docs folder"
+  echo "Please run 'yarn workspace @dreamerbird/dataverse run doc' and commit the changes to the docs folder"
   exit 1
 fi

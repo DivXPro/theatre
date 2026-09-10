@@ -1,14 +1,14 @@
-import type {Pointer} from '@toy-box/dataverse'
+import type {Pointer} from '@dreamerbird/dataverse'
 import React, {useLayoutEffect, useMemo, useRef} from 'react'
 import styled from 'styled-components'
-import type {SequenceEditorPanelLayout} from '@toy-box/studio/panels/SequenceEditorPanel/layout/layout'
-import {useVal} from '@toy-box/react'
-import getStudio from '@toy-box/studio/getStudio'
-import type {BasicNumberInputNudgeFn} from '@toy-box/studio/uiComponents/form/BasicNumberInput'
-import type {CommitOrDiscardOrRecapture} from '@toy-box/studio/StudioStore/StudioStore'
-import {propNameTextCSS} from '@toy-box/studio/propEditors/utils/propNameTextCSS'
-import type {StudioHistoricStateSequenceEditorMarker} from '@toy-box/core/types/private'
-import BasicStringInput from '@toy-box/studio/uiComponents/form/BasicStringInput'
+import type {SequenceEditorPanelLayout} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/layout'
+import {useVal} from '@dreamerbird/react'
+import getStudio from '@dreamerbird/studio/getStudio'
+import type {BasicNumberInputNudgeFn} from '@dreamerbird/studio/uiComponents/form/BasicNumberInput'
+import type {CommitOrDiscardOrRecapture} from '@dreamerbird/studio/StudioStore/StudioStore'
+import {propNameTextCSS} from '@dreamerbird/studio/propEditors/utils/propNameTextCSS'
+import type {StudioHistoricStateSequenceEditorMarker} from '@dreamerbird/core/types/private'
+import BasicStringInput from '@dreamerbird/studio/uiComponents/form/BasicStringInput'
 
 const Container = styled.div`
   display: flex;

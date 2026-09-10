@@ -1,4 +1,4 @@
-import type {Asset, File} from '@toy-box/core/types/public'
+import type {Asset, File} from '@dreamerbird/core/types/public'
 
 export interface IEditingTools<T> {
   temporarilySetValue(v: T): void

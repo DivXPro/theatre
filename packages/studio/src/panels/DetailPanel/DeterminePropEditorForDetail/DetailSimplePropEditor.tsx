@@ -1,15 +1,15 @@
 import type {
   IBasePropType,
   PropTypeConfig_AllSimples,
-} from '@toy-box/core/types/public'
+} from '@dreamerbird/core/types/public'
 import React, {useMemo} from 'react'
-import {useEditingToolsForSimplePropInDetailsPanel} from '@toy-box/studio/propEditors/useEditingToolsForSimpleProp'
-import {SingleRowPropEditor} from '@toy-box/studio/panels/DetailPanel/DeterminePropEditorForDetail/SingleRowPropEditor'
-import type {Pointer} from '@toy-box/dataverse'
-import {getPointerParts} from '@toy-box/dataverse'
-import type SheetObject from '@toy-box/core/sheetObjects/SheetObject'
-import type {ISimplePropEditorReactProps} from '@toy-box/studio/propEditors/simpleEditors/ISimplePropEditorReactProps'
-import {whatPropIsHighlighted} from '@toy-box/studio/panels/SequenceEditorPanel/whatPropIsHighlighted'
+import {useEditingToolsForSimplePropInDetailsPanel} from '@dreamerbird/studio/propEditors/useEditingToolsForSimpleProp'
+import {SingleRowPropEditor} from '@dreamerbird/studio/panels/DetailPanel/DeterminePropEditorForDetail/SingleRowPropEditor'
+import type {Pointer} from '@dreamerbird/dataverse'
+import {getPointerParts} from '@dreamerbird/dataverse'
+import type SheetObject from '@dreamerbird/core/sheetObjects/SheetObject'
+import type {ISimplePropEditorReactProps} from '@dreamerbird/studio/propEditors/simpleEditors/ISimplePropEditorReactProps'
+import {whatPropIsHighlighted} from '@dreamerbird/studio/panels/SequenceEditorPanel/whatPropIsHighlighted'
 
 export type IDetailSimplePropEditorProps<
   TPropTypeConfig extends IBasePropType<string, any>,

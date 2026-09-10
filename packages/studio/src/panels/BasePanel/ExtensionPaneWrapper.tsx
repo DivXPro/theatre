@@ -1,6 +1,6 @@
-import type {$FixMe} from '@toy-box/core/types/public'
-import type {PanelPosition, UIPanelId} from '@toy-box/core/types/private'
-import type {PaneInstance} from '@toy-box/core/types/public'
+import type {$FixMe} from '@dreamerbird/core/types/public'
+import type {PanelPosition, UIPanelId} from '@dreamerbird/core/types/private'
+import type {PaneInstance} from '@dreamerbird/core/types/public'
 import React, {useCallback, useLayoutEffect, useState} from 'react'
 import styled from 'styled-components'
 import {F2 as F2Impl, TitleBar} from './common'
@@ -9,9 +9,9 @@ import PanelDragZone from './PanelDragZone'
 import PanelWrapper from './PanelWrapper'
 import {ErrorBoundary} from 'react-error-boundary'
 import {IoClose} from 'react-icons/io5'
-import getStudio from '@toy-box/studio/getStudio'
-import {panelZIndexes} from '@toy-box/studio/panels/BasePanel/common'
-import type {PaneInstanceId} from '@toy-box/core/types/public'
+import getStudio from '@dreamerbird/studio/getStudio'
+import {panelZIndexes} from '@dreamerbird/studio/panels/BasePanel/common'
+import type {PaneInstanceId} from '@dreamerbird/core/types/public'
 
 const defaultPosition: PanelPosition = {
   edges: {

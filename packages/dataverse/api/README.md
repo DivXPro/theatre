@@ -1,6 +1,6 @@
-@toy-box/dataverse
+@dreamerbird/dataverse
 
-# @toy-box/dataverse
+# @dreamerbird/dataverse
 
 The animation-optimized FRP library powering the internals of Theatre.js.
 

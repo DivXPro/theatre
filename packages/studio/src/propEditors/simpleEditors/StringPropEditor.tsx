@@ -1,6 +1,6 @@
 import React from 'react'
-import type {PropTypeConfig_String} from '@toy-box/core/types/public'
-import BasicStringInput from '@toy-box/studio/uiComponents/form/BasicStringInput'
+import type {PropTypeConfig_String} from '@dreamerbird/core/types/public'
+import BasicStringInput from '@dreamerbird/studio/uiComponents/form/BasicStringInput'
 import type {ISimplePropEditorReactProps} from './ISimplePropEditorReactProps'
 
 function StringPropEditor({

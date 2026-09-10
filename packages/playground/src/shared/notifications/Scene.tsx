@@ -1,6 +1,6 @@
 import React, {useLayoutEffect, useRef} from 'react'
-import type {IProject} from '@toy-box/core'
-import {onChange, types} from '@toy-box/core'
+import type {IProject} from '@dreamerbird/core'
+import {onChange, types} from '@dreamerbird/core'
 
 const globalConfig = {
   background: {

@@ -1,16 +1,16 @@
 import React from 'react'
 import styled from 'styled-components'
 
-import type {PropTypeConfig_AllSimples} from '@toy-box/core/types/public'
-import type {ISimplePropEditorReactProps} from '@toy-box/studio/propEditors/simpleEditors/ISimplePropEditorReactProps'
-import {simplePropEditorByPropType} from '@toy-box/studio/propEditors/simpleEditors/simplePropEditorByPropType'
+import type {PropTypeConfig_AllSimples} from '@dreamerbird/core/types/public'
+import type {ISimplePropEditorReactProps} from '@dreamerbird/studio/propEditors/simpleEditors/ISimplePropEditorReactProps'
+import {simplePropEditorByPropType} from '@dreamerbird/studio/propEditors/simpleEditors/simplePropEditorByPropType'
 import type {
   EditingOptionsTree,
   PrimitivePropEditingOptions,
 } from './useSingleKeyframeInlineEditorPopover'
 import last from 'lodash-es/last'
 import {useTempTransactionEditingTools} from './useTempTransactionEditingTools'
-import {__private} from '@toy-box/core'
+import {__private} from '@dreamerbird/core'
 const {valueInProp} = __private.propTypeUtils
 
 const SingleKeyframePropEditorContainer = styled.div`

@@ -1,8 +1,8 @@
-import {getRegisteredSheetIds} from '@toy-box/studio/selectors'
-import {usePrism} from '@toy-box/react'
+import {getRegisteredSheetIds} from '@dreamerbird/studio/selectors'
+import {usePrism} from '@dreamerbird/react'
 import React from 'react'
 import {SheetItem} from './SheetItem'
-import type Project from '@toy-box/core/projects/Project'
+import type Project from '@dreamerbird/core/projects/Project'
 
 const SheetsList: React.FC<{
   project: Project

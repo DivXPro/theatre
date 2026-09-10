@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto'
-import {SaazFront, FrontIDBAdapter, BackIDBAdapter} from '@toy-box/saaz'
-import {SaazBack} from '@toy-box/saaz'
-import {schema} from '@toy-box/sync-server/state/schema'
+import {SaazFront, FrontIDBAdapter, BackIDBAdapter} from '@dreamerbird/saaz'
+import {SaazBack} from '@dreamerbird/saaz'
+import {schema} from '@dreamerbird/sync-server/state/schema'
 
 jest.setTimeout(10000)
 

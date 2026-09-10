@@ -1,12 +1,16 @@
-import type {PropTypeConfig_Rgba, Rgba} from '@toy-box/core/types/public'
-import {validHexRegExp} from '@toy-box/utils/color'
-import {decorateRgba, rgba2hex, parseRgbaFromHex} from '@toy-box/utils/color'
+import type {PropTypeConfig_Rgba, Rgba} from '@dreamerbird/core/types/public'
+import {validHexRegExp} from '@dreamerbird/utils/color'
+import {
+  decorateRgba,
+  rgba2hex,
+  parseRgbaFromHex,
+} from '@dreamerbird/utils/color'
 import React, {useCallback, useRef} from 'react'
-import {RgbaColorPicker} from '@toy-box/studio/uiComponents/colorPicker'
+import {RgbaColorPicker} from '@dreamerbird/studio/uiComponents/colorPicker'
 import styled from 'styled-components'
-import usePopover from '@toy-box/studio/uiComponents/Popover/usePopover'
-import BasicStringInput from '@toy-box/studio/uiComponents/form/BasicStringInput'
-import {popoverBackgroundColor} from '@toy-box/studio/uiComponents/Popover/BasicPopover'
+import usePopover from '@dreamerbird/studio/uiComponents/Popover/usePopover'
+import BasicStringInput from '@dreamerbird/studio/uiComponents/form/BasicStringInput'
+import {popoverBackgroundColor} from '@dreamerbird/studio/uiComponents/Popover/BasicPopover'
 import type {ISimplePropEditorReactProps} from './ISimplePropEditorReactProps'
 
 const RowContainer = styled.div`

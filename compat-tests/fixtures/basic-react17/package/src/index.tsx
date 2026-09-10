@@ -1,7 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
-import studio from '@toy-box/studio'
-import {getProject} from '@toy-box/core'
+import studio from '@dreamerbird/studio'
+import {getProject} from '@dreamerbird/core'
 import {Scene} from './App/Scene'
 
 studio.initialize()

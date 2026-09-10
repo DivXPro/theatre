@@ -1,5 +1,5 @@
-import type {$IntentionalAny} from '@toy-box/core/types/public'
-import {pointerEventsAutoInNormalMode} from '@toy-box/studio/css'
+import type {$IntentionalAny} from '@dreamerbird/core/types/public'
+import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
 import React from 'react'
 import styled from 'styled-components'
 import PopoverArrow from './PopoverArrow'

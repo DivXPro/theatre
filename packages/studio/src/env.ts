@@ -1,4 +1,4 @@
-import type {Env} from '@toy-box/core/envSchema'
+import type {Env} from '@dreamerbird/core/envSchema'
 
 // process.env is guaranteed to be of type Env, because we validate it in `devEnv/cli`
 //

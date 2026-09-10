@@ -5,9 +5,9 @@ import {useState} from 'react'
 import React, {useMemo, useRef} from 'react'
 import styled from 'styled-components'
 import {mergeRefs} from 'react-merge-refs'
-import useRefAndState from '@toy-box/studio/utils/useRefAndState'
-import useOnClickOutside from '@toy-box/studio/uiComponents/useOnClickOutside'
-import useDrag from '@toy-box/studio/uiComponents/useDrag'
+import useRefAndState from '@dreamerbird/studio/utils/useRefAndState'
+import useOnClickOutside from '@dreamerbird/studio/uiComponents/useOnClickOutside'
+import useDrag from '@dreamerbird/studio/uiComponents/useDrag'
 
 const Container = styled.div`
   height: 100%;

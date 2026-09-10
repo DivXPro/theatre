@@ -1,12 +1,12 @@
 import {transparentize} from 'polished'
 import React from 'react'
 import styled from 'styled-components'
-import getStudio from '@toy-box/studio/getStudio'
-import type {PathToProp} from '@toy-box/utils/pathToProp'
-import type SheetObject from '@toy-box/core/sheetObjects/SheetObject'
-import type {PropTypeConfig} from '@toy-box/core/types/public'
+import getStudio from '@dreamerbird/studio/getStudio'
+import type {PathToProp} from '@dreamerbird/utils/pathToProp'
+import type SheetObject from '@dreamerbird/core/sheetObjects/SheetObject'
+import type {PropTypeConfig} from '@dreamerbird/core/types/public'
 import {nextPrevCursorsTheme} from './NextPrevKeyframeCursors'
-import {__private} from '@toy-box/core'
+import {__private} from '@dreamerbird/core'
 const {isPropConfigComposite, iteratePropType} = __private.propTypeUtils
 
 const theme = {

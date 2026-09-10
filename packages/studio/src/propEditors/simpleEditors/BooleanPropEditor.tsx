@@ -1,7 +1,7 @@
-import type {PropTypeConfig_Boolean} from '@toy-box/core/types/public'
+import type {PropTypeConfig_Boolean} from '@dreamerbird/core/types/public'
 import React, {useCallback} from 'react'
 import styled from 'styled-components'
-import BasicCheckbox from '@toy-box/studio/uiComponents/form/BasicCheckbox'
+import BasicCheckbox from '@dreamerbird/studio/uiComponents/form/BasicCheckbox'
 import type {ISimplePropEditorReactProps} from './ISimplePropEditorReactProps'
 
 const Input = styled(BasicCheckbox)`

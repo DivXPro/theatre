@@ -1,7 +1,7 @@
-import {getProject} from '@toy-box/core'
+import {getProject} from '@dreamerbird/core'
 import React, {useEffect, useRef} from 'react'
 import {Canvas} from '@react-three/fiber'
-import {editable as e, SheetProvider, PerspectiveCamera} from '@toy-box/r3f'
+import {editable as e, SheetProvider, PerspectiveCamera} from '@dreamerbird/r3f'
 import state from './state.json'
 
 // credit: https://codesandbox.io/s/camera-pan-nsb7f

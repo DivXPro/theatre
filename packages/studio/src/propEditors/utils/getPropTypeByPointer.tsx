@@ -1,6 +1,6 @@
-import type {PropTypeConfig} from '@toy-box/core/types/public'
-import type SheetObject from '@toy-box/core/sheetObjects/SheetObject'
-import {getPointerParts} from '@toy-box/dataverse'
+import type {PropTypeConfig} from '@dreamerbird/core/types/public'
+import type SheetObject from '@dreamerbird/core/sheetObjects/SheetObject'
+import {getPointerParts} from '@dreamerbird/dataverse'
 
 /**
  * @deprecated because it uses obj.template.staticConfig

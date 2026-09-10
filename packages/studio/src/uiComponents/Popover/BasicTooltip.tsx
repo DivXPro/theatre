@@ -1,7 +1,7 @@
 import styled from 'styled-components'
-import {pointerEventsAutoInNormalMode} from '@toy-box/studio/css'
+import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
 import React from 'react'
-import type {$IntentionalAny} from '@toy-box/core/types/public'
+import type {$IntentionalAny} from '@dreamerbird/core/types/public'
 
 const Container = styled.div`
   position: absolute;

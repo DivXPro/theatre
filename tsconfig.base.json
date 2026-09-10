@@ -16,23 +16,23 @@
     "stripInternal": true,
     "declaration": true,
     "paths": {
-      "@toy-box/core": ["./packages/core/src/index.ts"],
-      "@toy-box/core/*": ["./packages/core/src/*"],
-      "@toy-box/studio": ["./packages/studio/src/index.ts"],
-      "@toy-box/studio/*": ["./packages/studio/src/*"],
-      "@toy-box/utils": ["./packages/utils/src/index.ts"],
-      "@toy-box/utils/*": ["./packages/utils/src/*"],
-      "@toy-box/saaz": ["./packages/saaz/src/index.ts"],
-      "@toy-box/app/*": ["./packages/app/src/*"],
-      "@toy-box/sync-server/*": ["./packages/sync-server/src/*"],
-      "@toy-box/dataverse": ["./packages/dataverse/src/index.ts"],
-      "@toy-box/react": ["./packages/react/src/index.ts"],
-      "@toy-box/r3f": ["./packages/r3f/src/index.ts"],
-      "@toy-box/r3f/dist/extension": ["./packages/r3f/src/extension/index.ts"],
-      "@toy-box/dataverse-experiments": [
+      "@dreamerbird/core": ["./packages/core/src/index.ts"],
+      "@dreamerbird/core/*": ["./packages/core/src/*"],
+      "@dreamerbird/studio": ["./packages/studio/src/index.ts"],
+      "@dreamerbird/studio/*": ["./packages/studio/src/*"],
+      "@dreamerbird/utils": ["./packages/utils/src/index.ts"],
+      "@dreamerbird/utils/*": ["./packages/utils/src/*"],
+      "@dreamerbird/saaz": ["./packages/saaz/src/index.ts"],
+      "@dreamerbird/app/*": ["./packages/app/src/*"],
+      "@dreamerbird/sync-server/*": ["./packages/sync-server/src/*"],
+      "@dreamerbird/dataverse": ["./packages/dataverse/src/index.ts"],
+      "@dreamerbird/react": ["./packages/react/src/index.ts"],
+      "@dreamerbird/r3f": ["./packages/r3f/src/index.ts"],
+      "@dreamerbird/r3f/dist/extension": ["./packages/r3f/src/extension/index.ts"],
+      "@dreamerbird/dataverse-experiments": [
         "./packages/dataverse-experiments/src/index.ts"
       ],
-      "@toy-box/theatric": ["./packages/theatric/src/index.ts"]
+      "@dreamerbird/theatric": ["./packages/theatric/src/index.ts"]
     },
     "forceConsistentCasingInFileNames": true
   },

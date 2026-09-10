@@ -3,19 +3,19 @@ import type {
   PropTypeConfig_AllSimples,
   PropTypeConfig_Compound,
   UnknownValidCompoundProps,
-} from '@toy-box/core/types/public'
-import type SheetObject from '@toy-box/core/sheetObjects/SheetObject'
-import type {IPropPathToTrackIdTree} from '@toy-box/core/sheetObjects/SheetObjectTemplate'
-import type Sheet from '@toy-box/core/sheets/Sheet'
-import type {PathToProp} from '@toy-box/utils/pathToProp'
-import type {StudioSheetItemKey} from '@toy-box/core/types/private'
-import {createStudioSheetItemKey} from '@toy-box/studio/utils/createStudioSheetItemKey'
-import type {$FixMe, $IntentionalAny} from '@toy-box/core/types/public'
-import {prism, val, pointerToPrism} from '@toy-box/dataverse'
-import logger from '@toy-box/utils/logger'
-import {titleBarHeight} from '@toy-box/studio/panels/BasePanel/common'
-import type {Studio} from '@toy-box/studio/Studio'
-import type {SequenceTrackId} from '@toy-box/core/types/public'
+} from '@dreamerbird/core/types/public'
+import type SheetObject from '@dreamerbird/core/sheetObjects/SheetObject'
+import type {IPropPathToTrackIdTree} from '@dreamerbird/core/sheetObjects/SheetObjectTemplate'
+import type Sheet from '@dreamerbird/core/sheets/Sheet'
+import type {PathToProp} from '@dreamerbird/utils/pathToProp'
+import type {StudioSheetItemKey} from '@dreamerbird/core/types/private'
+import {createStudioSheetItemKey} from '@dreamerbird/studio/utils/createStudioSheetItemKey'
+import type {$FixMe, $IntentionalAny} from '@dreamerbird/core/types/public'
+import {prism, val, pointerToPrism} from '@dreamerbird/dataverse'
+import logger from '@dreamerbird/utils/logger'
+import {titleBarHeight} from '@dreamerbird/studio/panels/BasePanel/common'
+import type {Studio} from '@dreamerbird/studio/Studio'
+import type {SequenceTrackId} from '@dreamerbird/core/types/public'
 
 /**
  * Base "view model" for each row with common

@@ -1,8 +1,8 @@
-import type {Asset} from '@toy-box/core/types/public'
-import type Project from '@toy-box/core/projects/Project'
-import {val} from '@toy-box/dataverse'
-import type {$IntentionalAny} from '@toy-box/core/types/public'
-import {__private} from '@toy-box/core'
+import type {Asset} from '@dreamerbird/core/types/public'
+import type Project from '@dreamerbird/core/projects/Project'
+import {val} from '@dreamerbird/dataverse'
+import type {$IntentionalAny} from '@dreamerbird/core/types/public'
+import {__private} from '@dreamerbird/core'
 const {forEachPropDeep} = __private.propTypeUtils
 const {keyframeUtils} = __private
 

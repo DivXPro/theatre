@@ -13,8 +13,8 @@
  * 路径(走 removePathFromRegistry);启动自检清掉"对象在但清单没有"的
  * 孤儿(老场景残留的空路径对象)。
  */
-import {getStudioSync, types as t, val} from '@toy-box/core'
-import type {ISheet, ISheetObject} from '@toy-box/core'
+import {getStudioSync, types as t, val} from '@dreamerbird/core'
+import type {ISheet, ISheetObject} from '@dreamerbird/core'
 import {useEffect, useMemo, useState} from 'react'
 import {getPathMeta} from './CameraPath'
 

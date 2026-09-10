@@ -1,13 +1,13 @@
 import {useEffect} from 'react'
-import getStudio from '@toy-box/studio/getStudio'
-import {cmdIsDown} from '@toy-box/utils/keyboardUtils'
-import {getSelectedSequence} from '@toy-box/studio/selectors'
-import type {$IntentionalAny} from '@toy-box/core/types/public'
-import type {Prism} from '@toy-box/dataverse'
-import {Atom, prism, val} from '@toy-box/dataverse'
-import type Sequence from '@toy-box/core/sequences/Sequence'
-import memoizeFn from '@toy-box/utils/memoizeFn'
-import type {IPlaybackRange} from '@toy-box/core/types/public'
+import getStudio from '@dreamerbird/studio/getStudio'
+import {cmdIsDown} from '@dreamerbird/utils/keyboardUtils'
+import {getSelectedSequence} from '@dreamerbird/studio/selectors'
+import type {$IntentionalAny} from '@dreamerbird/core/types/public'
+import type {Prism} from '@dreamerbird/dataverse'
+import {Atom, prism, val} from '@dreamerbird/dataverse'
+import type Sequence from '@dreamerbird/core/sequences/Sequence'
+import memoizeFn from '@dreamerbird/utils/memoizeFn'
+import type {IPlaybackRange} from '@dreamerbird/core/types/public'
 
 let playPauseKeyboardShortcutIsEnabled = true
 export function disablePlayPauseKeyboardShortcut() {

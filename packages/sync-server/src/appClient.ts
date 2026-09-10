@@ -1,4 +1,4 @@
-import type {AppRouter} from '@toy-box/app/src/server/api/root'
+import type {AppRouter} from '@dreamerbird/app/src/server/api/root'
 import type {CreateTRPCProxyClient} from '@trpc/client'
 import {createTRPCProxyClient, httpBatchLink} from '@trpc/client'
 import superjson from 'superjson'

@@ -1,5 +1,5 @@
-import {Atom, val} from '@toy-box/dataverse'
-import type {$IntentionalAny} from '@toy-box/utils/types'
+import {Atom, val} from '@dreamerbird/dataverse'
+import type {$IntentionalAny} from '@dreamerbird/utils/types'
 import {wireDirectSyncServerLink} from './wireDirectSyncServerLink'
 
 type ConnectionState = 'connected' | 'reconnecting'

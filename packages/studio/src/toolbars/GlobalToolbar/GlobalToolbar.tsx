@@ -1,13 +1,13 @@
-import {useVal} from '@toy-box/react'
-import getStudio from '@toy-box/studio/getStudio'
+import {useVal} from '@dreamerbird/react'
+import getStudio from '@dreamerbird/studio/getStudio'
 import React from 'react'
 import styled from 'styled-components'
-import ExtensionToolbar from '@toy-box/studio/toolbars/ExtensionToolbar/ExtensionToolbar'
-import ConnectionStatusBadge from '@toy-box/studio/uiComponents/ConnectionStatusBadge'
+import ExtensionToolbar from '@dreamerbird/studio/toolbars/ExtensionToolbar/ExtensionToolbar'
+import ConnectionStatusBadge from '@dreamerbird/studio/uiComponents/ConnectionStatusBadge'
 import {
   useNotifications,
   useEmptyNotificationsTooltip,
-} from '@toy-box/studio/notify'
+} from '@dreamerbird/studio/notify'
 import {
   useConflicts,
   useOutlineTriggerTooltip,

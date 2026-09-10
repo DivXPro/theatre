@@ -1,6 +1,6 @@
-import mousePositionD from '@toy-box/studio/utils/mousePositionD'
-import {usePrism} from '@toy-box/react'
-import {val} from '@toy-box/dataverse'
+import mousePositionD from '@dreamerbird/studio/utils/mousePositionD'
+import {usePrism} from '@dreamerbird/react'
+import {val} from '@dreamerbird/dataverse'
 import React from 'react'
 import {createPortal} from 'react-dom'
 

@@ -2,8 +2,8 @@ import * as jose from 'jose'
 import {TRPCError} from '@trpc/server'
 import {appHost} from '../appClient'
 import {isAuthDisabled} from '../authConfig'
-import type {studioAuthTokens} from '@toy-box/app/types'
-import type {$IntentionalAny} from '@toy-box/utils/types'
+import type {studioAuthTokens} from '@dreamerbird/app/types'
+import type {$IntentionalAny} from '@dreamerbird/utils/types'
 
 let jwtPublicKeyPromise: Promise<CryptoKey> | undefined
 // Lazy: the fetch only fires when a token actually needs verifying. The

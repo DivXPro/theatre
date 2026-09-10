@@ -1,20 +1,20 @@
-import type {SequenceEditorPanelLayout} from '@toy-box/studio/panels/SequenceEditorPanel/layout/layout'
-import type {Pointer} from '@toy-box/dataverse'
-import {Atom} from '@toy-box/dataverse'
-import {val} from '@toy-box/dataverse'
+import type {SequenceEditorPanelLayout} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/layout'
+import type {Pointer} from '@dreamerbird/dataverse'
+import {Atom} from '@dreamerbird/dataverse'
+import {val} from '@dreamerbird/dataverse'
 import React from 'react'
 import styled from 'styled-components'
-import {DopeSnapHitZoneUI} from '@toy-box/studio/panels/SequenceEditorPanel/RightOverlay/DopeSnapHitZoneUI'
+import {DopeSnapHitZoneUI} from '@dreamerbird/studio/panels/SequenceEditorPanel/RightOverlay/DopeSnapHitZoneUI'
 import type {
   BasicKeyframe,
   ObjectAddressKey,
   SequenceTrackId,
-} from '@toy-box/core/types/public'
+} from '@dreamerbird/core/types/public'
 import type {
   BasicKeyframedTrack,
   HistoricPositionalSequence,
-} from '@toy-box/core/types/private/core'
-import {__private} from '@toy-box/core'
+} from '@dreamerbird/core/types/private/core'
+import {__private} from '@dreamerbird/core'
 
 const {keyframeUtils} = __private
 

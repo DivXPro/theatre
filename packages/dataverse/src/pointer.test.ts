@@ -1,5 +1,5 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
-import {pointer, getPointerParts, Atom} from '@toy-box/dataverse'
+import {pointer, getPointerParts, Atom} from '@dreamerbird/dataverse'
 
 describe(`pointer`, () => {
   test(`Basic useage of pointer`, async () => {

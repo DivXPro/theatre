@@ -1,23 +1,26 @@
-import type {TrackData} from '@toy-box/core/types/private/core'
-import type SheetObject from '@toy-box/core/sheetObjects/SheetObject'
-import type {SequenceEditorPanelLayout} from '@toy-box/studio/panels/SequenceEditorPanel/layout/layout'
-import type {BasicKeyframe, SequenceTrackId} from '@toy-box/core/types/public'
-import type {Pointer} from '@toy-box/dataverse'
+import type {TrackData} from '@dreamerbird/core/types/private/core'
+import type SheetObject from '@dreamerbird/core/sheetObjects/SheetObject'
+import type {SequenceEditorPanelLayout} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/layout'
+import type {
+  BasicKeyframe,
+  SequenceTrackId,
+} from '@dreamerbird/core/types/public'
+import type {Pointer} from '@dreamerbird/dataverse'
 import React from 'react'
 import styled from 'styled-components'
-import type {ExtremumSpace} from '@toy-box/studio/panels/SequenceEditorPanel/GraphEditor/BasicKeyframedTrack/BasicKeyframedTrack'
+import type {ExtremumSpace} from '@dreamerbird/studio/panels/SequenceEditorPanel/GraphEditor/BasicKeyframedTrack/BasicKeyframedTrack'
 import Curve from './Curve'
 import CurveHandle from './CurveHandle'
 import GraphEditorDotScalar from './GraphEditorDotScalar'
 import GraphEditorDotNonScalar from './GraphEditorDotNonScalar'
 import GraphEditorNonScalarDash from './GraphEditorNonScalarDash'
-import type {PropTypeConfig_AllSimples} from '@toy-box/core/types/public'
-import type {PathToProp} from '@toy-box/utils/pathToProp'
+import type {PropTypeConfig_AllSimples} from '@dreamerbird/core/types/public'
+import type {PathToProp} from '@dreamerbird/utils/pathToProp'
 import type {
   GraphEditorColors,
   StudioSheetItemKey,
-} from '@toy-box/core/types/private'
-import {__private} from '@toy-box/core'
+} from '@dreamerbird/core/types/private'
+import {__private} from '@dreamerbird/core'
 
 const {keyframeUtils} = __private
 

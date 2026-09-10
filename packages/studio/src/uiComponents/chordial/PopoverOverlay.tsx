@@ -1,10 +1,10 @@
 import React from 'react'
-import {usePrism} from '@toy-box/react'
+import {usePrism} from '@dreamerbird/react'
 import type {ChodrialElement, InvokeTypePopover} from './chordialInternals'
-import {val} from '@toy-box/dataverse'
+import {val} from '@dreamerbird/dataverse'
 import {popoverActor} from './popoverActor'
-import PopoverPositioner from '@toy-box/studio/uiComponents/Popover/PopoverPositioner'
-import {usePointerCapturing} from '@toy-box/studio/UIRoot/PointerCapturing'
+import PopoverPositioner from '@dreamerbird/studio/uiComponents/Popover/PopoverPositioner'
+import {usePointerCapturing} from '@dreamerbird/studio/UIRoot/PointerCapturing'
 
 export const PopoverOverlay: React.FC<{}> = () => {
   const s = usePrism(():

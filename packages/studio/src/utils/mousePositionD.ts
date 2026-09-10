@@ -1,4 +1,4 @@
-import {prism} from '@toy-box/dataverse'
+import {prism} from '@dreamerbird/dataverse'
 
 /**
  * A prism that holds the current mouse position.

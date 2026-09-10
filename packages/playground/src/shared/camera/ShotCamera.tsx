@@ -1,6 +1,10 @@
-import {editable as e, PerspectiveCamera, useCurrentSheet} from '@toy-box/r3f'
-import {getStudioSync, types as t, val} from '@toy-box/core'
-import type {ISheetObject} from '@toy-box/core'
+import {
+  editable as e,
+  PerspectiveCamera,
+  useCurrentSheet,
+} from '@dreamerbird/r3f'
+import {getStudioSync, types as t, val} from '@dreamerbird/core'
+import type {ISheetObject} from '@dreamerbird/core'
 import React, {
   useCallback,
   useEffect,

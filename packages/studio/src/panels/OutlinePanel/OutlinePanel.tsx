@@ -1,12 +1,12 @@
 import React, {useEffect, useLayoutEffect} from 'react'
 import styled from 'styled-components'
-import {panelZIndexes} from '@toy-box/studio/panels/BasePanel/common'
+import {panelZIndexes} from '@dreamerbird/studio/panels/BasePanel/common'
 import ProjectsList from './ProjectsList/ProjectsList'
-import {useVal} from '@toy-box/react'
-import getStudio from '@toy-box/studio/getStudio'
-import useHotspot from '@toy-box/studio/uiComponents/useHotspot'
-import {Atom, prism, val} from '@toy-box/dataverse'
-import {pointerEventsAutoInNormalMode} from '@toy-box/studio/css'
+import {useVal} from '@dreamerbird/react'
+import getStudio from '@dreamerbird/studio/getStudio'
+import useHotspot from '@dreamerbird/studio/uiComponents/useHotspot'
+import {Atom, prism, val} from '@dreamerbird/dataverse'
+import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
 
 const headerHeight = `44px`
 

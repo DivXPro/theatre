@@ -1,4 +1,4 @@
-import theatre from '@toy-box/core'
+import theatre from '@dreamerbird/core'
 import {useEffect, useMemo, useRef} from 'react'
 
 let idCounter = 0

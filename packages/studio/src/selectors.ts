@@ -1,13 +1,13 @@
-import type Project from '@toy-box/core/projects/Project'
-import type Sequence from '@toy-box/core/sequences/Sequence'
-import type SheetObject from '@toy-box/core/sheetObjects/SheetObject'
-import type Sheet from '@toy-box/core/sheets/Sheet'
-import {prism, val} from '@toy-box/dataverse'
-import type {$IntentionalAny} from '@toy-box/dataverse/src/types'
-import type {SheetId} from '@toy-box/core/types/public'
+import type Project from '@dreamerbird/core/projects/Project'
+import type Sequence from '@dreamerbird/core/sequences/Sequence'
+import type SheetObject from '@dreamerbird/core/sheetObjects/SheetObject'
+import type Sheet from '@dreamerbird/core/sheets/Sheet'
+import {prism, val} from '@dreamerbird/dataverse'
+import type {$IntentionalAny} from '@dreamerbird/dataverse/src/types'
+import type {SheetId} from '@dreamerbird/core/types/public'
 import {uniq} from 'lodash-es'
 import getStudio from './getStudio'
-import {__private} from '@toy-box/core'
+import {__private} from '@dreamerbird/core'
 const {isSheet, isSheetObject} = __private.instanceTypes
 
 export type OutlineSelectable = Project | Sheet | SheetObject

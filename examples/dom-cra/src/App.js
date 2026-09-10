@@ -1,4 +1,4 @@
-import theatre from '@toy-box/core'
+import theatre from '@dreamerbird/core'
 import {useLayoutEffect, useMemo, useState} from 'react'
 import useDrag from './useDrag'
 

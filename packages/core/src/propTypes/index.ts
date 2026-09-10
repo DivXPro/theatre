@@ -1,5 +1,5 @@
-import type {$FixMe, $IntentionalAny} from '@toy-box/core/types/public'
-import userReadableTypeOfValue from '@toy-box/utils/userReadableTypeOfValue'
+import type {$FixMe, $IntentionalAny} from '@dreamerbird/core/types/public'
+import userReadableTypeOfValue from '@dreamerbird/utils/userReadableTypeOfValue'
 
 import {
   decorateRgba,
@@ -7,9 +7,12 @@ import {
   oklabToLinearSrgb,
   srgbToLinearSrgb,
   linearSrgbToSrgb,
-} from '@toy-box/utils/color'
+} from '@dreamerbird/utils/color'
 import {clamp, mapValues} from 'lodash-es'
-import {propTypeSymbol, type NumberNudgeFn} from '@toy-box/core/types/public'
+import {
+  propTypeSymbol,
+  type NumberNudgeFn,
+} from '@dreamerbird/core/types/public'
 import {sanitizeCompoundProps} from './internals'
 
 import type {
@@ -27,7 +30,7 @@ import type {
   Rgba,
   File,
   Asset,
-} from '@toy-box/core/types/public'
+} from '@dreamerbird/core/types/public'
 
 // Notes on naming:
 // As of now, prop types are either `simple` or `composite`.

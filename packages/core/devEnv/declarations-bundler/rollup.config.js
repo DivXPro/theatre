@@ -34,7 +34,7 @@ const normalizeGetterNamespaces = {
   },
 }
 
-// rollup-plugin-dts inlines @toy-box/utils (mapped to utils/src) by compiling its
+// rollup-plugin-dts inlines @dreamerbird/utils (mapped to utils/src) by compiling its
 // TypeScript source. For most symbols it emits proper declarations, but for
 // `SimpleCache` and the `nominal$1` unique symbol it leaks implementation bodies into
 // the output: `declare const nominal$1 = Symbol()`, a `_values` field initializer,
@@ -122,11 +122,11 @@ const config = {
     format: 'es',
   },
   external: (s) => {
-    if (s === '@toy-box/dataverse') {
+    if (s === '@dreamerbird/dataverse') {
       return true
     }
 
-    if (s.startsWith('@toy-box')) {
+    if (s.startsWith('@dreamerbird')) {
       return false
     }
 
@@ -143,18 +143,18 @@ const config = {
       respectExternal: true,
       compilerOptions: {
         paths: {
-          '@toy-box/core': [fromPackage(`.temp/declarations/src`)],
+          '@dreamerbird/core': [fromPackage(`.temp/declarations/src`)],
         },
       },
     }),
     alias({
       entries: [
         {
-          find: `@toy-box/core`,
+          find: `@dreamerbird/core`,
           replacement: fromPackage(`.temp/declarations/src`),
         },
         {
-          find: `@toy-box/utils`,
+          find: `@dreamerbird/utils`,
           replacement: fromPackages(`utils/src`),
         },
       ],

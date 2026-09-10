@@ -1,5 +1,5 @@
-import type {Studio} from '@toy-box/studio/Studio'
-import {val} from '@toy-box/dataverse'
+import type {Studio} from '@dreamerbird/studio/Studio'
+import {val} from '@dreamerbird/dataverse'
 
 const NonSSRBitsClass =
   typeof window !== 'undefined'

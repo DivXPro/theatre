@@ -1,15 +1,15 @@
-import type Project from '@toy-box/core/projects/Project'
-import getStudio from '@toy-box/studio/getStudio'
-import BasicPopover from '@toy-box/studio/uiComponents/Popover/BasicPopover'
-import usePopover from '@toy-box/studio/uiComponents/Popover/usePopover'
+import type Project from '@dreamerbird/core/projects/Project'
+import getStudio from '@dreamerbird/studio/getStudio'
+import BasicPopover from '@dreamerbird/studio/uiComponents/Popover/BasicPopover'
+import usePopover from '@dreamerbird/studio/uiComponents/Popover/usePopover'
 import React, {useCallback, useState} from 'react'
 import styled from 'styled-components'
-import DetailPanelButton from '@toy-box/studio/uiComponents/DetailPanelButton'
+import DetailPanelButton from '@dreamerbird/studio/uiComponents/DetailPanelButton'
 import StateConflictRow from './ProjectDetails/StateConflictRow'
-import {PersistenceStatusBanner} from '@toy-box/studio/uiComponents/PersistenceStatusBanner'
+import {PersistenceStatusBanner} from '@dreamerbird/studio/uiComponents/PersistenceStatusBanner'
 import JSZip from 'jszip'
-import {notify} from '@toy-box/studio/notify'
-import {getAllPossibleAssetIDs} from '@toy-box/studio/utils/assets'
+import {notify} from '@dreamerbird/studio/notify'
+import {getAllPossibleAssetIDs} from '@dreamerbird/studio/utils/assets'
 
 const Container = styled.div``
 

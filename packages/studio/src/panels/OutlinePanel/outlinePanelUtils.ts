@@ -1,8 +1,8 @@
-import type Project from '@toy-box/core/projects/Project'
+import type Project from '@dreamerbird/core/projects/Project'
 import {useCallback} from 'react'
-import getStudio from '@toy-box/studio/getStudio'
-import {useVal} from '@toy-box/react'
-import type Sheet from '@toy-box/core/sheets/Sheet'
+import getStudio from '@dreamerbird/studio/getStudio'
+import {useVal} from '@dreamerbird/react'
+import type Sheet from '@dreamerbird/core/sheets/Sheet'
 
 export function useCollapseStateInOutlinePanel(
   item: Project | Sheet | {type: 'namespace'; sheet: Sheet; path: string[]},

@@ -1,11 +1,11 @@
-import {defer} from '@toy-box/utils/defer'
-import noop from '@toy-box/utils/noop'
-import type {Prism, Pointer, Ticker} from '@toy-box/dataverse'
-import {Atom} from '@toy-box/dataverse'
+import {defer} from '@dreamerbird/utils/defer'
+import noop from '@dreamerbird/utils/noop'
+import type {Prism, Pointer, Ticker} from '@dreamerbird/dataverse'
+import {Atom} from '@dreamerbird/dataverse'
 import type {
   IPlaybackDirection,
   IPlaybackRange,
-} from '@toy-box/core/types/public'
+} from '@dreamerbird/core/types/public'
 
 export interface IPlaybackState {
   position: number

@@ -1,12 +1,12 @@
-import {useVal} from '@toy-box/react'
-import type {Pointer} from '@toy-box/dataverse'
+import {useVal} from '@dreamerbird/react'
+import type {Pointer} from '@dreamerbird/dataverse'
 import React from 'react'
 import styled from 'styled-components'
-import type {SequenceEditorPanelLayout} from '@toy-box/studio/panels/SequenceEditorPanel/layout/layout'
+import type {SequenceEditorPanelLayout} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/layout'
 import Left from './Left/Left'
 import DopeSheetBackground from './Right/DopeSheetBackground'
 import Right from './Right/Right'
-import VerticalScrollContainer from '@toy-box/studio/panels/SequenceEditorPanel/VerticalScrollContainer'
+import VerticalScrollContainer from '@dreamerbird/studio/panels/SequenceEditorPanel/VerticalScrollContainer'
 
 const Container = styled.div`
   position: absolute;

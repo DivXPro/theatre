@@ -1,33 +1,33 @@
 import React, {useMemo, useRef} from 'react'
 import styled from 'styled-components'
 
-import getStudio from '@toy-box/studio/getStudio'
-import type {CommitOrDiscardOrRecapture} from '@toy-box/studio/StudioStore/StudioStore'
-import useContextMenu from '@toy-box/studio/uiComponents/simpleContextMenu/useContextMenu'
-import type {DragOpts} from '@toy-box/studio/uiComponents/useDrag'
-import useDrag from '@toy-box/studio/uiComponents/useDrag'
-import useRefAndState from '@toy-box/studio/utils/useRefAndState'
-import {val} from '@toy-box/dataverse'
-import {useLockFrameStampPosition} from '@toy-box/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
-import {useCssCursorLock} from '@toy-box/studio/uiComponents/PointerEventsHandler'
-import DopeSnap from '@toy-box/studio/panels/SequenceEditorPanel/RightOverlay/DopeSnap'
+import getStudio from '@dreamerbird/studio/getStudio'
+import type {CommitOrDiscardOrRecapture} from '@dreamerbird/studio/StudioStore/StudioStore'
+import useContextMenu from '@dreamerbird/studio/uiComponents/simpleContextMenu/useContextMenu'
+import type {DragOpts} from '@dreamerbird/studio/uiComponents/useDrag'
+import useDrag from '@dreamerbird/studio/uiComponents/useDrag'
+import useRefAndState from '@dreamerbird/studio/utils/useRefAndState'
+import {val} from '@dreamerbird/dataverse'
+import {useLockFrameStampPosition} from '@dreamerbird/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
+import {useCssCursorLock} from '@dreamerbird/studio/uiComponents/PointerEventsHandler'
+import DopeSnap from '@dreamerbird/studio/panels/SequenceEditorPanel/RightOverlay/DopeSnap'
 
 import type {ISingleKeyframeEditorProps} from './SingleKeyframeEditor'
-import {absoluteDims} from '@toy-box/studio/utils/absoluteDims'
-import {useLogger} from '@toy-box/studio/uiComponents/useLogger'
-import type {ILogger} from '@toy-box/utils/logger'
-import {copyableKeyframesFromSelection} from '@toy-box/studio/panels/SequenceEditorPanel/DopeSheet/selections'
-import {pointerEventsAutoInNormalMode} from '@toy-box/studio/css'
+import {absoluteDims} from '@dreamerbird/studio/utils/absoluteDims'
+import {useLogger} from '@dreamerbird/studio/uiComponents/useLogger'
+import type {ILogger} from '@dreamerbird/utils/logger'
+import {copyableKeyframesFromSelection} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/selections'
+import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
 import {
   collectKeyframeSnapPositions,
   snapToNone,
   snapToSome,
-} from '@toy-box/studio/panels/SequenceEditorPanel/DopeSheet/Right/KeyframeSnapTarget'
+} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/Right/KeyframeSnapTarget'
 import {useKeyframeInlineEditorPopover} from './useSingleKeyframeInlineEditorPopover'
 import usePresence, {
   PresenceFlag,
-} from '@toy-box/studio/uiComponents/usePresence'
-import {__private} from '@toy-box/core'
+} from '@dreamerbird/studio/uiComponents/usePresence'
+import {__private} from '@dreamerbird/core'
 
 const {keyframeUtils} = __private
 

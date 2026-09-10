@@ -1,13 +1,13 @@
-import type {StrictRecord} from '@toy-box/core/types/public'
+import type {StrictRecord} from '@dreamerbird/core/types/public'
 import React, {useMemo} from 'react'
 import {useEffect} from 'react'
 import {useLogger} from './useLogger'
-import {prism, pointerToPrism} from '@toy-box/dataverse'
-import {Atom} from '@toy-box/dataverse'
-import {usePrismInstance} from '@toy-box/react'
-import {selectClosestHTMLAncestor} from '@toy-box/studio/utils/selectClosestHTMLAncestor'
-import pointerDeep from '@toy-box/utils/pointerDeep'
-import type {StudioSheetItemKey} from '@toy-box/core/types/private'
+import {prism, pointerToPrism} from '@dreamerbird/dataverse'
+import {Atom} from '@dreamerbird/dataverse'
+import {usePrismInstance} from '@dreamerbird/react'
+import {selectClosestHTMLAncestor} from '@dreamerbird/studio/utils/selectClosestHTMLAncestor'
+import pointerDeep from '@dreamerbird/utils/pointerDeep'
+import type {StudioSheetItemKey} from '@dreamerbird/core/types/private'
 
 /** To mean the presence value */
 export enum PresenceFlag {

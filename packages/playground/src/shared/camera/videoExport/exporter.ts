@@ -1,5 +1,5 @@
-import type {ISheet} from '@toy-box/core'
-import {val} from '@toy-box/dataverse'
+import type {ISheet} from '@dreamerbird/core'
+import {val} from '@dreamerbird/dataverse'
 import {createMediaRecorderEncoder, extForMime} from './encoder'
 import type {ExportSink} from './sinks'
 

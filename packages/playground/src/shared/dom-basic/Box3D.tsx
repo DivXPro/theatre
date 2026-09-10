@@ -1,7 +1,7 @@
 import React, {useEffect, useRef} from 'react'
 import type {CSSProperties} from 'react'
-import {types} from '@toy-box/core'
-import type {ISheet} from '@toy-box/core'
+import {types} from '@dreamerbird/core'
+import type {ISheet} from '@dreamerbird/core'
 
 // Box element
 export const BoxSize = 100

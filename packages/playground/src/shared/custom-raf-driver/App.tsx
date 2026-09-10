@@ -1,6 +1,6 @@
-import {editable as e, RafDriverProvider, SheetProvider} from '@toy-box/r3f'
-import type {IRafDriver} from '@toy-box/core'
-import {getProject} from '@toy-box/core'
+import {editable as e, RafDriverProvider, SheetProvider} from '@dreamerbird/r3f'
+import type {IRafDriver} from '@dreamerbird/core'
+import {getProject} from '@dreamerbird/core'
 import React from 'react'
 import {Canvas} from '@react-three/fiber'
 

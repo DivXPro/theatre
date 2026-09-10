@@ -10,7 +10,7 @@
  * `jest.doMock`, the registry reset, and everything required fresh so `./trpc`'s
  * `import ... from 'src/utils/authUtils'` resolves the mock.
  */
-import type {$IntentionalAny} from '@toy-box/utils/types'
+import type {$IntentionalAny} from '@dreamerbird/utils/types'
 
 const originalEnv: Record<string, string | undefined> = {
   AUTH_DISABLED: process.env.AUTH_DISABLED,

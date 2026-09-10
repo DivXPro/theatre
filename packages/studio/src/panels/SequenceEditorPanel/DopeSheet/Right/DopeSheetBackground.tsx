@@ -1,11 +1,11 @@
-import type {SequenceEditorPanelLayout} from '@toy-box/studio/panels/SequenceEditorPanel/layout/layout'
-import {zIndexes} from '@toy-box/studio/panels/SequenceEditorPanel/SequenceEditorPanel'
-import {useVal} from '@toy-box/react'
-import type {Pointer} from '@toy-box/dataverse'
+import type {SequenceEditorPanelLayout} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/layout'
+import {zIndexes} from '@dreamerbird/studio/panels/SequenceEditorPanel/SequenceEditorPanel'
+import {useVal} from '@dreamerbird/react'
+import type {Pointer} from '@dreamerbird/dataverse'
 import {darken, transparentize} from 'polished'
 import React from 'react'
 import styled from 'styled-components'
-import FrameGrid from '@toy-box/studio/panels/SequenceEditorPanel/FrameGrid/FrameGrid'
+import FrameGrid from '@dreamerbird/studio/panels/SequenceEditorPanel/FrameGrid/FrameGrid'
 
 const Container = styled.div`
   position: absolute;

@@ -1,19 +1,19 @@
 import type {
   DopeSheetSelection,
   SequenceEditorPanelLayout,
-} from '@toy-box/studio/panels/SequenceEditorPanel/layout/layout'
+} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/layout'
 import type {
   SequenceEditorTree_PropWithChildren,
   SequenceEditorTree_Sheet,
   SequenceEditorTree_SheetObject,
-} from '@toy-box/studio/panels/SequenceEditorPanel/layout/tree'
-import {usePrism, useVal} from '@toy-box/react'
-import type {Prism, Pointer} from '@toy-box/dataverse'
-import {prism, val, pointerToPrism} from '@toy-box/dataverse'
+} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/tree'
+import {usePrism, useVal} from '@dreamerbird/react'
+import type {Prism, Pointer} from '@dreamerbird/dataverse'
+import {prism, val, pointerToPrism} from '@dreamerbird/dataverse'
 import React, {useMemo, Fragment} from 'react'
 import styled from 'styled-components'
-import useContextMenu from '@toy-box/studio/uiComponents/simpleContextMenu/useContextMenu'
-import useRefAndState from '@toy-box/studio/utils/useRefAndState'
+import useContextMenu from '@dreamerbird/studio/uiComponents/simpleContextMenu/useContextMenu'
+import useRefAndState from '@dreamerbird/studio/utils/useRefAndState'
 import type {
   IAggregateKeyframesAtPosition,
   IAggregateKeyframeEditorProps,
@@ -22,41 +22,41 @@ import AggregateKeyframeEditor from './AggregateKeyframeEditor/AggregateKeyframe
 import type {
   AggregatedKeyframes,
   KeyframeWithTrack,
-} from '@toy-box/studio/panels/SequenceEditorPanel/DopeSheet/Right/collectAggregateKeyframes'
-import {collectAggregateSnapPositionsObjectOrCompound} from '@toy-box/studio/panels/SequenceEditorPanel/DopeSheet/Right/collectAggregateKeyframes'
-import {useLogger} from '@toy-box/studio/uiComponents/useLogger'
+} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/Right/collectAggregateKeyframes'
+import {collectAggregateSnapPositionsObjectOrCompound} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/Right/collectAggregateKeyframes'
+import {useLogger} from '@dreamerbird/studio/uiComponents/useLogger'
 import {getAggregateKeyframeEditorUtilsPrismFn} from './AggregateKeyframeEditor/useAggregateKeyframeEditorUtils'
-import DopeSnap from '@toy-box/studio/panels/SequenceEditorPanel/RightOverlay/DopeSnap'
-import type {DragOpts} from '@toy-box/studio/uiComponents/useDrag'
-import type {CommitOrDiscardOrRecapture} from '@toy-box/studio/StudioStore/StudioStore'
-import useDrag from '@toy-box/studio/uiComponents/useDrag'
-import {useLockFrameStampPositionRef} from '@toy-box/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
-import {useCssCursorLock} from '@toy-box/studio/uiComponents/PointerEventsHandler'
-import getStudio from '@toy-box/studio/getStudio'
-import type {SheetObjectAddress} from '@toy-box/core/types/public'
+import DopeSnap from '@dreamerbird/studio/panels/SequenceEditorPanel/RightOverlay/DopeSnap'
+import type {DragOpts} from '@dreamerbird/studio/uiComponents/useDrag'
+import type {CommitOrDiscardOrRecapture} from '@dreamerbird/studio/StudioStore/StudioStore'
+import useDrag from '@dreamerbird/studio/uiComponents/useDrag'
+import {useLockFrameStampPositionRef} from '@dreamerbird/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
+import {useCssCursorLock} from '@dreamerbird/studio/uiComponents/PointerEventsHandler'
+import getStudio from '@dreamerbird/studio/getStudio'
+import type {SheetObjectAddress} from '@dreamerbird/core/types/public'
 import {
   decodePathToProp,
   encodePathToProp,
   doesPathStartWith,
-} from '@toy-box/utils/pathToProp'
+} from '@dreamerbird/utils/pathToProp'
 import type {
   ObjectAddressKey,
   SequenceTrackId,
-} from '@toy-box/core/types/public'
-import type Sequence from '@toy-box/core/sequences/Sequence'
+} from '@dreamerbird/core/types/public'
+import type Sequence from '@dreamerbird/core/sequences/Sequence'
 import KeyframeSnapTarget, {
   snapPositionsStateD,
-} from '@toy-box/studio/panels/SequenceEditorPanel/DopeSheet/Right/KeyframeSnapTarget'
-import {emptyObject} from '@toy-box/utils'
-import type {KeyframeWithPathToPropFromCommonRoot} from '@toy-box/core/types/private'
+} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/Right/KeyframeSnapTarget'
+import {emptyObject} from '@dreamerbird/utils'
+import type {KeyframeWithPathToPropFromCommonRoot} from '@dreamerbird/core/types/private'
 import {
   collectKeyframeSnapPositions,
   snapToNone,
   snapToSome,
-} from '@toy-box/studio/panels/SequenceEditorPanel/DopeSheet/Right/KeyframeSnapTarget'
-import {collectAggregateSnapPositionsSheet} from '@toy-box/studio/panels/SequenceEditorPanel/DopeSheet/Right/collectAggregateKeyframes'
-import type {BasicKeyframe} from '@toy-box/core/types/public'
-import type {ContextMenuItem} from '@toy-box/studio/uiComponents/chordial/chordialInternals'
+} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/Right/KeyframeSnapTarget'
+import {collectAggregateSnapPositionsSheet} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/Right/collectAggregateKeyframes'
+import type {BasicKeyframe} from '@dreamerbird/core/types/public'
+import type {ContextMenuItem} from '@dreamerbird/studio/uiComponents/chordial/chordialInternals'
 
 const AggregatedKeyframeTrackContainer = styled.div`
   position: relative;

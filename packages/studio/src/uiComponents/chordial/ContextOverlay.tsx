@@ -1,9 +1,9 @@
 import React from 'react'
-import {usePrism, useVal} from '@toy-box/react'
+import {usePrism, useVal} from '@dreamerbird/react'
 import type {ChodrialElement, ChordialOpts} from './chordialInternals'
 import {contextActor, contextStatus} from './contextActor'
-import ContextMenu from '@toy-box/studio/uiComponents/simpleContextMenu/ContextMenu/ContextMenu'
-import {val} from '@toy-box/dataverse'
+import ContextMenu from '@dreamerbird/studio/uiComponents/simpleContextMenu/ContextMenu/ContextMenu'
+import {val} from '@dreamerbird/dataverse'
 
 export const ContextOverlay: React.FC<{}> = () => {
   const currentStatus = useVal(contextStatus)

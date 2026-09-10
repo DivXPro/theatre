@@ -1,11 +1,11 @@
-import {useVal} from '@toy-box/react'
-import type {Pointer} from '@toy-box/dataverse'
+import {useVal} from '@dreamerbird/react'
+import type {Pointer} from '@dreamerbird/dataverse'
 import React from 'react'
 import styled from 'styled-components'
-import type {SequenceEditorPanelLayout} from '@toy-box/studio/panels/SequenceEditorPanel/layout/layout'
-import StampsGrid from '@toy-box/studio/panels/SequenceEditorPanel/FrameGrid/StampsGrid'
-import {includeLockFrameStampAttrs} from '@toy-box/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
-import {pointerEventsAutoInNormalMode} from '@toy-box/studio/css'
+import type {SequenceEditorPanelLayout} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/layout'
+import StampsGrid from '@dreamerbird/studio/panels/SequenceEditorPanel/FrameGrid/StampsGrid'
+import {includeLockFrameStampAttrs} from '@dreamerbird/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
+import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
 import FocusRangeZone from './FocusRangeZone/FocusRangeZone'
 
 export const topStripHeight = 18

@@ -1,5 +1,5 @@
-import type {$IntentionalAny} from '@toy-box/utils/types'
-import type {Studio} from '@toy-box/studio/Studio'
+import type {$IntentionalAny} from '@dreamerbird/utils/types'
+import type {Studio} from '@dreamerbird/studio/Studio'
 import type SyncServerLink from './SyncServerLink'
 
 /**

@@ -1,5 +1,5 @@
 {
-  "name": "@toy-box/r3f",
+  "name": "@dreamerbird/r3f",
   "version": "1.0.0",
   "license": "Apache-2.0",
   "authors": [
@@ -47,10 +47,10 @@
     "clean": "rm -rf ./dist && rm -f tsconfig.tsbuildinfo"
   },
   "devDependencies": {
+    "@dreamerbird/dataverse": "workspace:*",
+    "@dreamerbird/react": "workspace:*",
     "@react-three/drei": "^10.7.8",
     "@react-three/fiber": "^9.7.0",
-    "@toy-box/dataverse": "workspace:*",
-    "@toy-box/react": "workspace:*",
     "@types/jest": "^26.0.23",
     "@types/lodash-es": "^4.17.4",
     "@types/node": "^15.6.2",
@@ -76,9 +76,9 @@
     "zustand": "^3.5.1"
   },
   "peerDependencies": {
+    "@dreamerbird/core": "*",
+    "@dreamerbird/studio": "*",
     "@react-three/fiber": "^9.0.0",
-    "@toy-box/core": "*",
-    "@toy-box/studio": "*",
     "react": ">=19.0.0",
     "react-dom": ">=19.0.0",
     "three": ">=0.156.0"

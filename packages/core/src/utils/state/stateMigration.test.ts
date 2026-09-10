@@ -16,11 +16,11 @@
  */
 import * as fs from 'node:fs'
 import * as path from 'node:path'
-import {getProject, val} from '@toy-box/core'
-import * as t from '@toy-box/core/propTypes'
-import {shallowValidateOnDiskState} from '@toy-box/core/projects/Project'
-import {InvalidArgumentError} from '@toy-box/utils/errors'
-import type {OnDiskState, ProjectId} from '@toy-box/core/types/public'
+import {getProject, val} from '@dreamerbird/core'
+import * as t from '@dreamerbird/core/propTypes'
+import {shallowValidateOnDiskState} from '@dreamerbird/core/projects/Project'
+import {InvalidArgumentError} from '@dreamerbird/utils/errors'
+import type {OnDiskState, ProjectId} from '@dreamerbird/core/types/public'
 
 const representative = JSON.parse(
   fs.readFileSync(

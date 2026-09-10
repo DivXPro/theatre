@@ -1,10 +1,10 @@
-import OutlinePanel from '@toy-box/studio/panels/OutlinePanel/OutlinePanel'
-import DetailPanel from '@toy-box/studio/panels/DetailPanel/DetailPanel'
+import OutlinePanel from '@dreamerbird/studio/panels/OutlinePanel/OutlinePanel'
+import DetailPanel from '@dreamerbird/studio/panels/DetailPanel/DetailPanel'
 import React from 'react'
-import getStudio from '@toy-box/studio/getStudio'
-import {useVal} from '@toy-box/react'
-import ExtensionPaneWrapper from '@toy-box/studio/panels/BasePanel/ExtensionPaneWrapper'
-import SequenceEditorPanel from '@toy-box/studio/panels/SequenceEditorPanel/SequenceEditorPanel'
+import getStudio from '@dreamerbird/studio/getStudio'
+import {useVal} from '@dreamerbird/react'
+import ExtensionPaneWrapper from '@dreamerbird/studio/panels/BasePanel/ExtensionPaneWrapper'
+import SequenceEditorPanel from '@dreamerbird/studio/panels/SequenceEditorPanel/SequenceEditorPanel'
 
 const PanelsRoot: React.FC = () => {
   const panes = useVal(getStudio().paneManager.allPanesD)

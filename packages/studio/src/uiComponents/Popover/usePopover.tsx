@@ -1,11 +1,11 @@
-import {usePointerCapturing} from '@toy-box/studio/UIRoot/PointerCapturing'
-import useRefAndState from '@toy-box/studio/utils/useRefAndState'
+import {usePointerCapturing} from '@dreamerbird/studio/UIRoot/PointerCapturing'
+import useRefAndState from '@dreamerbird/studio/utils/useRefAndState'
 import React, {useCallback, useContext, useEffect, useRef} from 'react'
 import {createPortal} from 'react-dom'
 import {PortalContext} from 'reakit'
 import type {AbsolutePlacementBoxConstraints} from './PopoverPositioner'
 import PopoverPositioner from './PopoverPositioner'
-import {contextMenuShownContext} from '@toy-box/studio/panels/DetailPanel/DetailPanel'
+import {contextMenuShownContext} from '@dreamerbird/studio/panels/DetailPanel/DetailPanel'
 
 export type OpenFn = (
   e:

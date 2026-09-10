@@ -1,4 +1,4 @@
-import type {SyncServerRootRouter} from '@toy-box/sync-server/trpc/routes'
+import type {SyncServerRootRouter} from '@dreamerbird/sync-server/trpc/routes'
 import superjson from 'superjson'
 import type {CreateTRPCProxyClient} from '@trpc/client'
 import {

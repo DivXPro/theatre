@@ -1,9 +1,9 @@
-import type {Prism} from '@toy-box/dataverse'
-import {Atom, prism, val} from '@toy-box/dataverse'
+import type {Prism} from '@dreamerbird/dataverse'
+import {Atom, prism, val} from '@dreamerbird/dataverse'
 import {TRPCClientError} from '@trpc/client'
-import delay from '@toy-box/utils/delay'
-import type {$FixMe, $IntentionalAny} from '@toy-box/core/types/public'
-import {defer} from '@toy-box/utils/defer'
+import delay from '@dreamerbird/utils/delay'
+import type {$FixMe, $IntentionalAny} from '@dreamerbird/core/types/public'
+import {defer} from '@dreamerbird/utils/defer'
 import {
   generateRandomCodeVerifier,
   calculatePKCECodeChallenge,
@@ -11,9 +11,9 @@ import {
 import type {Studio} from './Studio'
 import getStudio from './getStudio'
 import {decodeJwt} from 'jose'
-import type {studioAccessScopes, studioAuthTokens} from '@toy-box/app/types'
-import type {AtomPersistor} from '@toy-box/utils/persistAtom'
-import {persistAtom} from '@toy-box/utils/persistAtom'
+import type {studioAccessScopes, studioAuthTokens} from '@dreamerbird/app/types'
+import type {AtomPersistor} from '@dreamerbird/utils/persistAtom'
+import {persistAtom} from '@dreamerbird/utils/persistAtom'
 
 type PersistentState =
   | {loggedIn: false}

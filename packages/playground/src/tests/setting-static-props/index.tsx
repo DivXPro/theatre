@@ -1,6 +1,6 @@
-import theatre from '@toy-box/core'
-import '@toy-box/studio'
-import {getProject} from '@toy-box/core'
+import theatre from '@dreamerbird/core'
+import '@dreamerbird/studio'
+import {getProject} from '@dreamerbird/core'
 
 void theatre.init({studio: true, usePersistentStorage: false})
 

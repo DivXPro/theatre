@@ -1,4 +1,4 @@
-import {theme} from '@toy-box/studio/css'
+import {theme} from '@dreamerbird/studio/css'
 import styled from 'styled-components'
 
 export const panelZIndexes = {

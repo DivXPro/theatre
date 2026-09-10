@@ -1,16 +1,16 @@
 /* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable no-restricted-syntax */
-import '@toy-box/studio'
-import type {SheetId} from '@toy-box/core'
-import {getProject} from '@toy-box/core'
-import {privateAPI} from '@toy-box/core/privateAPIs'
-import type {ProjectState_Historic} from '@toy-box/core/types/private/core'
-import type {SheetState_Historic} from '@toy-box/core/types/private/core'
-import * as t from '@toy-box/core/propTypes'
-import getStudio from '@toy-box/studio/getStudio'
-import {getCoreTicker} from '@toy-box/core/coreTicker'
-import {globals} from '@toy-box/core/globals'
-import theatre from '@toy-box/core'
+import '@dreamerbird/studio'
+import type {SheetId} from '@dreamerbird/core'
+import {getProject} from '@dreamerbird/core'
+import {privateAPI} from '@dreamerbird/core/privateAPIs'
+import type {ProjectState_Historic} from '@dreamerbird/core/types/private/core'
+import type {SheetState_Historic} from '@dreamerbird/core/types/private/core'
+import * as t from '@dreamerbird/core/propTypes'
+import getStudio from '@dreamerbird/studio/getStudio'
+import {getCoreTicker} from '@dreamerbird/core/coreTicker'
+import {globals} from '@dreamerbird/core/globals'
+import theatre from '@dreamerbird/core'
 
 const defaultProps = {
   position: {

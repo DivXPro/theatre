@@ -1,17 +1,17 @@
-import {defer} from '@toy-box/utils/defer'
-import {InvalidArgumentError} from '@toy-box/utils/errors'
-import noop from '@toy-box/utils/noop'
-import type {Prism, Pointer, Ticker} from '@toy-box/dataverse'
-import {Atom} from '@toy-box/dataverse'
+import {defer} from '@dreamerbird/utils/defer'
+import {InvalidArgumentError} from '@dreamerbird/utils/errors'
+import noop from '@dreamerbird/utils/noop'
+import type {Prism, Pointer, Ticker} from '@dreamerbird/dataverse'
+import {Atom} from '@dreamerbird/dataverse'
 import type {
   IPlaybackController,
   IPlaybackState,
 } from './DefaultPlaybackController'
-import {notify} from '@toy-box/core/utils/notify'
+import {notify} from '@dreamerbird/core/utils/notify'
 import type {
   IPlaybackDirection,
   IPlaybackRange,
-} from '@toy-box/core/types/public'
+} from '@dreamerbird/core/types/public'
 
 export default class AudioPlaybackController implements IPlaybackController {
   _mainGain: GainNode

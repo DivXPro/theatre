@@ -1,6 +1,6 @@
-import {editable as e, SheetProvider} from '@toy-box/r3f'
+import {editable as e, SheetProvider} from '@dreamerbird/r3f'
 import {Stars, TorusKnot} from '@react-three/drei'
-import {getProject, onChange} from '@toy-box/core'
+import {getProject, onChange} from '@dreamerbird/core'
 import React from 'react'
 import {Canvas} from '@react-three/fiber'
 

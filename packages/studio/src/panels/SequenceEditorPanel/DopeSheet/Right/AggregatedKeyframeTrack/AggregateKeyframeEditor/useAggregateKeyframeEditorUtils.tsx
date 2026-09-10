@@ -1,9 +1,9 @@
-import {prism} from '@toy-box/dataverse'
-import {createStudioSheetItemKey} from '@toy-box/studio/utils/createStudioSheetItemKey'
-import {AggregateKeyframePositionIsSelected} from '@toy-box/studio/panels/SequenceEditorPanel/DopeSheet/Right/AggregatedKeyframeTrack/AggregatedKeyframeTrack'
-import {isConnectionEditingInCurvePopover} from '@toy-box/studio/panels/SequenceEditorPanel/DopeSheet/Right/BasicKeyframedTrack/KeyframeEditor/CurveEditorPopover/CurveEditorPopover'
-import {usePrism} from '@toy-box/react'
-import {selectedKeyframeConnections} from '@toy-box/studio/panels/SequenceEditorPanel/DopeSheet/selections'
+import {prism} from '@dreamerbird/dataverse'
+import {createStudioSheetItemKey} from '@dreamerbird/studio/utils/createStudioSheetItemKey'
+import {AggregateKeyframePositionIsSelected} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/Right/AggregatedKeyframeTrack/AggregatedKeyframeTrack'
+import {isConnectionEditingInCurvePopover} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/Right/BasicKeyframedTrack/KeyframeEditor/CurveEditorPopover/CurveEditorPopover'
+import {usePrism} from '@dreamerbird/react'
+import {selectedKeyframeConnections} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/selections'
 import type {
   IAggregateKeyframeEditorProps,
   AggregatedKeyframeConnection,

@@ -1,6 +1,6 @@
 import {useThree} from '@react-three/fiber'
-import {getStudioSync} from '@toy-box/core'
-import type {IScrub} from '@toy-box/core'
+import {getStudioSync} from '@dreamerbird/core'
+import type {IScrub} from '@dreamerbird/core'
 import {useCallback, useEffect, useRef, useState} from 'react'
 import {Plane, Raycaster, Vector2, Vector3} from 'three'
 

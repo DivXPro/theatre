@@ -36,13 +36,13 @@ You can find the documentation and video tutorials [here](https://theatrejs.com/
 
 Join us on [Discord](https://discord.gg/bm9f8F9Y9N), follow the updates on [twitter](https://twitter.com/AriaMinaei) or write us an [email](mailto:hello@theatrejs.com).
 
-## `@toy-box/core`
+## `@dreamerbird/core`
 
-Theatre.js comes in two packages: `@toy-box/core` (the library) and `@toy-box/studio` (the editor). This package is the core library.
+Theatre.js comes in two packages: `@dreamerbird/core` (the library) and `@dreamerbird/studio` (the editor). This package is the core library.
 
 ## Bundle size
 
-`@toy-box/core` is currently around 20KiB compressed with all its dependencies.
+`@dreamerbird/core` is currently around 20KiB compressed with all its dependencies.
 
 ## License
 

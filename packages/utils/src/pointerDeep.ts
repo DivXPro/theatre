@@ -1,6 +1,6 @@
-import type {Pointer} from '@toy-box/dataverse'
-import type {PathToProp} from '@toy-box/utils/pathToProp'
-import type {$IntentionalAny} from '@toy-box/utils/types'
+import type {Pointer} from '@dreamerbird/dataverse'
+import type {PathToProp} from '@dreamerbird/utils/pathToProp'
+import type {$IntentionalAny} from '@dreamerbird/utils/types'
 
 /**
  * Points deep into a pointer, using `toAppend` as the path. This is _NOT_ type-safe, so use with caution.

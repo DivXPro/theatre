@@ -1,9 +1,9 @@
-import {Atom} from '@toy-box/dataverse'
-import type {$IntentionalAny} from '@toy-box/core/types/public'
+import {Atom} from '@dreamerbird/dataverse'
+import type {$IntentionalAny} from '@dreamerbird/core/types/public'
 import {useEffect, type ElementType, type MutableRefObject} from 'react'
-import type {DragOpts} from '@toy-box/studio/uiComponents/useDrag'
+import type {DragOpts} from '@dreamerbird/studio/uiComponents/useDrag'
 import type React from 'react'
-import type {AbsolutePlacementBoxConstraints} from '@toy-box/studio/uiComponents/Popover/PopoverPositioner'
+import type {AbsolutePlacementBoxConstraints} from '@dreamerbird/studio/uiComponents/Popover/PopoverPositioner'
 
 export type InvokeTypePopover = {
   type: 'popover'

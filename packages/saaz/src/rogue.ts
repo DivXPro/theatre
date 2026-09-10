@@ -1,8 +1,8 @@
-import deepEqual from '@toy-box/utils/deepEqual'
+import deepEqual from '@dreamerbird/utils/deepEqual'
 import type {$IntentionalAny} from './types'
 import * as immer from 'immer'
 import setDeep from 'lodash-es/set'
-import memoizeFn from '@toy-box/utils/memoizeFn'
+import memoizeFn from '@dreamerbird/utils/memoizeFn'
 
 type BranchName = 'base' | string
 

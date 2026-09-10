@@ -1,14 +1,14 @@
 import React from 'react'
 import {cloneElement, useLayoutEffect, useState} from 'react'
 import useWindowSize from 'react-use/esm/useWindowSize'
-import useBoundingClientRect from '@toy-box/studio/uiComponents/useBoundingClientRect'
+import useBoundingClientRect from '@dreamerbird/studio/uiComponents/useBoundingClientRect'
 import ArrowContext from './ArrowContext'
-import useRefAndState from '@toy-box/studio/utils/useRefAndState'
-import useOnClickOutside from '@toy-box/studio/uiComponents/useOnClickOutside'
-import onPointerOutside from '@toy-box/studio/uiComponents/onPointerOutside'
-import noop from '@toy-box/utils/noop'
+import useRefAndState from '@dreamerbird/studio/utils/useRefAndState'
+import useOnClickOutside from '@dreamerbird/studio/uiComponents/useOnClickOutside'
+import onPointerOutside from '@dreamerbird/studio/uiComponents/onPointerOutside'
+import noop from '@dreamerbird/utils/noop'
 import {clamp} from 'lodash-es'
-import type {$IntentionalAny} from '@toy-box/core/types/public'
+import type {$IntentionalAny} from '@dreamerbird/core/types/public'
 
 const minimumDistanceOfArrowToEdgeOfPopover = 8
 

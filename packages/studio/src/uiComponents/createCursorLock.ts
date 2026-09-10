@@ -1,4 +1,4 @@
-// import getStudio from '@toy-box/studio/getStudio'
+// import getStudio from '@dreamerbird/studio/getStudio'
 
 // export function createCursorLock(cursor: string) {
 //   const el = getStudio()!.ui.containerShadow.getElementById(

@@ -1,11 +1,11 @@
-import {usePrism} from '@toy-box/react'
-import getStudio from '@toy-box/studio/getStudio'
+import {usePrism} from '@dreamerbird/react'
+import getStudio from '@dreamerbird/studio/getStudio'
 import React, {useRef} from 'react'
-import useTooltip from '@toy-box/studio/uiComponents/Popover/useTooltip'
-import ErrorTooltip from '@toy-box/studio/uiComponents/Popover/ErrorTooltip'
-import BasicTooltip from '@toy-box/studio/uiComponents/Popover/BasicTooltip'
-import {val} from '@toy-box/dataverse'
-import usePopover from '@toy-box/studio/uiComponents/Popover/usePopover'
+import useTooltip from '@dreamerbird/studio/uiComponents/Popover/useTooltip'
+import ErrorTooltip from '@dreamerbird/studio/uiComponents/Popover/ErrorTooltip'
+import BasicTooltip from '@dreamerbird/studio/uiComponents/Popover/BasicTooltip'
+import {val} from '@dreamerbird/dataverse'
+import usePopover from '@dreamerbird/studio/uiComponents/Popover/usePopover'
 import MoreMenu from './MoreMenu/MoreMenu'
 
 export function useOutlineTriggerTooltip(

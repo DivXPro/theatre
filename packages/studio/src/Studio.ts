@@ -1,7 +1,7 @@
-import Scrub from '@toy-box/studio/Scrub'
-import UI from '@toy-box/studio/UI/UI'
-import type {Pointer, Ticker} from '@toy-box/dataverse'
-import {Atom, PointerProxy, pointerToPrism} from '@toy-box/dataverse'
+import Scrub from '@dreamerbird/studio/Scrub'
+import UI from '@dreamerbird/studio/UI/UI'
+import type {Pointer, Ticker} from '@dreamerbird/dataverse'
+import {Atom, PointerProxy, pointerToPrism} from '@dreamerbird/dataverse'
 import type {
   CommitOrDiscardOrRecapture,
   ITransactionPrivateApi,
@@ -12,32 +12,32 @@ import type {
   IStudio,
   PaneClassDefinition,
   InitOpts,
-} from '@toy-box/core/types/public'
+} from '@dreamerbird/core/types/public'
 import TheatreStudio from './TheatreStudio'
 import {nanoid} from 'nanoid/non-secure'
-import type Project from '@toy-box/core/projects/Project'
-import type {CoreBits} from '@toy-box/core/CoreBundle'
-import SimpleCache from '@toy-box/utils/SimpleCache'
-import type {IProject, ISheet, ProjectId} from '@toy-box/core'
+import type Project from '@dreamerbird/core/projects/Project'
+import type {CoreBits} from '@dreamerbird/core/CoreBundle'
+import SimpleCache from '@dreamerbird/utils/SimpleCache'
+import type {IProject, ISheet, ProjectId} from '@dreamerbird/core'
 import PaneManager from './PaneManager'
-import type * as _coreExports from '@toy-box/core/coreExports'
+import type * as _coreExports from '@dreamerbird/core/coreExports'
 import type {
   OnDiskState,
   ProjectEphemeralState,
-} from '@toy-box/core/types/private/core'
-import type {Deferred} from '@toy-box/utils/defer'
-import {defer} from '@toy-box/utils/defer'
+} from '@dreamerbird/core/types/private/core'
+import type {Deferred} from '@dreamerbird/utils/defer'
+import {defer} from '@dreamerbird/utils/defer'
 import {DEFAULT_PERSISTENCE_KEY, sanitizeOpts} from './sanitizeOpts'
 import shallowEqual from 'shallowequal'
 import {createStore} from './IDBStorage'
-import {getAllPossibleAssetIDs} from '@toy-box/studio/utils/assets'
+import {getAllPossibleAssetIDs} from '@dreamerbird/studio/utils/assets'
 import {notify} from './notify'
-import type {RafDriverPrivateAPI} from '@toy-box/core/rafDrivers'
-import {persistAtom} from '@toy-box/utils/persistAtom'
+import type {RafDriverPrivateAPI} from '@dreamerbird/core/rafDrivers'
+import {persistAtom} from '@dreamerbird/utils/persistAtom'
 import produce from 'immer'
 import Storno from './Storno/Storno'
 import Auth from './Auth'
-import type {$IntentionalAny} from '@toy-box/core/types/public'
+import type {$IntentionalAny} from '@dreamerbird/core/types/public'
 import AppLink from './SyncStore/AppLink'
 import SyncServerLink from './SyncStore/SyncServerLink'
 import {wireDirectSyncServerLink} from './SyncStore/wireDirectSyncServerLink'
@@ -47,28 +47,28 @@ import {wrapTrpcClientWithAuth} from './SyncStore/utils'
 
 export type CoreExports = typeof _coreExports
 
-const STUDIO_NOT_INITIALIZED_MESSAGE = `You seem to have imported '@toy-box/studio' but haven't initialized it. You can initialize the studio by:
+const STUDIO_NOT_INITIALIZED_MESSAGE = `You seem to have imported '@dreamerbird/studio' but haven't initialized it. You can initialize the studio by:
 \`\`\`
-import theatre from '@toy-box/core'
+import theatre from '@dreamerbird/core'
 theatre.init({studio: true})
 \`\`\`
 
-* If you didn't mean to import '@toy-box/studio', this means that your bundler is not tree-shaking it. This is most likely a bundler misconfiguration.
+* If you didn't mean to import '@dreamerbird/studio', this means that your bundler is not tree-shaking it. This is most likely a bundler misconfiguration.
 
-* If you meant to import '@toy-box/studio' without showing its UI, you can do that by running:
+* If you meant to import '@dreamerbird/studio' without showing its UI, you can do that by running:
 
 \`\`\`
-import theatre from '@toy-box/core'
+import theatre from '@dreamerbird/core'
 theatre.init({studio: true})
 studio.ui.hide()
 \`\`\`
 `
 
-const STUDIO_INITIALIZED_LATE_MSG = `You seem to have imported '@toy-box/studio' but called \`studio.initialize()\` after some delay.
+const STUDIO_INITIALIZED_LATE_MSG = `You seem to have imported '@dreamerbird/studio' but called \`studio.initialize()\` after some delay.
 Theatre.js projects remain in pending mode (won't play their sequences) until the studio is initialized, so you should place the \`studio.initialize()\` line right after the import line:
 
 \`\`\`
-import theatre from '@toy-box/core'
+import theatre from '@dreamerbird/core'
 // ... and other imports
 
 studio.initialize()
@@ -113,7 +113,7 @@ export class Studio {
   readonly paneManager: PaneManager
 
   /**
-   * An atom holding the exports of '\@toy-box/core'. Will be undefined if '\@toy-box/core' is never imported
+   * An atom holding the exports of '\@dreamerbird/core'. Will be undefined if '\@dreamerbird/core' is never imported
    */
   private _coreAtom = new Atom<{core?: CoreExports}>({})
 
@@ -158,7 +158,7 @@ export class Studio {
   private _didWarnAboutNotInitializing = false
 
   /**
-   * This will be set as soon as `@toy-box/core` registers itself on `@toy-box/studio`
+   * This will be set as soon as `@dreamerbird/core` registers itself on `@dreamerbird/studio`
    */
   private _coreBits: CoreBits | undefined
 
@@ -369,7 +369,7 @@ export class Studio {
   async initialize(opts?: InitOpts) {
     if (!this._coreBits) {
       throw new Error(
-        `You seem to have imported \`@toy-box/studio\` without importing \`@toy-box/core\`. Make sure to include an import of \`@toy-box/core\` before calling \`studio.initializer()\`.`,
+        `You seem to have imported \`@dreamerbird/studio\` without importing \`@dreamerbird/core\`. Make sure to include an import of \`@dreamerbird/core\` before calling \`studio.initializer()\`.`,
       )
     }
 

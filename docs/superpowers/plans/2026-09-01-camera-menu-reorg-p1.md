@@ -39,7 +39,7 @@
 
 ```ts
 // packages/core/src/tests/sheetObjectActions.test.ts
-import {setupTestSheet} from '@toy-box/core/tests/testUtils' // 若不存在,见 Step 2 备选
+import {setupTestSheet} from '@dreamerbird/core/tests/testUtils' // 若不存在,见 Step 2 备选
 ```
 
 先读 `packages/core/src/index.test.ts` 头部,照搬它建 project/sheet 的方式。测试内容:
@@ -49,7 +49,7 @@ test('sheet.object 重复调用带 actions 会更新模板上的 actions', () =>
   // 建 project + sheet(照搬 index.test.ts 的写法)
   const config = {n: 0} // shorthand number
   const obj = sheet.object('obj', config)
-  const template = privateAPI(obj).template // privateAPI 从 @toy-box/core/__private 或测试内已有用法照搬
+  const template = privateAPI(obj).template // privateAPI 从 @dreamerbird/core/__private 或测试内已有用法照搬
   expect(template._temp_actions).toEqual(undefined)
 
   const actionA = jest.fn()
@@ -70,7 +70,7 @@ test('sheet.object 重复调用带 actions 会更新模板上的 actions', () =>
 })
 ```
 
-注意:`privateAPI` 的引入方式照抄 core 现有测试(若没有现成用法,用 `import {__private} from '@toy-box/core'` 不可行时,改为断言 `sheet.object` 不抛错 + 通过 studio 侧 ObjectDetails 的行为在 Task 4 浏览器验证;core 内可用 `import {privateAPI} from '@toy-box/core/theatre'`——先 grep `privateAPI` 在 core 测试里的用法再定)。
+注意:`privateAPI` 的引入方式照抄 core 现有测试(若没有现成用法,用 `import {__private} from '@dreamerbird/core'` 不可行时,改为断言 `sheet.object` 不抛错 + 通过 studio 侧 ObjectDetails 的行为在 Task 4 浏览器验证;core 内可用 `import {privateAPI} from '@dreamerbird/core/theatre'`——先 grep `privateAPI` 在 core 测试里的用法再定)。
 
 - [ ] **Step 2: 跑测试确认现状**
 
@@ -84,7 +84,7 @@ Expected: 若机制已如代码所示,直接 PASS(机制已存在,这个测试�
 a) 文件顶部 import 加类型:
 
 ```ts
-import type {SheetObjectActionsConfig} from '@toy-box/core/types/public'
+import type {SheetObjectActionsConfig} from '@dreamerbird/core/types/public'
 ```
 
 b) 创建 sheet object 的 useLayoutEffect(现 deps `[sheet, storeKey, additionalProps]`,约 136-185 行)改为:
@@ -151,7 +151,7 @@ git commit -m "feat(r3f): pass objectActions through editable to sheet.object pa
 - Test: `packages/playground/src/shared/camera/menuModel.test.ts`
 
 **Interfaces:**
-- Consumes: `ContextMenuItem` 类型(`@toy-box/studio/uiComponents/chordial/chordialInternals`);`SheetObjectActionsConfig`(`@toy-box/core/types/public`)。
+- Consumes: `ContextMenuItem` 类型(`@dreamerbird/studio/uiComponents/chordial/chordialInternals`);`SheetObjectActionsConfig`(`@dreamerbird/core/types/public`)。
 - Produces(后面任务全部从这里取):
   - `buildCameraMenuItems(opts: {onViewShot: () => void}): ContextMenuItem[]`
   - `buildPathMenuItems(opts: {metaKey: string; editing: boolean; onToggleEdit: () => void; onDelete: () => void}): ContextMenuItem[]`
@@ -279,8 +279,8 @@ Expected: FAIL(module not found)
  * 都在这里组装成数据,组件层(App/TopToolbar/各右键挂载点)只负责渲染
  * 和接回调。纯函数,单测直接断言结构。
  */
-import type {ContextMenuItem} from '@toy-box/studio/uiComponents/chordial/chordialInternals'
-import type {SheetObjectActionsConfig} from '@toy-box/core/types/public'
+import type {ContextMenuItem} from '@dreamerbird/studio/uiComponents/chordial/chordialInternals'
+import type {SheetObjectActionsConfig} from '@dreamerbird/core/types/public'
 import {GIZMO_MODE_LABELS} from './PlacementManager'
 import type {GizmoMode} from './PlacementManager'
 
@@ -399,7 +399,7 @@ git commit -m "feat(playground): pure menu/action item builders for camera scene
 - Modify: `packages/playground/src/shared/camera/PlacementManager.tsx:1276-1400` 附近(ObjectContextMenu 重写为薄封装调用)
 
 **Interfaces:**
-- Consumes: Task 2 的 `buildCameraMenuItems/buildPathMenuItems/buildObjectMenuItems`;studio `ContextMenu`(`@toy-box/studio/uiComponents/simpleContextMenu/ContextMenu/ContextMenu`,default export,props `{items, clickPoint?: {clientX, clientY}, onRequestClose}`)。
+- Consumes: Task 2 的 `buildCameraMenuItems/buildPathMenuItems/buildObjectMenuItems`;studio `ContextMenu`(`@dreamerbird/studio/uiComponents/simpleContextMenu/ContextMenu/ContextMenu`,default export,props `{items, clickPoint?: {clientX, clientY}, onRequestClose}`)。
 - Produces:
   ```tsx
   export function CanvasContextMenu(props: {
@@ -420,8 +420,8 @@ git commit -m "feat(playground): pure menu/action item builders for camera scene
  * 这里只把"光标位置 + 菜单项 + 关闭回调"对齐过去。
  */
 import React from 'react'
-import ContextMenu from '@toy-box/studio/uiComponents/simpleContextMenu/ContextMenu/ContextMenu'
-import type {ContextMenuItem} from '@toy-box/studio/uiComponents/chordial/chordialInternals'
+import ContextMenu from '@dreamerbird/studio/uiComponents/simpleContextMenu/ContextMenu/ContextMenu'
+import type {ContextMenuItem} from '@dreamerbird/studio/uiComponents/chordial/chordialInternals'
 
 export function CanvasContextMenu({
   position,
@@ -557,7 +557,7 @@ git commit -m "refactor(playground): unify canvas context menus on studio Contex
 
 ```ts
 // CameraPath.tsx,getPathMeta 之后
-import type {SheetObjectActionsConfig} from '@toy-box/core/types/public'
+import type {SheetObjectActionsConfig} from '@dreamerbird/core/types/public'
 
 /**
  * 给路径对象挂面板动作(属性后的按钮区,core 的 __actions__ 机制)。
@@ -676,7 +676,7 @@ git commit -m "feat(playground): move camera/path actions into object panel acti
 - Modify: `packages/playground/src/shared/camera/App.tsx`(删 4 个绝对定位按钮 + 两个手写下拉,改挂 TopToolbar)
 
 **Interfaces:**
-- Consumes: studio `useMenu`(`@toy-box/studio/uiComponents/simpleContextMenu/useMenu`,default export,签名 `[node, open, close, isOpen] = useMenu({items, ...})`);Task 2 的 `buildExportMenuItems`;Task 3 的 `CanvasContextMenu` 不需要(导出下拉直接用 useMenu 返回的 node)。
+- Consumes: studio `useMenu`(`@dreamerbird/studio/uiComponents/simpleContextMenu/useMenu`,default export,签名 `[node, open, close, isOpen] = useMenu({items, ...})`);Task 2 的 `buildExportMenuItems`;Task 3 的 `CanvasContextMenu` 不需要(导出下拉直接用 useMenu 返回的 node)。
 - Produces:
   ```tsx
   export function TopToolbar(props: {
@@ -703,7 +703,7 @@ git commit -m "feat(playground): move camera/path actions into object panel acti
  * 一个 flex 容器按顺序排,不再写死像素偏移。
  */
 import React, {useRef} from 'react'
-import useMenu from '@toy-box/studio/uiComponents/simpleContextMenu/useMenu'
+import useMenu from '@dreamerbird/studio/uiComponents/simpleContextMenu/useMenu'
 import {buildExportMenuItems} from './menuModel'
 
 /** listSinks() 返回元素的类型,由 App 从 videoExport 模块 re-export 传入 */

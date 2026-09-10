@@ -1,9 +1,9 @@
-import getStudio from '@toy-box/studio/getStudio'
+import getStudio from '@dreamerbird/studio/getStudio'
 import type {
   SheetAddress,
   WithoutSheetInstance,
-} from '@toy-box/core/types/public'
-import type {StudioSheetItemKey} from '@toy-box/core/types/private'
+} from '@dreamerbird/core/types/public'
+import type {StudioSheetItemKey} from '@dreamerbird/core/types/private'
 
 export function setCollapsedSheetItem(
   isCollapsed: boolean,

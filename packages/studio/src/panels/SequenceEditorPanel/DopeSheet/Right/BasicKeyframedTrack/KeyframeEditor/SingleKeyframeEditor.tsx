@@ -1,18 +1,18 @@
 import type {
   DopeSheetSelection,
   SequenceEditorPanelLayout,
-} from '@toy-box/studio/panels/SequenceEditorPanel/layout/layout'
-import type {SequenceEditorTree_PrimitiveProp} from '@toy-box/studio/panels/SequenceEditorPanel/layout/tree'
-import type {Pointer} from '@toy-box/dataverse'
-import {val} from '@toy-box/dataverse'
+} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/layout'
+import type {SequenceEditorTree_PrimitiveProp} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/tree'
+import type {Pointer} from '@dreamerbird/dataverse'
+import {val} from '@dreamerbird/dataverse'
 import React from 'react'
 import styled from 'styled-components'
 import SingleKeyframeConnector from './BasicKeyframeConnector'
 import SingleKeyframeDot from './SingleKeyframeDot'
-import type {TrackWithId} from '@toy-box/studio/panels/SequenceEditorPanel/DopeSheet/Right/collectAggregateKeyframes'
-import type {StudioSheetItemKey} from '@toy-box/core/types/private'
-import type {BasicKeyframe} from '@toy-box/core'
-import {__private} from '@toy-box/core'
+import type {TrackWithId} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/Right/collectAggregateKeyframes'
+import type {StudioSheetItemKey} from '@dreamerbird/core/types/private'
+import type {BasicKeyframe} from '@dreamerbird/core'
+import {__private} from '@dreamerbird/core'
 
 const {keyframeUtils} = __private
 

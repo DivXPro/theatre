@@ -1,5 +1,5 @@
-import {editable as e, SheetProvider} from '@toy-box/r3f'
-import {getProject} from '@toy-box/core'
+import {editable as e, SheetProvider} from '@dreamerbird/r3f'
+import {getProject} from '@dreamerbird/core'
 import React, {useEffect, useState} from 'react'
 import {Canvas} from '@react-three/fiber'
 import {PerspectiveCamera} from '@react-three/drei'

@@ -1,24 +1,24 @@
-import type {TrackData} from '@toy-box/core/types/private/core'
-import type SheetObject from '@toy-box/core/sheetObjects/SheetObject'
-import type {PathToProp} from '@toy-box/utils/pathToProp'
-import {createStudioSheetItemKey} from '@toy-box/studio/utils/createStudioSheetItemKey'
+import type {TrackData} from '@dreamerbird/core/types/private/core'
+import type SheetObject from '@dreamerbird/core/sheetObjects/SheetObject'
+import type {PathToProp} from '@dreamerbird/utils/pathToProp'
+import {createStudioSheetItemKey} from '@dreamerbird/studio/utils/createStudioSheetItemKey'
 import type {
   $IntentionalAny,
   BasicKeyframe,
   VoidFn,
-} from '@toy-box/core/types/public'
-import type {Pointer} from '@toy-box/dataverse'
+} from '@dreamerbird/core/types/public'
+import type {Pointer} from '@dreamerbird/dataverse'
 import React, {useMemo, useRef, useState} from 'react'
-import type {SequenceEditorPanelLayout} from '@toy-box/studio/panels/SequenceEditorPanel/layout/layout'
+import type {SequenceEditorPanelLayout} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/layout'
 import KeyframeEditor from './KeyframeEditor/KeyframeEditor'
-import {__private} from '@toy-box/core'
+import {__private} from '@dreamerbird/core'
 import type {
   PropTypeConfig_AllSimples,
   SequenceTrackId,
-} from '@toy-box/core/types/public'
-import {useVal} from '@toy-box/react'
-import type {GraphEditorColors} from '@toy-box/core/types/private'
-import {graphEditorColors} from '@toy-box/sync-server/state/schema'
+} from '@dreamerbird/core/types/public'
+import {useVal} from '@dreamerbird/react'
+import type {GraphEditorColors} from '@dreamerbird/core/types/private'
+import {graphEditorColors} from '@dreamerbird/sync-server/state/schema'
 
 const {getPropConfigByPath, isPropConfigComposite, valueInProp} =
   __private.propTypeUtils

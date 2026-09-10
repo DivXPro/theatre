@@ -1,11 +1,11 @@
-import type Project from '@toy-box/core/projects/Project'
-import SheetObjectTemplate from '@toy-box/core/sheetObjects/SheetObjectTemplate'
+import type Project from '@dreamerbird/core/projects/Project'
+import SheetObjectTemplate from '@dreamerbird/core/sheetObjects/SheetObjectTemplate'
 import type {
   SheetAddress,
   WithoutSheetInstance,
-} from '@toy-box/core/types/public'
-import {Atom} from '@toy-box/dataverse'
-import type {Pointer} from '@toy-box/dataverse'
+} from '@dreamerbird/core/types/public'
+import {Atom} from '@dreamerbird/dataverse'
+import type {Pointer} from '@dreamerbird/dataverse'
 import Sheet from './Sheet'
 import type {ObjectNativeObject} from './Sheet'
 
@@ -13,12 +13,12 @@ import type {
   ObjectAddressKey,
   SheetId,
   SheetInstanceId,
-} from '@toy-box/core/types/public'
-import type {StrictRecord} from '@toy-box/core/types/public'
+} from '@dreamerbird/core/types/public'
+import type {StrictRecord} from '@dreamerbird/core/types/public'
 import type {
   SheetObjectActionsConfig,
   SheetObjectPropTypeConfig,
-} from '@toy-box/core/types/public'
+} from '@dreamerbird/core/types/public'
 
 type SheetTemplateObjectTemplateMap = StrictRecord<
   ObjectAddressKey,

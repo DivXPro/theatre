@@ -1,19 +1,22 @@
-import type Project from '@toy-box/core/projects/Project'
-import type Sheet from '@toy-box/core/sheets/Sheet'
-import {encodePathToProp} from '@toy-box/utils/pathToProp'
-import type {BasicKeyframe, SequenceAddress} from '@toy-box/core/types/public'
-import didYouMean from '@toy-box/utils/didYouMean'
-import {InvalidArgumentError} from '@toy-box/utils/errors'
+import type Project from '@dreamerbird/core/projects/Project'
+import type Sheet from '@dreamerbird/core/sheets/Sheet'
+import {encodePathToProp} from '@dreamerbird/utils/pathToProp'
+import type {
+  BasicKeyframe,
+  SequenceAddress,
+} from '@dreamerbird/core/types/public'
+import didYouMean from '@dreamerbird/utils/didYouMean'
+import {InvalidArgumentError} from '@dreamerbird/utils/errors'
 import type {
   Prism,
   Pointer,
   Ticker,
   PointerToPrismProvider,
-} from '@toy-box/dataverse'
-import {getPointerParts} from '@toy-box/dataverse'
-import {Atom} from '@toy-box/dataverse'
-import {pointer} from '@toy-box/dataverse'
-import {prism, val} from '@toy-box/dataverse'
+} from '@dreamerbird/dataverse'
+import {getPointerParts} from '@dreamerbird/dataverse'
+import {Atom} from '@dreamerbird/dataverse'
+import {pointer} from '@dreamerbird/dataverse'
+import {prism, val} from '@dreamerbird/dataverse'
 import {padStart} from 'lodash-es'
 import type {
   IPlaybackController,
@@ -26,11 +29,11 @@ import type {
   IPlaybackDirection,
   IPlaybackRange,
   ISequence,
-} from '@toy-box/core/types/public'
-import {notify} from '@toy-box/core/utils/notify'
-import type {$IntentionalAny} from '@toy-box/dataverse/src/types'
-import {isSheetObject} from '@toy-box/core/utils/instanceTypes'
-import {getSortedKeyframesCached} from '@toy-box/core/utils/keyframeUtils'
+} from '@dreamerbird/core/types/public'
+import {notify} from '@dreamerbird/core/utils/notify'
+import type {$IntentionalAny} from '@dreamerbird/dataverse/src/types'
+import {isSheetObject} from '@dreamerbird/core/utils/instanceTypes'
+import {getSortedKeyframesCached} from '@dreamerbird/core/utils/keyframeUtils'
 
 const possibleDirections = [
   'normal',

@@ -1,13 +1,13 @@
-import getStudio from '@toy-box/studio/getStudio'
-import type {SerializableValue} from '@toy-box/core/types/public'
+import getStudio from '@dreamerbird/studio/getStudio'
+import type {SerializableValue} from '@dreamerbird/core/types/public'
 import type {
   CommitOrDiscardOrRecapture,
   ITransactionPrivateApi,
-} from '@toy-box/studio/StudioStore/StudioStore'
-import type {IEditingTools} from '@toy-box/studio/propEditors/utils/IEditingTools'
+} from '@dreamerbird/studio/StudioStore/StudioStore'
+import type {IEditingTools} from '@dreamerbird/studio/propEditors/utils/IEditingTools'
 import {useMemo} from 'react'
-import type SheetObject from '@toy-box/core/sheetObjects/SheetObject'
-import type {Asset} from '@toy-box/core/types/public'
+import type SheetObject from '@dreamerbird/core/sheetObjects/SheetObject'
+import type {Asset} from '@dreamerbird/core/types/public'
 
 /**
  * This function takes a function `writeTx` that sets a value in the private Studio API and

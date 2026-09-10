@@ -6,8 +6,8 @@ import type {
   PropTypeConfig_Enum,
   PathToProp,
   $IntentionalAny,
-} from '@toy-box/core/types/public'
-import memoizeFn from '@toy-box/utils/memoizeFn'
+} from '@dreamerbird/core/types/public'
+import memoizeFn from '@dreamerbird/utils/memoizeFn'
 
 /**
  * Iterates recursively over all props of an object (which should be a {@link SerializableMap}) and runs `fn`

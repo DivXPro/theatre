@@ -6,12 +6,12 @@ import type {
   ColorPickerBaseProps,
   HsvaColor,
   RgbaColor,
-} from '@toy-box/studio/uiComponents/colorPicker/types'
-import {equalColorObjects} from '@toy-box/studio/uiComponents/colorPicker/utils/compare'
+} from '@dreamerbird/studio/uiComponents/colorPicker/types'
+import {equalColorObjects} from '@dreamerbird/studio/uiComponents/colorPicker/utils/compare'
 import {
   rgbaToHsva,
   hsvaToRgba,
-} from '@toy-box/studio/uiComponents/colorPicker/utils/convert'
+} from '@dreamerbird/studio/uiComponents/colorPicker/utils/convert'
 import {EditingProvider} from './EditingProvider'
 
 const normalizeRgba = (rgba: RgbaColor) => {

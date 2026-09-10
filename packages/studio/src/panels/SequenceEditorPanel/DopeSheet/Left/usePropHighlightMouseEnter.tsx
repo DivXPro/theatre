@@ -1,7 +1,7 @@
-import type {SequenceEditorTree_AllRowTypes} from '@toy-box/studio/panels/SequenceEditorPanel/layout/tree'
-import type {PropAddress} from '@toy-box/core/types/public'
+import type {SequenceEditorTree_AllRowTypes} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/tree'
+import type {PropAddress} from '@dreamerbird/core/types/public'
 import {useLayoutEffect} from 'react'
-import {whatPropIsHighlighted} from '@toy-box/studio/panels/SequenceEditorPanel/whatPropIsHighlighted'
+import {whatPropIsHighlighted} from '@dreamerbird/studio/panels/SequenceEditorPanel/whatPropIsHighlighted'
 
 /** This should ignore if  */
 export function usePropHighlightMouseEnter(

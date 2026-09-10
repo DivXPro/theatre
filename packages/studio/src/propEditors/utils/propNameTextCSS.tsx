@@ -1,5 +1,5 @@
-import type {PropHighlighted} from '@toy-box/studio/panels/SequenceEditorPanel/whatPropIsHighlighted'
-import type {$IntentionalAny} from '@toy-box/core/types/public'
+import type {PropHighlighted} from '@dreamerbird/studio/panels/SequenceEditorPanel/whatPropIsHighlighted'
+import type {$IntentionalAny} from '@dreamerbird/core/types/public'
 import type {RuleSet} from 'styled-components'
 import {css} from 'styled-components'
 

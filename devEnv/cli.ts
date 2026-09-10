@@ -28,14 +28,14 @@ $.quote = function quote(arg) {
 }
 
 const packagesToBuild = [
-  '@toy-box/dataverse',
-  '@toy-box/saaz',
-  '@toy-box/core',
-  '@toy-box/studio',
-  '@toy-box/react',
-  '@toy-box/r3f',
-  '@toy-box/theatric',
-  '@toy-box/browser-bundles',
+  '@dreamerbird/dataverse',
+  '@dreamerbird/saaz',
+  '@dreamerbird/core',
+  '@dreamerbird/studio',
+  '@dreamerbird/react',
+  '@dreamerbird/r3f',
+  '@dreamerbird/theatric',
+  '@dreamerbird/browser-bundles',
 ]
 
 /**
@@ -44,14 +44,14 @@ const packagesToBuild = [
  * filesystem/git paths.
  */
 const workspaceLocationsByName: Record<string, string> = {
-  '@toy-box/dataverse': 'packages/dataverse',
-  '@toy-box/saaz': 'packages/saaz',
-  '@toy-box/core': 'packages/core',
-  '@toy-box/studio': 'packages/studio',
-  '@toy-box/react': 'packages/react',
-  '@toy-box/r3f': 'packages/r3f',
-  '@toy-box/theatric': 'packages/theatric',
-  '@toy-box/browser-bundles': 'packages/browser-bundles',
+  '@dreamerbird/dataverse': 'packages/dataverse',
+  '@dreamerbird/saaz': 'packages/saaz',
+  '@dreamerbird/core': 'packages/core',
+  '@dreamerbird/studio': 'packages/studio',
+  '@dreamerbird/react': 'packages/react',
+  '@dreamerbird/r3f': 'packages/r3f',
+  '@dreamerbird/theatric': 'packages/theatric',
+  '@dreamerbird/browser-bundles': 'packages/browser-bundles',
 }
 
 prog
@@ -338,14 +338,14 @@ prog
   )
   .action(async () => {
     const packagesToPublish = [
-      '@toy-box/core',
-      '@toy-box/studio',
-      '@toy-box/dataverse',
-      '@toy-box/saaz',
-      '@toy-box/react',
-      '@toy-box/browser-bundles',
-      '@toy-box/r3f',
-      '@toy-box/theatric',
+      '@dreamerbird/core',
+      '@dreamerbird/studio',
+      '@dreamerbird/dataverse',
+      '@dreamerbird/saaz',
+      '@dreamerbird/react',
+      '@dreamerbird/browser-bundles',
+      '@dreamerbird/r3f',
+      '@dreamerbird/theatric',
     ]
 
     /**
@@ -382,7 +382,7 @@ prog
       // The `r3f` package has its own release schedule, so its version numbers
       // are almost always different from the rest of the packages.
       const pathToPackageJson =
-        packageName === '@toy-box/r3f'
+        packageName === '@dreamerbird/r3f'
           ? path.resolve(__dirname, '../', 'packages', 'r3f', 'package.json')
           : path.resolve(__dirname, '../', './package.json')
 
@@ -420,13 +420,13 @@ prog
 
         let {version, dependencies, peerDependencies, devDependencies} =
           original
-        // The @toy-box/r3f package curently doesn't track the same version number of the other packages like @toy-box/core,
+        // The @dreamerbird/r3f package curently doesn't track the same version number of the other packages like @dreamerbird/core,
         // so we need to generate version numbers independently for each package
         version = getNewVersionName(workspaceData.name, latestCommitHash)
         assignedVersionByPackageName[workspaceData.name] = version
         // Normally we don't have to override the package versions in dependencies because yarn would already convert
-        // all the "workspace:*" versions to a fixed version before publishing. However, packages like @toy-box/studio
-        // have a peerDependency on @toy-box/core set to "*" (meaning they would work with any version of @toy-box/core).
+        // all the "workspace:*" versions to a fixed version before publishing. However, packages like @dreamerbird/studio
+        // have a peerDependency on @dreamerbird/core set to "*" (meaning they would work with any version of @dreamerbird/core).
         // This is not the desired behavior in pre-release versions, so here, we'll fix those "*" versions to the set version.
         for (const deps of [dependencies, peerDependencies, devDependencies]) {
           if (!deps) continue
@@ -520,8 +520,8 @@ prog
 {
   const allDevCommands = [
     `yarn workspace playground run serve`,
-    `yarn workspace @toy-box/app run cli dev all`,
-    `yarn workspace @toy-box/sync-server run cli dev all`,
+    `yarn workspace @dreamerbird/app run cli dev all`,
+    `yarn workspace @dreamerbird/sync-server run cli dev all`,
   ]
 
   prog

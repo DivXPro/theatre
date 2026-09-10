@@ -1,5 +1,5 @@
 import isPlainObject from 'lodash-es/isPlainObject'
-import type {$IntentionalAny} from '@toy-box/utils/types'
+import type {$IntentionalAny} from '@dreamerbird/utils/types'
 
 enum ValueType {
   Opaque = 0,

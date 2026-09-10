@@ -6,7 +6,7 @@
 
 **Architecture:** 照搬放置模型(Placements)的注册表模式:一个大纲里的注册表对象存相机清单(JSON),每台相机 = 一对 theatre 对象(相机+Target),App 按清单渲染 ShotCamera;添加=注册表加行(组件挂载即创建对象),删除=forgetObject 清持久数据+注册表移除(组件卸载即大纲行消失)。P1 上限一台。
 
-**Tech Stack:** theatre fork(@toy-box)、r3f、jest、playwright 浏览器实测。
+**Tech Stack:** theatre fork(@dreamerbird)、r3f、jest、playwright 浏览器实测。
 
 **Spec:** docs/superpowers/specs/2026-09-01-camera-menu-reorg-design.md(菜单归属原则)+ 2026-09-01 会话决议(见下)。
 
@@ -131,8 +131,8 @@ Expected: FAIL(模块不存在)
  * 即创建对象、大纲行出现);删除 = forgetObject 清持久数据 + 注册表
  * 移除(组件卸载,editable 清理时 detachObject,大纲行消失)。
  */
-import {getStudioSync, types as t, val} from '@toy-box/core'
-import type {ISheet, ISheetObject} from '@toy-box/core'
+import {getStudioSync, types as t, val} from '@dreamerbird/core'
+import type {ISheet, ISheetObject} from '@dreamerbird/core'
 import {useEffect, useMemo, useState} from 'react'
 
 /** 注册表对象的 theatre key(大纲里显示为 "Cameras" 行,和 Placements 同款) */

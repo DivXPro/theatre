@@ -1,32 +1,32 @@
 import React from 'react'
-import useRefAndState from '@toy-box/studio/utils/useRefAndState'
+import useRefAndState from '@dreamerbird/studio/utils/useRefAndState'
 import usePresence, {
   PresenceFlag,
-} from '@toy-box/studio/uiComponents/usePresence'
-import useContextMenu from '@toy-box/studio/uiComponents/simpleContextMenu/useContextMenu'
+} from '@dreamerbird/studio/uiComponents/usePresence'
+import useContextMenu from '@dreamerbird/studio/uiComponents/simpleContextMenu/useContextMenu'
 import type {IAggregateKeyframeEditorProps} from './AggregateKeyframeEditor'
 import type {IAggregateKeyframeEditorUtils} from './useAggregateKeyframeEditorUtils'
 import {AggregateKeyframeVisualDot, HitZone} from './AggregateKeyframeVisualDot'
-import getStudio from '@toy-box/studio/getStudio'
+import getStudio from '@dreamerbird/studio/getStudio'
 import {
   copyableKeyframesFromSelection,
   keyframesWithPaths,
-} from '@toy-box/studio/panels/SequenceEditorPanel/DopeSheet/selections'
-import type {KeyframeWithPathToPropFromCommonRoot} from '@toy-box/core/types/private'
-import {commonRootOfPathsToProps} from '@toy-box/utils/pathToProp'
-import DopeSnap from '@toy-box/studio/panels/SequenceEditorPanel/RightOverlay/DopeSnap'
+} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/selections'
+import type {KeyframeWithPathToPropFromCommonRoot} from '@dreamerbird/core/types/private'
+import {commonRootOfPathsToProps} from '@dreamerbird/utils/pathToProp'
+import DopeSnap from '@dreamerbird/studio/panels/SequenceEditorPanel/RightOverlay/DopeSnap'
 import type {
   PrimitivePropEditingOptions,
   PropWithChildrenEditingOptionsTree,
   SheetObjectEditingOptionsTree,
-} from '@toy-box/studio/panels/SequenceEditorPanel/DopeSheet/Right/BasicKeyframedTrack/KeyframeEditor/useSingleKeyframeInlineEditorPopover'
-import {useKeyframeInlineEditorPopover} from '@toy-box/studio/panels/SequenceEditorPanel/DopeSheet/Right/BasicKeyframedTrack/KeyframeEditor/useSingleKeyframeInlineEditorPopover'
+} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/Right/BasicKeyframedTrack/KeyframeEditor/useSingleKeyframeInlineEditorPopover'
+import {useKeyframeInlineEditorPopover} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/Right/BasicKeyframedTrack/KeyframeEditor/useSingleKeyframeInlineEditorPopover'
 import type {
   SequenceEditorTree_PrimitiveProp,
   SequenceEditorTree_PropWithChildren,
   SequenceEditorTree_SheetObject,
-} from '@toy-box/studio/panels/SequenceEditorPanel/layout/tree'
-import type {KeyframeWithTrack} from '@toy-box/studio/panels/SequenceEditorPanel/DopeSheet/Right/collectAggregateKeyframes'
+} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/tree'
+import type {KeyframeWithTrack} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/Right/collectAggregateKeyframes'
 
 type IAggregateKeyframeDotProps = {
   editorProps: IAggregateKeyframeEditorProps

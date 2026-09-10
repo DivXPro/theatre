@@ -1,5 +1,5 @@
 {
-  "name": "@toy-box/react",
+  "name": "@dreamerbird/react",
   "version": "1.0.0",
   "license": "Apache-2.0",
   "author": {
@@ -40,7 +40,7 @@
     "typescript": "5.6.3"
   },
   "dependencies": {
-    "@toy-box/dataverse": "workspace:*",
+    "@dreamerbird/dataverse": "workspace:*",
     "lodash-es": "^4.17.21",
     "queue-microtask": "^1.2.3"
   },

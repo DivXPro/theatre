@@ -1,26 +1,26 @@
-import type {TrackData} from '@toy-box/core/types/private/core'
-import type {SequenceEditorPanelLayout} from '@toy-box/studio/panels/SequenceEditorPanel/layout/layout'
-import type {SequenceEditorTree_PrimitiveProp} from '@toy-box/studio/panels/SequenceEditorPanel/layout/tree'
-import {usePrism, useVal} from '@toy-box/react'
-import type {Pointer} from '@toy-box/dataverse'
-import {val} from '@toy-box/dataverse'
+import type {TrackData} from '@dreamerbird/core/types/private/core'
+import type {SequenceEditorPanelLayout} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/layout'
+import type {SequenceEditorTree_PrimitiveProp} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/tree'
+import {usePrism, useVal} from '@dreamerbird/react'
+import type {Pointer} from '@dreamerbird/dataverse'
+import {val} from '@dreamerbird/dataverse'
 import React, {useMemo} from 'react'
 import styled from 'styled-components'
 import SingleKeyframeEditor from './KeyframeEditor/SingleKeyframeEditor'
-import useContextMenu from '@toy-box/studio/uiComponents/simpleContextMenu/useContextMenu'
-import useRefAndState from '@toy-box/studio/utils/useRefAndState'
-import getStudio from '@toy-box/studio/getStudio'
-import {arePathsEqual} from '@toy-box/utils/pathToProp'
-import type {KeyframeWithPathToPropFromCommonRoot} from '@toy-box/core/types/private'
+import useContextMenu from '@dreamerbird/studio/uiComponents/simpleContextMenu/useContextMenu'
+import useRefAndState from '@dreamerbird/studio/utils/useRefAndState'
+import getStudio from '@dreamerbird/studio/getStudio'
+import {arePathsEqual} from '@dreamerbird/utils/pathToProp'
+import type {KeyframeWithPathToPropFromCommonRoot} from '@dreamerbird/core/types/private'
 import KeyframeSnapTarget, {
   snapPositionsStateD,
-} from '@toy-box/studio/panels/SequenceEditorPanel/DopeSheet/Right/KeyframeSnapTarget'
-import {createStudioSheetItemKey} from '@toy-box/studio/utils/createStudioSheetItemKey'
-import type {BasicKeyframe} from '@toy-box/core'
-import {__private} from '@toy-box/core'
+} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/Right/KeyframeSnapTarget'
+import {createStudioSheetItemKey} from '@dreamerbird/studio/utils/createStudioSheetItemKey'
+import type {BasicKeyframe} from '@dreamerbird/core'
+import {__private} from '@dreamerbird/core'
 
 const {keyframeUtils} = __private
-import type {ContextMenuItem} from '@toy-box/studio/uiComponents/chordial/chordialInternals'
+import type {ContextMenuItem} from '@dreamerbird/studio/uiComponents/chordial/chordialInternals'
 
 const Container = styled.div`
   position: relative;

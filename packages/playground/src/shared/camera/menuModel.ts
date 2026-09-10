@@ -3,8 +3,8 @@
  * 都在这里组装成数据,组件层(App/TopToolbar/各右键挂载点)只负责渲染
  * 和接回调。纯函数,单测直接断言结构。
  */
-import type {ContextMenuItem} from '@toy-box/studio/uiComponents/chordial/chordialInternals'
-import type {SheetObjectActionsConfig} from '@toy-box/core/types/public'
+import type {ContextMenuItem} from '@dreamerbird/studio/uiComponents/chordial/chordialInternals'
+import type {SheetObjectActionsConfig} from '@dreamerbird/core/types/public'
 import {GIZMO_MODE_LABELS} from './PlacementManager'
 import type {GizmoMode} from './PlacementManager'
 

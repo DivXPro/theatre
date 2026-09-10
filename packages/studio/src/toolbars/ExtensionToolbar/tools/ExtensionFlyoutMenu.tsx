@@ -1,14 +1,14 @@
 import React, {useRef} from 'react'
 import styled from 'styled-components'
-import {pointerEventsAutoInNormalMode} from '@toy-box/studio/css'
+import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
 import type {
   ToolConfigFlyoutMenu,
   ToolconfigFlyoutMenuItem,
-} from '@toy-box/core/types/public'
-import ToolbarIconButton from '@toy-box/studio/uiComponents/toolbar/ToolbarIconButton'
-import BaseMenu from '@toy-box/studio/uiComponents/simpleContextMenu/ContextMenu/BaseMenu'
-import usePopover from '@toy-box/studio/uiComponents/Popover/usePopover'
-import type {$IntentionalAny} from '@toy-box/core/types/public'
+} from '@dreamerbird/core/types/public'
+import ToolbarIconButton from '@dreamerbird/studio/uiComponents/toolbar/ToolbarIconButton'
+import BaseMenu from '@dreamerbird/studio/uiComponents/simpleContextMenu/ContextMenu/BaseMenu'
+import usePopover from '@dreamerbird/studio/uiComponents/Popover/usePopover'
+import type {$IntentionalAny} from '@dreamerbird/core/types/public'
 
 const Container = styled.div`
   ${pointerEventsAutoInNormalMode};

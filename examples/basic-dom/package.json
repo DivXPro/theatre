@@ -4,8 +4,8 @@
     "start": "parcel serve ./index.html"
   },
   "dependencies": {
-    "@toy-box/core": "workspace:*",
-    "@toy-box/studio": "workspace:*",
+    "@dreamerbird/core": "workspace:*",
+    "@dreamerbird/studio": "workspace:*",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "parcel-bundler": "^1.12.5",

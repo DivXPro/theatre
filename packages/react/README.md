@@ -1,4 +1,4 @@
-# @toy-box/react
+# @dreamerbird/react
 
 Utilities for using [Theatre.js](https://www.theatrejs.com) or
 [Dataverse](https://github.com/theatre-js/theatre/tree/main/packages/dataverse)
@@ -13,8 +13,8 @@ A React hook that returns the value of the given prism or pointer.
 Usage with Dataverse pointers:
 
 ```tsx
-import {Atom} from '@toy-box/dataverse'
-import {useVal} from '@toy-box/react'
+import {Atom} from '@dreamerbird/dataverse'
+import {useVal} from '@dreamerbird/react'
 
 const atom = new Atom({foo: 'foo'})
 
@@ -27,8 +27,8 @@ function Component() {
 Usage with Dataverse prisms:
 
 ```tsx
-import {prism} from '@toy-box/dataverse'
-import {useVal} from '@toy-box/react'
+import {prism} from '@dreamerbird/dataverse'
+import {useVal} from '@dreamerbird/react'
 
 const pr = prism(() => 'some value')
 
@@ -41,8 +41,8 @@ function Component() {
 Usage with Theatre.js pointers:
 
 ```tsx
-import {useVal} from '@toy-box/react'
-import {getProject} from '@toy-box/core'
+import {useVal} from '@dreamerbird/react'
+import {getProject} from '@dreamerbird/core'
 
 const obj = getProject('my project')
   .sheet('my sheet')
@@ -65,8 +65,8 @@ Creates a prism out of `fn` and subscribes the element to the value of the
 created prism.
 
 ```tsx
-import {Atom, val, prism} from '@toy-box/dataverse'
-import {usePrism} from '@toy-box/react'
+import {Atom, val, prism} from '@dreamerbird/dataverse'
+import {usePrism} from '@dreamerbird/react'
 
 const state = new Atom({a: 1, b: 1})
 
@@ -94,8 +94,8 @@ function Component(props: {which: 'a' | 'b'}) {
 Subscribes the element to the value of the given prism instance.
 
 ```tsx
-import {Atom, val, prism} from '@toy-box/dataverse'
-import {usePrismInstance} from '@toy-box/react'
+import {Atom, val, prism} from '@dreamerbird/dataverse'
+import {usePrismInstance} from '@dreamerbird/react'
 
 const state = new Atom({a: 1, b: 1})
 
@@ -115,7 +115,7 @@ function Component() {
 re-render if the value of the atom changes.
 
 ```tsx
-import {useAtom, useVal} from '@toy-box/react'
+import {useAtom, useVal} from '@dreamerbird/react'
 import {useEffect} from 'react'
 
 function MyComponent() {

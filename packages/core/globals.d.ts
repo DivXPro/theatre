@@ -1,6 +1,6 @@
 declare module globalThis {
   /**
-   * This is set to true when running the tests, so that `@toy-box/core` will try to conenct to `@toy-box/studio`,
+   * This is set to true when running the tests, so that `@dreamerbird/core` will try to conenct to `@dreamerbird/studio`,
    * even if `typeof window === 'undefined'`.
    */
   var __THEATREJS__FORCE_CONNECT_CORE_AND_STUDIO: boolean | undefined

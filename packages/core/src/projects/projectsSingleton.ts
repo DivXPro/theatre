@@ -1,5 +1,5 @@
-import {Atom} from '@toy-box/dataverse'
-import type {ProjectId} from '@toy-box/core/types/public'
+import {Atom} from '@dreamerbird/dataverse'
+import type {ProjectId} from '@dreamerbird/core/types/public'
 import type Project from './Project'
 
 interface State {

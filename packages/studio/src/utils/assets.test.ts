@@ -1,4 +1,4 @@
-import type Project from '@toy-box/core/projects/Project'
+import type Project from '@dreamerbird/core/projects/Project'
 import {getAllPossibleAssetIDs} from './assets'
 
 function projectWithState(state: unknown): Project {

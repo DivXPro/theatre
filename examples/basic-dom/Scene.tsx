@@ -1,9 +1,9 @@
-import type {IScrub} from '@toy-box/core'
+import type {IScrub} from '@dreamerbird/core'
 import React, {useLayoutEffect, useMemo, useState} from 'react'
-import type {ISheet, ISheetObject, IProject} from '@toy-box/core'
+import type {ISheet, ISheetObject, IProject} from '@dreamerbird/core'
 import type {UseDragOpts} from './useDrag'
 import useDrag from './useDrag'
-import theatre from '@toy-box/core'
+import theatre from '@dreamerbird/core'
 
 const boxObjectConfig = {
   x: 0,

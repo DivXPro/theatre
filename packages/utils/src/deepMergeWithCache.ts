@@ -1,4 +1,4 @@
-import type {$IntentionalAny} from '@toy-box/utils/types'
+import type {$IntentionalAny} from '@dreamerbird/utils/types'
 
 /**
  * This is like `Object.assign(base, override)`, with the following differences:

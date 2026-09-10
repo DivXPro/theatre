@@ -1,5 +1,5 @@
-import type {ISheet, ISheetObject} from '@toy-box/core'
-import {types, getStudioSync} from '@toy-box/core'
+import type {ISheet, ISheetObject} from '@dreamerbird/core'
+import {types, getStudioSync} from '@dreamerbird/core'
 
 let sheet: ISheet | undefined = undefined
 let sheetObject: ISheetObject<typeof editorSheetObjectConfig> | undefined =

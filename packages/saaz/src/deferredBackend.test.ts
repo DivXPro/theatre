@@ -1,7 +1,7 @@
 import {createDeferredBackend} from './deferredBackend'
 import SaazBack from './back/SaazBack'
 import {BackMemoryAdapter} from './back/BackMemoryAdapter'
-import {defer} from '@toy-box/utils/defer'
+import {defer} from '@dreamerbird/utils/defer'
 import type {$IntentionalAny, SaazBackInterface, Schema} from './types'
 
 jest.setTimeout(5000)

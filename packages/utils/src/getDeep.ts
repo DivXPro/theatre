@@ -1,5 +1,5 @@
 import lodashGet from 'lodash-es/get'
-import type {PathToProp} from '@toy-box/utils/pathToProp'
+import type {PathToProp} from '@dreamerbird/utils/pathToProp'
 
 /**
  * Returns the value at `path` of `v`.

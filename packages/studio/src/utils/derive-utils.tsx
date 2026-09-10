@@ -1,7 +1,7 @@
-import {isPrism, prism, val} from '@toy-box/dataverse'
-import type {Prism, Pointer} from '@toy-box/dataverse'
-import {usePrismInstance} from '@toy-box/react'
-import type {$FixMe, $IntentionalAny} from '@toy-box/core/types/public'
+import {isPrism, prism, val} from '@dreamerbird/dataverse'
+import type {Prism, Pointer} from '@dreamerbird/dataverse'
+import {usePrismInstance} from '@dreamerbird/react'
+import type {$FixMe, $IntentionalAny} from '@dreamerbird/core/types/public'
 import React, {useMemo, useRef} from 'react'
 import {invariant} from './invariant'
 

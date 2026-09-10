@@ -1,8 +1,8 @@
-import type {$IntentionalAny} from '@toy-box/core/types/public'
-import type {BasicKeyframedTrack} from '@toy-box/core/types/private/core'
-import memoizeFn from '@toy-box/utils/memoizeFn'
+import type {$IntentionalAny} from '@dreamerbird/core/types/public'
+import type {BasicKeyframedTrack} from '@dreamerbird/core/types/private/core'
+import memoizeFn from '@dreamerbird/utils/memoizeFn'
 import {cloneDeep} from 'lodash-es'
-import type {BasicKeyframe} from '@toy-box/core/types/public'
+import type {BasicKeyframe} from '@dreamerbird/core/types/public'
 
 export const getSortedKeyframes = (
   keyframes: BasicKeyframedTrack['keyframes'],

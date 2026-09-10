@@ -1,4 +1,4 @@
-import {Atom} from '@toy-box/dataverse'
+import {Atom} from '@dreamerbird/dataverse'
 import {useLayoutEffect, useMemo} from 'react'
 
 export default function useValToAtom<S>(val: S): Atom<S> {

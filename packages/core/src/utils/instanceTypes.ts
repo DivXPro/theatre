@@ -1,14 +1,18 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
-import type {IProject, ISheet, ISheetObject} from '@toy-box/core/types/public'
-import type Project from '@toy-box/core/projects/Project'
-import type SheetObject from '@toy-box/core/sheetObjects/SheetObject'
-import type SheetObjectTemplate from '@toy-box/core/sheetObjects/SheetObjectTemplate'
-import type Sheet from '@toy-box/core/sheets/Sheet'
-import type SheetTemplate from '@toy-box/core/sheets/SheetTemplate'
-import type {$IntentionalAny} from '@toy-box/core/types/public'
+import type {
+  IProject,
+  ISheet,
+  ISheetObject,
+} from '@dreamerbird/core/types/public'
+import type Project from '@dreamerbird/core/projects/Project'
+import type SheetObject from '@dreamerbird/core/sheetObjects/SheetObject'
+import type SheetObjectTemplate from '@dreamerbird/core/sheetObjects/SheetObjectTemplate'
+import type Sheet from '@dreamerbird/core/sheets/Sheet'
+import type SheetTemplate from '@dreamerbird/core/sheets/SheetTemplate'
+import type {$IntentionalAny} from '@dreamerbird/core/types/public'
 
 /**
- * Since \@toy-box/core and \@toy-box/studio are separate bundles,
+ * Since \@dreamerbird/core and \@dreamerbird/studio are separate bundles,
  * they cannot use `x instanceof Y` to detect object types.
  *
  * The functions in this module are supposed to be a replacement for that.

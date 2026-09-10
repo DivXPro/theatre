@@ -1,4 +1,4 @@
-[@toy-box/dataverse](../README.md) / PointerToPrismProvider
+[@dreamerbird/dataverse](../README.md) / PointerToPrismProvider
 
 # Interface: PointerToPrismProvider
 

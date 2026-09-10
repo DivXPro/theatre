@@ -1,5 +1,5 @@
-import {globalVariableNames} from '@toy-box/core/globals'
-import type {$IntentionalAny} from '@toy-box/core/types/public'
+import {globalVariableNames} from '@dreamerbird/core/globals'
+import type {$IntentionalAny} from '@dreamerbird/core/types/public'
 
 /**
  * Behavior tests for the core `init()` / `getStudio()` / `getStudioSync()`

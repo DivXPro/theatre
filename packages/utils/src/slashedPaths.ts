@@ -1,5 +1,5 @@
-import {InvalidArgumentError} from '@toy-box/utils/errors'
-// import {notify} from '@toy-box/shared/notify'
+import {InvalidArgumentError} from '@dreamerbird/utils/errors'
+// import {notify} from '@dreamerbird/shared/notify'
 
 /**
  * Make the given string's "path" slashes normalized with preceding and trailing spaces.

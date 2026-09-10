@@ -20,21 +20,21 @@
  * adapter is a shared singleton.
  *
  * jest-esbuild does not hoist `jest.mock`, so any static import of
- * `@toy-box/saaz` — directly, or transitively via `Studio` → `StudioStore` —
+ * `@dreamerbird/saaz` — directly, or transitively via `Studio` → `StudioStore` —
  * evaluates the real module into the registry before the mock registers, and
  * the factory never runs. The test therefore registers the mock with
  * `jest.doMock`, resets the module registry, and requires everything fresh so
- * every consumer of `@toy-box/saaz` (including `StudioStore`) resolves the mock.
+ * every consumer of `@dreamerbird/saaz` (including `StudioStore`) resolves the mock.
  */
-import type {$IntentionalAny} from '@toy-box/utils/types'
+import type {$IntentionalAny} from '@dreamerbird/utils/types'
 
 jest.setTimeout(20000)
 
 const PROJECT_ID = 'p1'
 
 test('studio.initialized does not resolve before persisted state is restored', async () => {
-  jest.doMock('@toy-box/saaz', () => {
-    const actual = jest.requireActual('@toy-box/saaz')
+  jest.doMock('@dreamerbird/saaz', () => {
+    const actual = jest.requireActual('@dreamerbird/saaz')
 
     const self: $IntentionalAny = {
       ...actual,
@@ -81,10 +81,10 @@ test('studio.initialized does not resolve before persisted state is restored', a
   })
   jest.resetModules()
 
-  const Saaz: $IntentionalAny = require('@toy-box/saaz')
-  const {schema} = require('@toy-box/sync-server/state/schema')
-  const {Studio} = require('@toy-box/studio/Studio')
-  const {Atom, val} = require('@toy-box/dataverse')
+  const Saaz: $IntentionalAny = require('@dreamerbird/saaz')
+  const {schema} = require('@dreamerbird/sync-server/state/schema')
+  const {Studio} = require('@dreamerbird/studio/Studio')
+  const {Atom, val} = require('@dreamerbird/dataverse')
   const mockState = Saaz.__mockState
 
   // ---- seed a persisted session, as a previous page load would have left ----

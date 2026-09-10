@@ -1,4 +1,4 @@
-import type {$FixMe, $IntentionalAny} from '@toy-box/utils/types'
+import type {$FixMe, $IntentionalAny} from '@dreamerbird/utils/types'
 
 /**
  * Returns a new object with the value at `path` replaced with the result of `reducer(oldValue)`.

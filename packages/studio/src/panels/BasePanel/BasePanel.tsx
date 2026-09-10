@@ -1,12 +1,12 @@
-import {prism, val} from '@toy-box/dataverse'
-import {usePrism} from '@toy-box/react'
-import type {$IntentionalAny, VoidFn} from '@toy-box/core/types/public'
-import getStudio from '@toy-box/studio/getStudio'
-import type {PanelPosition} from '@toy-box/core/types/private'
-import useLockSet from '@toy-box/studio/uiComponents/useLockSet'
+import {prism, val} from '@dreamerbird/dataverse'
+import {usePrism} from '@dreamerbird/react'
+import type {$IntentionalAny, VoidFn} from '@dreamerbird/core/types/public'
+import getStudio from '@dreamerbird/studio/getStudio'
+import type {PanelPosition} from '@dreamerbird/core/types/private'
+import useLockSet from '@dreamerbird/studio/uiComponents/useLockSet'
 import React, {useContext} from 'react'
 import useWindowSize from 'react-use/esm/useWindowSize'
-import type {UIPanelId} from '@toy-box/core/types/private'
+import type {UIPanelId} from '@dreamerbird/core/types/private'
 
 type PanelStuff = {
   panelId: UIPanelId

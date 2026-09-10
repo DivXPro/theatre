@@ -1,35 +1,35 @@
-import type {ISheet, ISheetObject} from '@toy-box/core'
-import type {Prism, Pointer} from '@toy-box/dataverse'
-import {getPointerParts, prism} from '@toy-box/dataverse'
-import SimpleCache from '@toy-box/utils/SimpleCache'
-import type {$IntentionalAny, VoidFn} from '@toy-box/core/types/public'
-import type {OnDiskState} from '@toy-box/core'
-import type {IScrub} from '@toy-box/core/types/public'
-import type {Studio} from '@toy-box/studio/Studio'
+import type {ISheet, ISheetObject} from '@dreamerbird/core'
+import type {Prism, Pointer} from '@dreamerbird/dataverse'
+import {getPointerParts, prism} from '@dreamerbird/dataverse'
+import SimpleCache from '@dreamerbird/utils/SimpleCache'
+import type {$IntentionalAny, VoidFn} from '@dreamerbird/core/types/public'
+import type {OnDiskState} from '@dreamerbird/core'
+import type {IScrub} from '@dreamerbird/core/types/public'
+import type {Studio} from '@dreamerbird/studio/Studio'
 import {outlineSelection} from './selectors'
-import type SheetObject from '@toy-box/core/sheetObjects/SheetObject'
+import type SheetObject from '@dreamerbird/core/sheetObjects/SheetObject'
 import getStudio from './getStudio'
 import {debounce, uniq} from 'lodash-es'
-import type Sheet from '@toy-box/core/sheets/Sheet'
+import type Sheet from '@dreamerbird/core/sheets/Sheet'
 import type {
   IExtension,
   IStudio,
   ITransactionAPI,
   PaneInstance,
   ProjectId,
-} from '@toy-box/core/types/public'
+} from '@dreamerbird/core/types/public'
 import {
   disablePlayPauseKeyboardShortcut,
   enablePlayPauseKeyboardShortcut,
 } from './UIRoot/useKeyboardShortcuts'
-import type TheatreSheetObject from '@toy-box/core/sheetObjects/TheatreSheetObject'
-import type TheatreSheet from '@toy-box/core/sheets/TheatreSheet'
-import type {OutlineSelectionState} from '@toy-box/core/types/private/studio'
-import type Project from '@toy-box/core/projects/Project'
-import type SheetTemplate from '@toy-box/core/sheets/SheetTemplate'
-import type SheetObjectTemplate from '@toy-box/core/sheetObjects/SheetObjectTemplate'
-import type {PaneInstanceId} from '@toy-box/core/types/public'
-import {__private} from '@toy-box/core'
+import type TheatreSheetObject from '@dreamerbird/core/sheetObjects/TheatreSheetObject'
+import type TheatreSheet from '@dreamerbird/core/sheets/TheatreSheet'
+import type {OutlineSelectionState} from '@dreamerbird/core/types/private/studio'
+import type Project from '@dreamerbird/core/projects/Project'
+import type SheetTemplate from '@dreamerbird/core/sheets/SheetTemplate'
+import type SheetObjectTemplate from '@dreamerbird/core/sheetObjects/SheetObjectTemplate'
+import type {PaneInstanceId} from '@dreamerbird/core/types/public'
+import {__private} from '@dreamerbird/core'
 const {
   isSheet,
   isProject,
@@ -213,9 +213,9 @@ export default class TheatreStudio implements IStudio {
   getStudioProject() {
     const core = getStudio().core
     if (!core) {
-      throw new Error(`You're calling studio.getStudioProject() before \`@toy-box/core\` is loaded. To fix this:
-1. Check if \`@toy-box/core\` is import/required in your bundle.
-2. Check the stack trace of this error and make sure the funciton that calls getStudioProject() is run after \`@toy-box/core\` is loaded.`)
+      throw new Error(`You're calling studio.getStudioProject() before \`@dreamerbird/core\` is loaded. To fix this:
+1. Check if \`@dreamerbird/core\` is import/required in your bundle.
+2. Check the stack trace of this error and make sure the funciton that calls getStudioProject() is run after \`@dreamerbird/core\` is loaded.`)
     }
     return getStudio().getStudioProject(core)
   }

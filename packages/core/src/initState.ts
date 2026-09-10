@@ -1,4 +1,4 @@
-import {defer} from '@toy-box/utils/defer'
+import {defer} from '@dreamerbird/utils/defer'
 import type {InitOpts} from './types/public'
 
 /**

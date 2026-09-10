@@ -1,14 +1,14 @@
-import type {Prism} from '@toy-box/dataverse'
-import {val} from '@toy-box/dataverse'
-import {Atom} from '@toy-box/dataverse'
-import {prism} from '@toy-box/dataverse'
+import type {Prism} from '@dreamerbird/dataverse'
+import {val} from '@dreamerbird/dataverse'
+import {Atom} from '@dreamerbird/dataverse'
+import {prism} from '@dreamerbird/dataverse'
 import type {
   PropAddress,
   WithoutSheetInstance,
-} from '@toy-box/core/types/public'
+} from '@dreamerbird/core/types/public'
 
-import pointerDeep from '@toy-box/utils/pointerDeep'
-import type {$IntentionalAny, VoidFn} from '@toy-box/core/types/public'
+import pointerDeep from '@dreamerbird/utils/pointerDeep'
+import type {$IntentionalAny, VoidFn} from '@dreamerbird/core/types/public'
 import lodashSet from 'lodash-es/set'
 
 /** constant global manager */

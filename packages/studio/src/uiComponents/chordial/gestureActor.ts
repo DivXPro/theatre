@@ -1,13 +1,16 @@
-import {basicFSM} from '@toy-box/utils/basicFSM'
-import type {DragHandlers, DragOpts} from '@toy-box/studio/uiComponents/useDrag'
+import {basicFSM} from '@dreamerbird/utils/basicFSM'
+import type {
+  DragHandlers,
+  DragOpts,
+} from '@dreamerbird/studio/uiComponents/useDrag'
 import {
   DRAG_DETECTION_DISTANCE_THRESHOLD,
   MouseButton,
   didPointerLockCauseMovement,
-} from '@toy-box/studio/uiComponents/useDrag'
-import {isSafari} from '@toy-box/studio/uiComponents/isSafari'
-import type {CapturedPointer} from '@toy-box/studio/UIRoot/PointerCapturing'
-import {createPointerCapturing} from '@toy-box/studio/UIRoot/PointerCapturing'
+} from '@dreamerbird/studio/uiComponents/useDrag'
+import {isSafari} from '@dreamerbird/studio/uiComponents/isSafari'
+import type {CapturedPointer} from '@dreamerbird/studio/UIRoot/PointerCapturing'
+import {createPointerCapturing} from '@dreamerbird/studio/UIRoot/PointerCapturing'
 import type {
   ChodrialElement,
   ChordialOpts,

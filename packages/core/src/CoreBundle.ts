@@ -1,9 +1,9 @@
-// import type {Studio} from '@toy-box/studio/Studio'
+// import type {Studio} from '@dreamerbird/studio/Studio'
 import projectsSingleton from './projects/projectsSingleton'
 import {privateAPI} from './privateAPIs'
 import * as coreExports from './coreExports'
 import {getCoreRafDriver} from './coreTicker'
-import type {IStudioInternal} from '@toy-box/core/types/public'
+import type {IStudioInternal} from '@dreamerbird/core/types/public'
 import {env} from './env'
 
 type Studio = IStudioInternal
@@ -29,7 +29,9 @@ export default class CoreBundle {
 
   getBitsForStudio(studio: Studio, callback: (bits: CoreBits) => void) {
     if (this._studio) {
-      throw new Error(`@toy-box/core is already attached to @toy-box/studio`)
+      throw new Error(
+        `@dreamerbird/core is already attached to @dreamerbird/studio`,
+      )
     }
     this._studio = studio
     const bits: CoreBits = {

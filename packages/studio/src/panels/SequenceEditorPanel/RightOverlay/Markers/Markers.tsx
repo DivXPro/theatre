@@ -1,8 +1,8 @@
-import type {Pointer} from '@toy-box/dataverse'
-import {useVal} from '@toy-box/react'
-import getStudio from '@toy-box/studio/getStudio'
+import type {Pointer} from '@dreamerbird/dataverse'
+import {useVal} from '@dreamerbird/react'
+import getStudio from '@dreamerbird/studio/getStudio'
 import React from 'react'
-import type {SequenceEditorPanelLayout} from '@toy-box/studio/panels/SequenceEditorPanel/layout/layout'
+import type {SequenceEditorPanelLayout} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/layout'
 import MarkerDot from './MarkerDot'
 
 const Markers: React.FC<{layoutP: Pointer<SequenceEditorPanelLayout>}> = ({

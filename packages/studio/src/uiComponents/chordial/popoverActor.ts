@@ -1,6 +1,6 @@
-import {basicFSM} from '@toy-box/utils/basicFSM'
+import {basicFSM} from '@dreamerbird/utils/basicFSM'
 import type {ChodrialElement, InvokeTypePopover} from './chordialInternals'
-import {prism, val} from '@toy-box/dataverse'
+import {prism, val} from '@dreamerbird/dataverse'
 
 export const popoverActor = basicFSM<
   | {type: 'open'; el: ChodrialElement; triggerEvent: MouseEvent | undefined}

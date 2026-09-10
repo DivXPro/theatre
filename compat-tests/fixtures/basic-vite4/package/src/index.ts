@@ -1,4 +1,4 @@
-import theatre, {getProject} from '@toy-box/core'
+import theatre, {getProject} from '@dreamerbird/core'
 
 const project = getProject('Sample project')
 const sheet = project.sheet('Scene')
@@ -8,7 +8,7 @@ async function main(): Promise<void> {
     if (import.meta.env.MODE === 'development') {
       // 1.0 API: the studio bundle registers itself through this side-effect
       // import, and init() must be called before getStudio()
-      await import('@toy-box/studio')
+      await import('@dreamerbird/studio')
       await theatre.init({studio: true, usePersistentStorage: false})
       await theatre.getStudio()
     }

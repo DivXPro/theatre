@@ -44,11 +44,11 @@ function getAliasesFromTsConfigForRollup() {
   const aliases = []
 
   for (let [key, value] of Object.entries(tsConfigPaths)) {
-    // like '@toy-box/core/*'
+    // like '@dreamerbird/core/*'
     if (key.match(/\/\*$/)) {
       key = key.replace(/\/\*$/, '/(.*)')
     } else {
-      // like '@toy-box/core'
+      // like '@dreamerbird/core'
       key = key + '$'
     }
     aliases.push({

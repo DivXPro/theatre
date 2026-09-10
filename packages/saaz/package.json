@@ -1,5 +1,5 @@
 {
-  "name": "@toy-box/saaz",
+  "name": "@dreamerbird/saaz",
   "version": "1.0.0",
   "license": "Apache-2.0",
   "author": {
@@ -30,9 +30,9 @@
     "precommit": "yarn run docs"
   },
   "devDependencies": {
+    "@dreamerbird/dataverse": "workspace:*",
+    "@dreamerbird/utils": "workspace:*",
     "@microsoft/api-extractor": "^7.36.4",
-    "@toy-box/dataverse": "workspace:*",
-    "@toy-box/utils": "workspace:*",
     "@types/jest": "^26.0.23",
     "@types/lodash-es": "^4.17.4",
     "@types/node": "^15.6.2",

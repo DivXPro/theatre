@@ -4,7 +4,7 @@ import * as path from 'path'
 import * as dotenv from 'dotenv'
 import * as yaml from 'yaml'
 
-describe(`@toy-box/sync-server env`, () => {
+describe(`@dreamerbird/sync-server env`, () => {
   describe(`AUTH_DISABLED self-host env`, () => {
     const base = {NODE_ENV: 'development', PORT: '3001', HOST: 'localhost'}
 

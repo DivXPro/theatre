@@ -7,8 +7,8 @@ import type {
   NotificationType,
   Notify,
   Notifiers,
-} from '@toy-box/core/utils/notify'
-import {useVal} from '@toy-box/react'
+} from '@dreamerbird/core/utils/notify'
+import {useVal} from '@dreamerbird/react'
 import getStudio from './getStudio'
 import {marked} from 'marked'
 import useTooltip from './uiComponents/Popover/useTooltip'

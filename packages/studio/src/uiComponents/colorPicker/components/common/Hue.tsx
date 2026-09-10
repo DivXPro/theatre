@@ -4,9 +4,9 @@ import type {Interaction} from './Interactive'
 import {Interactive} from './Interactive'
 import {Pointer} from './Pointer'
 
-import {hsvaToHslString} from '@toy-box/studio/uiComponents/colorPicker/utils/convert'
-import {clamp} from '@toy-box/studio/uiComponents/colorPicker/utils/clamp'
-import {round} from '@toy-box/studio/uiComponents/colorPicker/utils/round'
+import {hsvaToHslString} from '@dreamerbird/studio/uiComponents/colorPicker/utils/convert'
+import {clamp} from '@dreamerbird/studio/uiComponents/colorPicker/utils/clamp'
+import {round} from '@dreamerbird/studio/uiComponents/colorPicker/utils/round'
 import styled from 'styled-components'
 
 const Container = styled.div`

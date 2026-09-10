@@ -1,10 +1,10 @@
-import UIRoot from '@toy-box/studio/UIRoot/UIRoot'
-import type {$IntentionalAny} from '@toy-box/core/types/public'
+import UIRoot from '@dreamerbird/studio/UIRoot/UIRoot'
+import type {$IntentionalAny} from '@dreamerbird/core/types/public'
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import {getMounter} from '@toy-box/studio/utils/renderInPortalInContext'
-import {withStyledShadow} from '@toy-box/studio/css'
-import ExtensionToolbar from '@toy-box/studio/toolbars/ExtensionToolbar/ExtensionToolbar'
+import {getMounter} from '@dreamerbird/studio/utils/renderInPortalInContext'
+import {withStyledShadow} from '@dreamerbird/studio/css'
+import ExtensionToolbar from '@dreamerbird/studio/toolbars/ExtensionToolbar/ExtensionToolbar'
 
 export default class UINonSSRBits {
   readonly containerEl = document.createElement('div')

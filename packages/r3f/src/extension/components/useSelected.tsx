@@ -3,8 +3,8 @@ import {useLayoutEffect, useRef, useState} from 'react'
 import {
   __private_allRegisteredObjects as allRegisteredObjects,
   __private_makeStoreKey as makeStoreKey,
-} from '@toy-box/r3f'
-import {getStudioSync, type ISheetObject, type IStudio} from '@toy-box/core'
+} from '@dreamerbird/r3f'
+import {getStudioSync, type ISheetObject, type IStudio} from '@dreamerbird/core'
 import type {$IntentionalAny} from '../../types'
 
 export function useSelected(): undefined | string {

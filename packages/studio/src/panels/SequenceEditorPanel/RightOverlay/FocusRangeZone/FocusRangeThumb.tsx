@@ -1,28 +1,28 @@
-import type {Pointer} from '@toy-box/dataverse'
-import {prism, val} from '@toy-box/dataverse'
-import {usePrism, useVal} from '@toy-box/react'
-import type {$IntentionalAny, IRange} from '@toy-box/core/types/public'
-import getStudio from '@toy-box/studio/getStudio'
-import type {SequenceEditorPanelLayout} from '@toy-box/studio/panels/SequenceEditorPanel/layout/layout'
+import type {Pointer} from '@dreamerbird/dataverse'
+import {prism, val} from '@dreamerbird/dataverse'
+import {usePrism, useVal} from '@dreamerbird/react'
+import type {$IntentionalAny, IRange} from '@dreamerbird/core/types/public'
+import getStudio from '@dreamerbird/studio/getStudio'
+import type {SequenceEditorPanelLayout} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/layout'
 import {
   topStripHeight,
   topStripTheme,
-} from '@toy-box/studio/panels/SequenceEditorPanel/RightOverlay/TopStrip'
-import type {CommitOrDiscardOrRecapture} from '@toy-box/studio/StudioStore/StudioStore'
+} from '@dreamerbird/studio/panels/SequenceEditorPanel/RightOverlay/TopStrip'
+import type {CommitOrDiscardOrRecapture} from '@dreamerbird/studio/StudioStore/StudioStore'
 import {
   lockedCursorCssVarName,
   useCssCursorLock,
-} from '@toy-box/studio/uiComponents/PointerEventsHandler'
-import useDrag from '@toy-box/studio/uiComponents/useDrag'
-import useRefAndState from '@toy-box/studio/utils/useRefAndState'
+} from '@dreamerbird/studio/uiComponents/PointerEventsHandler'
+import useDrag from '@dreamerbird/studio/uiComponents/useDrag'
+import useRefAndState from '@dreamerbird/studio/utils/useRefAndState'
 import React, {useMemo} from 'react'
 import styled from 'styled-components'
 import {
   includeLockFrameStampAttrs,
   useLockFrameStampPosition,
-} from '@toy-box/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
+} from '@dreamerbird/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
 import {focusRangeStripTheme, RangeStrip} from './FocusRangeStrip'
-import DopeSnap from '@toy-box/studio/panels/SequenceEditorPanel/RightOverlay/DopeSnap'
+import DopeSnap from '@dreamerbird/studio/panels/SequenceEditorPanel/RightOverlay/DopeSnap'
 
 const TheDiv = styled.div<{$enabled: boolean; $type: ThumbType}>`
   position: absolute;

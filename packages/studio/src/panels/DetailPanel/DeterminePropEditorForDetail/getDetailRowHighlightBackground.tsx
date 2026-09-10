@@ -1,4 +1,4 @@
-import type {PropHighlighted} from '@toy-box/studio/panels/SequenceEditorPanel/whatPropIsHighlighted'
+import type {PropHighlighted} from '@dreamerbird/studio/panels/SequenceEditorPanel/whatPropIsHighlighted'
 
 export function getDetailRowHighlightBackground({
   $isHighlighted: isHighlighted,

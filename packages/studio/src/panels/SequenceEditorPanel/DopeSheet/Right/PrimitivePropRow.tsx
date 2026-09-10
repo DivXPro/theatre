@@ -1,13 +1,13 @@
-import type {SequenceEditorPanelLayout} from '@toy-box/studio/panels/SequenceEditorPanel/layout/layout'
-import type {SequenceEditorTree_PrimitiveProp} from '@toy-box/studio/panels/SequenceEditorPanel/layout/tree'
-import getStudio from '@toy-box/studio/getStudio'
-import {usePrism} from '@toy-box/react'
-import type {Pointer} from '@toy-box/dataverse'
-import {val} from '@toy-box/dataverse'
+import type {SequenceEditorPanelLayout} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/layout'
+import type {SequenceEditorTree_PrimitiveProp} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/tree'
+import getStudio from '@dreamerbird/studio/getStudio'
+import {usePrism} from '@dreamerbird/react'
+import type {Pointer} from '@dreamerbird/dataverse'
+import {val} from '@dreamerbird/dataverse'
 import React from 'react'
 import RightRow from './Row'
 import BasicKeyframedTrack from './BasicKeyframedTrack/BasicKeyframedTrack'
-import {useLogger} from '@toy-box/studio/uiComponents/useLogger'
+import {useLogger} from '@dreamerbird/studio/uiComponents/useLogger'
 
 const PrimitivePropRow: React.FC<{
   leaf: SequenceEditorTree_PrimitiveProp

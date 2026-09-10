@@ -1,4 +1,4 @@
-import type {$FixMe, VoidFn} from '@toy-box/core/types/public'
+import type {$FixMe, VoidFn} from '@dreamerbird/core/types/public'
 import type React from 'react'
 import {useEffect} from 'react'
 import useMenu from './useMenu'

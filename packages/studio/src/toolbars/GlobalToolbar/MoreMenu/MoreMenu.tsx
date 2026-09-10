@@ -1,7 +1,7 @@
-import type {$IntentionalAny} from '@toy-box/core/types/public'
+import type {$IntentionalAny} from '@dreamerbird/core/types/public'
 import React from 'react'
 import styled from 'styled-components'
-import {env} from '@toy-box/studio/env'
+import {env} from '@dreamerbird/studio/env'
 
 const Container = styled.div`
   width: 138px;

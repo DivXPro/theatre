@@ -1,36 +1,36 @@
-import type {SequenceEditorPanelLayout} from '@toy-box/studio/panels/SequenceEditorPanel/layout/layout'
-import RoomToClick from '@toy-box/studio/uiComponents/RoomToClick'
-import useRefAndState from '@toy-box/studio/utils/useRefAndState'
-import {usePrism, useVal} from '@toy-box/react'
-import type {$IntentionalAny} from '@toy-box/core/types/public'
-import type {Pointer} from '@toy-box/dataverse'
-import {val} from '@toy-box/dataverse'
+import type {SequenceEditorPanelLayout} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/layout'
+import RoomToClick from '@dreamerbird/studio/uiComponents/RoomToClick'
+import useRefAndState from '@dreamerbird/studio/utils/useRefAndState'
+import {usePrism, useVal} from '@dreamerbird/react'
+import type {$IntentionalAny} from '@dreamerbird/core/types/public'
+import type {Pointer} from '@dreamerbird/dataverse'
+import {val} from '@dreamerbird/dataverse'
 import clamp from 'lodash-es/clamp'
 import React, {useState} from 'react'
 import styled from 'styled-components'
-import {zIndexes} from '@toy-box/studio/panels/SequenceEditorPanel/SequenceEditorPanel'
+import {zIndexes} from '@dreamerbird/studio/panels/SequenceEditorPanel/SequenceEditorPanel'
 import {
   includeLockFrameStampAttrs,
   useLockFrameStampPosition,
-} from '@toy-box/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
-import {pointerEventsAutoInNormalMode} from '@toy-box/studio/css'
-import BasicPopover from '@toy-box/studio/uiComponents/Popover/BasicPopover'
+} from '@dreamerbird/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
+import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
+import BasicPopover from '@dreamerbird/studio/uiComponents/Popover/BasicPopover'
 import PlayheadPositionPopover from './PlayheadPositionPopover'
-import {getIsPlayheadAttachedToFocusRange} from '@toy-box/studio/UIRoot/useKeyboardShortcuts'
+import {getIsPlayheadAttachedToFocusRange} from '@dreamerbird/studio/UIRoot/useKeyboardShortcuts'
 import {
   lockedCursorCssVarName,
   useCssCursorLock,
-} from '@toy-box/studio/uiComponents/PointerEventsHandler'
-import getStudio from '@toy-box/studio/getStudio'
+} from '@dreamerbird/studio/uiComponents/PointerEventsHandler'
+import getStudio from '@dreamerbird/studio/getStudio'
 import DopeSnap from './DopeSnap'
 import {
   snapToAll,
   snapToNone,
-} from '@toy-box/studio/panels/SequenceEditorPanel/DopeSheet/Right/KeyframeSnapTarget'
-import useChordial from '@toy-box/studio/uiComponents/chordial/useChodrial'
+} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/Right/KeyframeSnapTarget'
+import useChordial from '@dreamerbird/studio/uiComponents/chordial/useChodrial'
 import {mergeRefs} from 'react-merge-refs'
-import usePopover from '@toy-box/studio/uiComponents/Popover/usePopover'
-import {generateSequenceMarkerId} from '@toy-box/studio/utils/ids'
+import usePopover from '@dreamerbird/studio/uiComponents/Popover/usePopover'
+import {generateSequenceMarkerId} from '@dreamerbird/studio/utils/ids'
 
 const Container = styled.div<{$isVisible: boolean}>`
   --thumbColor: #00e0ff;

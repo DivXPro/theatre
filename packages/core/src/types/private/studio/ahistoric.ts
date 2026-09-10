@@ -1,12 +1,12 @@
-import type {StrictRecord} from '@toy-box/core/types/public'
-import type {PointableSet} from '@toy-box/utils/PointableSet'
-import type {StudioSheetItemKey} from '@toy-box/core/types/private/studio'
+import type {StrictRecord} from '@dreamerbird/core/types/public'
+import type {PointableSet} from '@dreamerbird/utils/PointableSet'
+import type {StudioSheetItemKey} from '@dreamerbird/core/types/private/studio'
 import type {
   BasicKeyframe,
   ProjectId,
   SheetId,
   IRange,
-} from '@toy-box/core/types/public'
+} from '@dreamerbird/core/types/public'
 
 export type KeyframeWithPathToPropFromCommonRoot = {
   pathToProp: (string | number)[]

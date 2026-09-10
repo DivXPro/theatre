@@ -1,14 +1,14 @@
-import type Project from '@toy-box/core/projects/Project'
+import type Project from '@dreamerbird/core/projects/Project'
 import React, {useCallback} from 'react'
-import BaseItem from '@toy-box/studio/panels/OutlinePanel/BaseItem'
-import SheetsList from '@toy-box/studio/panels/OutlinePanel/SheetsList/SheetsList'
-import getStudio from '@toy-box/studio/getStudio'
-import {usePrism, useVal} from '@toy-box/react'
-import {outlineSelection} from '@toy-box/studio/selectors'
-import {val} from '@toy-box/dataverse'
+import BaseItem from '@dreamerbird/studio/panels/OutlinePanel/BaseItem'
+import SheetsList from '@dreamerbird/studio/panels/OutlinePanel/SheetsList/SheetsList'
+import getStudio from '@dreamerbird/studio/getStudio'
+import {usePrism, useVal} from '@dreamerbird/react'
+import {outlineSelection} from '@dreamerbird/studio/selectors'
+import {val} from '@dreamerbird/dataverse'
 import styled from 'styled-components'
-import {useCollapseStateInOutlinePanel} from '@toy-box/studio/panels/OutlinePanel/outlinePanelUtils'
-import useChordial from '@toy-box/studio/uiComponents/chordial/useChodrial'
+import {useCollapseStateInOutlinePanel} from '@dreamerbird/studio/panels/OutlinePanel/outlinePanelUtils'
+import useChordial from '@dreamerbird/studio/uiComponents/chordial/useChodrial'
 
 const ConflictNotice = styled.div`
   color: #ff6363;

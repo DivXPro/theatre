@@ -14,10 +14,10 @@ uplinks:
     url: https://registry.npmjs.org/
     cache: false
 packages:
-  '@toy-box/*':
+  '@dreamerbird/*':
     access: $all
     publish: $all
-  '@toy-box/theatric':
+  '@dreamerbird/theatric':
     access: $all
     publish: $all
   '@*/*':

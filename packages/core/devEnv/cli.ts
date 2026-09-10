@@ -52,7 +52,7 @@ async function bundle(watch: boolean) {
       __IS_VISUAL_REGRESSION_TESTING: 'false',
       'process.env.NODE_ENV': '"production"',
     },
-    external: ['@toy-box/dataverse'],
+    external: ['@dreamerbird/dataverse'],
     minifyIdentifiers: false,
     minifySyntax: true,
     minifyWhitespace: false,

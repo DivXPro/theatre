@@ -1,9 +1,9 @@
-import type {VoidFn} from '@toy-box/core/types/public'
+import type {VoidFn} from '@dreamerbird/core/types/public'
 import React, {useContext, useEffect, useState} from 'react'
 import ContextMenu from './ContextMenu/ContextMenu'
 import type {ContextMenuProps} from './ContextMenu/ContextMenu'
-import {contextMenuShownContext} from '@toy-box/studio/panels/DetailPanel/DetailPanel'
-import {closeAllTooltips} from '@toy-box/studio/uiComponents/Popover/useTooltip'
+import {contextMenuShownContext} from '@dreamerbird/studio/panels/DetailPanel/DetailPanel'
+import {closeAllTooltips} from '@dreamerbird/studio/uiComponents/Popover/useTooltip'
 
 const emptyNode = <></>
 

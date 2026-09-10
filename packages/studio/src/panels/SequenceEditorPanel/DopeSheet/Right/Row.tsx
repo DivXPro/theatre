@@ -1,4 +1,4 @@
-import type {SequenceEditorTree_Row} from '@toy-box/studio/panels/SequenceEditorPanel/layout/tree'
+import type {SequenceEditorTree_Row} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/tree'
 import React from 'react'
 import styled from 'styled-components'
 

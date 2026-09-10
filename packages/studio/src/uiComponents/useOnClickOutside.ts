@@ -1,4 +1,4 @@
-import type {$IntentionalAny} from '@toy-box/core/types/public'
+import type {$IntentionalAny} from '@dreamerbird/core/types/public'
 import {useEffect} from 'react'
 
 export default function useOnClickOutside(

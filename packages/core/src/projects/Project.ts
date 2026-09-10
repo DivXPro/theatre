@@ -2,33 +2,33 @@ import type {
   OnDiskState,
   ProjectEphemeralState,
   ProjectState,
-} from '@toy-box/core/types/private/core'
-import type TheatreProject from '@toy-box/core/projects/TheatreProject'
-import type Sheet from '@toy-box/core/sheets/Sheet'
-import SheetTemplate from '@toy-box/core/sheets/SheetTemplate'
-// import type {Studio} from '@toy-box/studio/Studio'
-import type {ProjectAddress} from '@toy-box/core/types/public'
-import type {Pointer} from '@toy-box/dataverse'
-import {PointerProxy} from '@toy-box/dataverse'
-import {Atom} from '@toy-box/dataverse'
+} from '@dreamerbird/core/types/private/core'
+import type TheatreProject from '@dreamerbird/core/projects/TheatreProject'
+import type Sheet from '@dreamerbird/core/sheets/Sheet'
+import SheetTemplate from '@dreamerbird/core/sheets/SheetTemplate'
+// import type {Studio} from '@dreamerbird/studio/Studio'
+import type {ProjectAddress} from '@dreamerbird/core/types/public'
+import type {Pointer} from '@dreamerbird/dataverse'
+import {PointerProxy} from '@dreamerbird/dataverse'
+import {Atom} from '@dreamerbird/dataverse'
 import initialiseProjectState from './initialiseProjectState'
 import projectsSingleton from './projectsSingleton'
-import type {Deferred} from '@toy-box/utils/defer'
-import {defer} from '@toy-box/utils/defer'
-import {globals} from '@toy-box/core/globals'
-import {initState} from '@toy-box/core/initState'
+import type {Deferred} from '@dreamerbird/utils/defer'
+import {defer} from '@dreamerbird/utils/defer'
+import {globals} from '@dreamerbird/core/globals'
+import {initState} from '@dreamerbird/core/initState'
 import type {
   ProjectId,
   SheetId,
   SheetInstanceId,
-} from '@toy-box/core/types/public'
+} from '@dreamerbird/core/types/public'
 
 import type {
   $IntentionalAny,
   $____FixmeStudio,
-} from '@toy-box/core/types/public'
-import {InvalidArgumentError} from '@toy-box/utils/errors'
-import userReadableTypeOfValue from '@toy-box/utils/userReadableTypeOfValue'
+} from '@dreamerbird/core/types/public'
+import {InvalidArgumentError} from '@dreamerbird/utils/errors'
+import userReadableTypeOfValue from '@dreamerbird/utils/userReadableTypeOfValue'
 
 type Studio = $____FixmeStudio
 
@@ -142,7 +142,7 @@ export default class Project {
 
     if (config.state) {
       setTimeout(() => {
-        // The user has provided config.state but in case @toy-box/studio is loaded,
+        // The user has provided config.state but in case @dreamerbird/studio is loaded,
         // let's give it one tick to attach itself
         if (!this._studio) {
           this._studioReadyDeferred.resolve(undefined)
@@ -164,9 +164,9 @@ export default class Project {
           if (!this._studio) {
             throw new Error(
               `Argument config.state in Theatre.getProject("${id}", config) is empty. This is fine ` +
-                `while you are using @toy-box/core along with @toy-box/studio. But since @toy-box/studio ` +
+                `while you are using @dreamerbird/core along with @dreamerbird/studio. But since @dreamerbird/studio ` +
                 `is not loaded, the state of project "${id}" will be empty.\n\n` +
-                `To fix this, you need to add @toy-box/studio into the bundle and export ` +
+                `To fix this, you need to add @dreamerbird/studio into the bundle and export ` +
                 `the project's state. Learn how to do that at https://www.theatrejs.com/docs/latest/manual/projects#state\n`,
             )
           }

@@ -1,10 +1,10 @@
 import type {ElementType} from 'react'
 import React from 'react'
 import Item from './Item'
-import type {$FixMe} from '@toy-box/core/types/public'
+import type {$FixMe} from '@dreamerbird/core/types/public'
 import styled from 'styled-components'
 import {transparentize} from 'polished'
-import {pointerEventsAutoInNormalMode} from '@toy-box/studio/css'
+import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
 
 const minWidth = 190
 

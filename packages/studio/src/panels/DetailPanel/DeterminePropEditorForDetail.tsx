@@ -1,13 +1,13 @@
 import React from 'react'
-import type {Pointer} from '@toy-box/dataverse'
+import type {Pointer} from '@dreamerbird/dataverse'
 import type {
   PropTypeConfig,
   PropTypeConfig_AllSimples,
-} from '@toy-box/core/types/public'
-import type SheetObject from '@toy-box/core/sheetObjects/SheetObject'
-import {simplePropEditorByPropType} from '@toy-box/studio/propEditors/simpleEditors/simplePropEditorByPropType'
-import type {PropConfigForType} from '@toy-box/studio/propEditors/utils/PropConfigForType'
-import type {ISimplePropEditorReactProps} from '@toy-box/studio/propEditors/simpleEditors/ISimplePropEditorReactProps'
+} from '@dreamerbird/core/types/public'
+import type SheetObject from '@dreamerbird/core/sheetObjects/SheetObject'
+import {simplePropEditorByPropType} from '@dreamerbird/studio/propEditors/simpleEditors/simplePropEditorByPropType'
+import type {PropConfigForType} from '@dreamerbird/studio/propEditors/utils/PropConfigForType'
+import type {ISimplePropEditorReactProps} from '@dreamerbird/studio/propEditors/simpleEditors/ISimplePropEditorReactProps'
 import DetailCompoundPropEditor from './DeterminePropEditorForDetail/DetailCompoundPropEditor'
 import DetailSimplePropEditor from './DeterminePropEditorForDetail/DetailSimplePropEditor'
 

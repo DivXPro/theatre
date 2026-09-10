@@ -1,9 +1,9 @@
-import type {$IntentionalAny} from '@toy-box/core/types/public'
+import type {$IntentionalAny} from '@dreamerbird/core/types/public'
 import type {
   PropTypeConfig,
   PropTypeConfig_Compound,
-} from '@toy-box/core/types/public'
-import {isPropConfigComposite} from '@toy-box/core/propTypes/utils'
+} from '@dreamerbird/core/types/public'
+import {isPropConfigComposite} from '@dreamerbird/core/propTypes/utils'
 
 type EncodedPropPath = string
 type Order = number

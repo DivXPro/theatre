@@ -1,11 +1,11 @@
-import type {$FixMe} from '@toy-box/core/types/public'
+import type {$FixMe} from '@dreamerbird/core/types/public'
 import {useLayoutEffect, useRef} from 'react'
 import {useCssCursorLock} from './PointerEventsHandler'
-import type {CapturedPointer} from '@toy-box/studio/UIRoot/PointerCapturing'
-import {usePointerCapturing} from '@toy-box/studio/UIRoot/PointerCapturing'
-import noop from '@toy-box/utils/noop'
+import type {CapturedPointer} from '@dreamerbird/studio/UIRoot/PointerCapturing'
+import {usePointerCapturing} from '@dreamerbird/studio/UIRoot/PointerCapturing'
+import noop from '@dreamerbird/utils/noop'
 import {isSafari} from './isSafari'
-import useRefAndState from '@toy-box/studio/utils/useRefAndState'
+import useRefAndState from '@dreamerbird/studio/utils/useRefAndState'
 
 export enum MouseButton {
   Left = 0,

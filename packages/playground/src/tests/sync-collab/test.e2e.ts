@@ -73,7 +73,7 @@ test('two browsers sync via self-hosted sync-server', async ({browser}) => {
     [
       'exec',
       'tsx',
-      // sync-server's tsconfig holds the `@toy-box/utils/*` path aliases; from
+      // sync-server's tsconfig holds the `@dreamerbird/utils/*` path aliases; from
       // the repo root tsx wouldn't auto-detect a root tsconfig.json.
       '--tsconfig',
       'packages/sync-server/tsconfig.json',

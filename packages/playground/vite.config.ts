@@ -93,7 +93,7 @@ const config = defineConfig(async ({command}) => {
 
     resolve: {
       /*
-    This will alias paths like `@toy-box/core` to `path/to/theatre/core/src/index.ts` and so on,
+    This will alias paths like `@dreamerbird/core` to `path/to/theatre/core/src/index.ts` and so on,
     so vite won't treat the monorepo's packages as externals and won't pre-bundle them.
     */
       alias: [...getAliasesFromTsConfigForRollup()],
@@ -104,9 +104,9 @@ const config = defineConfig(async ({command}) => {
       'process.env.BACKEND_URL': JSON.stringify(findAppUrl()),
     },
     optimizeDeps: {
-      exclude: dev ? ['@toy-box/core', '@toy-box/studio'] : [],
-      // include: !dev ? ['@toy-box/core', '@toy-box/studio'] : [],
-      // needsInterop: ['@toy-box/core', '@toy-box/studio'],
+      exclude: dev ? ['@dreamerbird/core', '@dreamerbird/studio'] : [],
+      // include: !dev ? ['@dreamerbird/core', '@dreamerbird/studio'] : [],
+      // needsInterop: ['@dreamerbird/core', '@dreamerbird/studio'],
     },
     build: {
       outDir: '../build',

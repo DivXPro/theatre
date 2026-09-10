@@ -1,5 +1,5 @@
-import type {IProject, ISheet, ISheetObject} from '@toy-box/core'
-import type {VoidFn} from '@toy-box/dataverse/src/types'
+import type {IProject, ISheet, ISheetObject} from '@dreamerbird/core'
+import type {VoidFn} from '@dreamerbird/dataverse/src/types'
 
 export type TheatreUpdateCallback = (data: any) => void
 

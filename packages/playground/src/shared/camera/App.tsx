@@ -3,18 +3,18 @@ import {
   RefreshSnapshot,
   SheetProvider,
   PerspectiveCamera,
-} from '@toy-box/r3f'
+} from '@dreamerbird/r3f'
 import {
   Stars,
   OrbitControls,
   GizmoHelper,
   GizmoViewport,
 } from '@react-three/drei'
-import {getProject, getStudioSync, val} from '@toy-box/core'
-import {privateAPI} from '@toy-box/core/privateAPIs'
-import getDeep from '@toy-box/utils/getDeep'
-import {usePrism} from '@toy-box/react'
-import type {IScrub, ISheetObject} from '@toy-box/core'
+import {getProject, getStudioSync, val} from '@dreamerbird/core'
+import {privateAPI} from '@dreamerbird/core/privateAPIs'
+import getDeep from '@dreamerbird/utils/getDeep'
+import {usePrism} from '@dreamerbird/react'
+import type {IScrub, ISheetObject} from '@dreamerbird/core'
 import React, {
   Suspense,
   useCallback,

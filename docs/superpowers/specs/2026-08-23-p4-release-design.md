@@ -7,7 +7,7 @@
 
 把仓库推进到「**1.0.0 发布就绪**」状态:文档(CHANGELOG/迁移指南)定稿、compat-tests 在新 scope 下本地验证通过、版本对齐 1.0.0、发布脚本可调用。**本次不实际 publish 到 npm**——出口标准是发布就绪,不是已发布。
 
-关键背景:fork 在 main 分支开发(不用 worktree),npm scope 已全部改为 `@toy-box/*`,版本仍停在 `0.7.0`。上游 CHANGELOG 停在 0.4.5,fork 的 P0-P3 改动尚未记录。
+关键背景:fork 在 main 分支开发(不用 worktree),npm scope 已全部改为 `@dreamerbird/*`,版本仍停在 `0.7.0`。上游 CHANGELOG 停在 0.4.5,fork 的 P0-P3 改动尚未记录。
 
 ### 已确认的关键决策(brainstorming 结论)
 
@@ -40,7 +40,7 @@ W4 发布脚本 + dry-run dogfood
 
 单条 `## 1.0.0` 综合条目,按用户可见面分组,每条一行并指向迁移指南对应节,不展开代码:
 
-- **Breaking**:`@theatre/*` → `@toy-box/*` scope 改名;`init()` 流程定稿(`getStudio()` 前必须先 `init()`)
+- **Breaking**:`@theatre/*` → `@dreamerbird/*` scope 改名;`init()` 流程定稿(`getStudio()` 前必须先 `init()`)
 - **协作**:自托管 sync-server minimal loop(`AUTH_DISABLED`)、直连 ws、断线徽标
 - **内部**:saaz 同步引擎桥、StudioStore 后端可选
 
@@ -59,10 +59,10 @@ W4 发布脚本 + dry-run dogfood
 
 ## W2 compat-tests 本地适配
 
-现状:fixtures 已是 `@toy-box` scope + `0.0.1-COMPAT.1` 占位版本;CI 里 Compatibility-Tests job `if: false` 禁用(注释「skip until the new API is ready」,现 API 已 ready)。
+现状:fixtures 已是 `@dreamerbird` scope + `0.0.1-COMPAT.1` 占位版本;CI 里 Compatibility-Tests job `if: false` 禁用(注释「skip until the new API is ready」,现 API 已 ready)。
 
 **步骤**:
-1. 静态核对:确认 8 个 fixtures 的 import/依赖指向 `@toy-box`、无残留 `@theatre`
+1. 静态核对:确认 8 个 fixtures 的 import/依赖指向 `@dreamerbird`、无残留 `@theatre`
 2. 跑 `yarn test:compat:install`(verdaccio 本地发 workspace 包 → 装进 fixtures),验证发布链路在新 scope 下通
 3. 跑代表性 fixture:`basic-vite4`(纯 core+studio,最快)+ `r3f-react18`(含 r3f,覆盖三栈)
 4. 若因 `init()` 定稿 / 新 API 挂 → 改 fixture 源码适配(这是真适配工作)

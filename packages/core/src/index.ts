@@ -6,7 +6,7 @@
 
 export * from './coreExports'
 export * from './types/public'
-import {defer} from '@toy-box/utils/defer'
+import {defer} from '@dreamerbird/utils/defer'
 import CoreBundle from './CoreBundle'
 import {globalVariableNames} from './globals'
 import {initState} from './initState'
@@ -53,13 +53,13 @@ export async function init(opts?: InitOpts) {
   if (opts?.studio && typeof window !== 'undefined') {
     // The studio bundle registers itself with core when imported; init() only
     // supplies the opts. If nothing has attached after a while, the likely
-    // cause is a missing `import '@toy-box/studio'` — say so instead of
+    // cause is a missing `import '@dreamerbird/studio'` — say so instead of
     // leaving the user with a silently absent studio.
     setTimeout(() => {
       if (studioDeferred.status !== 'resolved') {
         console.warn(
-          `theatre.init({studio: true}) was called, but @toy-box/studio has not loaded. ` +
-            `Did you forget to import it? Add \`import '@toy-box/studio'\` to your app's entry ` +
+          `theatre.init({studio: true}) was called, but @dreamerbird/studio has not loaded. ` +
+            `Did you forget to import it? Add \`import '@dreamerbird/studio'\` to your app's entry ` +
             `module — the studio registers itself with core when it is imported.`,
         )
       }
@@ -78,7 +78,7 @@ registerCoreBundle()
  * @remarks
  * the studio and core need to communicate with each other somehow, and currently we do that
  * by registering each of them as a global variable. This function does the work of registering
- * the core bundle (everything exported from `@toy-box/core`) to window.__TheatreJS_CoreBundle.
+ * the core bundle (everything exported from `@dreamerbird/core`) to window.__TheatreJS_CoreBundle.
  */
 function registerCoreBundle() {
   // This only works in a browser environment
@@ -104,8 +104,8 @@ function registerCoreBundle() {
     ) {
       /*
       Another core bundle is registered. This usually means the bundler is not configured correctly and
-      is bundling `@toy-box/core` multiple times, but, there are legitimate scenarios where a user may want
-      to include multiple instances of `@toy-box/core` on the same page.
+      is bundling `@dreamerbird/core` multiple times, but, there are legitimate scenarios where a user may want
+      to include multiple instances of `@dreamerbird/core` on the same page.
 
       For example, an article might embed two separate interactive graphics that
       are made by different teams (and even different tech stacks -- one in JS, the other in clojurescript).
@@ -140,14 +140,14 @@ function registerCoreBundle() {
       
       */
       throw new Error(
-        `It seems that the module '@toy-box/core' is loaded more than once. This could have two possible causes:\n` +
+        `It seems that the module '@dreamerbird/core' is loaded more than once. This could have two possible causes:\n` +
           `1. You might have two separate versions of Theatre.js in node_modules.\n` +
           `2. Or this might be a bundling misconfiguration, in case you're using a bundler like Webpack/ESBuild/Rollup.\n\n` +
-          `Note that it **is okay** to import '@toy-box/core' multiple times. But those imports should point to the same module.`,
+          `Note that it **is okay** to import '@dreamerbird/core' multiple times. But those imports should point to the same module.`,
       )
     } else {
       throw new Error(
-        `The variable window.${globalVariableNames.coreBundle} seems to be already set by a module other than @toy-box/core.`,
+        `The variable window.${globalVariableNames.coreBundle} seems to be already set by a module other than @dreamerbird/core.`,
       )
     }
   }

@@ -1,4 +1,4 @@
-import {sanitizeOptsForTest} from '@toy-box/studio/sanitizeOpts'
+import {sanitizeOptsForTest} from '@dreamerbird/studio/sanitizeOpts'
 
 test('serverUrl defaults to undefined (no cloud backend)', () => {
   const opts = sanitizeOptsForTest(undefined)

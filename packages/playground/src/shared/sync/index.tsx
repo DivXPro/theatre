@@ -1,5 +1,5 @@
-import '@toy-box/studio'
-import theatre, {getProject, getStudioSync} from '@toy-box/core'
+import '@dreamerbird/studio'
+import theatre, {getProject, getStudioSync} from '@dreamerbird/core'
 
 const params = new URLSearchParams(window.location.search)
 const serverUrl = params.get('serverUrl') ?? 'ws://localhost:3000'

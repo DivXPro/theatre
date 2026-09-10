@@ -1,4 +1,4 @@
-import {Atom, prism} from '@toy-box/dataverse'
+import {Atom, prism} from '@dreamerbird/dataverse'
 
 /**
  * A prism hook that converts `val` into an atom, and returns that atom.

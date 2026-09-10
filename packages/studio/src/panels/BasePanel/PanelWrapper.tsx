@@ -1,4 +1,4 @@
-import {pointerEventsAutoInNormalMode} from '@toy-box/studio/css'
+import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
 import React from 'react'
 import styled from 'styled-components'
 import {usePanel} from './BasePanel'

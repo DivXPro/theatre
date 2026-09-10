@@ -1,4 +1,4 @@
-import {BackMemoryAdapter, SaazBack} from '@toy-box/saaz'
+import {BackMemoryAdapter, SaazBack} from '@dreamerbird/saaz'
 import {schema} from '../state/schema'
 
 const backs: {[key in string]?: SaazBack} = {}

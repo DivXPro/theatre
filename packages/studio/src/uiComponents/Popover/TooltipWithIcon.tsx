@@ -1,6 +1,6 @@
 import styled from 'styled-components'
 import React from 'react'
-import type {$IntentionalAny} from '@toy-box/core/types/public'
+import type {$IntentionalAny} from '@dreamerbird/core/types/public'
 import BasicTooltip from './BasicTooltip'
 
 const Container = styled(BasicTooltip)`

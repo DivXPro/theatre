@@ -1,5 +1,5 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
-import type {Pointer, Prism} from '@toy-box/dataverse'
+import type {Pointer, Prism} from '@dreamerbird/dataverse'
 // eslint-disable-next-line import/no-extraneous-dependencies
 import {
   isPointer,
@@ -11,7 +11,7 @@ import {
   prism,
   Ticker,
   val,
-} from '@toy-box/dataverse'
+} from '@dreamerbird/dataverse'
 import {set as lodashSet} from 'lodash-es'
 import {isPointerToPrismProvider} from './pointerToPrism'
 
@@ -1286,7 +1286,7 @@ describe(`The exhaustive guide to dataverse`, () => {
   })
 
   // What's next?
-  // At this point we have covered all of `@toy-box/dataverse`.
-  // If you're planning to use Dataverse with React, have a look at [`@toy-box/react`](https://github.com/theatre-js/theatre/tree/main/packages/react)
+  // At this point we have covered all of `@dreamerbird/dataverse`.
+  // If you're planning to use Dataverse with React, have a look at [`@dreamerbird/react`](https://github.com/theatre-js/theatre/tree/main/packages/react)
   // which provides a React integration for Dataverse as well.
 })

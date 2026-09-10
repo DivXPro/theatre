@@ -1,13 +1,13 @@
 import React from 'react'
-import useDrag from '@toy-box/studio/uiComponents/useDrag'
-import useRefAndState from '@toy-box/studio/utils/useRefAndState'
+import useDrag from '@dreamerbird/studio/uiComponents/useDrag'
+import useRefAndState from '@dreamerbird/studio/utils/useRefAndState'
 import clamp from 'lodash-es/clamp'
 import styled from 'styled-components'
-import {pointerEventsAutoInNormalMode} from '@toy-box/studio/css'
+import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
 import type {CubicBezierHandles} from './shared'
 import {useFreezableMemo} from './useFreezableMemo'
 import {COLOR_BASE} from './colors'
-import type {KeyframeConnectionWithAddress} from '@toy-box/studio/panels/SequenceEditorPanel/DopeSheet/selections'
+import type {KeyframeConnectionWithAddress} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/selections'
 
 // Defines the dimensions of the SVG viewbox space
 const VIEWBOX_PADDING = 0.12

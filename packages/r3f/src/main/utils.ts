@@ -1,5 +1,5 @@
 import {editorStore} from './store'
-import type {ISheetObject} from '@toy-box/core'
+import type {ISheetObject} from '@dreamerbird/core'
 
 export const refreshSnapshot = editorStore.getState().createSnapshot
 

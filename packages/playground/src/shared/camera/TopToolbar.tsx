@@ -5,7 +5,7 @@
  * 一个 flex 容器按顺序排,不再写死像素偏移。
  */
 import React, {useCallback, useRef} from 'react'
-import useMenu from '@toy-box/studio/uiComponents/simpleContextMenu/useMenu'
+import useMenu from '@dreamerbird/studio/uiComponents/simpleContextMenu/useMenu'
 import {buildExportMenuItems} from './menuModel'
 import type {ExportSink} from './videoExport/sinks'
 

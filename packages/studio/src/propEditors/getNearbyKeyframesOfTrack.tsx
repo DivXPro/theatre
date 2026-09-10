@@ -1,11 +1,11 @@
-import type {TrackData} from '@toy-box/core/types/private/core'
-import type SheetObject from '@toy-box/core/sheetObjects/SheetObject'
-import {createStudioSheetItemKey} from '@toy-box/studio/utils/createStudioSheetItemKey'
+import type {TrackData} from '@dreamerbird/core/types/private/core'
+import type SheetObject from '@dreamerbird/core/sheetObjects/SheetObject'
+import {createStudioSheetItemKey} from '@dreamerbird/studio/utils/createStudioSheetItemKey'
 import type {
   KeyframeWithTrack,
   TrackWithId,
-} from '@toy-box/studio/panels/SequenceEditorPanel/DopeSheet/Right/collectAggregateKeyframes'
-import {__private} from '@toy-box/core'
+} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/Right/collectAggregateKeyframes'
+import {__private} from '@dreamerbird/core'
 
 const {keyframeUtils} = __private
 

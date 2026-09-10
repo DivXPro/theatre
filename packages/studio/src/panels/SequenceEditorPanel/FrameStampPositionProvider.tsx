@@ -1,7 +1,7 @@
-import type {Prism, Pointer} from '@toy-box/dataverse'
-import {Atom, prism, val} from '@toy-box/dataverse'
-import mousePositionD from '@toy-box/studio/utils/mousePositionD'
-import type {$IntentionalAny} from '@toy-box/core/types/public'
+import type {Prism, Pointer} from '@dreamerbird/dataverse'
+import {Atom, prism, val} from '@dreamerbird/dataverse'
+import mousePositionD from '@dreamerbird/studio/utils/mousePositionD'
+import type {$IntentionalAny} from '@dreamerbird/core/types/public'
 import {inRange, last} from 'lodash-es'
 import React, {
   createContext,

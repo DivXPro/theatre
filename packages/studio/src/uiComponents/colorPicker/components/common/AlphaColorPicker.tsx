@@ -8,8 +8,8 @@ import type {
   ColorModel,
   ColorPickerBaseProps,
   AnyColor,
-} from '@toy-box/studio/uiComponents/colorPicker/types'
-import {useColorManipulation} from '@toy-box/studio/uiComponents/colorPicker/hooks/useColorManipulation'
+} from '@dreamerbird/studio/uiComponents/colorPicker/types'
+import {useColorManipulation} from '@dreamerbird/studio/uiComponents/colorPicker/hooks/useColorManipulation'
 import styled from 'styled-components'
 
 const Container = styled.div`

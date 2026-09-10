@@ -1,10 +1,10 @@
-import type SheetObject from '@toy-box/core/sheetObjects/SheetObject'
-import getStudio from '@toy-box/studio/getStudio'
+import type SheetObject from '@dreamerbird/core/sheetObjects/SheetObject'
+import getStudio from '@dreamerbird/studio/getStudio'
 import React from 'react'
-import BaseItem from '@toy-box/studio/panels/OutlinePanel/BaseItem'
-import {useVal} from '@toy-box/react'
-import {outlineSelection} from '@toy-box/studio/selectors'
-import useChordial from '@toy-box/studio/uiComponents/chordial/useChodrial'
+import BaseItem from '@dreamerbird/studio/panels/OutlinePanel/BaseItem'
+import {useVal} from '@dreamerbird/react'
+import {outlineSelection} from '@dreamerbird/studio/selectors'
+import useChordial from '@dreamerbird/studio/uiComponents/chordial/useChodrial'
 
 export const ObjectItem: React.FC<{
   sheetObject: SheetObject

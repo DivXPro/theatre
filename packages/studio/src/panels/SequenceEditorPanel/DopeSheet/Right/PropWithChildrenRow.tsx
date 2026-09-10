@@ -1,16 +1,19 @@
-import type {SequenceEditorPanelLayout} from '@toy-box/studio/panels/SequenceEditorPanel/layout/layout'
+import type {SequenceEditorPanelLayout} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/layout'
 import type {
   SequenceEditorTree_PrimitiveProp,
   SequenceEditorTree_PropWithChildren,
-} from '@toy-box/studio/panels/SequenceEditorPanel/layout/tree'
-import {usePrism} from '@toy-box/react'
-import type {Pointer} from '@toy-box/dataverse'
+} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/tree'
+import {usePrism} from '@dreamerbird/react'
+import type {Pointer} from '@dreamerbird/dataverse'
 import React from 'react'
 import PrimitivePropRow from './PrimitivePropRow'
 import RightRow from './Row'
 import AggregatedKeyframeTrack from './AggregatedKeyframeTrack/AggregatedKeyframeTrack'
 import {collectAggregateKeyframesInPrism} from './collectAggregateKeyframes'
-import {ProvideLogger, useLogger} from '@toy-box/studio/uiComponents/useLogger'
+import {
+  ProvideLogger,
+  useLogger,
+} from '@dreamerbird/studio/uiComponents/useLogger'
 
 export const decideRowByPropType = (
   leaf: SequenceEditorTree_PropWithChildren | SequenceEditorTree_PrimitiveProp,

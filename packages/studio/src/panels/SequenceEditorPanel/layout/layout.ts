@@ -1,16 +1,16 @@
-import type Sheet from '@toy-box/core/sheets/Sheet'
-import getStudio from '@toy-box/studio/getStudio'
-import type useDrag from '@toy-box/studio/uiComponents/useDrag'
-import type {SheetAddress} from '@toy-box/core/types/public'
-import subPrism from '@toy-box/utils/subPrism'
+import type Sheet from '@dreamerbird/core/sheets/Sheet'
+import getStudio from '@dreamerbird/studio/getStudio'
+import type useDrag from '@dreamerbird/studio/uiComponents/useDrag'
+import type {SheetAddress} from '@dreamerbird/core/types/public'
+import subPrism from '@dreamerbird/utils/subPrism'
 import type {
   IRange,
   PositionInScreenSpace,
   StrictRecord,
-} from '@toy-box/core/types/public'
-import {valToAtom} from '@toy-box/utils/valToAtom'
-import type {Prism, Pointer} from '@toy-box/dataverse'
-import {Atom, prism, val} from '@toy-box/dataverse'
+} from '@dreamerbird/core/types/public'
+import {valToAtom} from '@dreamerbird/utils/valToAtom'
+import type {Prism, Pointer} from '@dreamerbird/dataverse'
+import {Atom, prism, val} from '@dreamerbird/dataverse'
 import type {SequenceEditorTree} from './tree'
 import {calculateSequenceEditorTree} from './tree'
 import {clamp} from 'lodash-es'
@@ -18,7 +18,7 @@ import type {
   KeyframeId,
   ObjectAddressKey,
   SequenceTrackId,
-} from '@toy-box/core/types/public'
+} from '@dreamerbird/core/types/public'
 
 // A Side is either the left side of the panel or the right side
 type DimsOfPanelPart = {

@@ -1,5 +1,5 @@
-import type {IProject, ISheet} from '@toy-box/core'
-import {getStudioSync} from '@toy-box/core'
+import type {IProject, ISheet} from '@dreamerbird/core'
+import {getStudioSync} from '@dreamerbird/core'
 import {remote} from './Remote'
 import type {BroadcastData, BroadcastDataEvent} from './Remote'
 

@@ -1,9 +1,9 @@
 /* eslint-disable no-restricted-syntax */
 import React from 'react'
 import {renderToStaticMarkup} from 'react-dom/server'
-import {Atom} from '@toy-box/dataverse'
-import type {$IntentionalAny} from '@toy-box/utils/types'
-import {setStudio} from '@toy-box/studio/getStudio'
+import {Atom} from '@dreamerbird/dataverse'
+import type {$IntentionalAny} from '@dreamerbird/utils/types'
+import {setStudio} from '@dreamerbird/studio/getStudio'
 import {PersistenceStatusBanner} from './PersistenceStatusBanner'
 
 const makeStudio = (persistenceStatus: 'ok' | 'degraded') => ({

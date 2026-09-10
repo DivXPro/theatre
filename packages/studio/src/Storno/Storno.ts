@@ -1,6 +1,6 @@
-import type {Prism} from '@toy-box/dataverse'
-import {Atom, prism, val} from '@toy-box/dataverse'
-import type {$FixMe} from '@toy-box/core/types/public'
+import type {Prism} from '@dreamerbird/dataverse'
+import {Atom, prism, val} from '@dreamerbird/dataverse'
+import type {$FixMe} from '@dreamerbird/core/types/public'
 
 type State = {
   loginState:

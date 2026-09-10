@@ -1,6 +1,6 @@
 import React, {useEffect, useRef} from 'react'
-import {types} from '@toy-box/core'
-import type {ISheetObject, IProject} from '@toy-box/core'
+import {types} from '@dreamerbird/core'
+import type {ISheetObject, IProject} from '@dreamerbird/core'
 import {
   Color,
   DirectionalLight,

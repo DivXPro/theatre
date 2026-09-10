@@ -1,10 +1,10 @@
-// import type {Studio} from '@toy-box/studio/Studio'
-import delay from '@toy-box/utils/delay'
+// import type {Studio} from '@dreamerbird/studio/Studio'
+import delay from '@dreamerbird/utils/delay'
 import type Project from './Project'
-import type {OnDiskState} from '@toy-box/core/types/private/core'
-import {globals} from '@toy-box/core/globals'
-import {val} from '@toy-box/dataverse'
-import type {$____FixmeStudio} from '@toy-box/core/types/public'
+import type {OnDiskState} from '@dreamerbird/core/types/private/core'
+import {globals} from '@dreamerbird/core/globals'
+import {val} from '@dreamerbird/dataverse'
+import type {$____FixmeStudio} from '@dreamerbird/core/types/public'
 
 type Studio = $____FixmeStudio
 

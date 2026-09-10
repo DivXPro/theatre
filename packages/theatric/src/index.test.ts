@@ -1,5 +1,5 @@
 /* eslint-disable no-restricted-syntax, @typescript-eslint/no-var-requires */
-import type {$IntentionalAny} from '@toy-box/core/types/public'
+import type {$IntentionalAny} from '@dreamerbird/core/types/public'
 
 /**
  * theatric holds `_project`/`_projectConfig` as module-level singletons, so
@@ -12,7 +12,7 @@ const loadTheatric = () => {
   // packages/core/src/index.test.ts).
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const {globalVariableNames} =
-    require('@toy-box/core/globals') as $IntentionalAny
+    require('@dreamerbird/core/globals') as $IntentionalAny
   delete (global as $IntentionalAny)[globalVariableNames.coreBundle]
   delete (global as $IntentionalAny)[globalVariableNames.StudioBundle]
   jest.resetModules()

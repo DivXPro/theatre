@@ -6,7 +6,7 @@ module.exports = {
       'warn',
       {
         aliases: [
-          {name: '@toy-box/core', path: path.resolve(__dirname, './src')},
+          {name: '@dreamerbird/core', path: path.resolve(__dirname, './src')},
         ],
       },
     ],

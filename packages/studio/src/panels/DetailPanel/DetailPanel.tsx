@@ -1,5 +1,5 @@
-import {outlineSelection} from '@toy-box/studio/selectors'
-import {usePrism, useVal} from '@toy-box/react'
+import {outlineSelection} from '@dreamerbird/studio/selectors'
+import {usePrism, useVal} from '@dreamerbird/react'
 import React, {
   createContext,
   useContext,
@@ -12,17 +12,17 @@ import {
   panelZIndexes,
   TitleBar_Piece,
   TitleBar_Punctuation,
-} from '@toy-box/studio/panels/BasePanel/common'
-import {pointerEventsAutoInNormalMode} from '@toy-box/studio/css'
+} from '@dreamerbird/studio/panels/BasePanel/common'
+import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
 import ObjectDetails from './ObjectDetails'
 import ProjectDetails from './ProjectDetails'
-import getStudio from '@toy-box/studio/getStudio'
-import useHotspot from '@toy-box/studio/uiComponents/useHotspot'
-import {Atom, prism, val} from '@toy-box/dataverse'
+import getStudio from '@dreamerbird/studio/getStudio'
+import useHotspot from '@dreamerbird/studio/uiComponents/useHotspot'
+import {Atom, prism, val} from '@dreamerbird/dataverse'
 import EmptyState from './EmptyState'
-import useLockSet from '@toy-box/studio/uiComponents/useLockSet'
-import {usePresenceListenersOnRootElement} from '@toy-box/studio/uiComponents/usePresence'
-import {__private} from '@toy-box/core'
+import useLockSet from '@dreamerbird/studio/uiComponents/useLockSet'
+import {usePresenceListenersOnRootElement} from '@dreamerbird/studio/uiComponents/usePresence'
+import {__private} from '@dreamerbird/core'
 const {isProject, isSheetObject} = __private.instanceTypes
 
 const headerHeight = `32px`

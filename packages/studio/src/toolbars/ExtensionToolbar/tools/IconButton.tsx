@@ -1,8 +1,8 @@
 import React from 'react'
-import ToolbarIconButton from '@toy-box/studio/uiComponents/toolbar/ToolbarIconButton'
+import ToolbarIconButton from '@dreamerbird/studio/uiComponents/toolbar/ToolbarIconButton'
 import styled from 'styled-components'
-import {pointerEventsAutoInNormalMode} from '@toy-box/studio/css'
-import type {ToolConfigIcon} from '@toy-box/core/types/public'
+import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
+import type {ToolConfigIcon} from '@dreamerbird/core/types/public'
 
 const Container = styled(ToolbarIconButton)`
   ${pointerEventsAutoInNormalMode};

@@ -1,5 +1,5 @@
-import type {Pointer} from '@toy-box/dataverse'
-import type CoreBundle from '@toy-box/core/CoreBundle'
+import type {Pointer} from '@dreamerbird/dataverse'
+import type CoreBundle from '@dreamerbird/core/CoreBundle'
 import type {OnDiskState} from './private/core'
 
 /** For `any`s that aren't meant to stay `any`*/
@@ -250,10 +250,10 @@ export type IProjectConfig = {
 export interface IProject {
   readonly type: 'Theatre_Project_PublicAPI'
   /**
-   * If `@toy-box/studio` is used, this promise would resolve when studio has loaded
+   * If `@dreamerbird/studio` is used, this promise would resolve when studio has loaded
    * the state of the project into memory.
    *
-   * If `@toy-box/studio` is not used, this promise is already resolved.
+   * If `@dreamerbird/studio` is not used, this promise is already resolved.
    */
   readonly ready: Promise<void>
   /**
@@ -592,7 +592,7 @@ export interface ISequence {
    *
    * @example Usage
    * ```ts
-   * import {onChange, val} from '@toy-box/core'
+   * import {onChange, val} from '@dreamerbird/core'
    *
    * // let's assume `sheet` is a sheet
    * const sequence = sheet.sequence
@@ -1207,7 +1207,7 @@ export interface InitOpts {
  * @example
  * Basic usage:
  * ```ts
- * import theatre from '@toy-box/core'
+ * import theatre from '@dreamerbird/core'
  *
  * theatre.init({studio: true})
  * ```
@@ -1215,7 +1215,7 @@ export interface InitOpts {
  * @example
  * Usage with **tree-shaking**:
  * ```ts
- * import theatre from '@toy-box/core'
+ * import theatre from '@dreamerbird/core'
  *
  * if (process.env.NODE_ENV !== 'production') {
  *   theatre.init({studio: true})
@@ -1431,7 +1431,7 @@ export interface IStudio {
 }
 
 /**
- * The studio bundle object that `@toy-box/studio` registers on the shared
+ * The studio bundle object that `@dreamerbird/studio` registers on the shared
  * global. Core discovers it during `registerCoreBundle()` and hands over its
  * `CoreBundle` so the studio can pull core's bits.
  */
