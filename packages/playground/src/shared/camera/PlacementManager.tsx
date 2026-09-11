@@ -15,12 +15,13 @@ import React, {
   useRef,
   useState,
 } from 'react'
-import {AnimationMixer, Box3, Plane, Raycaster, Vector2, Vector3} from 'three'
+import {AnimationMixer, Box3, Raycaster, Vector3} from 'three'
 import type {Group, Mesh, Object3D, AnimationClip, AnimationAction} from 'three'
 import {SkeletonUtils} from 'three-stdlib'
 import {createGLTFLoader} from './assetLibrary/gltfLoader'
 import {getLibrary} from './assetLibrary/library'
 import {entryOptions} from './assetLibrary/options'
+import {computeDropPoint} from './dropPoint'
 import {registerEditorOnly} from './editorOnly'
 import {useModalGrab} from './modalGrab'
 import {disposeObjectTree} from './assetLibrary/dispose'
@@ -191,6 +192,11 @@ export function usePlacementSurface(ref: React.RefObject<Object3D | null>) {
   }, [ref])
 }
 
+/** 落点表面登记表的只读视图(路径预设落点标记也用这套射线目标) */
+export function getPlacementSurfaces(): ReadonlySet<Object3D> {
+  return placementSurfaces
+}
+
 /**
  * 选中 gizmo 的目标登记表:"theatre 对象 → 场景节点"。
  * 想让某个可编辑对象被选中后挂移动箭头,就用 useSelectionGizmoTarget
@@ -259,6 +265,13 @@ function readRegistry(
   } catch {
     return []
   }
+}
+
+/** 所有已放置模型的落点(给 findFreeSpot 算默认位用) */
+export function readPlacementPositions(
+  sheet: ISheet,
+): Array<{x: number; y: number; z: number}> {
+  return readRegistry(getRegistry(sheet)).map((e) => e.position)
 }
 
 /**
@@ -415,6 +428,21 @@ export function usePlacementController(project: IProject) {
     [placing],
   )
 
+  /** 点击库卡片直接落点:跳过幽灵预览,走与 confirmPlacing 相同的落地管线 */
+  const placeLibraryEntryAt = useCallback(
+    (entry: ModelEntry, point: {x: number; y: number; z: number}) => {
+      const base =
+        entry.name.replace(/\.[^.]+$/, '').replace(/[^\w-]/g, '_') || 'model'
+      setPendingEntry({
+        key: `Placed / ${base}-${Date.now().toString(36)}`,
+        libraryEntryId: entry.id,
+        position: point,
+        pending: true,
+      })
+    },
+    [],
+  )
+
   const clearPending = useCallback(() => setPendingEntry(null), [])
 
   return {
@@ -424,6 +452,7 @@ export function usePlacementController(project: IProject) {
     startPlacingFromLibrary,
     cancelPlacing,
     confirmPlacing,
+    placeLibraryEntryAt,
     clearPending,
   }
 }
@@ -439,6 +468,8 @@ export function PlacementRig(props: {
   placing: PlacingState
   onConfirm: (point: {x: number; y: number; z: number}) => void
   onCancel: () => void
+  /** 拖拽放置:按下发生在面板卡片上,画布内松手才是确认 */
+  confirmOnPointerUp?: boolean
 }) {
   return props.placing.source.type === 'local' ? (
     <PlacementRigFBX {...props} />
@@ -452,14 +483,21 @@ function PlacementRigFBX({
   placing,
   onConfirm,
   onCancel,
+  confirmOnPointerUp,
 }: {
   placing: PlacingState
   onConfirm: (point: {x: number; y: number; z: number}) => void
   onCancel: () => void
+  confirmOnPointerUp?: boolean
 }) {
   const fbx = useFBX(placing.url)
   return (
-    <PlacementRigCore model={fbx} onConfirm={onConfirm} onCancel={onCancel} />
+    <PlacementRigCore
+      model={fbx}
+      onConfirm={onConfirm}
+      onCancel={onCancel}
+      confirmOnPointerUp={confirmOnPointerUp}
+    />
   )
 }
 
@@ -468,10 +506,12 @@ function PlacementRigGLTF({
   placing,
   onConfirm,
   onCancel,
+  confirmOnPointerUp,
 }: {
   placing: PlacingState
   onConfirm: (point: {x: number; y: number; z: number}) => void
   onCancel: () => void
+  confirmOnPointerUp?: boolean
 }) {
   const [model, setModel] = useState<Group | null>(null)
   const [failed, setFailed] = useState(false)
@@ -500,7 +540,12 @@ function PlacementRigGLTF({
   if (failed) throw new Error('[placement] 库模型预览加载失败')
   if (!model) return null
   return (
-    <PlacementRigCore model={model} onConfirm={onConfirm} onCancel={onCancel} />
+    <PlacementRigCore
+      model={model}
+      onConfirm={onConfirm}
+      onCancel={onCancel}
+      confirmOnPointerUp={confirmOnPointerUp}
+    />
   )
 }
 
@@ -513,10 +558,12 @@ function PlacementRigCore({
   model,
   onConfirm,
   onCancel,
+  confirmOnPointerUp,
 }: {
   model: Group
   onConfirm: (point: {x: number; y: number; z: number}) => void
   onCancel: () => void
+  confirmOnPointerUp?: boolean
 }) {
   const invalidate = useThree((s) => s.invalidate)
   const gl = useThree((s) => s.gl)
@@ -525,41 +572,18 @@ function PlacementRigCore({
   const {scale, lift} = useNormalizedModel(model)
   const ghostRef = useRef<Group>(null!)
   const raycaster = useMemo(() => new Raycaster(), [])
-  const groundPlane = useMemo(() => new Plane(new Vector3(0, 1, 0), 0), [])
 
   const computePoint = useCallback(
-    (clientX: number, clientY: number): Vector3 => {
-      const rect = gl.domElement.getBoundingClientRect()
-      const ndc = new Vector2(
-        ((clientX - rect.left) / rect.width) * 2 - 1,
-        -((clientY - rect.top) / rect.height) * 2 + 1,
-      )
-      raycaster.setFromCamera(ndc, camera)
-      // 表面优先:只对登记过的落点表面检测(行星、已放置的模型)。
-      // ghost、星星、gizmo 等不在表里,天然跳过;只认 Mesh 命中
-      const surface = raycaster
-        .intersectObjects([...placementSurfaces], true)
-        .find((h) => (h.object as Mesh).isMesh)
-      const ground = raycaster.ray.intersectPlane(groundPlane, new Vector3())
-      // 相机贴着地平面(y≈0)时,地面会在"相机脚下"命中(t≈0),
-      // 这个命中比任何表面都"近",但它就在相机自己身上,没有放置意义。
-      // 半单位以内的地面命中直接丢弃,让给表面或前方兜底。
-      const usableGround =
-        ground && raycaster.ray.origin.distanceTo(ground) > 0.5 ? ground : null
-      if (
-        surface &&
-        (!usableGround ||
-          surface.distance <= raycaster.ray.origin.distanceTo(usableGround))
-      ) {
-        return surface.point
-      }
-      if (usableGround) return usableGround
-      // 视线与地面平行、朝天、或贴地:放到正前方 30 个单位、压到地面
-      const ahead = raycaster.ray.at(30, new Vector3())
-      ahead.y = 0
-      return ahead
-    },
-    [gl, camera, raycaster, groundPlane],
+    (clientX: number, clientY: number): Vector3 =>
+      computeDropPoint(
+        raycaster,
+        camera,
+        placementSurfaces,
+        gl.domElement.getBoundingClientRect(),
+        clientX,
+        clientY,
+      ),
+    [gl, camera, raycaster],
   )
 
   // 鼠标事件只记坐标并申请一帧,真正的落点计算在帧回调里做一次——
@@ -589,6 +613,8 @@ function PlacementRigCore({
     }
     const onClick = (ev: MouseEvent) => {
       if (ev.button !== 0) return
+      // 拖拽模式下画布点击不确认,确认只走松手
+      if (confirmOnPointerUp) return
       // 拖动后的松手不算点击
       if (
         downPos &&
@@ -620,7 +646,43 @@ function PlacementRigCore({
       window.removeEventListener('keydown', onKey)
       window.removeEventListener('contextmenu', onContextMenu)
     }
-  }, [gl, computePoint, camera, invalidate, onConfirm, onCancel])
+  }, [
+    gl,
+    computePoint,
+    camera,
+    invalidate,
+    onConfirm,
+    onCancel,
+    confirmOnPointerUp,
+  ])
+
+  // 拖拽模式:按下发生在面板卡片上,松手才是确认。松手在画布外(面板区域)
+  // = 取消;太远(>300)也取消,防止误放到天边
+  useEffect(() => {
+    if (!confirmOnPointerUp) return
+    const el = gl.domElement
+    const onUp = (ev: PointerEvent) => {
+      if (ev.button !== 0) return
+      const rect = el.getBoundingClientRect()
+      const inside =
+        ev.clientX >= rect.left &&
+        ev.clientX <= rect.right &&
+        ev.clientY >= rect.top &&
+        ev.clientY <= rect.bottom
+      if (!inside) {
+        onCancel()
+        return
+      }
+      const p = computePoint(ev.clientX, ev.clientY)
+      if (p.distanceTo(camera.position) > 300) {
+        onCancel()
+        return
+      }
+      onConfirm({x: p.x, y: p.y, z: p.z})
+    }
+    window.addEventListener('pointerup', onUp)
+    return () => window.removeEventListener('pointerup', onUp)
+  }, [confirmOnPointerUp, gl, camera, computePoint, onConfirm, onCancel])
 
   return (
     // 首次 pointermove 之前不显示,避免在原地闪一下
