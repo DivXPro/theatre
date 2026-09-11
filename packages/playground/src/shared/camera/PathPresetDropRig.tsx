@@ -53,16 +53,12 @@ export function PathPresetDropRig({
     }
     const onUp = (ev: PointerEvent) => {
       if (ev.button !== 0) return
-      const rect = el.getBoundingClientRect()
-      const inside =
-        ev.clientX >= rect.left &&
-        ev.clientX <= rect.right &&
-        ev.clientY >= rect.top &&
-        ev.clientY <= rect.bottom
-      if (!inside) {
+      // 同 PlacementRigCore:松手在面板 DOM 上(target 非画布)= 静默取消
+      if (ev.target !== el) {
         onCancel()
         return
       }
+      const rect = el.getBoundingClientRect()
       const p = computeDropPoint(
         raycaster,
         camera,

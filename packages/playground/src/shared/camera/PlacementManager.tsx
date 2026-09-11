@@ -663,13 +663,9 @@ function PlacementRigCore({
     const el = gl.domElement
     const onUp = (ev: PointerEvent) => {
       if (ev.button !== 0) return
-      const rect = el.getBoundingClientRect()
-      const inside =
-        ev.clientX >= rect.left &&
-        ev.clientX <= rect.right &&
-        ev.clientY >= rect.top &&
-        ev.clientY <= rect.bottom
-      if (!inside) {
+      // 画布铺满全窗口、垫在面板之下:松手在面板/工具栏等 DOM 上时 target 不是画布,
+      // 必须取消(spec:松手在面板区域 = 静默取消)。提示条 pointerEvents:none 不挡
+      if (ev.target !== el) {
         onCancel()
         return
       }
