@@ -41,6 +41,7 @@ import {
   getPlacementEntryForObject,
   getPlacementInstanceForObject,
   isSelectSuppressed,
+  readPlacementPositions,
   useGizmoMode,
   usePlacementController,
   usePlacementSurface,
@@ -92,7 +93,9 @@ import {
 } from './pathRegistry'
 import type {BoundCameraReset} from './pathRegistry'
 import {resolveBoundPathKey} from './pathBinding'
-import {seedArcPoints} from './pathModel'
+import {findFreeSpot, presetPoints} from './pathPresets'
+import type {PathPreset} from './pathPresets'
+import {PathPresetDropRig} from './PathPresetDropRig'
 import {listSinks} from './videoExport/sinks'
 import type {ExportSink} from './videoExport/sinks'
 import {startShotExport} from './videoExport/exporter'
@@ -648,12 +651,36 @@ function App() {
     placing,
     pendingEntry,
     startPlacingFromLibrary,
+    placeLibraryEntryAt,
     cancelPlacing,
     confirmPlacing,
     clearPending,
   } = usePlacementController(project)
   const [gizmoMode, setGizmoMode] = useGizmoMode()
   const [libraryOpen, setLibraryOpen] = useState(false)
+
+  // 点击模型卡片 = 立即放到默认位(原点被占沿 +X 自动错开);要指定位置用拖拽
+  const placeModelAtDefault = useCallback(
+    (entry: ModelEntry) => {
+      placeLibraryEntryAt(entry, findFreeSpot(readPlacementPositions(sheet)))
+    },
+    [sheet, placeLibraryEntryAt],
+  )
+
+  // 拖拽态:模型拖拽复用 placing 幽灵(按下即进 placing,松手即 confirm);
+  // 路径预设拖拽挂落点标记
+  const [modelDragging, setModelDragging] = useState(false)
+  const [presetDrag, setPresetDrag] = useState<PathPreset | null>(null)
+  const startModelDrag = useCallback(
+    (entry: ModelEntry) => {
+      setModelDragging(true)
+      startPlacingFromLibrary(entry).catch((err) => {
+        console.warn('[placement] 库模型加载失败', err)
+        setModelDragging(false)
+      })
+    },
+    [startPlacingFromLibrary],
+  )
   // 右键已放置模型弹出的操作菜单:记录目标条目和光标位置
   const [objectMenu, setObjectMenu] = useState<{
     key: string
@@ -795,33 +822,27 @@ function App() {
     }
   }, [enterPathEdit, exitPathEdit])
 
-  // 添加路径:注册表加一行并播种一段环绕弧(从活动相机机位,无相机时
-  // 退回主视角机位),然后进编辑模式。先播种再登记——组件挂载时点已就位,
-  // 路径对象不会以空名单亮过相("没点就不出现")。不自动切相机驱动
-  // (用户决策:驱动与否只在相机面板配)
-  const addPosPathPoint = useCallback(() => {
-    const cam = activeCamera
-      ? shotRefsMapRef.current.get(activeCamera.cameraKey)?.camera.current
-      : undefined
-    const target = activeCamera
-      ? shotRefsMapRef.current.get(activeCamera.cameraKey)?.target.current
-      : undefined
-    const mainCam = cameraObjRef.current
-    const mainTarget = targetObjRef.current
-    const seed =
-      cam && target
-        ? seedArcPoints(val(cam.props.position), val(target.props.position))
-        : mainCam && mainTarget
-          ? seedArcPoints(
-              val(mainCam.props.position),
-              val(mainTarget.props.position),
-            )
-          : undefined
-    const entry = nextPathEntry(readPathEntries(getPathsRegistry(sheet)))
-    addPathPoint(sheet, entry.pathKey, seed)
-    addPathToRegistry(sheet, entry)
-    enterPathEdit(entry.pathKey)
-  }, [sheet, activeCamera, enterPathEdit])
+  // 路径预设放置:点击 = 场景中心;拖拽 = 指针落点。高度跟活动相机当前 Y
+  // (无相机跟主视角,再退回 5)。先播种再登记(没点就不出现),落地即进
+  // 编辑模式。每一步都是既有可撤销事务,撤销 = 清单行消失 + 点数据回滚
+  const placePresetPath = useCallback(
+    (preset: PathPreset, centerXZ?: {x: number; z: number}) => {
+      const camObj = activeCamera
+        ? shotRefsMapRef.current.get(activeCamera.cameraKey)?.camera.current
+        : undefined
+      const camY =
+        (camObj ? (val(camObj.props.position) as {y: number}).y : undefined) ??
+        (cameraObjRef.current
+          ? (val(cameraObjRef.current.props.position) as {y: number}).y
+          : 5)
+      const center = {x: centerXZ?.x ?? 0, y: camY, z: centerXZ?.z ?? 0}
+      const entry = nextPathEntry(readPathEntries(getPathsRegistry(sheet)))
+      addPathPoint(sheet, entry.pathKey, presetPoints(preset, center))
+      addPathToRegistry(sheet, entry)
+      enterPathEdit(entry.pathKey)
+    },
+    [sheet, activeCamera, enterPathEdit],
+  )
 
   // 缺失提示:绑定了朝向但 Target 已被删 → 工具条下方纯文字提醒;
   // 恢复动作在相机面板动作区(恢复 Target),提示条不带按钮
@@ -1190,9 +1211,7 @@ function App() {
       }}
     >
       <TopToolbar
-        placing={!!placing}
-        onOpenLibrary={() => setLibraryOpen((v) => !v)}
-        onAddPath={addPosPathPoint}
+        onToggleLibrary={() => setLibraryOpen((v) => !v)}
         onAddCamera={addCamera}
         exportSinks={exportSinks}
         exporting={exporting}
@@ -1230,6 +1249,26 @@ function App() {
         </div>
       )}
       <GizmoModeHint mode={gizmoMode} />
+      {(modelDragging || presetDrag) && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 24,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 10,
+            padding: '6px 12px',
+            borderRadius: 6,
+            background: 'rgba(24,24,28,0.9)',
+            border: '1px solid rgba(255,255,255,0.15)',
+            color: '#eee',
+            fontSize: 12,
+            pointerEvents: 'none',
+          }}
+        >
+          松开鼠标落点,Esc/右键取消
+        </div>
+      )}
       {shotView && (
         <div
           style={{
@@ -1252,11 +1291,10 @@ function App() {
       )}
       {libraryOpen && (
         <AssetLibraryPanel
-          onPlaceModel={(entry: ModelEntry) => {
-            startPlacingFromLibrary(entry).catch((err) =>
-              console.warn('[placement] 库模型加载失败', err),
-            )
-          }}
+          onPlaceModel={placeModelAtDefault}
+          onDragStartModel={startModelDrag}
+          onPlacePreset={(preset: PathPreset) => placePresetPath(preset)}
+          onDragStartPreset={(preset: PathPreset) => setPresetDrag(preset)}
           onApplyAnimation={applyAnimation}
           onApplyPose={applyPose}
           onSavePose={onSavePose}
@@ -1485,11 +1523,23 @@ function App() {
           </Suspense>
           {placing && (
             <Suspense fallback={null}>
-              <PlacementRigErrorBoundary onCancel={cancelPlacing}>
+              <PlacementRigErrorBoundary
+                onCancel={() => {
+                  cancelPlacing()
+                  setModelDragging(false)
+                }}
+              >
                 <PlacementRig
                   placing={placing}
-                  onConfirm={confirmPlacing}
-                  onCancel={cancelPlacing}
+                  confirmOnPointerUp={modelDragging}
+                  onConfirm={(p) => {
+                    confirmPlacing(p)
+                    setModelDragging(false)
+                  }}
+                  onCancel={() => {
+                    cancelPlacing()
+                    setModelDragging(false)
+                  }}
                 />
               </PlacementRigErrorBoundary>
             </Suspense>
@@ -1503,6 +1553,15 @@ function App() {
             onObjectMenu={(key, x, y) => setObjectMenu({key, x, y})}
           />
           <SelectionGizmo hidden={!!placing || shotView} mode={gizmoMode} />
+          {presetDrag && (
+            <PathPresetDropRig
+              onConfirm={(p) => {
+                placePresetPath(presetDrag, {x: p.x, z: p.z})
+                setPresetDrag(null)
+              }}
+              onCancel={() => setPresetDrag(null)}
+            />
+          )}
           <Stars radius={500} depth={50} count={1000} factor={10} />
         </SheetProvider>
       </Canvas>

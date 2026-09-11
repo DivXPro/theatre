@@ -1,8 +1,8 @@
 /**
- * 顶栏工具条:只放全局动作——添加(模型/相机/路径)和导出视频。
- * 物体的属性设置在各自面板,物体的动作在面板动作区和右键菜单,
- * 都不进这里(见 docs/superpowers/specs/2026-09-01-camera-menu-reorg-design.md)。
- * 一个 flex 容器按顺序排,不再写死像素偏移。
+ * 顶栏工具条:只放全局动作——资产库(模型/姿势/动作/路径预设的统一
+ * 入口)、添加相机、导出视频。物体的属性设置在各自面板,物体的动作在
+ * 面板动作区和右键菜单(见 docs/superpowers/specs/2026-09-01-camera-menu-reorg-design.md
+ * 与 2026-09-12-unified-placement-panel-design.md)。
  */
 import React, {useCallback, useRef} from 'react'
 import useMenu from '@dreamerbird/studio/uiComponents/simpleContextMenu/useMenu'
@@ -22,20 +22,16 @@ function buttonStyle(disabled: boolean, danger = false): React.CSSProperties {
 }
 
 export function TopToolbar({
-  placing,
-  onOpenLibrary,
+  onToggleLibrary,
   onAddCamera,
-  onAddPath,
   exportSinks,
   exporting,
   exportDisabled,
   onPickExportSink,
   onStopExport,
 }: {
-  placing: boolean
-  onOpenLibrary: () => void
+  onToggleLibrary: () => void
   onAddCamera: () => void
-  onAddPath: () => void
   exportSinks: readonly ExportSink[]
   exporting: boolean
   exportDisabled: boolean
@@ -61,12 +57,8 @@ export function TopToolbar({
         gap: 8,
       }}
     >
-      <button
-        disabled={placing}
-        onClick={onOpenLibrary}
-        style={buttonStyle(placing)}
-      >
-        {placing ? '放置中:左键确认落点,Esc/右键取消' : '添加模型'}
+      <button onClick={onToggleLibrary} style={buttonStyle(false)}>
+        资产库
       </button>
       <button
         onClick={onAddCamera}
@@ -74,13 +66,6 @@ export function TopToolbar({
         title="从当前导演视角创建一台相机(落地即活动相机)"
       >
         添加相机
-      </button>
-      <button
-        onClick={onAddPath}
-        style={buttonStyle(false)}
-        title="从活动相机机位播种一段环绕弧,并进入编辑模式"
-      >
-        添加路径
       </button>
       <button
         ref={exportButtonRef}
