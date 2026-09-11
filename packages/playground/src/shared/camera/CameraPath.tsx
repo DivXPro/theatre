@@ -434,7 +434,8 @@ function makePathLine(): Line {
     geo,
     new LineBasicMaterial({color: 0xffffff, toneMapped: false}),
   )
-  // 顶点随名单重写,包围球不更新,关掉视锥剔除防止被误剔
+  // 顶点随名单重写,包围球会重算(Line raycast 粗测依赖它);
+  // 渲染剔除与 drawRange 零填充缓冲的包围球不配合,frustumCulled 直接关掉更稳
   line.frustumCulled = false
   return line
 }
@@ -631,6 +632,9 @@ export function CameraPath({
     const count = buildLinePositions(entries, attr.array as Float32Array)
     line.geometry.setDrawRange(0, count)
     attr.needsUpdate = true
+    // 顶点是固定长缓冲就地重写,Line raycast 缓存的包围球不会自己更新;
+    // 不重算的话平移/加点后射线粗测还在旧位置,点选/右键间歇性漏判
+    line.geometry.computeBoundingSphere()
     line.visible = !hidden && count > 0
     // 方向箭头只在编辑模式出现(对齐 Blender:方向刻度是编辑态的叠加层),
     // 跟着线走:线可见且编辑中才可见
