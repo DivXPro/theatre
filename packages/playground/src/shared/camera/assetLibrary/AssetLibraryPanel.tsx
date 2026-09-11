@@ -1,15 +1,75 @@
-import React, {useEffect, useRef, useState} from 'react'
+import React, {useCallback, useEffect, useRef, useState} from 'react'
 import {countLibraryEntryUsage} from '../PlacementManager'
+import {PATH_PRESETS} from '../pathPresets'
+import type {PathPreset} from '../pathPresets'
 import {getLibrary, useLibraryEntries, useRigAliases} from './library'
 import {planImport, executeImport, realImportDeps} from './importPipeline'
 import type {ImportPlan} from './importPipeline'
 import {renderThumbnail} from './thumbnail'
 import type {AnimationEntry, ModelEntry, PoseEntry} from './types'
 
-type Tab = 'model' | 'pose' | 'animation'
+type Tab = 'model' | 'pose' | 'animation' | 'path'
+
+/** 卡片手势阈值:按下后移动超过 4px 算拖拽(沿用场景点选的拖拽判定惯例) */
+const DRAG_THRESHOLD_PX = 4
+
+/**
+ * 卡片手势:按下后移动超阈值 = 拖拽(onDragStart 触发一次),否则松开 = 点击。
+ * 监听挂 window:拖出卡片后移动/松手照样生效。右键不走这里(另有 onContextMenu)。
+ */
+function useCardGesture<T>(
+  onClick: (item: T) => void,
+  onDragStart?: (item: T) => void,
+) {
+  const gestureRef = useRef<{
+    item: T
+    x: number
+    y: number
+    dragging: boolean
+  } | null>(null)
+  const onClickRef = useRef(onClick)
+  const onDragStartRef = useRef(onDragStart)
+  onClickRef.current = onClick
+  onDragStartRef.current = onDragStart
+
+  useEffect(() => {
+    const onMove = (ev: PointerEvent) => {
+      const g = gestureRef.current
+      if (!g || g.dragging) return
+      if (Math.hypot(ev.clientX - g.x, ev.clientY - g.y) > DRAG_THRESHOLD_PX) {
+        const start = onDragStartRef.current
+        if (!start) return
+        g.dragging = true
+        start(g.item)
+      }
+    }
+    const onUp = () => {
+      const g = gestureRef.current
+      gestureRef.current = null
+      if (g && !g.dragging) onClickRef.current(g.item)
+    }
+    window.addEventListener('pointermove', onMove)
+    window.addEventListener('pointerup', onUp)
+    return () => {
+      window.removeEventListener('pointermove', onMove)
+      window.removeEventListener('pointerup', onUp)
+    }
+  }, [])
+
+  return useCallback(
+    (item: T) => (ev: React.PointerEvent) => {
+      if (ev.button !== 0) return
+      gestureRef.current = {item, x: ev.clientX, y: ev.clientY, dragging: false}
+    },
+    [],
+  )
+}
 
 export function AssetLibraryPanel({
   onPlaceModel,
+  onDragStartModel,
+  onPlacePreset,
+  onDragStartPreset,
   filterRig,
   onClose,
   onApplyAnimation,
@@ -20,6 +80,9 @@ export function AssetLibraryPanel({
   disabled,
 }: {
   onPlaceModel: (entry: ModelEntry) => void
+  onDragStartModel?: (entry: ModelEntry) => void
+  onPlacePreset?: (preset: PathPreset) => void
+  onDragStartPreset?: (preset: PathPreset) => void
   filterRig?: string
   onClose: () => void
   onApplyAnimation?: (entry: AnimationEntry) => void
@@ -41,6 +104,15 @@ export function AssetLibraryPanel({
     null,
   )
   const [thumbUrls, setThumbUrls] = useState<Record<string, string>>({})
+
+  const modelGesture = useCardGesture<ModelEntry>(
+    (entry) => onPlaceModel(entry),
+    onDragStartModel,
+  )
+  const presetGesture = useCardGesture<PathPreset>(
+    (preset) => onPlacePreset?.(preset),
+    (preset) => onDragStartPreset?.(preset),
+  )
 
   const mountedRef = useRef(true)
   useEffect(() => {
@@ -235,7 +307,7 @@ export function AssetLibraryPanel({
       <div
         key={entry.id}
         style={cardBaseStyle}
-        onClick={() => onPlaceModel(entry)}
+        onPointerDown={modelGesture(entry)}
         onContextMenu={(ev) => {
           ev.preventDefault()
           setMenu({x: ev.clientX, y: ev.clientY, id: entry.id})
@@ -333,6 +405,19 @@ export function AssetLibraryPanel({
   const renderPoseCard = (entry: PoseEntry) =>
     renderApplyCard(entry, '🧍', onApplyPose)
 
+  // 预设卡片:内置不可删改,无右键菜单、无骨架标签
+  const renderPresetCard = (preset: PathPreset) => (
+    <div
+      key={preset.id}
+      style={cardBaseStyle}
+      onPointerDown={presetGesture(preset)}
+      title="点击放到场景中心;按住拖到画布指定落点"
+    >
+      <div style={placeholderStyle}>{preset.icon}</div>
+      <div style={labelStyle}>{preset.name}</div>
+    </div>
+  )
+
   const visibleAnimations = sortBySelectedRig(animations)
   const visiblePoses = sortBySelectedRig(poses)
 
@@ -410,22 +495,39 @@ export function AssetLibraryPanel({
         >
           动作
         </button>
-        <div style={{flex: 1}} />
         <button
-          disabled={busy}
-          onClick={() => fileRef.current?.click()}
+          onClick={() => setTab('path')}
           style={{
             padding: '4px 10px',
             borderRadius: 6,
-            border: '1px solid rgba(255,255,255,0.12)',
-            background: 'rgba(255,255,255,0.08)',
+            border: 'none',
+            background:
+              tab === 'path' ? 'rgba(255,255,255,0.15)' : 'transparent',
             color: 'rgba(255,255,255,0.9)',
-            cursor: busy ? 'default' : 'pointer',
+            cursor: 'pointer',
             fontSize: 13,
           }}
         >
-          导入
+          路径
         </button>
+        <div style={{flex: 1}} />
+        {tab !== 'path' && (
+          <button
+            disabled={busy}
+            onClick={() => fileRef.current?.click()}
+            style={{
+              padding: '4px 10px',
+              borderRadius: 6,
+              border: '1px solid rgba(255,255,255,0.12)',
+              background: 'rgba(255,255,255,0.08)',
+              color: 'rgba(255,255,255,0.9)',
+              cursor: busy ? 'default' : 'pointer',
+              fontSize: 13,
+            }}
+          >
+            导入
+          </button>
+        )}
         <button
           onClick={onClose}
           style={{
@@ -517,7 +619,9 @@ export function AssetLibraryPanel({
           ? models.map(renderModelCard)
           : tab === 'pose'
             ? visiblePoses.map(renderPoseCard)
-            : visibleAnimations.map(renderAnimationCard)}
+            : tab === 'path'
+              ? PATH_PRESETS.map(renderPresetCard)
+              : visibleAnimations.map(renderAnimationCard)}
       </div>
 
       {/* 确认清单弹层 */}
