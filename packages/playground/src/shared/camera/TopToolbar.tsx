@@ -29,6 +29,7 @@ export function TopToolbar({
   exportDisabled,
   onPickExportSink,
   onStopExport,
+  libraryDisabled = false,
 }: {
   onToggleLibrary: () => void
   onAddCamera: () => void
@@ -37,6 +38,8 @@ export function TopToolbar({
   exportDisabled: boolean
   onPickExportSink: (sink: ExportSink) => void
   onStopExport: () => void
+  /** 放置中/拖拽中禁用资产库入口,避免再开一次放置流程(沿用旧「添加模型」的置灰语义) */
+  libraryDisabled?: boolean
 }) {
   const exportButtonRef = useRef<HTMLButtonElement>(null)
   const exportMenuItems = useCallback(
@@ -57,7 +60,12 @@ export function TopToolbar({
         gap: 8,
       }}
     >
-      <button onClick={onToggleLibrary} style={buttonStyle(false)}>
+      <button
+        disabled={libraryDisabled}
+        onClick={onToggleLibrary}
+        style={buttonStyle(libraryDisabled)}
+        title={libraryDisabled ? '放置中:先确认或取消当前放置' : undefined}
+      >
         资产库
       </button>
       <button

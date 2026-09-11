@@ -1218,6 +1218,7 @@ function App() {
         onPickExportSink={handlePickExportSink}
         onStopExport={handleStopExport}
         exportDisabled={!activeCamera}
+        libraryDisabled={!!placing || modelDragging || presetDrag !== null}
       />
       {!shotView && activeCamera && (
         <div

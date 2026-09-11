@@ -43,16 +43,28 @@ function useCardGesture<T>(
         start(g.item)
       }
     }
-    const onUp = () => {
+    const onUp = (ev: PointerEvent) => {
+      // 按住左键时再松右键/中键也会触发 pointerup:只认左键松手,
+      // 其他键的 up 不清手势也不结算,等左键自己的 up
+      if (ev.button !== 0) return
       const g = gestureRef.current
       gestureRef.current = null
       if (g && !g.dragging) onClickRef.current(g.item)
     }
+    // pointercancel/blur:手势被系统打断,清掉 gestureRef,否则陈旧手势
+    // 会在下一次任意 pointerup 变成幻影放置
+    const onCancel = () => {
+      gestureRef.current = null
+    }
     window.addEventListener('pointermove', onMove)
     window.addEventListener('pointerup', onUp)
+    window.addEventListener('pointercancel', onCancel)
+    window.addEventListener('blur', onCancel)
     return () => {
       window.removeEventListener('pointermove', onMove)
       window.removeEventListener('pointerup', onUp)
+      window.removeEventListener('pointercancel', onCancel)
+      window.removeEventListener('blur', onCancel)
     }
   }, [])
 
