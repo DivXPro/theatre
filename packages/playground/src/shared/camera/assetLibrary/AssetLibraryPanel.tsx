@@ -325,6 +325,9 @@ export function AssetLibraryPanel({
         <div
           style={{...tagStyle, cursor: 'pointer'}}
           title={`${entry.rig}\n点击给这套骨架起名`}
+          // 卡片放置走 window 级 pointerup 手势,stopPropagation(click) 挡不住;
+          // 必须在 pointerdown 拦截,避免点标签起名时连带放置模型
+          onPointerDown={(ev) => ev.stopPropagation()}
           onClick={renameRig(entry.rig)}
         >
           {rigLabel(entry.rig)}
