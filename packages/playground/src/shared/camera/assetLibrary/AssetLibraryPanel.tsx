@@ -308,6 +308,7 @@ export function AssetLibraryPanel({
         key={entry.id}
         style={cardBaseStyle}
         onPointerDown={modelGesture(entry)}
+        onDragStart={(ev) => ev.preventDefault()}
         onContextMenu={(ev) => {
           ev.preventDefault()
           setMenu({x: ev.clientX, y: ev.clientY, id: entry.id})
@@ -317,6 +318,7 @@ export function AssetLibraryPanel({
           <img
             src={url}
             alt={entry.name}
+            draggable={false}
             style={{width: '100%', height: 64, objectFit: 'cover'}}
           />
         ) : (
@@ -414,6 +416,7 @@ export function AssetLibraryPanel({
       key={preset.id}
       style={cardBaseStyle}
       onPointerDown={presetGesture(preset)}
+      onDragStart={(ev) => ev.preventDefault()}
       title="点击放到场景中心;按住拖到画布指定落点"
     >
       <div style={placeholderStyle}>{preset.icon}</div>
