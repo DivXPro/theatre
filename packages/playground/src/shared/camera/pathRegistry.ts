@@ -92,8 +92,27 @@ export function addPathToRegistry(sheet: ISheet, entry: PathEntry) {
  * 删除路径:先清持久数据(forgetObject:静态覆盖 + 时间轴轨道)
  * 并显式脱离(detachObject:路径对象不是 editable,卸载不会自动脱离),
  * 再从注册表移除(组件卸载 → 大纲行消失)。撤销两步都能完整回滚。
+ *
+ * boundCameras:删除前由调用方收集的"绑定了这条路径的相机"(App 有
+ * 相机对象 refs)。它们的回退(定格机位 + 回手动 + 清绑定)折进清单
+ * 移除的同一个 scrub——撤销删除会把清单行、绑定、机位一起还原,全程
+ * 不留"绑定还在但路径没了"的中间态。若不折进来,ShotCamera 的失效
+ * 看护会在本地删除后再补一笔回退:撤销删除时绑定先被还原成失效态,
+ * 看护立刻再打回手动,新事务把撤销游标归零并截断重做历史,撤销永远
+ * 原地打转(实测确认的撤销陷阱)
  */
-export function removePathFromRegistry(sheet: ISheet, entry: PathEntry) {
+
+/** 删除路径时一并回退的绑定相机;freeze 为 null 表示路径没点、没被驱动过,机位不动 */
+export type BoundCameraReset = {
+  obj: ISheetObject<any>
+  freeze: {x: number; y: number; z: number} | null
+}
+
+export function removePathFromRegistry(
+  sheet: ISheet,
+  entry: PathEntry,
+  boundCameras: BoundCameraReset[] = [],
+) {
   const studio = getStudioSync()
   if (!studio) return
   // getPathMeta 对已存在的对象直接返回句柄(配置走缓存,同一引用)
@@ -109,11 +128,17 @@ export function removePathFromRegistry(sheet: ISheet, entry: PathEntry) {
   const registry = getPathsRegistry(sheet)
   const list = readPathEntries(registry)
   const scrub = studio.scrub()
-  scrub.capture(({set}) =>
+  scrub.capture(({set}) => {
+    for (const {obj, freeze} of boundCameras) {
+      if (freeze)
+        set(obj.props.position, {x: freeze.x, y: freeze.y, z: freeze.z})
+      set(obj.props.moveMode, 'manual')
+      set(obj.props.pathKey, '')
+    }
     set(
       registry.props.list,
       JSON.stringify(list.filter((e) => e.pathKey !== entry.pathKey)),
-    ),
-  )
+    )
+  })
   scrub.commit()
 }

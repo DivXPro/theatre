@@ -59,7 +59,9 @@ import {getLibrary} from './assetLibrary/library'
 import {ShotCamera} from './ShotCamera'
 import {
   addCameraToRegistry,
+  getCamerasRegistry,
   nextCameraEntry,
+  readCameraEntries,
   removeCamera,
   useCamerasList,
 } from './cameraRegistry'
@@ -88,6 +90,8 @@ import {
   removePathFromRegistry,
   usePathsList,
 } from './pathRegistry'
+import type {BoundCameraReset} from './pathRegistry'
+import {resolveBoundPathKey} from './pathBinding'
 import {seedArcPoints} from './pathModel'
 import {listSinks} from './videoExport/sinks'
 import type {ExportSink} from './videoExport/sinks'
@@ -478,6 +482,43 @@ type ShotObjRefs = {
   target: MutableRefObject<ISheetObject<any> | undefined>
 }
 
+/**
+ * 删除路径前收集绑定它的相机(连同机位定格),交给注册表折进清单移除的
+ * 同一个 scrub 里回退——为什么不靠 ShotCamera 的失效看护做本地删除的回退,
+ * 见 removePathFromRegistry 的注释(撤销陷阱)。
+ * 机位采样行进进度处 = 相机画面里的当前位置(进度共享在路径对象上,
+ * 一台采样全体通用);没点的路径没驱动过相机,不定格。
+ * 清单现场重读,不用渲染期快照(对齐启动自检的教训:快照有瞬窗)。
+ */
+function collectBoundCameraResets(
+  sheet: ISheet,
+  shotRefs: Map<string, ShotObjRefs>,
+  metaKey: string,
+): BoundCameraReset[] {
+  const registeredKeys = readPathEntries(getPathsRegistry(sheet)).map(
+    (e) => e.pathKey,
+  )
+  let freeze: {x: number; y: number; z: number} | null = null
+  if (pathExists(sheet, metaKey) && readPathPoints(sheet, metaKey).length > 0) {
+    const meta = getPathMeta(sheet, metaKey)
+    const tmp = new Vector3()
+    if (samplePathPoint(metaKey, val(meta.props.progress) as number, tmp)) {
+      freeze = {x: tmp.x, y: tmp.y, z: tmp.z}
+    }
+  }
+  const resets: BoundCameraReset[] = []
+  for (const entry of readCameraEntries(getCamerasRegistry(sheet))) {
+    const obj = shotRefs.get(entry.cameraKey)?.camera.current
+    if (!obj) continue
+    const moveMode = (val(obj.props.moveMode) as string | undefined) ?? 'manual'
+    const pathKey = (val(obj.props.pathKey) as string | undefined) ?? ''
+    if (resolveBoundPathKey(moveMode, pathKey, registeredKeys) !== metaKey)
+      continue
+    resets.push({obj, freeze})
+  }
+  return resets
+}
+
 function App() {
   const bgs = ['#272730', '#b7c5d1']
   const [bgIndex, setBgIndex] = useState(0)
@@ -821,7 +862,11 @@ function App() {
   // 退出(不回头重选,对象已经没了,重选会把它又建出来)
   const removePath = useCallback(
     (metaKey: string) => {
-      removePathFromRegistry(sheet, {pathKey: metaKey})
+      removePathFromRegistry(
+        sheet,
+        {pathKey: metaKey},
+        collectBoundCameraResets(sheet, shotRefsMapRef.current, metaKey),
+      )
       if (editingPath === metaKey) exitPathEditOnBlur()
       if (selectedPathPoint?.metaKey === metaKey) setSelectedPathPoint(null)
     },

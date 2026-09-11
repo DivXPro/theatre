@@ -284,16 +284,38 @@ export function ShotCamera({
   )
   const camDriveLocked = boundKey !== null && boundHasPoints
 
-  // 绑定失效看护:绑定的路径被删(本地删除/对端同步删除都会走到)→
-  // 回退手动并清绑定,机位定格当前位置(对齐 Blender:约束目标被删,
-  // 物体保持当前变换)。空路径(没控制点)不算失效,维持绑定
+  // 帧驱动的机位镜像:useFrame 每次把相机驱动到路径点时就同步一份到
+  // 这里。看护/解绑的"定格当前机位"读它,而不是去读 THREE 相机本体
+  const drivenPosRef = useRef(new Vector3())
+  const drivenPosValidRef = useRef(false)
+  // 换绑到另一条路径后,旧路径攒下的镜像作废,等下一次帧驱动写入——
+  // 不然换绑瞬间路径被对端删掉,定格会拿上一条路径的旧机位(复审 minor)。
+  // 只在换绑/绑定时作废:失效(boundKey→null)时看护紧接着就要读它定格
+  useEffect(() => {
+    if (boundKey !== null) drivenPosValidRef.current = false
+  }, [boundKey])
+
+  // 绑定失效看护:绑定的路径被删后对端同步删除会走到这里(本地删除
+  // 已在 removePathFromRegistry 的同一个 scrub 里连带回退,见 App 的
+  // removePath)→ 回退手动并清绑定,机位定格当前位置(对齐 Blender:
+  // 约束目标被删,物体保持当前变换)。空路径(没控制点)不算失效,
+  // 维持绑定。
+  // 定格取 drivenPosRef(帧驱动每帧镜像的驱动机位),不读
+  // cam.position:绑定失效引发的 theatre 值变化可能已让包装器重应用
+  // 过期属性、或组件重挂载出了新相机,此刻 cam.position 不一定是
+  // 画面机位(实测竞态:同一删除两次运行一次定格一次跳变)
   useEffect(() => {
     if (!isBindingStale(camMoveMode, camPathKey, registeredKeys)) return
     const obj = cameraObjRef.current
     const studio = getStudioSync()
     if (!obj || !studio) return
+    const frozen = drivenPosValidRef.current
+      ? drivenPosRef.current
+      : camRef.current?.position
     const scrub = studio.scrub()
     scrub.capture(({set}) => {
+      if (frozen)
+        set(obj.props.position, {x: frozen.x, y: frozen.y, z: frozen.z})
       set(obj.props.moveMode, 'manual')
       set(obj.props.pathKey, '')
     })
@@ -441,6 +463,8 @@ export function ShotCamera({
       samplePathPoint(boundKey!, val(boundMeta.props.progress), tmp)
     ) {
       cam.position.copy(tmp)
+      drivenPosRef.current.copy(tmp)
+      drivenPosValidRef.current = true
     }
     if (targetRef.current) {
       aimRef.current.position.copy(targetRef.current.position)
