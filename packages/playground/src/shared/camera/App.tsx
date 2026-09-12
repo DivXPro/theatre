@@ -825,23 +825,40 @@ function App() {
   // 路径预设放置:点击 = 场景中心;拖拽 = 指针落点。高度跟活动相机当前 Y
   // (无相机跟主视角,再退回 5)。先播种再登记(没点就不出现),落地即进
   // 编辑模式。每一步都是既有可撤销事务,撤销 = 清单行消失 + 点数据回滚
+  // 高度也喂给拖拽落点标记,让标记显示在路径将要生成的高度(所见即所得)
+  const pathPresetHeight = useCallback(() => {
+    const camObj = activeCamera
+      ? shotRefsMapRef.current.get(activeCamera.cameraKey)?.camera.current
+      : undefined
+    return (
+      (camObj ? (val(camObj.props.position) as {y: number}).y : undefined) ??
+      (cameraObjRef.current
+        ? (val(cameraObjRef.current.props.position) as {y: number}).y
+        : 5)
+    )
+  }, [activeCamera])
   const placePresetPath = useCallback(
     (preset: PathPreset, centerXZ?: {x: number; z: number}) => {
-      const camObj = activeCamera
-        ? shotRefsMapRef.current.get(activeCamera.cameraKey)?.camera.current
-        : undefined
-      const camY =
-        (camObj ? (val(camObj.props.position) as {y: number}).y : undefined) ??
-        (cameraObjRef.current
-          ? (val(cameraObjRef.current.props.position) as {y: number}).y
-          : 5)
-      const center = {x: centerXZ?.x ?? 0, y: camY, z: centerXZ?.z ?? 0}
+      const center = {
+        x: centerXZ?.x ?? 0,
+        y: pathPresetHeight(),
+        z: centerXZ?.z ?? 0,
+      }
       const entry = nextPathEntry(readPathEntries(getPathsRegistry(sheet)))
+      // 注册表说 key 空着,但同名路径可能带着旧点:撤销只退登记没退播种、
+      // 或同步中断的部分持久化,都会留这种孤儿(启动自检只查 legacy 的
+      // "Pos Path" 一个 key;且跨会话孤儿的值在持久态里,对象表探测
+      // 根本看不到)。不真删就播种,addPathPoint 会把旧点当既有路径
+      // 延伸,新路径落在旧位置(中点偏差)——注册表是唯一事实源,
+      // 取回对象看实际点数,有点就是孤儿,真删再播种
+      if (readPathPoints(sheet, entry.pathKey).length > 0) {
+        removePathFromRegistry(sheet, entry)
+      }
       addPathPoint(sheet, entry.pathKey, presetPoints(preset, center))
       addPathToRegistry(sheet, entry)
       enterPathEdit(entry.pathKey)
     },
-    [sheet, activeCamera, enterPathEdit],
+    [sheet, pathPresetHeight, enterPathEdit],
   )
 
   // 缺失提示:绑定了朝向但 Target 已被删 → 工具条下方纯文字提醒;
@@ -1556,6 +1573,7 @@ function App() {
           <SelectionGizmo hidden={!!placing || shotView} mode={gizmoMode} />
           {presetDrag && (
             <PathPresetDropRig
+              heightY={pathPresetHeight()}
               onConfirm={(p) => {
                 placePresetPath(presetDrag, {x: p.x, z: p.z})
                 setPresetDrag(null)

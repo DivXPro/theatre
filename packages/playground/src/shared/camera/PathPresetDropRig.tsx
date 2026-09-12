@@ -2,8 +2,8 @@
  * 路径预设拖拽的 Canvas 内容:落点标记(小球)跟随指针,松开 = 在该处
  * 生成预设路径,画布外松开/Esc/右键 = 取消。落点数学与模型放置共用
  * computeDropPoint(表面优先、地面兜底、朝天退前方 30)。
- * 路径生成在活动相机高度,标记只指示 XZ 落点,不预览形状(落地即进
- * 编辑模式,点立即可见可改)。
+ * 路径生成在活动相机高度(heightY),标记也显示在这个高度——标记在哪,
+ * 路径就在哪,不会标记贴地、路径在天上(落地即进编辑模式,点立即可见可改)。
  */
 import React, {useEffect, useMemo, useRef} from 'react'
 import {useFrame, useThree} from '@react-three/fiber'
@@ -15,9 +15,12 @@ import {getPlacementSurfaces} from './PlacementManager'
 export function PathPresetDropRig({
   onConfirm,
   onCancel,
+  heightY,
 }: {
   onConfirm: (point: {x: number; y: number; z: number}) => void
   onCancel: () => void
+  /** 路径生成高度(活动相机当前 Y):标记显示在这个高度,与落点语义一致 */
+  heightY: number
 }) {
   const invalidate = useThree((s) => s.invalidate)
   const gl = useThree((s) => s.gl)
@@ -41,7 +44,7 @@ export function PathPresetDropRig({
     )
     if (markerRef.current) {
       markerRef.current.visible = true
-      markerRef.current.position.copy(p)
+      markerRef.current.position.set(p.x, heightY, p.z)
     }
   })
 
