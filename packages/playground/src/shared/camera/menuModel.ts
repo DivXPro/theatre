@@ -56,9 +56,30 @@ export function buildObjectMenuItems(opts: {
   mode: GizmoMode
   onSelectMode: (mode: GizmoMode) => void
   onDelete: () => void
+  /** 提供时菜单顶部出「改变姿势」(右键库来源模型时由 App 传入) */
+  onChangePose?: () => void
+  /** 提供时菜单顶部出「播放动作」 */
+  onPlayAnimation?: () => void
 }): ContextMenuItem[] {
   const modes: Array<GizmoMode> = ['translate', 'rotate', 'scale']
+  const applyItems: ContextMenuItem[] = []
+  if (opts.onChangePose) {
+    applyItems.push({
+      type: 'normal',
+      label: '改变姿势',
+      callback: opts.onChangePose,
+    } as ContextMenuItem)
+  }
+  if (opts.onPlayAnimation) {
+    applyItems.push({
+      type: 'normal',
+      label: '播放动作',
+      callback: opts.onPlayAnimation,
+    } as ContextMenuItem)
+  }
+  if (applyItems.length > 0) applyItems.push({type: 'separator'})
   return [
+    ...applyItems,
     ...modes.map(
       (m): ContextMenuItem => ({
         type: 'normal',
@@ -68,7 +89,7 @@ export function buildObjectMenuItems(opts: {
       }),
     ),
     {type: 'separator'},
-    {type: 'normal', label: '删除', callback: () => opts.onDelete()},
+    {type: 'normal', label: '删除', callback: opts.onDelete},
   ]
 }
 

@@ -60,6 +60,50 @@ test('模型右键菜单:三种 gizmo 模式,当前模式打勾,末尾删除', (
   expect(String((items[4] as any).label)).toContain('删除')
 })
 
+test('对象右键菜单:提供姿势/动作回调时多出两项,位于手柄模式上方', () => {
+  const onSelectMode = jest.fn()
+  const onDelete = jest.fn()
+  const onChangePose = jest.fn()
+  const onPlayAnimation = jest.fn()
+  const items = buildObjectMenuItems({
+    mode: 'rotate',
+    onSelectMode,
+    onDelete,
+    onChangePose,
+    onPlayAnimation,
+  })
+  // [改变姿势, 播放动作, sep, translate, rotate, scale, sep, 删除]
+  expect(items.map((i) => i.type)).toEqual([
+    'normal',
+    'normal',
+    'separator',
+    'normal',
+    'normal',
+    'normal',
+    'separator',
+    'normal',
+  ])
+  expect(String((items[0] as any).label)).toContain('改变姿势')
+  expect(String((items[1] as any).label)).toContain('播放动作')
+  expect(String((items[7] as any).label)).toContain('删除')
+  ;(items[0] as any).callback?.({} as any)
+  expect(onChangePose).toHaveBeenCalled()
+  ;(items[1] as any).callback?.({} as any)
+  expect(onPlayAnimation).toHaveBeenCalled()
+})
+
+test('对象右键菜单:只传姿势回调时只有「改变姿势」一项', () => {
+  const items = buildObjectMenuItems({
+    mode: 'translate',
+    onSelectMode: jest.fn(),
+    onDelete: jest.fn(),
+    onChangePose: jest.fn(),
+  })
+  // [改变姿势, sep, translate, rotate, scale, sep, 删除]
+  expect(items).toHaveLength(7)
+  expect(String((items[0] as any).label)).toContain('改变姿势')
+})
+
 test('相机面板动作:路径为空不含对齐;Target 在不含恢复', () => {
   const a = buildCameraPanelActions({
     hasPoints: false,
