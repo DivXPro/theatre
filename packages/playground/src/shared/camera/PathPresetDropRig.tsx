@@ -4,13 +4,24 @@
  * computeDropPoint(表面优先、地面兜底、朝天退前方 30)。
  * 路径生成在活动相机高度(heightY),标记也显示在这个高度——标记在哪,
  * 路径就在哪,不会标记贴地、路径在天上(落地即进编辑模式,点立即可见可改)。
+ * 命中已放置物体时,路径中心对到物体中心(和点击放到场景中心一个语义);
+ * 命中空地面/朝天时保持指针的精确落点。
  */
 import React, {useEffect, useMemo, useRef} from 'react'
 import {useFrame, useThree} from '@react-three/fiber'
-import {Raycaster} from 'three'
-import type {Mesh} from 'three'
+import {Raycaster, Vector3} from 'three'
+import type {Mesh, Object3D} from 'three'
 import {computeDropPoint} from './dropPoint'
-import {getPlacementSurfaces} from './PlacementManager'
+import {getPlacedModelRoots, getPlacementSurfaces} from './PlacementManager'
+
+/** 路径中心的水平位置:命中放置的模型 = 模型中心;背景/地面/朝天 = 指针精确落点 */
+function pathCenterXZ(p: Vector3, out: {surfaceRoot: Object3D | null}) {
+  const root = out.surfaceRoot
+  if (!root || !getPlacedModelRoots().has(root)) return {x: p.x, z: p.z}
+  const w = new Vector3()
+  root.getWorldPosition(w)
+  return {x: w.x, z: w.z}
+}
 
 export function PathPresetDropRig({
   onConfirm,
@@ -30,6 +41,7 @@ export function PathPresetDropRig({
 
   // pointermove 一秒上百次:只记坐标并申请一帧,落点计算在帧回调里做一次
   const pendingMoveRef = useRef<{x: number; y: number} | null>(null)
+  const hitOut = useMemo(() => ({surfaceRoot: null as Object3D | null}), [])
   useFrame(() => {
     const pending = pendingMoveRef.current
     if (!pending) return
@@ -41,10 +53,12 @@ export function PathPresetDropRig({
       gl.domElement.getBoundingClientRect(),
       pending.x,
       pending.y,
+      hitOut,
     )
     if (markerRef.current) {
+      const c = pathCenterXZ(p, hitOut)
       markerRef.current.visible = true
-      markerRef.current.position.set(p.x, heightY, p.z)
+      markerRef.current.position.set(c.x, heightY, c.z)
     }
   })
 
@@ -69,12 +83,14 @@ export function PathPresetDropRig({
         rect,
         ev.clientX,
         ev.clientY,
+        hitOut,
       )
       if (p.distanceTo(camera.position) > 300) {
         onCancel()
         return
       }
-      onConfirm({x: p.x, y: p.y, z: p.z})
+      const c = pathCenterXZ(p, hitOut)
+      onConfirm({x: c.x, y: p.y, z: c.z})
     }
     const onKey = (ev: KeyboardEvent) => {
       if (ev.key === 'Escape') onCancel()

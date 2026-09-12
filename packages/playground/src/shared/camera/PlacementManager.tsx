@@ -198,6 +198,30 @@ export function getPlacementSurfaces(): ReadonlySet<Object3D> {
 }
 
 /**
+ * 「放置的模型」子集:placementSurfaces 里属于库放置实例的根(背景
+ * 场景模型不在此列)。路径预设拖拽吸附用——拖到放置的模型上对到它的
+ * 中心,拖到背景/地面保持精确落点
+ */
+const placedModelRoots = new Set<Object3D>()
+
+/** 放置实例登记自己的场景根,卸载时自动移除 */
+function usePlacedModelRoot(ref: React.RefObject<Object3D | null>) {
+  useEffect(() => {
+    const obj = ref.current
+    if (!obj) return
+    placedModelRoots.add(obj)
+    return () => {
+      placedModelRoots.delete(obj)
+    }
+  }, [ref])
+}
+
+/** 放置模型根集合的只读视图 */
+export function getPlacedModelRoots(): ReadonlySet<Object3D> {
+  return placedModelRoots
+}
+
+/**
  * 选中 gizmo 的目标登记表:"theatre 对象 → 场景节点"。
  * 想让某个可编辑对象被选中后挂移动箭头,就用 useSelectionGizmoTarget
  * 把它的 theatre 对象和场景节点登记进来(已放置的模型、Thingy 都是)。
@@ -939,6 +963,8 @@ function PlacedModelCore({
   // 登记为落点表面:之后的放置可以把模型摞到这个模型上
   const groupRef = useRef<Group>(null!)
   usePlacementSurface(groupRef)
+  // 同时登记进「放置的模型」子集:路径拖拽吸附只认放置实例,不认背景
+  usePlacedModelRoot(groupRef)
   // 登记为选中 gizmo 的附着目标:被选中时身上挂三轴移动箭头
   useSelectionGizmoTarget(objRef, groupRef)
   const invalidate = useThree((s) => s.invalidate)

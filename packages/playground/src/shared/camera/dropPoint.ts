@@ -17,6 +17,8 @@ export function computeDropPoint(
   rect: {left: number; top: number; width: number; height: number},
   clientX: number,
   clientY: number,
+  /** 表面分支胜出时回填命中的登记根(命中网格往上走到 surfaces 里的祖先) */
+  out?: {surfaceRoot: Object3D | null},
 ): Vector3 {
   const ndc = new Vector2(
     ((clientX - rect.left) / rect.width) * 2 - 1,
@@ -24,8 +26,9 @@ export function computeDropPoint(
   )
   raycaster.setFromCamera(ndc, camera)
   // 表面优先:只对登记过的落点表面检测,只认 Mesh 命中
+  const roots = [...surfaces]
   const surface = raycaster
-    .intersectObjects([...surfaces], true)
+    .intersectObjects(roots, true)
     .find((h) => (h.object as Mesh).isMesh)
   const ground = raycaster.ray.intersectPlane(GROUND_PLANE, new Vector3())
   // 相机贴地(y≈0)时地面会在"相机脚下"命中(t≈0),这个命中比任何
@@ -37,8 +40,15 @@ export function computeDropPoint(
     (!usableGround ||
       surface.distance <= raycaster.ray.origin.distanceTo(usableGround))
   ) {
+    if (out) {
+      const rootSet = new Set(roots)
+      let node: Object3D | null = surface.object
+      while (node && !rootSet.has(node)) node = node.parent
+      out.surfaceRoot = node
+    }
     return surface.point
   }
+  if (out) out.surfaceRoot = null
   if (usableGround) return usableGround
   // 视线与地面平行、朝天、或贴地:放到正前方 30 个单位、压到地面
   const ahead = raycaster.ray.at(30, new Vector3())

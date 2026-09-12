@@ -1,10 +1,12 @@
 import {
+  Group,
   Mesh,
   MeshBasicMaterial,
   PerspectiveCamera,
   PlaneGeometry,
   Raycaster,
 } from 'three'
+import type {Object3D} from 'three'
 import {computeDropPoint} from './dropPoint'
 
 const rect = {left: 0, top: 0, width: 800, height: 600}
@@ -100,5 +102,46 @@ describe('computeDropPoint', () => {
     expect(p.y).toBeCloseTo(0, 6)
     expect(p.x).toBeCloseTo(0, 6)
     expect(p.z).toBeCloseTo(0, 6)
+  })
+
+  it('命中登记根内部的网格:out.surfaceRoot 回填到登记根(不是深层网格)', () => {
+    // 登记根是个分组,里面套一层子分组再放网格(模拟放置模型的实例结构)
+    const root = new Group()
+    const inner = new Group()
+    const slab = new Mesh(new PlaneGeometry(100, 100), new MeshBasicMaterial())
+    slab.rotation.x = -Math.PI / 2
+    slab.position.y = 2
+    inner.add(slab)
+    inner.position.set(1, 0, 1)
+    root.add(inner)
+    root.position.set(3, 0, 3)
+    root.updateMatrixWorld(true)
+    const out: {surfaceRoot: Object3D | null} = {surfaceRoot: null}
+    const p = computeDropPoint(
+      new Raycaster(),
+      groundCam(),
+      new Set([root]),
+      rect,
+      400,
+      300,
+      out,
+    )
+    // 命中点在 (4, 2, 4)(分组偏移叠出来了),回填的是登记根本身
+    expect(p.y).toBeCloseTo(2, 6)
+    expect(out.surfaceRoot).toBe(root)
+  })
+
+  it('地面兜底时 out.surfaceRoot 为 null', () => {
+    const out: {surfaceRoot: Object3D | null} = {surfaceRoot: null}
+    computeDropPoint(
+      new Raycaster(),
+      groundCam(),
+      new Set(),
+      rect,
+      400,
+      300,
+      out,
+    )
+    expect(out.surfaceRoot).toBeNull()
   })
 })
