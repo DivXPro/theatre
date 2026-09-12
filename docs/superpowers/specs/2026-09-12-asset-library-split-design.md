@@ -97,8 +97,9 @@ App 里一个 `libraryOpen` 换成四个独立开关(model/pose/animation/path),
   `onTogglePathLibrary`,按钮文案调整
 - `menuModel.ts`:`buildObjectMenuItems` 加两个可选回调与两个菜单项
 - `menuModel.test.ts`:对象菜单新结构的单测
-- `PlacementManager.tsx`:无需改动(右键菜单数据在 App 组装,
-  `onObjectMenu` 回调链不变)
+- `PlacementManager.tsx`:新增导出 `readPlacementEntries(sheet)`(读放置
+  清单,App 判右键对象是否库来源用)并导出 `PlacementEntry` 类型;
+  `onObjectMenu` 回调链不变,菜单数据仍在 App 组装
 
 ### 6. 错误处理
 
