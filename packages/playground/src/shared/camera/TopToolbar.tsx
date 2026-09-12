@@ -1,8 +1,7 @@
 /**
- * 顶栏工具条:只放全局动作——资产库(模型/姿势/动作/路径预设的统一
- * 入口)、添加相机、导出视频。物体的属性设置在各自面板,物体的动作在
- * 面板动作区和右键菜单(见 docs/superpowers/specs/2026-09-01-camera-menu-reorg-design.md
- * 与 2026-09-12-unified-placement-panel-design.md)。
+ * 顶栏工具条:只放全局动作——添加模型、添加路径(各弹各的框体)、添加
+ * 相机、导出视频。姿势/动作绑定具体物体,入口在右键模型的菜单里;物体
+ * 的属性设置在各自面板(见 docs/superpowers/specs/2026-09-12-asset-library-split-design.md)。
  */
 import React, {useCallback, useRef} from 'react'
 import useMenu from '@dreamerbird/studio/uiComponents/simpleContextMenu/useMenu'
@@ -22,7 +21,8 @@ function buttonStyle(disabled: boolean, danger = false): React.CSSProperties {
 }
 
 export function TopToolbar({
-  onToggleLibrary,
+  onToggleModelLibrary,
+  onTogglePathLibrary,
   onAddCamera,
   exportSinks,
   exporting,
@@ -31,14 +31,15 @@ export function TopToolbar({
   onStopExport,
   libraryDisabled = false,
 }: {
-  onToggleLibrary: () => void
+  onToggleModelLibrary: () => void
+  onTogglePathLibrary: () => void
   onAddCamera: () => void
   exportSinks: readonly ExportSink[]
   exporting: boolean
   exportDisabled: boolean
   onPickExportSink: (sink: ExportSink) => void
   onStopExport: () => void
-  /** 放置中/拖拽中禁用资产库入口,避免再开一次放置流程(沿用旧「添加模型」的置灰语义) */
+  /** 放置中/拖拽中禁用添加入口,避免再开一次放置流程 */
   libraryDisabled?: boolean
 }) {
   const exportButtonRef = useRef<HTMLButtonElement>(null)
@@ -62,11 +63,19 @@ export function TopToolbar({
     >
       <button
         disabled={libraryDisabled}
-        onClick={onToggleLibrary}
+        onClick={onToggleModelLibrary}
         style={buttonStyle(libraryDisabled)}
         title={libraryDisabled ? '放置中:先确认或取消当前放置' : undefined}
       >
-        资产库
+        添加模型
+      </button>
+      <button
+        disabled={libraryDisabled}
+        onClick={onTogglePathLibrary}
+        style={buttonStyle(libraryDisabled)}
+        title={libraryDisabled ? '放置中:先确认或取消当前放置' : undefined}
+      >
+        添加路径
       </button>
       <button
         onClick={onAddCamera}

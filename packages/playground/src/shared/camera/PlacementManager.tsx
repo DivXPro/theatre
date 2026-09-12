@@ -53,7 +53,7 @@ import type {ModelEntry, PoseEntry} from './assetLibrary/types'
  *    该模型不渲染(错误边界兜住,不影响其它内容)
  */
 
-type PlacementEntry = {
+export type PlacementEntry = {
   key: string
   /** 本地 FBX 路径的 theatre 资产 id;库来源的条目没有此字段 */
   assetId?: string
@@ -296,6 +296,12 @@ export function readPlacementPositions(
   sheet: ISheet,
 ): Array<{x: number; y: number; z: number}> {
   return readRegistry(getRegistry(sheet)).map((e) => e.position)
+}
+
+/** 读放置清单全部 entry(App 判右键对象是否库来源用)。registry 对象由
+ *  PlacedModels 挂载时已创建,同 key 同配置的 sheet.object 是安全的重复调用 */
+export function readPlacementEntries(sheet: ISheet): PlacementEntry[] {
+  return readRegistry(getRegistry(sheet))
 }
 
 /**

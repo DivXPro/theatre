@@ -41,6 +41,7 @@ import {
   getPlacementEntryForObject,
   getPlacementInstanceForObject,
   isSelectSuppressed,
+  readPlacementEntries,
   readPlacementPositions,
   useGizmoMode,
   usePlacementController,
@@ -657,7 +658,25 @@ function App() {
     clearPending,
   } = usePlacementController(project)
   const [gizmoMode, setGizmoMode] = useGizmoMode()
-  const [libraryOpen, setLibraryOpen] = useState(false)
+  // 资产库拆成四个独立框体,按使用需要弹出:模型/路径走顶栏按钮,
+  // 姿势/动作走右键模型的菜单;框体不自动收起,各关各的
+  type LibraryFrameKind = 'model' | 'pose' | 'animation' | 'path'
+  const [frameOpen, setFrameOpen] = useState<Record<LibraryFrameKind, boolean>>(
+    {model: false, pose: false, animation: false, path: false},
+  )
+  const openFrame = useCallback(
+    (kind: LibraryFrameKind) => setFrameOpen((f) => ({...f, [kind]: true})),
+    [],
+  )
+  const toggleFrame = useCallback(
+    (kind: LibraryFrameKind) => setFrameOpen((f) => ({...f, [kind]: !f[kind]})),
+    [],
+  )
+  const closeFrame = useCallback(
+    (kind: LibraryFrameKind) =>
+      setFrameOpen((f) => (f[kind] ? {...f, [kind]: false} : f)),
+    [],
+  )
 
   // 点击模型卡片 = 立即放到默认位(原点被占沿 +X 自动错开);要指定位置用拖拽
   const placeModelAtDefault = useCallback(
@@ -1228,7 +1247,8 @@ function App() {
       }}
     >
       <TopToolbar
-        onToggleLibrary={() => setLibraryOpen((v) => !v)}
+        onToggleModelLibrary={() => toggleFrame('model')}
+        onTogglePathLibrary={() => toggleFrame('path')}
         onAddCamera={addCamera}
         exportSinks={exportSinks}
         exporting={exporting}
@@ -1307,20 +1327,43 @@ function App() {
           镜头视角 · Esc 返回导演视角
         </div>
       )}
-      {libraryOpen && (
+      {frameOpen.model && (
         <AssetLibraryPanel
+          kind="model"
           onPlaceModel={placeModelAtDefault}
           onDragStartModel={startModelDrag}
+          disabled={rigLoading}
+          onClose={() => closeFrame('model')}
+        />
+      )}
+      {frameOpen.path && (
+        <AssetLibraryPanel
+          kind="path"
           onPlacePreset={(preset: PathPreset) => placePresetPath(preset)}
           onDragStartPreset={(preset: PathPreset) => setPresetDrag(preset)}
-          onApplyAnimation={applyAnimation}
+          onClose={() => closeFrame('path')}
+        />
+      )}
+      {frameOpen.pose && (
+        <AssetLibraryPanel
+          kind="pose"
           onApplyPose={applyPose}
           onSavePose={onSavePose}
           canSavePose={canSavePose}
+          applyDisabled={!canApplyPose}
+          disabled={rigLoading}
+          filterRig={selectedRig}
+          onClose={() => closeFrame('pose')}
+        />
+      )}
+      {frameOpen.animation && (
+        <AssetLibraryPanel
+          kind="animation"
+          onApplyAnimation={applyAnimation}
           applyDisabled={!canApplyAnimation}
           disabled={rigLoading}
           filterRig={selectedRig}
-          onClose={() => setLibraryOpen(false)}
+          onClose={() => closeFrame('animation')}
         />
       )}
       {objectMenu && (
@@ -1334,6 +1377,16 @@ function App() {
               // 被删的对象留在选中列表里没意义，顺带清掉
               getStudioSync()?.setSelection([])
             },
+            // 库来源模型才有姿势/动作可套(本地遗留放置体没有库 id);
+            // 骨架不匹配的置灰由框体自己兜
+            ...(readPlacementEntries(sheet).find(
+              (e) => e.key === objectMenu.key,
+            )?.libraryEntryId !== undefined
+              ? {
+                  onChangePose: () => openFrame('pose'),
+                  onPlayAnimation: () => openFrame('animation'),
+                }
+              : {}),
           })}
           onClose={closeObjectMenu}
         />

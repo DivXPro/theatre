@@ -8,7 +8,23 @@ import type {ImportPlan} from './importPipeline'
 import {renderThumbnail} from './thumbnail'
 import type {AnimationEntry, ModelEntry, PoseEntry} from './types'
 
-type Tab = 'model' | 'pose' | 'animation' | 'path'
+export type AssetKind = 'model' | 'pose' | 'animation' | 'path'
+
+/** 框体标题:一个组件四个实例,按类型各显各的 */
+const KIND_TITLE: Record<AssetKind, string> = {
+  model: '模型库',
+  pose: '姿势库',
+  animation: '动作库',
+  path: '路径预设',
+}
+
+/** 多框体同开时贴左边缘按类型错开,避免完全重叠 */
+const KIND_OFFSET: Record<AssetKind, number> = {
+  model: 0,
+  path: 16,
+  pose: 32,
+  animation: 48,
+}
 
 /** 卡片手势阈值:按下后移动超过 4px 算拖拽(沿用场景点选的拖拽判定惯例) */
 const DRAG_THRESHOLD_PX = 4
@@ -78,6 +94,7 @@ function useCardGesture<T>(
 }
 
 export function AssetLibraryPanel({
+  kind,
   onPlaceModel,
   onDragStartModel,
   onPlacePreset,
@@ -91,7 +108,8 @@ export function AssetLibraryPanel({
   applyDisabled,
   disabled,
 }: {
-  onPlaceModel: (entry: ModelEntry) => void
+  kind: AssetKind
+  onPlaceModel?: (entry: ModelEntry) => void
   onDragStartModel?: (entry: ModelEntry) => void
   onPlacePreset?: (preset: PathPreset) => void
   onDragStartPreset?: (preset: PathPreset) => void
@@ -104,7 +122,6 @@ export function AssetLibraryPanel({
   applyDisabled?: boolean
   disabled?: boolean
 }) {
-  const [tab, setTab] = useState<Tab>('model')
   const models = useLibraryEntries('model') as ModelEntry[]
   const poses = useLibraryEntries('pose') as PoseEntry[]
   const animations = useLibraryEntries('animation') as AnimationEntry[]
@@ -118,7 +135,7 @@ export function AssetLibraryPanel({
   const [thumbUrls, setThumbUrls] = useState<Record<string, string>>({})
 
   const modelGesture = useCardGesture<ModelEntry>(
-    (entry) => onPlaceModel(entry),
+    (entry) => onPlaceModel?.(entry),
     onDragStartModel,
   )
   const presetGesture = useCardGesture<PathPreset>(
@@ -443,7 +460,7 @@ export function AssetLibraryPanel({
     <div
       style={{
         position: 'fixed',
-        left: 0,
+        left: KIND_OFFSET[kind],
         top: 0,
         bottom: 0,
         width: 260,
@@ -458,7 +475,7 @@ export function AssetLibraryPanel({
         fontFamily: 'system-ui, -apple-system, sans-serif',
       }}
     >
-      {/* 头部:tab 切换 + 导入 + 关闭 */}
+      {/* 头部:类型标题 + 导入(路径框体没有)+ 关闭 */}
       <div
         style={{
           display: 'flex',
@@ -468,68 +485,9 @@ export function AssetLibraryPanel({
           borderBottom: '1px solid rgba(255,255,255,0.12)',
         }}
       >
-        <button
-          onClick={() => setTab('model')}
-          style={{
-            padding: '4px 10px',
-            borderRadius: 6,
-            border: 'none',
-            background:
-              tab === 'model' ? 'rgba(255,255,255,0.15)' : 'transparent',
-            color: 'rgba(255,255,255,0.9)',
-            cursor: 'pointer',
-            fontSize: 13,
-          }}
-        >
-          模型
-        </button>
-        <button
-          onClick={() => setTab('pose')}
-          style={{
-            padding: '4px 10px',
-            borderRadius: 6,
-            border: 'none',
-            background:
-              tab === 'pose' ? 'rgba(255,255,255,0.15)' : 'transparent',
-            color: 'rgba(255,255,255,0.9)',
-            cursor: 'pointer',
-            fontSize: 13,
-          }}
-        >
-          姿势
-        </button>
-        <button
-          onClick={() => setTab('animation')}
-          style={{
-            padding: '4px 10px',
-            borderRadius: 6,
-            border: 'none',
-            background:
-              tab === 'animation' ? 'rgba(255,255,255,0.15)' : 'transparent',
-            color: 'rgba(255,255,255,0.9)',
-            cursor: 'pointer',
-            fontSize: 13,
-          }}
-        >
-          动作
-        </button>
-        <button
-          onClick={() => setTab('path')}
-          style={{
-            padding: '4px 10px',
-            borderRadius: 6,
-            border: 'none',
-            background:
-              tab === 'path' ? 'rgba(255,255,255,0.15)' : 'transparent',
-            color: 'rgba(255,255,255,0.9)',
-            cursor: 'pointer',
-            fontSize: 13,
-          }}
-        >
-          路径
-        </button>
+        <span style={{fontSize: 13, fontWeight: 600}}>{KIND_TITLE[kind]}</span>
         <div style={{flex: 1}} />
-        {tab !== 'path' && (
+        {kind !== 'path' && (
           <button
             disabled={busy}
             onClick={() => fileRef.current?.click()}
@@ -575,7 +533,7 @@ export function AssetLibraryPanel({
       />
 
       {/* filterRig 提示条:姿势/动作共用 */}
-      {(tab === 'animation' || tab === 'pose') && filterRig && (
+      {(kind === 'animation' || kind === 'pose') && filterRig && (
         <div
           style={{
             padding: '8px 12px',
@@ -589,8 +547,8 @@ export function AssetLibraryPanel({
         </div>
       )}
 
-      {/* 姿势 tab 顶部工具行:抽帧存姿势 */}
-      {tab === 'pose' && (
+      {/* 姿势框体顶部工具行:抽帧存姿势 */}
+      {kind === 'pose' && (
         <div
           style={{
             padding: '8px 12px',
@@ -633,11 +591,11 @@ export function AssetLibraryPanel({
           alignContent: 'start',
         }}
       >
-        {tab === 'model'
+        {kind === 'model'
           ? models.map(renderModelCard)
-          : tab === 'pose'
+          : kind === 'pose'
             ? visiblePoses.map(renderPoseCard)
-            : tab === 'path'
+            : kind === 'path'
               ? PATH_PRESETS.map(renderPresetCard)
               : visibleAnimations.map(renderAnimationCard)}
       </div>
