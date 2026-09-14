@@ -29,6 +29,9 @@ export function TopToolbar({
   exportDisabled,
   onPickExportSink,
   onStopExport,
+  pipVisible,
+  onTogglePip,
+  pipDisabled = false,
   libraryDisabled = false,
 }: {
   onToggleModelLibrary: () => void
@@ -39,6 +42,11 @@ export function TopToolbar({
   exportDisabled: boolean
   onPickExportSink: (sink: ExportSink) => void
   onStopExport: () => void
+  /** 画中画开关:开时按钮带高亮(和小窗边框同色) */
+  pipVisible: boolean
+  onTogglePip: () => void
+  /** 没有活动相机时置灰(小窗本来也不存在) */
+  pipDisabled?: boolean
   /** 放置中/拖拽中禁用添加入口,避免再开一次放置流程 */
   libraryDisabled?: boolean
 }) {
@@ -83,6 +91,26 @@ export function TopToolbar({
         title="从当前导演视角创建一台相机(落地即活动相机)"
       >
         添加相机
+      </button>
+      <button
+        onClick={onTogglePip}
+        disabled={pipDisabled}
+        style={{
+          ...buttonStyle(pipDisabled),
+          // 开启态高亮:和画中画小窗的边框同色
+          ...(pipVisible && !pipDisabled
+            ? {borderColor: '#6fb7ff', color: '#6fb7ff'}
+            : {}),
+        }}
+        title={
+          pipDisabled
+            ? '先添加相机'
+            : pipVisible
+              ? '隐藏右下角的镜头画中画'
+              : '显示右下角的镜头画中画'
+        }
+      >
+        画中画
       </button>
       <button
         ref={exportButtonRef}

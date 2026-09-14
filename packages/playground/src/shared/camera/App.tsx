@@ -1,9 +1,4 @@
-import {
-  editable as e,
-  RefreshSnapshot,
-  SheetProvider,
-  PerspectiveCamera,
-} from '@dreamerbird/r3f'
+import {editable as e, SheetProvider, PerspectiveCamera} from '@dreamerbird/r3f'
 import {
   Stars,
   OrbitControls,
@@ -29,10 +24,17 @@ import {Canvas, useFrame, useThree} from '@react-three/fiber'
 import type {ThreeEvent} from '@react-three/fiber'
 import {useGLTF} from '@react-three/drei'
 import sceneGLB from './scene.glb'
-import {MOUSE, Raycaster, Spherical, Vector2, Vector3} from 'three'
+import {
+  MOUSE,
+  PMREMGenerator,
+  Raycaster,
+  Spherical,
+  Vector2,
+  Vector3,
+} from 'three'
+import {RoomEnvironment} from 'three/examples/jsm/environments/RoomEnvironment.js'
 import type {Mesh, Object3D} from 'three'
 import {
-  GizmoModeHint,
   PlacementRig,
   PlacementRigErrorBoundary,
   PlacedModels,
@@ -150,13 +152,13 @@ function Model({url, selectLocked}: {url: string; selectLocked?: boolean}) {
     >
       <e.group
         ref={thingyGroupRef}
-        theatreKey="Example Namespace / Thingy"
+        theatreKey="Models / Thingy"
         objRef={thingyObjRef}
         onClick={selectThingy}
         rotation={[Math.PI / 13.5, -Math.PI / 5.8, Math.PI / 5.6]}
       >
         <e.mesh
-          theatreKey="Example Namespace / Thingy / Debris 2"
+          theatreKey="Models / Thingy / Debris 2"
           objRef={debris2ObjRef}
           ref={debris2Ref}
           receiveShadow
@@ -165,7 +167,7 @@ function Model({url, selectLocked}: {url: string; selectLocked?: boolean}) {
           material={nodes.planet002.material}
         />
         <e.mesh
-          theatreKey="Example Namespace / Thingy / Debris 1"
+          theatreKey="Models / Thingy / Debris 1"
           objRef={debris1ObjRef}
           ref={debris1Ref}
           geometry={nodes.planet003.geometry}
@@ -523,6 +525,29 @@ function collectBoundCameraResets(
   return resets
 }
 
+/**
+ * 中性环境光贴图(RoomEnvironment):GLB 模型是 PBR 材质,只靠点光源/平行光
+ * 会发闷发暗,环境贴图才是 PBR 的主要亮度来源。内置程序生成的房间环境,
+ * 不拉外部 HDR,离线可用;强度压低,只负责"打亮",明暗关系仍归 Key Light。
+ */
+function EnvLighting() {
+  const gl = useThree((s) => s.gl)
+  const scene = useThree((s) => s.scene)
+  useEffect(() => {
+    const pmrem = new PMREMGenerator(gl)
+    const env = pmrem.fromScene(new RoomEnvironment(), 0.04).texture
+    scene.environment = env
+    scene.environmentIntensity = 0.6
+    return () => {
+      scene.environment = null
+      scene.environmentIntensity = 1
+      env.dispose()
+      pmrem.dispose()
+    }
+  }, [gl, scene])
+  return null
+}
+
 function App() {
   const bgs = ['#272730', '#b7c5d1']
   const [bgIndex, setBgIndex] = useState(0)
@@ -544,6 +569,8 @@ function App() {
   }
   // true = 全屏镜头视角(导演视角让位,轨道控制器/导航块停用)
   const [shotView, setShotView] = useState(false)
+  // 画中画开关(顶栏按钮):只管编辑视角右下角的小窗,不影响镜头全屏视角
+  const [pipVisible, setPipVisible] = useState(true)
   // 视频导出:进行中的导出句柄 / 导出前的视角(导完恢复)
   const [exporting, setExporting] = useState(false)
   const exportHandleRef = useRef<ShotExportHandle | null>(null)
@@ -656,7 +683,7 @@ function App() {
     cancelPlacing,
     confirmPlacing,
     clearPending,
-  } = usePlacementController(project)
+  } = usePlacementController(project, sheet)
   const [gizmoMode, setGizmoMode] = useGizmoMode()
   // 资产库拆成四个独立框体,按使用需要弹出:模型/路径走顶栏按钮,
   // 姿势/动作走右键模型的菜单;框体不自动收起,各关各的
@@ -1255,9 +1282,12 @@ function App() {
         onPickExportSink={handlePickExportSink}
         onStopExport={handleStopExport}
         exportDisabled={!activeCamera}
+        pipVisible={pipVisible}
+        onTogglePip={() => setPipVisible((v) => !v)}
+        pipDisabled={!activeCamera}
         libraryDisabled={!!placing || modelDragging || presetDrag !== null}
       />
-      {!shotView && activeCamera && (
+      {!shotView && activeCamera && pipVisible && (
         <div
           style={{
             // 画中画边框:与 ShotCamera 渲染的右下角小窗同位置同尺寸
@@ -1286,7 +1316,6 @@ function App() {
           </span>
         </div>
       )}
-      <GizmoModeHint mode={gizmoMode} />
       {(modelDragging || presetDrag) && (
         <div
           style={{
@@ -1515,6 +1544,7 @@ function App() {
               targetKey={entry.targetKey}
               isActive={entry.cameraKey === activeCamera?.cameraKey}
               shotView={shotView}
+              pipVisible={pipVisible}
               cameraObjRef={getShotRefs(entry.cameraKey).camera}
               targetObjRef={getShotRefs(entry.cameraKey).target}
               onCameraContextMenu={(x, y) =>
@@ -1534,8 +1564,8 @@ function App() {
             <CameraPath
               key={entry.pathKey}
               metaKey={entry.pathKey}
-              // 普通态蓝色;选中/编辑的黄色档位在 CameraPath 内部
-              color={0x4a90d9}
+              // 普通态亮紫(与预设卡片的动画轨迹同色);选中/编辑的黄色档位在 CameraPath 内部
+              color={0xa78bfa}
               hidden={shotView}
               editing={editingPath === entry.pathKey}
               selectedKey={
@@ -1550,38 +1580,40 @@ function App() {
               progressOf={pathProgressOf(entry.pathKey)}
             />
           ))}
-          <fog attach="fog" args={[bg, 16, 30]} />
           <color attach="background" args={[bg]} />
-          <ambientLight intensity={0.75} />
+          {/* 布光定位=布局演示:半球光兜底(任何机位不死黑)+ 一盏主光给
+              明暗面和投影(形态可读);灯固定在世界坐标、不跟相机走,
+              编辑预览和录制成片一致。主光可编辑,角度在 studio 里调 */}
+          <ambientLight intensity={0.3} />
+          <hemisphereLight args={['#ffffff', '#444444', 1.1]} />
+          <EnvLighting />
+          <e.directionalLight
+            theatreKey="Key Light"
+            castShadow
+            intensity={1.4}
+            position={[10, 20, 10]}
+            shadow-mapSize={[2048, 2048]}
+            shadow-bias={-0.0001}
+            shadow-camera-left={-30}
+            shadow-camera-right={30}
+            shadow-camera-top={30}
+            shadow-camera-bottom={-30}
+            shadow-camera-far={80}
+          />
           <PerspectiveCamera
             theatreKey="Camera / Camera"
             objRef={cameraObjRef}
+            hideFromOutline
             makeDefault={!shotView}
             position={[0, 0, 16]}
             fov={75}
             lookAt={cameraTargetRef}
-          >
-            <e.pointLight
-              theatreKey="Light 1"
-              intensity={1}
-              position={[-10, -25, -10]}
-            />
-            <e.spotLight
-              theatreKey="Light 2"
-              castShadow
-              intensity={2.25}
-              angle={0.2}
-              penumbra={1}
-              position={[-25, 20, -15]}
-              shadow-mapSize={[1024, 1024]}
-              shadow-bias={-0.0001}
-            />
-            <e.directionalLight theatreKey="Light 3" />
-          </PerspectiveCamera>
+          />
           <e.mesh
             ref={cameraTargetRef}
             theatreKey="Camera / Target"
             objRef={targetObjRef}
+            hideFromOutline
             position={[0, 0, 0]}
             visible="editor"
           >
@@ -1589,7 +1621,6 @@ function App() {
             <meshPhongMaterial attach="material" color="red" />
           </e.mesh>
           <Suspense fallback={null}>
-            <RefreshSnapshot />
             <Model url={sceneGLB} selectLocked={!!placing} />
           </Suspense>
           {placing && (

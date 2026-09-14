@@ -28,7 +28,12 @@ export type PathEntry = {pathKey: string}
 const FIRST_PATH: PathEntry = {pathKey: 'Pos Path'}
 
 export function getPathsRegistry(sheet: ISheet) {
-  return sheet.object(PATHS_REGISTRY_KEY, {list: t.string('[]')})
+  // 注册表只是存数据的对象,不出现在大纲树
+  return sheet.object(
+    PATHS_REGISTRY_KEY,
+    {list: t.string('[]')},
+    {hideFromOutline: true},
+  )
 }
 
 /** 解析清单 JSON;坏数据一律回退空(注册表是底账,勿手改) */

@@ -71,8 +71,8 @@ import {consumeCameraSeed} from './cameraRegistry'
 const PIP_WIDTH_FRACTION = 0.28
 const PIP_MARGIN_PX = 16
 const FRUSTUM_COLOR = 0x6fb7ff
-/** 视锥示意线的末端距离(示意用,与相机实际 far 无关) */
-const FRUSTUM_DISPLAY_LENGTH = 3
+/** 视锥示意线的末端距离(示意用,与相机实际 far 无关;1.5 = 早期 3 的一半) */
+const FRUSTUM_DISPLAY_LENGTH = 1.5
 /** 末端平面的不透明度 */
 const FRUSTUM_FILL_OPACITY = 0.12
 
@@ -202,6 +202,7 @@ export function ShotCamera({
   targetKey,
   isActive,
   shotView,
+  pipVisible,
   cameraObjRef,
   targetObjRef,
   onCameraContextMenu,
@@ -212,6 +213,8 @@ export function ShotCamera({
   isActive: boolean
   /** 镜头视角全屏中(此时非活动相机的视锥/Target 也全部隐藏) */
   shotView: boolean
+  /** 画中画开关(顶栏按钮);只影响编辑视角的右下角小窗,镜头全屏视角不受它管 */
+  pipVisible: boolean
   cameraObjRef: MutableRefObject<ISheetObject<any> | undefined>
   targetObjRef: MutableRefObject<ISheetObject<any> | undefined>
   /** 右键相机:弹出相机菜单 */
@@ -556,7 +559,13 @@ export function ShotCamera({
         <boxGeometry args={[0.25, 0.25, 0.25]} />
         <meshBasicMaterial color="#ffb020" wireframe />
       </e.mesh>
-      {isActive && <ShotCameraRenderer camRef={camRef} pip={!makeDefault} />}
+      {isActive && (
+        <ShotCameraRenderer
+          camRef={camRef}
+          pip={!makeDefault}
+          pipVisible={pipVisible}
+        />
+      )}
     </>
   )
 }
@@ -571,16 +580,20 @@ export function ShotCamera({
 function ShotCameraRenderer({
   camRef,
   pip,
+  pipVisible,
 }: {
   camRef: MutableRefObject<PerspectiveCameraImpl>
   pip: boolean
+  pipVisible: boolean
 }) {
   // frameloop="demand":切换镜头视角/画中画只是 React 状态变化,
   // 不触发新帧的话画布上会留着上一帧(全屏取景的右下角)当"画中画"
   const invalidate = useThree((s) => s.invalidate)
   useEffect(() => {
+    // 开关切换也要 invalidate:关掉时触发一帧重画,把残留在画面角落的
+    // 最后一帧小窗清掉(demand 模式下不会自动重画)
     invalidate()
-  }, [pip, invalidate])
+  }, [pip, pipVisible, invalidate])
 
   // 渲染分工(踩过的坑,别改回自己画主视角):
   // drei Hud(GizmoNav 的导航块)的 useFrame 以优先级 1 每帧先全屏画
@@ -602,6 +615,9 @@ function ShotCameraRenderer({
       gl.render(scene, shotCam)
       return
     }
+
+    // 画中画被顶栏开关关掉了:这一帧不叠小窗(镜头全屏视角不受开关管)
+    if (!pipVisible) return
 
     const pipW = Math.round(w * PIP_WIDTH_FRACTION)
     const pipH = Math.round((pipW * 9) / 16)

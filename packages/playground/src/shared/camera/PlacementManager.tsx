@@ -169,7 +169,12 @@ function fileConfigFor(assetId: string) {
 }
 
 function getRegistry(sheet: ISheet) {
-  return sheet.object(REGISTRY_KEY, {list: t.string('[]')})
+  // 注册表只是存数据的对象,不出现在大纲树
+  return sheet.object(
+    REGISTRY_KEY,
+    {list: t.string('[]')},
+    {hideFromOutline: true},
+  )
 }
 
 /**
@@ -305,6 +310,21 @@ export function readPlacementEntries(sheet: ISheet): PlacementEntry[] {
 }
 
 /**
+ * 放置模型的 theatreKey:归在 "Models /" 命名空间,与演示模型同级平等呈现。
+ * 名字取自文件名(去扩展名,不安全字符换下划线);撞名才追加 -2/-3 序号,
+ * 平时保持干净(theatreKey 必须唯一,同名模型放两次需要区分)。
+ */
+function uniquePlacedModelKey(sheet: ISheet, label: string): string {
+  const base = label.replace(/\.[^.]+$/, '').replace(/[^\w-]/g, '_') || 'model'
+  const taken = new Set(readPlacementEntries(sheet).map((e) => e.key))
+  let key = `Models / ${base}`
+  for (let i = 2; taken.has(key); i++) {
+    key = `Models / ${base}-${i}`
+  }
+  return key
+}
+
+/**
  * 等资产存储就绪:attach 完成前 project.assetStorage 还是占位实现,
  * getAssetUrl 只会返回 "undefined/<id>" 假地址(theatre 官方也要求
  * project.ready 之后再取资产地址)。就绪前渲染已放置模型必然 404。
@@ -377,7 +397,7 @@ function makeGhost(fbx: Group): Group {
  * (模型立刻渲染),持久化由 PlacedModel 挂载后一次性提交(清单 + source
  * 静态覆盖同一个 scrub,一步撤销);取消/确认后释放 blob URL。
  */
-export function usePlacementController(project: IProject) {
+export function usePlacementController(project: IProject, sheet: ISheet) {
   const [placing, setPlacing] = useState<PlacingState | null>(null)
   const [pendingEntry, setPendingEntry] =
     useState<PendingPlacementEntry | null>(null)
@@ -434,19 +454,17 @@ export function usePlacementController(project: IProject) {
   const confirmPlacing = useCallback(
     (point: {x: number; y: number; z: number}) => {
       if (!placing) return
-      // theatreKey 只能含安全字符,文件名其余字符换成下划线
-      const base =
-        placing.label.replace(/\.[^.]+$/, '').replace(/[^\w-]/g, '_') || 'model'
+      const key = uniquePlacedModelKey(sheet, placing.label)
       if (placing.source.type === 'local') {
         setPendingEntry({
-          key: `Placed / ${base}-${Date.now().toString(36)}`,
+          key,
           assetId: placing.source.assetId,
           position: point,
           pending: true,
         })
       } else {
         setPendingEntry({
-          key: `Placed / ${base}-${Date.now().toString(36)}`,
+          key,
           libraryEntryId: placing.source.entryId,
           position: point,
           pending: true,
@@ -455,22 +473,20 @@ export function usePlacementController(project: IProject) {
       if (placing.source.type === 'local') URL.revokeObjectURL(placing.url)
       setPlacing(null)
     },
-    [placing],
+    [placing, sheet],
   )
 
   /** 点击库卡片直接落点:跳过幽灵预览,走与 confirmPlacing 相同的落地管线 */
   const placeLibraryEntryAt = useCallback(
     (entry: ModelEntry, point: {x: number; y: number; z: number}) => {
-      const base =
-        entry.name.replace(/\.[^.]+$/, '').replace(/[^\w-]/g, '_') || 'model'
       setPendingEntry({
-        key: `Placed / ${base}-${Date.now().toString(36)}`,
+        key: uniquePlacedModelKey(sheet, entry.name),
         libraryEntryId: entry.id,
         position: point,
         pending: true,
       })
     },
-    [],
+    [sheet],
   )
 
   const clearPending = useCallback(() => setPendingEntry(null), [])
@@ -1270,30 +1286,6 @@ export function useGizmoMode(): [GizmoMode, (mode: GizmoMode) => void] {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
   return [mode, setMode]
-}
-
-/** 顶部按钮旁的当前模式提示(兼作快捷键备忘) */
-export function GizmoModeHint({mode}: {mode: GizmoMode}) {
-  return (
-    <div
-      style={{
-        position: 'absolute',
-        bottom: 12,
-        left: 12,
-        padding: '4px 10px',
-        borderRadius: 6,
-        background: 'rgba(0,0,0,0.55)',
-        color: 'rgba(255,255,255,0.85)',
-        fontSize: 12,
-        pointerEvents: 'none',
-        userSelect: 'none',
-        // 与镜头视角顶条同档:DOM 顺序上 Canvas 在更后面,不设层级会被画布盖住
-        zIndex: 10,
-      }}
-    >
-      手柄:{GIZMO_MODE_LABELS[mode]}(G 移动 · R 旋转 · S 缩放)
-    </div>
-  )
 }
 
 /**
