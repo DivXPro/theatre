@@ -357,6 +357,10 @@ export interface ISheet {
     props: Props,
     options?: {
       reconfigure?: boolean
+      /** Keep the object out of the studio outline (Tree) and the sequence
+       * editor (timeline). Data, syncing and undo/redo are unaffected; the
+       * object just isn't listed or selectable there. */
+      hideFromOutline?: boolean
       __actions__THIS_API_IS_UNSTABLE_AND_WILL_CHANGE_IN_THE_NEXT_VERSION?: SheetObjectActionsConfig
     },
   ): ISheetObject<Props>

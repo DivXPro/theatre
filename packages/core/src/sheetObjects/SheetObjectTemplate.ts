@@ -77,6 +77,14 @@ export default class SheetObjectTemplate {
     SerializableMap<SerializablePrimitive> | undefined
   >
 
+  /**
+   * When true, the studio does not list this object in the outline panel
+   * (Tree) or in the sequence editor (timeline). For registry-style objects
+   * that exist only to persist data and are never meant to be selected or
+   * tweaked by hand. Set via `sheet.object(key, config, {hideFromOutline: true})`.
+   */
+  hideFromOutline: boolean = false
+
   get staticConfig() {
     return this._config.get()
   }

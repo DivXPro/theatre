@@ -135,7 +135,8 @@ export const calculateSequenceEditorTree = (
   }
 
   for (const sheetObject of Object.values(val(sheet.objectsP))) {
-    if (sheetObject) {
+    // hideFromOutline 的对象(注册表等纯数据对象)在时间轴同样不出现
+    if (sheetObject && !sheetObject.template.hideFromOutline) {
       addObject(
         sheetObject,
         tree.children,

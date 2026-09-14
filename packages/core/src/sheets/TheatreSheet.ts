@@ -40,6 +40,8 @@ export default class TheatreSheet implements ISheet {
     config: Props,
     opts?: {
       reconfigure?: boolean
+      /** See {@link ISheet.object}'s `hideFromOutline` option. */
+      hideFromOutline?: boolean
       __actions__THIS_API_IS_UNSTABLE_AND_WILL_CHANGE_IN_THE_NEXT_VERSION?: SheetObjectActionsConfig
     },
   ): ISheetObject<Props> {
@@ -89,6 +91,9 @@ export default class TheatreSheet implements ISheet {
       if (actions) {
         existingObject.template._temp_setActions(actions)
       }
+      if (opts?.hideFromOutline) {
+        existingObject.template.hideFromOutline = true
+      }
 
       return existingObject.publicApi as $IntentionalAny
     } else {
@@ -99,6 +104,9 @@ export default class TheatreSheet implements ISheet {
         sanitizedConfig,
         actions,
       )
+      if (opts?.hideFromOutline) {
+        object.template.hideFromOutline = true
+      }
       if (process.env.NODE_ENV !== 'production') {
         weakMapOfUnsanitizedProps.set(object as $FixMe, config)
       }

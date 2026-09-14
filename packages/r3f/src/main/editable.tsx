@@ -33,6 +33,8 @@ const createEditable = <Keys extends keyof ThreeElements>(
     type Props = Omit<ComponentProps<T>, 'visible'> & {
       theatreKey: string
       visible?: boolean | 'editor'
+      /** 不进 studio 大纲树/时间轴(透传 core 的 sheet.object 选项) */
+      hideFromOutline?: boolean
       additionalProps?: $FixMe
       objectActions?: SheetObjectActionsConfig
       objRef?: $FixMe
@@ -59,6 +61,7 @@ const createEditable = <Keys extends keyof ThreeElements>(
       {
         theatreKey,
         visible,
+        hideFromOutline,
         editableType,
         additionalProps,
         objectActions,
@@ -151,6 +154,7 @@ Then you can use it in your JSX like any other editable component. Note the make
         if (sheetObject) {
           sheet.object(theatreKey, objectConfig, {
             reconfigure: true,
+            hideFromOutline,
             // 面板动作区(属性后的按钮):core 机制,重复调用同 config 时只更新 actions
             __actions__THIS_API_IS_UNSTABLE_AND_WILL_CHANGE_IN_THE_NEXT_VERSION:
               objectActions,
@@ -158,6 +162,7 @@ Then you can use it in your JSX like any other editable component. Note the make
           return
         } else {
           const sheetObject = sheet.object(theatreKey, objectConfig, {
+            hideFromOutline,
             __actions__THIS_API_IS_UNSTABLE_AND_WILL_CHANGE_IN_THE_NEXT_VERSION:
               objectActions,
           })
@@ -259,6 +264,7 @@ Then you can use it in your JSX like any other editable component. Note the make
       Omit<ThreeElements[Property], 'visible'> & {
         theatreKey: string
         visible?: boolean | 'editor'
+        hideFromOutline?: boolean
         additionalProps?: $FixMe
         objectActions?: SheetObjectActionsConfig
         objRef?: $FixMe

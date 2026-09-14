@@ -22,7 +22,7 @@ const ObjectsList: React.FC<{
   return usePrism(() => {
     const objectsMap = val(sheet.objectsP)
     const objects = Object.values(objectsMap).filter(
-      (a): a is SheetObject => a != null,
+      (a): a is SheetObject => a != null && !a.template.hideFromOutline,
     )
 
     const rootObject: NamespacedObjects = new Map()

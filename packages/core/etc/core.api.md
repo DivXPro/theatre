@@ -5,12 +5,12 @@
 ```ts
 
 import { Atom } from '@dreamerbird/dataverse';
+import * as _dreamerbird_dataverse from '@dreamerbird/dataverse';
 import { Pointer } from '@dreamerbird/dataverse';
 import { PointerToPrismProvider } from '@dreamerbird/dataverse';
 import { PointerType } from '@dreamerbird/dataverse';
 import { Prism } from '@dreamerbird/dataverse';
 import { Ticker } from '@dreamerbird/dataverse';
-import * as _toy_box_dataverse from '@dreamerbird/dataverse';
 
 // @public (undocumented)
 export type $____FixmeStudio = any;
@@ -88,6 +88,7 @@ export interface IBasePropType<LiteralIdentifier extends string, ValueType, Dese
     // (undocumented)
     default: ValueType;
     deserializeAndSanitize: (json: unknown) => undefined | DeserializeType;
+    hidden?: boolean;
     label: string | undefined;
     type: LiteralIdentifier;
     valueType: ValueType;
@@ -202,6 +203,7 @@ export interface ISheet {
     detachObject(key: string): void;
     object<Props extends UnknownShorthandCompoundProps>(key: string, props: Props, options?: {
         reconfigure?: boolean;
+        hideFromOutline?: boolean;
         __actions__THIS_API_IS_UNSTABLE_AND_WILL_CHANGE_IN_THE_NEXT_VERSION?: SheetObjectActionsConfig;
     }): ISheetObject<Props>;
     readonly project: IProject;
@@ -595,10 +597,10 @@ export type WithoutSheetInstance<T extends SheetAddress> = Omit<T, 'sheetInstanc
 
 // Warnings were encountered during analysis:
 //
-// dist/index.d.ts:2382:5 - (ae-forgotten-export) The symbol "propTypeUtils" needs to be exported by the entry point index.d.ts
-// dist/index.d.ts:2383:5 - (ae-forgotten-export) The symbol "ids" needs to be exported by the entry point index.d.ts
-// dist/index.d.ts:2384:5 - (ae-forgotten-export) The symbol "instanceTypes" needs to be exported by the entry point index.d.ts
-// dist/index.d.ts:2385:5 - (ae-forgotten-export) The symbol "keyframeUtils" needs to be exported by the entry point index.d.ts
+// dist/index.d.ts:2413:5 - (ae-forgotten-export) The symbol "propTypeUtils" needs to be exported by the entry point index.d.ts
+// dist/index.d.ts:2414:5 - (ae-forgotten-export) The symbol "ids" needs to be exported by the entry point index.d.ts
+// dist/index.d.ts:2415:5 - (ae-forgotten-export) The symbol "instanceTypes" needs to be exported by the entry point index.d.ts
+// dist/index.d.ts:2416:5 - (ae-forgotten-export) The symbol "keyframeUtils" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 
