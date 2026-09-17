@@ -96,7 +96,7 @@ import {
 } from './pathRegistry'
 import type {BoundCameraReset} from './pathRegistry'
 import {resolveBoundPathKey} from './pathBinding'
-import {findFreeSpot, presetPoints} from './pathPresets'
+import {findFreeSpot, presetPlacement} from './pathPresets'
 import type {PathPreset} from './pathPresets'
 import {PathPresetDropRig} from './PathPresetDropRig'
 import {listSinks} from './videoExport/sinks'
@@ -868,10 +868,10 @@ function App() {
     }
   }, [enterPathEdit, exitPathEdit])
 
-  // 路径预设放置:点击 = 场景中心;拖拽 = 指针落点。高度跟活动相机当前 Y
-  // (无相机跟主视角,再退回 5)。先播种再登记(没点就不出现),落地即进
-  // 编辑模式。每一步都是既有可撤销事务,撤销 = 清单行消失 + 点数据回滚
-  // 高度也喂给拖拽落点标记,让标记显示在路径将要生成的高度(所见即所得)
+  // 路径预设放置:点击 = 场景中心(高度跟活动相机当前 Y,无相机跟主视角,
+  // 再退回 5);拖拽 = 指针落点的完整三维(视平面/表面吸附算出,见
+  // PathPresetDropRig)。先播种再登记(没点就不出现),落地即进编辑模式。
+  // 每一步都是既有可撤销事务,撤销 = 清单行消失 + 点数据回滚
   const pathPresetHeight = useCallback(() => {
     const camObj = activeCamera
       ? shotRefsMapRef.current.get(activeCamera.cameraKey)?.camera.current
@@ -884,11 +884,13 @@ function App() {
     )
   }, [activeCamera])
   const placePresetPath = useCallback(
-    (preset: PathPreset, centerXZ?: {x: number; z: number}) => {
+    (preset: PathPreset, at?: {x: number; y: number; z: number}) => {
+      // 落点三维都进来:拖拽放置的高度由视平面/表面吸附决定(所见即所得),
+      // 点击放置没有落点,高度退回活动相机当前 Y
       const center = {
-        x: centerXZ?.x ?? 0,
-        y: pathPresetHeight(),
-        z: centerXZ?.z ?? 0,
+        x: at?.x ?? 0,
+        y: at?.y ?? pathPresetHeight(),
+        z: at?.z ?? 0,
       }
       const entry = nextPathEntry(readPathEntries(getPathsRegistry(sheet)))
       // 注册表说 key 空着,但同名路径可能带着旧点:撤销只退登记没退播种、
@@ -900,7 +902,13 @@ function App() {
       if (readPathPoints(sheet, entry.pathKey).length > 0) {
         removePathFromRegistry(sheet, entry)
       }
-      addPathPoint(sheet, entry.pathKey, presetPoints(preset, center))
+      // 落点 = 路径原点:控制点存相对落点的局部坐标,落点本身在同一次
+      // 提交里写进位置变换——原点标记/整体移动箭头锚在落点(所见即所得),
+      // 世界位置与直接世界坐标播种等价
+      const {points, position} = presetPlacement(preset, center)
+      addPathPoint(sheet, entry.pathKey, points, (set) => {
+        set(getPathMeta(sheet, entry.pathKey).props.position, position)
+      })
       addPathToRegistry(sheet, entry)
       enterPathEdit(entry.pathKey)
     },
@@ -1659,7 +1667,7 @@ function App() {
             <PathPresetDropRig
               heightY={pathPresetHeight()}
               onConfirm={(p) => {
-                placePresetPath(presetDrag, {x: p.x, z: p.z})
+                placePresetPath(presetDrag, p)
                 setPresetDrag(null)
               }}
               onCancel={() => setPresetDrag(null)}
