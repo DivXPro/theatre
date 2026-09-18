@@ -1,23 +1,166 @@
 /**
  * 顶栏工具条:只放全局动作——添加模型、添加路径(各弹各的框体)、添加
- * 相机、导出视频。姿势/动作绑定具体物体,入口在右键模型的菜单里;物体
- * 的属性设置在各自面板(见 docs/superpowers/specs/2026-09-12-asset-library-split-design.md)。
+ * 相机、画中画、导出视频。姿势/动作绑定具体物体,入口在右键模型的菜单里;
+ * 物体的属性设置在各自面板(见 docs/superpowers/specs/2026-09-12-asset-library-split-design.md)。
+ *
+ * 外观 = studio 原生工具条:连体容器(ToolbarSwitchSelectContainer)+
+ * 图标按钮(ToolbarIconButton),图标+hover tooltip。chordial 挂在 studio
+ * 的 shadow DOM 里(这里用不了),tooltip 是自实现的,样式照抄 BasicTooltip。
+ * --theatre-* 令牌定义在 studio 的 :host(shadow DOM),主文档不可见,
+ * 一律带同值兜底——令牌将来全局化时自动接管。
  */
 import React, {useCallback, useRef} from 'react'
+import styled from 'styled-components'
+import ToolbarIconButton from '@dreamerbird/studio/uiComponents/toolbar/ToolbarIconButton'
+import ToolbarSwitchSelectContainer from '@dreamerbird/studio/uiComponents/toolbar/ToolbarSwitchSelectContainer'
+import Cube from '@dreamerbird/studio/uiComponents/icons/Cube'
+import Camera from '@dreamerbird/studio/uiComponents/icons/Camera'
 import useMenu from '@dreamerbird/studio/uiComponents/simpleContextMenu/useMenu'
 import {buildExportMenuItems} from './menuModel'
 import type {ExportSink} from './videoExport/sinks'
 
-function buttonStyle(disabled: boolean, danger = false): React.CSSProperties {
-  return {
-    padding: '6px 14px',
-    borderRadius: 6,
-    border: '1px solid #444',
-    background: disabled ? '#333' : danger ? '#633a3a' : '#272730',
-    color: disabled ? '#888' : '#eee',
-    cursor: disabled ? 'default' : 'pointer',
-    fontSize: 13,
+// ---------------------------------------------------------------------------
+// studio 图标包里没有的三个:路径 / 画中画 / 导出 / 停止。16×16、
+// currentColor,风格对齐 studio 图标
+
+const PathIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+    <path
+      d="M2.5 12.5C5 4.5 11 4.5 13.5 12.5"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      strokeLinecap="round"
+    />
+    <circle cx="2.5" cy="12.5" r="1.6" fill="currentColor" />
+    <circle cx="13.5" cy="12.5" r="1.6" fill="currentColor" />
+    <circle cx="8" cy="6.5" r="1.3" fill="currentColor" />
+  </svg>
+)
+
+const PipIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+    <rect
+      x="1.5"
+      y="3"
+      width="13"
+      height="10"
+      rx="1.5"
+      stroke="currentColor"
+      strokeWidth="1.3"
+    />
+    <rect x="8.5" y="8" width="4.5" height="3.5" rx="0.8" fill="currentColor" />
+  </svg>
+)
+
+const ExportIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+    <path
+      d="M8 2.5v6.5M4.8 6.6L8 9.8l3.2-3.2"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M2.5 11.5v1a1 1 0 001 1h9a1 1 0 001-1v-1"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      strokeLinecap="round"
+    />
+  </svg>
+)
+
+const StopIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+    <rect x="4" y="4" width="8" height="8" rx="1.2" fill="currentColor" />
+  </svg>
+)
+
+// ---------------------------------------------------------------------------
+
+const Positioning = styled.div`
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+`
+
+/** 原生 ToolbarIconButton + 本页需要的两个变体:禁用置灰、导出中转红 */
+const Btn = styled(ToolbarIconButton)`
+  &:disabled {
+    opacity: 0.45;
+    cursor: default;
+    &:hover {
+      background: var(--theatre-panel-bg-80, rgba(40, 43, 47, 0.8));
+    }
   }
+  &.danger {
+    color: #ff7a7a;
+  }
+  /* 画中画开启态:沿用原生 selected 高亮,颜色对齐小窗边框 */
+  &.selected {
+    color: #6fb7ff;
+    border-bottom-color: #6fb7ff;
+  }
+
+  /* tooltip:样式照抄 studio BasicTooltip;按钮 relative,气泡钉在正下方 */
+  & > .tip {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10000;
+    padding: 6px 8px;
+    border-radius: 4px;
+    box-shadow: rgb(0 0 0 / 25%) 0px 2px 4px;
+    backdrop-filter: blur(8px) saturate(300%) contrast(65%) brightness(55%);
+    background-color: rgb(45 46 66 / 50%);
+    border: 0.5px solid rgb(86 100 110 / 46%);
+    color: var(--theatre-text-primary, #ffffff);
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.5;
+    white-space: nowrap;
+    text-align: left;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 0.15s ease 0.25s,
+      visibility 0.15s ease 0.25s;
+    .hint {
+      display: block;
+      color: var(--theatre-text-secondary, #cccccc);
+    }
+  }
+  &:hover > .tip {
+    opacity: 1;
+    visibility: visible;
+  }
+`
+
+function ToolbarBtn({
+  tip,
+  hint,
+  children,
+  ...props
+}: {
+  /** tooltip 第一行:动作名 */
+  tip: string
+  /** tooltip 第二行:补充说明/禁用原因(可空) */
+  hint?: string
+  children: React.ReactNode
+} & React.ComponentProps<typeof Btn>) {
+  return (
+    <Btn {...props}>
+      {children}
+      <span className="tip">
+        {tip}
+        {hint ? <span className="hint">{hint}</span> : null}
+      </span>
+    </Btn>
+  )
 }
 
 export function TopToolbar({
@@ -58,83 +201,81 @@ export function TopToolbar({
   const [exportMenuNode, openExportMenu] = useMenu({items: exportMenuItems})
 
   return (
-    <div
-      style={{
-        position: 'absolute',
-        top: 12,
-        left: '50%',
-        transform: 'translateX(-50%)',
-        zIndex: 10,
-        display: 'flex',
-        gap: 8,
-      }}
-    >
-      <button
-        disabled={libraryDisabled}
-        onClick={onToggleModelLibrary}
-        style={buttonStyle(libraryDisabled)}
-        title={libraryDisabled ? '放置中:先确认或取消当前放置' : undefined}
-      >
-        添加模型
-      </button>
-      <button
-        disabled={libraryDisabled}
-        onClick={onTogglePathLibrary}
-        style={buttonStyle(libraryDisabled)}
-        title={libraryDisabled ? '放置中:先确认或取消当前放置' : undefined}
-      >
-        添加路径
-      </button>
-      <button
-        onClick={onAddCamera}
-        style={buttonStyle(false)}
-        title="从当前导演视角创建一台相机(落地即活动相机)"
-      >
-        添加相机
-      </button>
-      <button
-        onClick={onTogglePip}
-        disabled={pipDisabled}
-        style={{
-          ...buttonStyle(pipDisabled),
-          // 开启态高亮:和画中画小窗的边框同色
-          ...(pipVisible && !pipDisabled
-            ? {borderColor: '#6fb7ff', color: '#6fb7ff'}
-            : {}),
-        }}
-        title={
-          pipDisabled
-            ? '先添加相机'
-            : pipVisible
-              ? '隐藏右下角的镜头画中画'
-              : '显示右下角的镜头画中画'
-        }
-      >
-        画中画
-      </button>
-      <button
-        ref={exportButtonRef}
-        disabled={exportDisabled && !exporting}
-        onClick={() => {
-          if (exporting) {
-            onStopExport()
-            return
+    <Positioning>
+      <ToolbarSwitchSelectContainer>
+        <ToolbarBtn
+          disabled={libraryDisabled}
+          onClick={onToggleModelLibrary}
+          tip="添加模型"
+          hint={
+            libraryDisabled
+              ? '放置中:先确认或取消当前放置'
+              : '打开模型库,点击或拖拽把模型放进场景'
           }
-          const rect = exportButtonRef.current?.getBoundingClientRect()
-          openExportMenu(
-            rect ? {clientX: rect.left, clientY: rect.bottom + 4} : undefined,
-          )
-        }}
-        style={buttonStyle(exportDisabled && !exporting, exporting)}
-        title={
-          exportDisabled && !exporting
-            ? '先添加相机'
-            : '把镜头取景实时录成视频:序列从头播到尾,录完自动保存'
-        }
-      >
-        {exporting ? '停止并保存(Esc 取消)' : '导出视频'}
-      </button>
+        >
+          <Cube />
+        </ToolbarBtn>
+        <ToolbarBtn
+          disabled={libraryDisabled}
+          onClick={onTogglePathLibrary}
+          tip="添加路径"
+          hint={
+            libraryDisabled
+              ? '放置中:先确认或取消当前放置'
+              : '打开路径预设库,点击或拖拽生成相机轨迹'
+          }
+        >
+          <PathIcon />
+        </ToolbarBtn>
+        <ToolbarBtn
+          onClick={onAddCamera}
+          tip="添加相机"
+          hint="从当前导演视角创建一台相机(落地即活动相机)"
+        >
+          <Camera />
+        </ToolbarBtn>
+        <ToolbarBtn
+          onClick={onTogglePip}
+          disabled={pipDisabled}
+          className={pipVisible && !pipDisabled ? 'selected' : undefined}
+          tip="画中画"
+          hint={
+            pipDisabled
+              ? '先添加相机'
+              : pipVisible
+                ? '隐藏右下角的镜头画中画'
+                : '显示右下角的镜头画中画'
+          }
+        >
+          <PipIcon />
+        </ToolbarBtn>
+        <ToolbarBtn
+          ref={exportButtonRef}
+          disabled={exportDisabled && !exporting}
+          className={exporting ? 'danger' : undefined}
+          onClick={() => {
+            if (exporting) {
+              onStopExport()
+              return
+            }
+            const rect = exportButtonRef.current?.getBoundingClientRect()
+            openExportMenu(
+              rect ? {clientX: rect.left, clientY: rect.bottom + 4} : undefined,
+            )
+          }}
+          tip={exporting ? '停止并保存' : '导出视频'}
+          hint={
+            exporting
+              ? 'Esc 取消'
+              : exportDisabled
+                ? '先添加相机'
+                : '把镜头取景实时录成视频:序列从头播到尾,录完自动保存'
+          }
+        >
+          {exporting ? <StopIcon /> : <ExportIcon />}
+        </ToolbarBtn>
+      </ToolbarSwitchSelectContainer>
       {exportMenuNode}
-    </div>
+    </Positioning>
   )
 }

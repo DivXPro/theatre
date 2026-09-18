@@ -1,11 +1,25 @@
+/**
+ * 资产库框体:模型/路径/姿势/动作四种类型的选择面板,一个组件四个实例。
+ *
+ * 样式对齐 theatre 原生面板:骨架/标题栏配色取自 studio BasePanel
+ * (panel-bg #282b2f、TitleBar #25272b),按钮复用 studio DetailPanelButton,
+ * 卡片右键菜单复用 studio ContextMenu。--theatre-* 令牌定义在 studio 的
+ * shadow DOM(:host),主文档不可见,一律带同值兜底——令牌将来全局化时
+ * 自动接管(同 TopToolbar 的策略)。
+ */
 import React, {useCallback, useEffect, useRef, useState} from 'react'
+import styled from 'styled-components'
+import DetailPanelButton from '@dreamerbird/studio/uiComponents/DetailPanelButton'
+import {CanvasContextMenu} from '../contextMenu'
 import {countLibraryEntryUsage} from '../PlacementManager'
 import {PATH_PRESETS} from '../pathPresets'
 import type {PathPreset} from '../pathPresets'
+import {PathPresetThumb} from '../PathPresetThumb'
 import {getLibrary, useLibraryEntries, useRigAliases} from './library'
 import {planImport, executeImport, realImportDeps} from './importPipeline'
 import type {ImportPlan} from './importPipeline'
-import {renderThumbnail} from './thumbnail'
+import {backfillModelThumbnails} from './thumbnail'
+import {seedBuiltinModels} from './seedBuiltinModels'
 import type {AnimationEntry, ModelEntry, PoseEntry} from './types'
 
 export type AssetKind = 'model' | 'pose' | 'animation' | 'path'
@@ -28,6 +42,251 @@ const KIND_OFFSET: Record<AssetKind, number> = {
 
 /** 卡片手势阈值:按下后移动超过 4px 算拖拽(沿用场景点选的拖拽判定惯例) */
 const DRAG_THRESHOLD_PX = 4
+
+// ---------------------------------------------------------------------------
+// 样式(theatre 原生色系,var() 全部带同值兜底)
+
+/** 面板骨架:对齐 studio BasePanel 的底色/文字/字体 */
+const Panel = styled.div`
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  width: 260px;
+  /* studio 大纲面板的层级是 100,面板必须盖过它 */
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  background: var(--theatre-panel-bg, #282b2f);
+  border-right: 1px solid var(--theatre-panel-border, #1f1f1f);
+  color: var(--theatre-text-primary, #ffffff);
+  font-size: var(--theatre-font-size, 11px);
+  font-family: var(
+    --theatre-font-family,
+    -apple-system,
+    BlinkMacSystemFont,
+    Segoe WPC,
+    Segoe Editor,
+    HelveticaNeue-Light,
+    Ubuntu,
+    Droid Sans,
+    sans-serif
+  );
+`
+
+/** 头部:照抄 studio 面板 TitleBar 的配色(#25272b + 黑色细分隔线) */
+const Head = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px 4px 12px;
+  background-color: #25272b;
+  border-bottom: 1px solid rgb(0 0 0 / 13%);
+`
+
+const HeadTitle = styled.span`
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--theatre-head-title, #bbbbbb);
+`
+
+const HeadSpacer = styled.div`
+  flex: 1;
+`
+
+/** 头部小图标按钮:透明底,hover 用原生工具条按钮的 hover 色 */
+const HeadButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: 2px;
+  background: transparent;
+  color: var(--theatre-text-secondary, #cccccc);
+  cursor: pointer;
+  &:hover {
+    background: rgba(59, 63, 69, 0.8);
+    color: var(--theatre-text-primary, #ffffff);
+  }
+  &:disabled {
+    opacity: 0.45;
+    cursor: default;
+    &:hover {
+      background: transparent;
+      color: var(--theatre-text-secondary, #cccccc);
+    }
+  }
+`
+
+/** filterRig 提示条:弱化处理,用文字弱化色 */
+const HintBar = styled.div`
+  padding: 8px 12px;
+  font-size: 11px;
+  color: var(--theatre-text-muted, #888888);
+  background: rgba(0, 0, 0, 0.15);
+  border-bottom: 1px solid var(--theatre-panel-border, #1f1f1f);
+`
+
+/** 姿势框体顶部工具行(抽帧存姿势) */
+const ToolRow = styled.div`
+  display: flex;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--theatre-panel-border, #1f1f1f);
+  /* DetailPanelButton 是 block + flex-grow,这里给它一行 */
+  & > * {
+    flex: 1;
+  }
+`
+
+const Grid = styled.div`
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  align-content: start;
+`
+
+/** 卡片:面板色系,hover 用原生工具条按钮的 hover 色 */
+const Card = styled.div`
+  position: relative;
+  height: 96px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid var(--theatre-panel-border, #1f1f1f);
+  overflow: hidden;
+  cursor: pointer;
+  user-select: none;
+  &:hover {
+    background: rgba(59, 63, 69, 0.8);
+  }
+  &[data-disabled='true'] {
+    cursor: default;
+    opacity: 0.5;
+    &:hover {
+      background: rgba(0, 0, 0, 0.18);
+    }
+  }
+`
+
+const Thumb = styled.div`
+  width: 100%;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  background: rgba(0, 0, 0, 0.25);
+`
+
+const Label = styled.div`
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  right: 6px;
+  font-size: 11px;
+  color: var(--theatre-text-primary, #ffffff);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`
+
+const Tag = styled.div`
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  padding: 2px 6px;
+  border-radius: 2px;
+  font-size: 10px;
+  color: var(--theatre-text-secondary, #cccccc);
+  background: rgba(0, 0, 0, 0.45);
+  max-width: 60%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`
+
+/** 导入确认弹层:面板色系,盖在框体之上 */
+const Overlay = styled.div`
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 16px;
+  background: var(--theatre-panel-bg-99, rgba(40, 43, 47, 0.99));
+`
+
+const OverlayTitle = styled.div`
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 10px;
+`
+
+const MutedText = styled.div`
+  font-size: 11px;
+  color: var(--theatre-text-muted, #888888);
+`
+
+const SimilarCard = styled.div`
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  border-radius: 3px;
+  border: 1px solid var(--theatre-panel-border, #1f1f1f);
+  background: rgba(0, 0, 0, 0.18);
+  font-size: 11px;
+`
+
+/** 取消按钮:DetailPanelButton 的透明变体(teal 底让给主按钮) */
+const GhostButton = styled(DetailPanelButton)`
+  flex-grow: 0;
+  background: transparent;
+  border-color: var(--theatre-panel-border, #1f1f1f);
+  &:hover {
+    background: rgba(59, 63, 69, 0.8);
+    border-color: var(--theatre-panel-border, #1f1f1f);
+  }
+`
+
+const ConfirmButton = styled(DetailPanelButton)`
+  flex-grow: 0;
+`
+
+/** 头部图标:导入(箭头出托盘向上)/ 关闭。16×16、currentColor */
+const ImportIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+    <path
+      d="M8 10.5V4M4.8 7.2L8 4l3.2 3.2"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M2.5 11.5v1a1 1 0 001 1h9a1 1 0 001-1v-1"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      strokeLinecap="round"
+    />
+  </svg>
+)
+
+const CloseIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+    <path
+      d="M4.5 4.5l7 7M11.5 4.5l-7 7"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      strokeLinecap="round"
+    />
+  </svg>
+)
+
+// ---------------------------------------------------------------------------
 
 /**
  * 卡片手势:按下后移动超阈值 = 拖拽(onDragStart 触发一次),否则松开 = 点击。
@@ -151,6 +410,11 @@ export function AssetLibraryPanel({
     }
   }, [])
 
+  // 内置模型播种:仅模型框体挂载时触发(模块内幂等,只跑一次)
+  useEffect(() => {
+    if (kind === 'model') seedBuiltinModels()
+  }, [kind])
+
   // 防止同一缩略图并发多次 getBlobUrl
   const loadingThumbsRef = useRef<Set<string>>(new Set())
 
@@ -212,24 +476,8 @@ export function AssetLibraryPanel({
     try {
       await executeImport(plan, choices, getLibrary())
       // 补缩略图:导入成功的 model 项逐个渲染
-      for (const item of plan.items) {
-        if (item.type !== 'model') continue
-        const blob = await renderThumbnail(item.glb)
-        if (!blob) continue
-        const list = (await getLibrary().backend.listEntries(
-          'model',
-        )) as ModelEntry[]
-        const entry = list.find(
-          (e) => e.contentHash === item.contentHash && !e.thumbnailId,
-        )
-        if (entry) {
-          await getLibrary().putBlobWithEntry(blob, (thumbnailId) => ({
-            ...entry,
-            thumbnailId,
-          }))
-          if (!mountedRef.current) return
-        }
-      }
+      await backfillModelThumbnails(plan.items, getLibrary())
+      if (!mountedRef.current) return
     } finally {
       if (mountedRef.current) {
         setBusy(false)
@@ -263,79 +511,11 @@ export function AssetLibraryPanel({
     if (name) await getLibrary().renameEntry(id, name)
   }
 
-  // 卡片右键菜单:点菜单外或按 Esc 关闭
-  useEffect(() => {
-    if (!menu) return
-    const onPointerDown = (ev: PointerEvent) => {
-      if (!(ev.target as HTMLElement | null)?.closest('[data-card-menu]')) {
-        setMenu(null)
-      }
-    }
-    const onKey = (ev: KeyboardEvent) => {
-      if (ev.key === 'Escape') setMenu(null)
-    }
-    window.addEventListener('pointerdown', onPointerDown, true)
-    window.addEventListener('keydown', onKey)
-    return () => {
-      window.removeEventListener('pointerdown', onPointerDown, true)
-      window.removeEventListener('keydown', onKey)
-    }
-  }, [menu])
-
-  const cardBaseStyle: React.CSSProperties = {
-    position: 'relative',
-    height: 96,
-    borderRadius: 8,
-    background: 'rgba(255,255,255,0.05)',
-    border: '1px solid rgba(255,255,255,0.08)',
-    overflow: 'hidden',
-    cursor: 'pointer',
-    userSelect: 'none',
-  }
-
-  const placeholderStyle: React.CSSProperties = {
-    width: '100%',
-    height: 64,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: 28,
-    background: 'rgba(255,255,255,0.04)',
-  }
-
-  const labelStyle: React.CSSProperties = {
-    position: 'absolute',
-    bottom: 6,
-    left: 6,
-    right: 6,
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.9)',
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-  }
-
-  const tagStyle: React.CSSProperties = {
-    position: 'absolute',
-    top: 6,
-    right: 6,
-    padding: '2px 6px',
-    borderRadius: 4,
-    fontSize: 10,
-    color: 'rgba(255,255,255,0.7)',
-    background: 'rgba(0,0,0,0.35)',
-    maxWidth: '60%',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-  }
-
   const renderModelCard = (entry: ModelEntry) => {
     const url = thumbUrl(entry)
     return (
-      <div
+      <Card
         key={entry.id}
-        style={cardBaseStyle}
         onPointerDown={modelGesture(entry)}
         onDragStart={(ev) => ev.preventDefault()}
         onContextMenu={(ev) => {
@@ -351,22 +531,10 @@ export function AssetLibraryPanel({
             style={{width: '100%', height: 64, objectFit: 'cover'}}
           />
         ) : (
-          <div style={placeholderStyle}>📦</div>
+          <Thumb>📦</Thumb>
         )}
-        <div
-          style={{...tagStyle, cursor: 'pointer'}}
-          title={`${entry.rig}\n点击给这套骨架起名`}
-          // 卡片放置走 window 级 pointerup 手势,stopPropagation(click) 挡不住;
-          // 必须在 pointerdown 拦截,避免点标签起名时连带放置模型
-          onPointerDown={(ev) => ev.stopPropagation()}
-          onClick={renameRig(entry.rig)}
-        >
-          {rigLabel(entry.rig)}
-        </div>
-        <div style={labelStyle} title={entry.name}>
-          {entry.name}
-        </div>
-      </div>
+        <Label title={entry.name}>{entry.name}</Label>
+      </Card>
     )
   }
 
@@ -388,33 +556,27 @@ export function AssetLibraryPanel({
     const rigMismatch = filterRig ? entry.rig !== filterRig : false
     const cardDisabled = disabled || applyDisabled || !onApply || rigMismatch
     return (
-      <div
+      <Card
         key={entry.id}
-        style={{
-          ...cardBaseStyle,
-          cursor: cardDisabled ? 'default' : 'pointer',
-          opacity: cardDisabled ? 0.5 : 1,
-        }}
+        data-disabled={cardDisabled}
         onClick={cardDisabled ? undefined : () => onApply!(entry)}
         onContextMenu={(ev) => {
           ev.preventDefault()
           setMenu({x: ev.clientX, y: ev.clientY, id: entry.id})
         }}
       >
-        <div style={placeholderStyle}>{icon}</div>
-        <div
-          style={{...tagStyle, cursor: 'pointer'}}
+        <Thumb>{icon}</Thumb>
+        <Tag
+          style={{cursor: 'pointer'}}
           title={`${entry.rig}\n点击给这套骨架起名`}
           onClick={renameRig(entry.rig)}
         >
           {rigLabel(entry.rig)}
           {rigMismatch && ' · 骨架不匹配'}
-        </div>
-        <div style={labelStyle} title={entry.name}>
-          {entry.name}
-        </div>
+        </Tag>
+        <Label title={entry.name}>{entry.name}</Label>
         {extra}
-      </div>
+      </Card>
     )
   }
 
@@ -429,7 +591,7 @@ export function AssetLibraryPanel({
           bottom: 24,
           left: 6,
           fontSize: 10,
-          color: 'rgba(255,255,255,0.55)',
+          color: 'var(--theatre-text-muted, #888888)',
         }}
       >
         {entry.duration.toFixed(2)}s
@@ -439,87 +601,43 @@ export function AssetLibraryPanel({
   const renderPoseCard = (entry: PoseEntry) =>
     renderApplyCard(entry, '🧍', onApplyPose)
 
-  // 预设卡片:内置不可删改,无右键菜单、无骨架标签
+  // 预设卡片:内置不可删改,无右键菜单、无骨架标签;动画缩略图即运镜轨迹
   const renderPresetCard = (preset: PathPreset) => (
-    <div
+    <Card
       key={preset.id}
-      style={cardBaseStyle}
       onPointerDown={presetGesture(preset)}
       onDragStart={(ev) => ev.preventDefault()}
       title="点击放到场景中心;按住拖到画布指定落点"
     >
-      <div style={placeholderStyle}>{preset.icon}</div>
-      <div style={labelStyle}>{preset.name}</div>
-    </div>
+      <Thumb style={{fontSize: 0}}>
+        <PathPresetThumb preset={preset} />
+      </Thumb>
+      <Label>{preset.name}</Label>
+    </Card>
   )
 
   const visibleAnimations = sortBySelectedRig(animations)
   const visiblePoses = sortBySelectedRig(poses)
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        left: KIND_OFFSET[kind],
-        top: 0,
-        bottom: 0,
-        width: 260,
-        // studio 大纲面板的层级是 100,面板必须盖过它
-        zIndex: 1000,
-        display: 'flex',
-        flexDirection: 'column',
-        background: 'rgba(24,24,28,0.96)',
-        borderRight: '1px solid rgba(255,255,255,0.12)',
-        color: 'rgba(255,255,255,0.9)',
-        fontSize: 13,
-        fontFamily: 'system-ui, -apple-system, sans-serif',
-      }}
-    >
+    <Panel style={{left: KIND_OFFSET[kind]}}>
       {/* 头部:类型标题 + 导入(路径框体没有)+ 关闭 */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          padding: '10px 12px',
-          borderBottom: '1px solid rgba(255,255,255,0.12)',
-        }}
-      >
-        <span style={{fontSize: 13, fontWeight: 600}}>{KIND_TITLE[kind]}</span>
-        <div style={{flex: 1}} />
+      <Head>
+        <HeadTitle>{KIND_TITLE[kind]}</HeadTitle>
+        <HeadSpacer />
         {kind !== 'path' && (
-          <button
+          <HeadButton
             disabled={busy}
             onClick={() => fileRef.current?.click()}
-            style={{
-              padding: '4px 10px',
-              borderRadius: 6,
-              border: '1px solid rgba(255,255,255,0.12)',
-              background: 'rgba(255,255,255,0.08)',
-              color: 'rgba(255,255,255,0.9)',
-              cursor: busy ? 'default' : 'pointer',
-              fontSize: 13,
-            }}
+            title="导入文件"
           >
-            导入
-          </button>
+            <ImportIcon />
+          </HeadButton>
         )}
-        <button
-          onClick={onClose}
-          style={{
-            padding: '4px 8px',
-            borderRadius: 6,
-            border: 'none',
-            background: 'transparent',
-            color: 'rgba(255,255,255,0.7)',
-            cursor: 'pointer',
-            fontSize: 15,
-          }}
-          aria-label="关闭"
-        >
-          ×
-        </button>
-      </div>
+        <HeadButton onClick={onClose} title="关闭">
+          <CloseIcon />
+        </HeadButton>
+      </Head>
 
       <input
         ref={fileRef}
@@ -534,63 +652,24 @@ export function AssetLibraryPanel({
 
       {/* filterRig 提示条:姿势/动作共用 */}
       {(kind === 'animation' || kind === 'pose') && filterRig && (
-        <div
-          style={{
-            padding: '8px 12px',
-            fontSize: 12,
-            color: 'rgba(255,255,255,0.7)',
-            background: 'rgba(255,255,255,0.05)',
-            borderBottom: '1px solid rgba(255,255,255,0.08)',
-          }}
-        >
-          只列出同骨架族的条目可套用,不同族的已置灰
-        </div>
+        <HintBar>只列出同骨架族的条目可套用,不同族的已置灰</HintBar>
       )}
 
       {/* 姿势框体顶部工具行:抽帧存姿势 */}
       {kind === 'pose' && (
-        <div
-          style={{
-            padding: '8px 12px',
-            borderBottom: '1px solid rgba(255,255,255,0.08)',
-          }}
-        >
-          <button
+        <ToolRow>
+          <DetailPanelButton
             disabled={!canSavePose}
             onClick={() => void onSavePose?.()}
             title={canSavePose ? undefined : '先选中一个带骨架的已放置模型'}
-            style={{
-              width: '100%',
-              padding: '6px 10px',
-              borderRadius: 6,
-              border: '1px solid rgba(255,255,255,0.12)',
-              background: canSavePose
-                ? 'rgba(255,255,255,0.08)'
-                : 'rgba(255,255,255,0.04)',
-              color: canSavePose
-                ? 'rgba(255,255,255,0.9)'
-                : 'rgba(255,255,255,0.4)',
-              cursor: canSavePose ? 'pointer' : 'default',
-              fontSize: 13,
-            }}
           >
             存当前姿势
-          </button>
-        </div>
+          </DetailPanelButton>
+        </ToolRow>
       )}
 
       {/* 卡片网格 */}
-      <div
-        style={{
-          flex: 1,
-          overflowY: 'auto',
-          padding: 12,
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: 8,
-          alignContent: 'start',
-        }}
-      >
+      <Grid>
         {kind === 'model'
           ? models.map(renderModelCard)
           : kind === 'pose'
@@ -598,34 +677,19 @@ export function AssetLibraryPanel({
             : kind === 'path'
               ? PATH_PRESETS.map(renderPresetCard)
               : visibleAnimations.map(renderAnimationCard)}
-      </div>
+      </Grid>
 
       {/* 确认清单弹层 */}
       {plan && (
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            zIndex: 20,
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            padding: 16,
-            background: 'rgba(18,18,22,0.98)',
-          }}
-        >
-          <div style={{fontSize: 14, fontWeight: 600, marginBottom: 10}}>
-            {plan.summary}
-          </div>
+        <Overlay>
+          <OverlayTitle>{plan.summary}</OverlayTitle>
 
           {plan.items.some((i) => i.type === 'skip') && (
-            <div
+            <MutedText
               style={{
                 maxHeight: 120,
                 overflowY: 'auto',
                 marginBottom: 12,
-                fontSize: 12,
-                color: 'rgba(255,255,255,0.7)',
               }}
             >
               {plan.items
@@ -638,33 +702,21 @@ export function AssetLibraryPanel({
                     {i.name}: {i.reason}
                   </div>
                 ))}
-            </div>
+            </MutedText>
           )}
 
           {plan.similar.length > 0 && (
             <div style={{marginBottom: 12}}>
-              <div
-                style={{
-                  fontSize: 12,
-                  color: 'rgba(255,255,255,0.7)',
-                  marginBottom: 6,
-                }}
-              >
+              <MutedText style={{marginBottom: 6}}>
                 检测到相似模型,请选择处理方式:
-              </div>
+              </MutedText>
               {plan.similar.map((s, idx) => (
-                <div
-                  key={`${s.index}-${s.existingName}`}
-                  style={{
-                    padding: '8px 10px',
-                    marginBottom: 6,
-                    borderRadius: 6,
-                    background: 'rgba(255,255,255,0.05)',
-                    fontSize: 12,
-                  }}
-                >
+                <SimilarCard key={`${s.index}-${s.existingName}`}>
                   <div
-                    style={{marginBottom: 4, color: 'rgba(255,255,255,0.85)'}}
+                    style={{
+                      marginBottom: 4,
+                      color: 'var(--theatre-text-primary, #ffffff)',
+                    }}
                   >
                     新文件「{s.newName}」与库中「{s.existingName}」相似
                   </div>
@@ -700,101 +752,47 @@ export function AssetLibraryPanel({
                     />
                     保留为新条目
                   </label>
-                </div>
+                </SimilarCard>
               ))}
             </div>
           )}
 
           <div style={{display: 'flex', gap: 10, justifyContent: 'flex-end'}}>
-            <button
-              disabled={busy}
-              onClick={() => setPlan(null)}
-              style={{
-                padding: '6px 14px',
-                borderRadius: 6,
-                border: '1px solid rgba(255,255,255,0.12)',
-                background: 'transparent',
-                color: 'rgba(255,255,255,0.9)',
-                cursor: busy ? 'default' : 'pointer',
-                fontSize: 13,
-              }}
-            >
+            <GhostButton disabled={busy} onClick={() => setPlan(null)}>
               取消
-            </button>
-            <button
-              disabled={busy}
-              onClick={() => void confirmImport()}
-              style={{
-                padding: '6px 14px',
-                borderRadius: 6,
-                border: 'none',
-                background: 'rgba(255,255,255,0.18)',
-                color: '#fff',
-                cursor: busy ? 'default' : 'pointer',
-                fontSize: 13,
-              }}
-            >
+            </GhostButton>
+            <ConfirmButton disabled={busy} onClick={() => void confirmImport()}>
               确认
-            </button>
+            </ConfirmButton>
           </div>
-        </div>
+        </Overlay>
       )}
 
-      {/* 卡片右键菜单 */}
+      {/* 卡片右键菜单:studio 原生 ContextMenu(点外/Esc 关闭由它处理) */}
       {menu && (
-        <div
-          data-card-menu
-          style={{
-            position: 'fixed',
-            left: menu.x,
-            top: menu.y,
-            zIndex: 30,
-            minWidth: 120,
-            padding: '4px 0',
-            borderRadius: 8,
-            background: 'rgba(24,24,28,0.96)',
-            border: '1px solid rgba(255,255,255,0.12)',
-            boxShadow: '0 6px 24px rgba(0,0,0,0.5)',
-          }}
-        >
-          <div
-            style={{
-              padding: '6px 14px',
-              fontSize: 13,
-              color: 'rgba(255,255,255,0.9)',
-              cursor: 'pointer',
-            }}
-            onMouseEnter={(e) =>
-              (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')
-            }
-            onMouseLeave={(e) => (e.currentTarget.style.background = '')}
-            onClick={() => {
-              void renameEntry(menu.id)
-              setMenu(null)
-            }}
-          >
-            重命名
-          </div>
-          <div
-            style={{
-              padding: '6px 14px',
-              fontSize: 13,
-              color: '#ff6b6b',
-              cursor: 'pointer',
-            }}
-            onMouseEnter={(e) =>
-              (e.currentTarget.style.background = 'rgba(255,107,107,0.12)')
-            }
-            onMouseLeave={(e) => (e.currentTarget.style.background = '')}
-            onClick={() => {
-              void removeEntry(menu.id)
-              setMenu(null)
-            }}
-          >
-            删除
-          </div>
-        </div>
+        <CanvasContextMenu
+          position={{x: menu.x, y: menu.y}}
+          onClose={() => setMenu(null)}
+          items={[
+            {
+              type: 'normal',
+              label: '重命名',
+              callback: () => {
+                void renameEntry(menu.id)
+                setMenu(null)
+              },
+            },
+            {
+              type: 'normal',
+              label: '删除',
+              callback: () => {
+                void removeEntry(menu.id)
+                setMenu(null)
+              },
+            },
+          ]}
+        />
       )}
-    </div>
+    </Panel>
   )
 }

@@ -4,10 +4,14 @@ import {
   DirectionalLight,
   PerspectiveCamera,
   Scene,
+  Sphere,
   Vector3,
   WebGLRenderer,
 } from 'three'
 import {createGLTFLoader} from './gltfLoader'
+import type {ImportItem} from './importPipeline'
+import type {Library} from './library'
+import type {ModelEntry} from './types'
 
 /**
  * 离屏渲染模型缩略图(128×128 PNG)。WebGL 上下文创建失败、
@@ -39,13 +43,22 @@ export async function renderThumbnail(
       scene.add(gltf.scene)
 
       const box = new Box3().setFromObject(gltf.scene)
-      const center = box.getCenter(new Vector3())
-      const size = box.getSize(new Vector3()).length() || 1
-      const camera = new PerspectiveCamera(40, 1, size / 100, size * 10)
+      const sphere = box.getBoundingSphere(new Sphere())
+      const radius = sphere.radius || 1
+      // 取景距离按包围球 + 垂直视场角算,保证整个模型(高瘦的人形
+      // 尤其容易顶天)都进画面,再留 15% 呼吸边距
+      const fov = 40
+      const distance = (radius / Math.tan(((fov / 2) * Math.PI) / 180)) * 1.15
+      const camera = new PerspectiveCamera(
+        fov,
+        1,
+        distance / 100,
+        distance * 10,
+      )
       camera.position
-        .copy(center)
-        .add(new Vector3(size * 0.7, size * 0.5, size * 0.7))
-      camera.lookAt(center)
+        .copy(sphere.center)
+        .add(new Vector3(0.7, 0.5, 0.7).normalize().multiplyScalar(distance))
+      camera.lookAt(sphere.center)
       renderer.render(scene, camera)
 
       return await new Promise<Blob | undefined>((resolve) =>
@@ -56,5 +69,31 @@ export async function renderThumbnail(
     }
   } catch {
     return undefined
+  }
+}
+
+/**
+ * 给导入成功的 model 项补缩略图:按 contentHash 找回刚入库、
+ * 还没有 thumbnailId 的条目逐个渲染。手动导入与内置播种共用。
+ * WebGL 不可用时 renderThumbnail 返回 undefined,自然降级为占位图标。
+ */
+export async function backfillModelThumbnails(
+  items: ImportItem[],
+  library: Library,
+): Promise<void> {
+  for (const item of items) {
+    if (item.type !== 'model') continue
+    const blob = await renderThumbnail(item.glb)
+    if (!blob) continue
+    const list = (await library.backend.listEntries('model')) as ModelEntry[]
+    const entry = list.find(
+      (e) => e.contentHash === item.contentHash && !e.thumbnailId,
+    )
+    if (entry) {
+      await library.putBlobWithEntry(blob, (thumbnailId) => ({
+        ...entry,
+        thumbnailId,
+      }))
+    }
   }
 }
