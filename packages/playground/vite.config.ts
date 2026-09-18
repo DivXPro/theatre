@@ -89,7 +89,7 @@ const config = defineConfig(async ({command}) => {
       // base: '/playground/',
     },
 
-    assetsInclude: ['**/*.gltf', '**/*.glb'],
+    assetsInclude: ['**/*.gltf', '**/*.glb', '**/*.fbx'],
 
     resolve: {
       /*

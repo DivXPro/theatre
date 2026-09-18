@@ -29,14 +29,32 @@ export const realImportDeps: () => ImportDeps = () => ({
 
 async function defaultLoad(file: File): Promise<LoadedModel> {
   const {FBXLoader} = await import('three-stdlib')
+  const {LoadingManager} = await import('three')
   const url = URL.createObjectURL(file)
   try {
     if (/\.glb$|\.gltf$/i.test(file.name)) {
       const gltf = await createGLTFLoader().loadAsync(url)
       return {root: gltf.scene as Group, animations: gltf.animations}
     }
-    const root = await new FBXLoader().loadAsync(url)
-    return {root: root as Group, animations: root.animations}
+    // FBX 内嵌贴图走 TextureLoader 异步解码:loadAsync 在解析完成时就返回,
+    // 此时 texture.image 还是空的,直接导出会被当无效贴图剥掉(灰模)。
+    // 用 LoadingManager.onLoad 等全部贴图解码完再交卷;贴图加载失败不
+    // 阻塞(manager 照样 onLoad),无效贴图由导出侧的 strip 兜底
+    return await new Promise<LoadedModel>((resolve, reject) => {
+      const manager = new LoadingManager()
+      let loaded: LoadedModel | undefined
+      manager.onLoad = () => {
+        if (loaded) resolve(loaded)
+      }
+      new FBXLoader(manager).load(
+        url,
+        (root) => {
+          loaded = {root: root as Group, animations: root.animations}
+        },
+        undefined,
+        reject,
+      )
+    })
   } finally {
     URL.revokeObjectURL(url)
   }
@@ -76,7 +94,7 @@ export type ImportPlan = {
   summary: string
 }
 
-function baseName(fileName: string): string {
+export function baseName(fileName: string): string {
   return fileName.replace(/\.[^.]+$/, '').replace(/\.pose$/, '')
 }
 
