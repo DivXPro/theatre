@@ -4,9 +4,8 @@ import {
   useCurrentSheet,
 } from '@dreamerbird/r3f'
 import {getStudioSync, types as t, val} from '@dreamerbird/core'
-import type {ISheetObject} from '@dreamerbird/core'
+import type {ISheet, ISheetObject} from '@dreamerbird/core'
 import React, {
-  useCallback,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -35,14 +34,12 @@ import {registerEditorOnly, withEditorOnlyHidden} from './editorOnly'
 import {useSelectionGizmoTarget} from './PlacementManager'
 import {
   getPathMeta,
-  pathObjectName,
   samplePathPoint,
   usePathExists,
   usePathHasPoints,
 } from './CameraPath'
-import {resolveBoundPathKey, isBindingStale} from './pathBinding'
-import {usePathsList} from './pathRegistry'
-import {buildCameraPanelActions} from './menuModel'
+import {resolveBoundPathKey} from './pathBinding'
+import {getPathsRegistry, readPathEntries, usePathsList} from './pathRegistry'
 import {consumeCameraSeed} from './cameraRegistry'
 
 /**
@@ -53,8 +50,8 @@ import {consumeCameraSeed} from './cameraRegistry'
  *   (瞄准点),朝向始终 lookAt Target——对齐 Blender 的 Track To 约束:
  *   相机没有"朝向模式",目标怎么动是它的自由(Target 的移动直接在
  *   时间轴上给 position 打关键帧,不需要单独的路径对象)
- * - 运镜驱动:机位可以切到"沿路径"(moveMode=path 时沿 pathKey 绑定
- *   的路径,对齐 Blender 的约束跟随),由 CameraPath 的曲线 + 路径对象的
+ * - 运镜驱动:机位可以切到"沿路径"(相机面板的「绑定路径」下拉选一条
+ *   路径,对齐 Blender 的约束跟随),由 CameraPath 的曲线 + 路径对象的
  *   行进进度(0~1,对齐曲线侧的 Evaluation Time)驱动,
  *   进度打关键帧 = 调运镜节奏;路径为空时回退手动,不产生异常画面
  * - 编辑器里的视锥示意:从相机顶点拉 4 条线到固定距离的末端平面,
@@ -71,8 +68,8 @@ import {consumeCameraSeed} from './cameraRegistry'
 const PIP_WIDTH_FRACTION = 0.28
 const PIP_MARGIN_PX = 16
 const FRUSTUM_COLOR = 0x6fb7ff
-/** 视锥示意线的末端距离(示意用,与相机实际 far 无关;1.5 = 早期 3 的一半) */
-const FRUSTUM_DISPLAY_LENGTH = 1.5
+/** 视锥示意线的末端距离(示意用,与相机实际 far 无关;0.75 = 早期 3 的四分之一) */
+const FRUSTUM_DISPLAY_LENGTH = 0.75
 /** 末端平面的不透明度 */
 const FRUSTUM_FILL_OPACITY = 0.12
 
@@ -81,30 +78,55 @@ const FRUSTUM_FILL_OPACITY = 0.12
  * sheet.object 重复调用要求配置 deep-equal,函数按引用比,
  * 每次 render 新建会在热更新后炸"called twice with different config")。
  *
- * 分工对齐 Blender 的 Follow Path:**跟随开关归相机**(moveMode=path 时
- * 机位由 pathKey 绑定的路径驱动,position 属性被忽略),**行进进度归路径**
- * (绑定路径对象的 progress 属性,打关键帧 = 调运镜节奏;
- * 对齐曲线侧的 Evaluation Time)。路径为空时回退手动,不产生异常画面。
+ * 分工对齐 Blender 的 Follow Path:**绑哪条路径归相机**(pathKey 属性,
+ * 面板下拉选,选了即生效、清空即解绑,position 属性被忽略),**行进进度
+ * 归路径**(绑定路径对象的 progress 属性,打关键帧 = 调运镜节奏;
+ * 对齐曲线侧的 Evaluation Time)。路径被删回退手动(机位定格当前,
+ * 对齐 Blender 约束目标消失),不产生异常画面。
  * trackTarget=false = 解除朝向绑定(对齐 Blender 关掉 Track To 约束):
  * 解绑瞬间把当前朝向定格进 rotation 属性,画面不跳。
- * targetHidden=true = 软删除 Target(真删要绕过 React 声明式重建,代价
- * 不值;开关放相机面板是因为它是"镜头机组"的设置):Target 网格隐藏、
- * 不可点、不挂移动箭头,绑定的相机自动解脱保持当前朝向;对象还在
- * 大纲里,改回来就恢复。
+ */
+
+/**
+ * 「绑定路径」下拉的动态选项:pathKey → 显示名。选项函数由 studio 在
+ * 编辑器渲染/校验时调用(不在 React 上下文里),经 dropdownSheet 拿
+ * 当前 sheet 读注册表;注册表对象还没建好时退化为只有「手动」一项。
+ */
+let dropdownSheet: ISheet | null = null
+
+function pathBindingOptions(): {[key: string]: string} {
+  const options: {[key: string]: string} = {'': '手动(不绑定)'}
+  if (!dropdownSheet) return options
+  try {
+    for (const entry of readPathEntries(getPathsRegistry(dropdownSheet))) {
+      options[entry.pathKey] = entry.pathKey
+    }
+  } catch {
+    // 注册表对象尚未创建:只有手动项
+  }
+  return options
+}
+
+/**
+ * 运镜驱动属性,挂在 Shot Camera 对象上(模块级常量:
+ * sheet.object 重复调用要求配置 deep-equal,函数按引用比,
+ * 每次 render 新建会在热更新后炸"called twice with different config")。
+ *
+ * pathKey 是绑定的单一直径:下拉选项动态来自注册表(见
+ * pathBindingOptions),选「手动」= 解绑。moveMode 是双属性时代的
+ * 历史属性,隐藏保留只为兼容已持久化的状态值,不再显示也不再读写。
  */
 const shotCameraAdditionalProps = {
   trackTarget: t.boolean(true, {label: '朝向绑定 Target'}),
-  targetHidden: t.boolean(false, {label: '删除 Target(可恢复)'}),
   moveMode: t.stringLiteral(
     'manual',
-    // 选项标签保持通用:配置是模块级常量(deep-equal 约束),
-    // 动态路径清单塞不进来;绑定哪条路径由 pathKey 表达
     {manual: '手动', path: '路径'},
-    {label: '机位驱动'},
+    {label: '机位驱动', hidden: true},
   ),
-  // 绑定路径的 key(注册表里的 pathKey);空 = 未绑定。
-  // 主交互入口是面板动作区的绑定按钮,这个文本框只当兜底
-  pathKey: t.string('', {label: '绑定路径'}),
+  pathKey: t.stringLiteral('', pathBindingOptions, {
+    label: '绑定路径',
+    as: 'menu',
+  }),
 }
 
 /** 视锥线:末端平面矩形 4 段 + 顶点→平面 4 角 = 8 段 */
@@ -137,10 +159,34 @@ function makeFrustumFill(): Mesh {
   return fill
 }
 
-/** 按相机当前 fov/aspect 重写视锥顶点和显示面尺寸(挂在相机节点下,用视空间坐标) */
+/**
+ * "上方"指示三角(对齐 Blender 相机 gizmo):末端矩形上边中点向上
+ * 一根实心三角,随视锥一起按 fov/aspect 缩放、跟相机翻滚转动,
+ * 一眼看出哪边是镜头的上。单位几何:底边宽 1、高 1,底边中点在原点。
+ */
+function makeUpTriangle(): Mesh {
+  const geo = new BufferGeometry()
+  geo.setAttribute(
+    'position',
+    new BufferAttribute(new Float32Array([-0.5, 0, 0, 0.5, 0, 0, 0, 1, 0]), 3),
+  )
+  const tri = new Mesh(
+    geo,
+    new MeshBasicMaterial({
+      color: FRUSTUM_COLOR,
+      side: DoubleSide,
+      toneMapped: false,
+    }),
+  )
+  tri.frustumCulled = false
+  return tri
+}
+
+/** 按相机当前 fov/aspect 重写视锥顶点、显示面尺寸和上方三角(挂在相机节点下,用视空间坐标) */
 function updateFrustum(
   lines: LineSegments,
   fill: Mesh,
+  up: Mesh,
   cam: PerspectiveCameraImpl,
 ) {
   const {fov, aspect} = cam
@@ -172,6 +218,10 @@ function updateFrustum(
   }
   attr.needsUpdate = true
   fill.scale.set(2 * w, 2 * h, 1)
+  // 上方三角:宽取矩形宽的一半,高 = 宽的一半(高宽比 1:2),
+  // 底边与矩形上边之间留 1/8 底宽的间距
+  up.position.set(0, h + w * 0.125, z)
+  up.scale.set(w, w * 0.5, 1)
 }
 
 /** 响应式读对象的某个标量属性(值没变就返回原引用,不触发重渲染) */
@@ -230,6 +280,7 @@ export function ShotCamera({
   const aimRef = useRef<Object3D>(new Object3D())
   const frustum = useMemo(makeFrustumLines, [])
   const frustumFill = useMemo(makeFrustumFill, [])
+  const upTriangle = useMemo(makeUpTriangle, [])
 
   // 新相机落地即取景:添加时从导演视角捕获的种子(机位/朝向/瞄准点),
   // 挂载后消费一次——此后相机数据归面板/拖拽/时间轴管,种子不再介入
@@ -266,17 +317,16 @@ export function ShotCamera({
   // 都不出现,从源头消灭"拖了没反应、数据还悄悄岔开"的假动作。
   // 空路径驱动自动回退手动,不锁
   const sheet = useCurrentSheet()!
-  // 绑定解析:moveMode=path 时沿 pathKey 绑定的路径;空 pathKey 回退
-  // legacy 'Pos Path'(见 pathBinding.ts);进度仍在路径对象上(共享进度)
+  // 「绑定路径」下拉的选项函数在面板渲染时调用(非 React 上下文),
+  // 把当前 sheet 喂给模块级 pathBindingOptions
+  useEffect(() => {
+    dropdownSheet = sheet
+  }, [sheet])
+  // 绑定解析:pathKey 非空且在册 = 绑定生效;进度仍在路径对象上(共享进度)
   const paths = usePathsList(sheet)
   const registeredKeys = useMemo(() => paths.map((e) => e.pathKey), [paths])
-  const camMoveMode = useObjPropScalar<string>(
-    cameraObjRef,
-    'moveMode',
-    'manual',
-  )
   const camPathKey = useObjPropScalar<string>(cameraObjRef, 'pathKey', '')
-  const boundKey = resolveBoundPathKey(camMoveMode, camPathKey, registeredKeys)
+  const boundKey = resolveBoundPathKey(camPathKey, registeredKeys)
   // boundKey 为 null 时用 '' 探测(getObject('') 恒不存在,不创建)
   const boundPathExists = usePathExists(sheet, boundKey ?? '')
   const boundHasPoints = usePathHasPoints(sheet, boundKey ?? '')
@@ -298,68 +348,53 @@ export function ShotCamera({
     if (boundKey !== null) drivenPosValidRef.current = false
   }, [boundKey])
 
-  // 绑定失效看护:绑定的路径被删后对端同步删除会走到这里(本地删除
-  // 已在 removePathFromRegistry 的同一个 scrub 里连带回退,见 App 的
-  // removePath)→ 回退手动并清绑定,机位定格当前位置(对齐 Blender:
-  // 约束目标被删,物体保持当前变换)。空路径(没控制点)不算失效,
-  // 维持绑定。
-  // 定格取 drivenPosRef(帧驱动每帧镜像的驱动机位),不读
-  // cam.position:绑定失效引发的 theatre 值变化可能已让包装器重应用
-  // 过期属性、或组件重挂载出了新相机,此刻 cam.position 不一定是
-  // 画面机位(实测竞态:同一删除两次运行一次定格一次跳变)
+  // 解绑/失效统一看护:boundKey 由有变无(下拉选「手动」、绑定路径被删)
+  // → 过期 position 属性马上会被包装器重应用,相机跳回绑定前位置——
+  // 先把当前驱动机位定格进 position(对齐 Blender:约束解除,物体保持
+  // 当前变换),同时清掉 pathKey(失效时可能留着已删路径的死 key)。
+  // 本地路径删除已在 removePathFromRegistry 的同一个 scrub 里定格+清
+  // 绑定(App 的 removePath),这里检测到无需再写就直接跳过,不产生
+  // 多余撤销步。空路径(没控制点)不算失效,维持绑定。
+  // 定格取 drivenPosRef(帧驱动每帧镜像的驱动机位),不读 cam.position:
+  // 解绑引发的 theatre 值变化可能已让包装器重应用过期属性、或组件
+  // 重挂载出了新相机,此刻 cam.position 不一定是画面机位(实测竞态:
+  // 同一删除两次运行一次定格一次跳变)
+  const prevBoundKeyRef = useRef<string | null>(null)
   useEffect(() => {
-    if (!isBindingStale(camMoveMode, camPathKey, registeredKeys)) return
+    const prev = prevBoundKeyRef.current
+    prevBoundKeyRef.current = boundKey
+    if (prev === null || boundKey !== null) return
     const obj = cameraObjRef.current
     const studio = getStudioSync()
     if (!obj || !studio) return
     const frozen = drivenPosValidRef.current
       ? drivenPosRef.current
       : camRef.current?.position
+    const cur = val(obj.props.position) as
+      | {x: number; y: number; z: number}
+      | undefined
+    const pathKey = (val(obj.props.pathKey) as string | undefined) ?? ''
+    const alreadyFrozen =
+      !!frozen &&
+      !!cur &&
+      cur.x === frozen.x &&
+      cur.y === frozen.y &&
+      cur.z === frozen.z
+    if (alreadyFrozen && pathKey === '') return
     const scrub = studio.scrub()
     scrub.capture(({set}) => {
-      if (frozen)
+      if (frozen && !alreadyFrozen)
         set(obj.props.position, {x: frozen.x, y: frozen.y, z: frozen.z})
-      set(obj.props.moveMode, 'manual')
-      set(obj.props.pathKey, '')
+      if (pathKey !== '') set(obj.props.pathKey, '')
     })
     scrub.commit()
-  }, [camMoveMode, camPathKey, registeredKeys, cameraObjRef])
+  }, [boundKey, cameraObjRef])
 
-  // 绑定/解绑:一次 scrub 同时写 pathKey 和 moveMode,
-  // 不留"绑了但没生效"的中间态
-  const bindPath = useCallback(
-    (pathKey: string) => {
-      const obj = cameraObjRef.current
-      const studio = getStudioSync()
-      if (!obj || !studio) return
-      const scrub = studio.scrub()
-      scrub.capture(({set}) => {
-        set(obj.props.pathKey, pathKey)
-        set(obj.props.moveMode, 'path')
-      })
-      scrub.commit()
-    },
-    [cameraObjRef],
-  )
-  const unbindPath = useCallback(() => {
-    const obj = cameraObjRef.current
-    const studio = getStudioSync()
-    if (!obj || !studio) return
-    const scrub = studio.scrub()
-    scrub.capture(({set}) => {
-      set(obj.props.moveMode, 'manual')
-      set(obj.props.pathKey, '')
-    })
-    scrub.commit()
-  }, [cameraObjRef])
-
-  // 朝向绑定(Track To):trackTarget 是相机面板上的开关;Target 被软删
-  // (相机面板的 targetHidden)时绑定自动失效——两种失效都把当前朝向
-  // 定格进 rotation 属性,画面不跳(对齐 Blender:约束失效,物体保持
-  // 当前变换)
+  // 朝向绑定(Track To):trackTarget 是相机面板上的开关;关掉时把当前
+  // 朝向定格进 rotation 属性,画面不跳(对齐 Blender:约束失效,物体
+  // 保持当前变换)
   const trackTarget = useObjPropScalar(cameraObjRef, 'trackTarget', true)
-  const targetHidden = useObjPropScalar(cameraObjRef, 'targetHidden', false)
-  const tracking = trackTarget && !targetHidden
+  const tracking = trackTarget
   // 失效瞬间定格:theatre 值变化会触发包装器全量应用属性,过期的
   // rotation 可能已把相机顶回——但位置没变,用瞄准点位置重算朝向
   // (Matrix4.lookAt 与相机 lookAt 同语义:-Z 朝目标),就是用户看到
@@ -394,62 +429,10 @@ export function ShotCamera({
     scrub.commit()
   }, [tracking, cameraObjRef, boundKey, boundMeta])
 
-  // 面板动作区(属性后的按钮):把 App 的旧菜单动作下沉到相机面板
-  const alignToPathStart = useCallback(() => {
-    const obj = cameraObjRef.current
-    const studio = getStudioSync()
-    if (!obj || !studio || !boundKey) return
-    const tmp = new Vector3()
-    if (!samplePathPoint(boundKey, 0, tmp)) return
-    const scrub = studio.scrub()
-    scrub.capture(({set}) =>
-      set(obj.props.position, {x: tmp.x, y: tmp.y, z: tmp.z}),
-    )
-    scrub.commit()
-  }, [cameraObjRef, boundKey])
-
-  const restoreTarget = useCallback(() => {
-    const obj = cameraObjRef.current
-    const studio = getStudioSync()
-    if (!obj || !studio) return
-    const scrub = studio.scrub()
-    scrub.capture(({set}) => set(obj.props.targetHidden, false))
-    scrub.commit()
-  }, [cameraObjRef])
-
-  // 面板动作区(属性后的按钮):动作配置必须 useMemo 缓存引用,
-  // 否则 editable 的 effect 每 render 重跑(见 Global Constraints)
-  const objectActions = useMemo(
-    () =>
-      buildCameraPanelActions({
-        hasPoints: boundHasPoints,
-        targetHidden,
-        onAlignToPathStart: alignToPathStart,
-        onRestoreTarget: restoreTarget,
-        bindablePaths: registeredKeys.map((pathKey) => ({
-          pathKey,
-          label: pathObjectName(pathKey),
-        })),
-        boundPathKey: boundKey,
-        onBindPath: bindPath,
-        onUnbindPath: unbindPath,
-      }),
-    [
-      boundHasPoints,
-      targetHidden,
-      alignToPathStart,
-      restoreTarget,
-      registeredKeys,
-      boundKey,
-      bindPath,
-      unbindPath,
-    ],
-  )
-
   // 选中后挂三轴移动箭头:摄像机本体和瞄准点都能拖(机位被路径接管时
-  // 相机除外,见上;Target 被软删后也不可拖)
+  // 相机除外,见上)
   useSelectionGizmoTarget(cameraObjRef, camRef, !camDriveLocked)
-  useSelectionGizmoTarget(targetObjRef, targetRef, !targetHidden)
+  useSelectionGizmoTarget(targetObjRef, targetRef, true)
 
   // 运镜驱动(优先级 -1,赶在 wrapper 的 lookAt 之前):
   // 机位路径非空且 moveMode=path → 机位取路径上行进进度处。
@@ -478,15 +461,17 @@ export function ShotCamera({
   // (Target 的可见性走下面 e.mesh 的 visible 属性:镜头视角或软删时都藏)
   useEffect(() => registerEditorOnly(frustum), [frustum])
   useEffect(() => registerEditorOnly(frustumFill), [frustumFill])
+  useEffect(() => registerEditorOnly(upTriangle), [upTriangle])
   useEffect(() => registerEditorOnly(targetRef.current), [])
   useEffect(() => {
     frustum.visible = !shotView
     frustumFill.visible = !shotView
-  }, [shotView, frustum, frustumFill])
+    upTriangle.visible = !shotView
+  }, [shotView, frustum, frustumFill, upTriangle])
 
   useFrame(() => {
     if (camRef.current && frustum.visible) {
-      updateFrustum(frustum, frustumFill, camRef.current)
+      updateFrustum(frustum, frustumFill, upTriangle, camRef.current)
     }
   })
 
@@ -535,7 +520,6 @@ export function ShotCamera({
         far={60}
         lookAt={tracking ? aimRef : undefined}
         additionalProps={shotCameraAdditionalProps}
-        objectActions={objectActions}
       >
         <primitive
           object={frustum}
@@ -547,14 +531,19 @@ export function ShotCamera({
           onClick={select(cameraObjRef)}
           onContextMenu={contextMenu(cameraObjRef)}
         />
+        <primitive
+          object={upTriangle}
+          onClick={select(cameraObjRef)}
+          onContextMenu={contextMenu(cameraObjRef)}
+        />
       </PerspectiveCamera>
       <e.mesh
         theatreKey={targetKey}
         objRef={targetObjRef}
         ref={targetRef}
         position={[0, 1, 0]}
-        visible={!targetHidden && !shotView}
-        onClick={targetHidden ? undefined : select(targetObjRef)}
+        visible={!shotView}
+        onClick={select(targetObjRef)}
       >
         <boxGeometry args={[0.25, 0.25, 0.25]} />
         <meshBasicMaterial color="#ffb020" wireframe />

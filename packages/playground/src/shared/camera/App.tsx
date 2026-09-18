@@ -1,6 +1,6 @@
 import {editable as e, SheetProvider, PerspectiveCamera} from '@dreamerbird/r3f'
 import {
-  Stars,
+  Grid,
   OrbitControls,
   GizmoHelper,
   GizmoViewport,
@@ -25,6 +25,8 @@ import type {ThreeEvent} from '@react-three/fiber'
 import {useGLTF} from '@react-three/drei'
 import sceneGLB from './scene.glb'
 import {
+  Color,
+  LinearSRGBColorSpace,
   MOUSE,
   PMREMGenerator,
   Raycaster,
@@ -51,6 +53,7 @@ import {
   useSelectionGizmoTarget,
 } from './PlacementManager'
 import {CanvasContextMenu} from './contextMenu'
+import {registerEditorOnly} from './editorOnly'
 import {
   buildCameraMenuItems,
   buildObjectMenuItems,
@@ -516,10 +519,8 @@ function collectBoundCameraResets(
   for (const entry of readCameraEntries(getCamerasRegistry(sheet))) {
     const obj = shotRefs.get(entry.cameraKey)?.camera.current
     if (!obj) continue
-    const moveMode = (val(obj.props.moveMode) as string | undefined) ?? 'manual'
     const pathKey = (val(obj.props.pathKey) as string | undefined) ?? ''
-    if (resolveBoundPathKey(moveMode, pathKey, registeredKeys) !== metaKey)
-      continue
+    if (resolveBoundPathKey(pathKey, registeredKeys) !== metaKey) continue
     resets.push({obj, freeze})
   }
   return resets
@@ -548,10 +549,48 @@ function EnvLighting() {
   return null
 }
 
+/**
+ * 背景色(Blender 4.x 默认视口色 #454545)。
+ * 注意:Canvas 是 linear 模式,scene.background 的 Color 会被原样写进
+ * gl.clearColor 不做 sRGB 编码,而 hex 构造时又已按 sRGB→linear 转换
+ * 过一次,直接写 hex 会暗两个数量级(看上去纯黑)。这里按 linear 原值
+ * 构造,让屏幕显示值 = 目标 sRGB 值。材质颜色不受影响(走着色器输出链)。
+ */
+const BACKGROUND = new Color().setRGB(
+  0x45 / 255,
+  0x45 / 255,
+  0x45 / 255,
+  LinearSRGBColorSpace,
+)
+
+/**
+ * Blender 式地面网格:布局参考线,编辑辅助对象(登记 editorOnly,
+ * 画中画/镜头视角取景不画它)。微抬 0.01 避免与放置面 z-fighting;
+ * 不参与射线检测,不挡点选/放置。
+ * 颜色注意:linear 模式下材质色同样被压暗 ^2.2,hex 要按目标显示色
+ * 反推(目标 #55555b → hex #9b9ba1)。
+ */
+function GroundGrid() {
+  const ref = useRef<Mesh>(null!)
+  useEffect(() => registerEditorOnly(ref.current), [])
+  return (
+    <Grid
+      ref={ref}
+      position={[0, 0.01, 0]}
+      args={[100, 100]}
+      cellSize={1}
+      cellColor="#9b9ba1"
+      sectionSize={5}
+      sectionColor="#aeaeb6"
+      fadeDistance={80}
+      fadeStrength={1}
+      infiniteGrid
+      raycast={() => null}
+    />
+  )
+}
+
 function App() {
-  const bgs = ['#272730', '#b7c5d1']
-  const [bgIndex, setBgIndex] = useState(0)
-  const bg = bgs[bgIndex]
   const cameraTargetRef = useRef<Mesh>(null!)
   const cameraObjRef = useRef<ISheetObject<any> | undefined>(undefined)
   const targetObjRef = useRef<ISheetObject<any> | undefined>(undefined)
@@ -915,40 +954,6 @@ function App() {
     [sheet, pathPresetHeight, enterPathEdit],
   )
 
-  // 缺失提示:绑定了朝向但 Target 已被删 → 工具条下方纯文字提醒;
-  // 恢复动作在相机面板动作区(恢复 Target),提示条不带按钮
-  const [targetMissing, setTargetMissing] = useState(false)
-  useEffect(() => {
-    let offCam: (() => void) | undefined
-    let cancelled = false
-    // Canvas 是独立的 React root,里面 editable 填 objRef 的时机不受
-    // 本 root 的 effect 顺序保证——首帧可能还没填,逐帧重试到挂上为止
-    const trySubscribe = () => {
-      if (cancelled) return
-      if (!activeCamera) {
-        setTargetMissing(false)
-        return
-      }
-      const cam = activeShotRefs?.camera.current
-      if (!cam) {
-        requestAnimationFrame(trySubscribe)
-        return
-      }
-      const update = () =>
-        setTargetMissing(
-          Boolean(val(cam.props.trackTarget)) &&
-            Boolean(val(cam.props.targetHidden)),
-        )
-      update()
-      offCam = cam.onValuesChange(update)
-    }
-    trySubscribe()
-    return () => {
-      cancelled = true
-      offCam?.()
-    }
-  }, [activeCamera])
-
   // 删除整条路径:注册表真删(forgetObject + detach + 清单移除,撤销
   // 两步完整回滚);正在编辑/选中了它的点就一并退出/清掉——用失焦式
   // 退出(不回头重选,对象已经没了,重选会把它又建出来)
@@ -1044,8 +1049,8 @@ function App() {
     [sheet, activeCamera],
   )
 
-  // 绑定到活动相机:一次 scrub 同时写 pathKey 和 moveMode(同 ShotCamera
-  // 的 bindPath;这里是无相机面板时的入口)
+  // 绑定到活动相机:只写 pathKey(绑定的单一直径,见 pathBinding.ts);
+  // 这里是无相机面板时的入口(路径右键菜单)
   const bindPathToActiveCamera = useCallback(
     (pathKey: string) => {
       const studio = getStudioSync()
@@ -1056,7 +1061,6 @@ function App() {
       const scrub = studio.scrub()
       scrub.capture(({set}) => {
         set(cam.props.pathKey, pathKey)
-        set(cam.props.moveMode, 'path')
       })
       scrub.commit()
     },
@@ -1273,9 +1277,6 @@ function App() {
 
   return (
     <div
-      onClick={() => {
-        // return setBgIndex((bgIndex) => (bgIndex + 1) % bgs.length)
-      }}
       style={{
         height: '100vh',
         position: 'relative',
@@ -1475,28 +1476,6 @@ function App() {
           onClose={closeCameraMenu}
         />
       )}
-      {targetMissing && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 52,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 10,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-            padding: '6px 14px',
-            background: '#3a2a2a',
-            border: '1px solid #a55',
-            borderRadius: 6,
-            color: '#ffd9d9',
-            fontSize: 13,
-          }}
-        >
-          <span>Target 已删除,相机保持当前朝向(相机面板可恢复)</span>
-        </div>
-      )}
       {editingPath && !shotView && (
         <PathEditBar
           hasSelection={
@@ -1588,7 +1567,8 @@ function App() {
               progressOf={pathProgressOf(entry.pathKey)}
             />
           ))}
-          <color attach="background" args={[bg]} />
+          {/* 背景:Blender 4.x 默认视口背景色(linear 原值构造,见 BACKGROUND) */}
+          <primitive object={BACKGROUND} attach="background" />
           {/* 布光定位=布局演示:半球光兜底(任何机位不死黑)+ 一盏主光给
               明暗面和投影(形态可读);灯固定在世界坐标、不跟相机走,
               编辑预览和录制成片一致。主光可编辑,角度在 studio 里调 */}
@@ -1673,7 +1653,7 @@ function App() {
               onCancel={() => setPresetDrag(null)}
             />
           )}
-          <Stars radius={500} depth={50} count={1000} factor={10} />
+          <GroundGrid />
         </SheetProvider>
       </Canvas>
     </div>

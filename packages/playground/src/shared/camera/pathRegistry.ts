@@ -137,7 +137,6 @@ export function removePathFromRegistry(
     for (const {obj, freeze} of boundCameras) {
       if (freeze)
         set(obj.props.position, {x: freeze.x, y: freeze.y, z: freeze.z})
-      set(obj.props.moveMode, 'manual')
       set(obj.props.pathKey, '')
     }
     set(
