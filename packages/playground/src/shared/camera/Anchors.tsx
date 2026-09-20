@@ -1,8 +1,7 @@
 // packages/playground/src/shared/camera/Anchors.tsx
 /**
- * 独立锚点(空物体):顶栏按钮添加,橙色线框小方块(沿用旧 Target
- * 视觉)。可点选、可拖(gizmo)、右键删除;可被相机瞄准,可绑定父级
- * (Task 7)。仅编辑视角可见。
+ * 独立锚点(空物体):顶栏按钮添加,橙色线框小球体。可点选、可拖
+ * (gizmo)、右键删除;可被相机瞄准,可绑定父级(Task 7)。仅编辑视角可见。
  */
 import {editable as e} from '@dreamerbird/r3f'
 import {getStudioSync, types as t, val} from '@dreamerbird/core'
@@ -289,7 +288,7 @@ function AnchorObject({
         )
       }}
     >
-      <boxGeometry args={[0.25, 0.25, 0.25]} />
+      <sphereGeometry args={[0.125, 16, 16]} />
       <meshBasicMaterial color="#ffb020" wireframe />
     </e.mesh>
   )
