@@ -1,9 +1,11 @@
 // packages/playground/src/shared/camera/Anchors.tsx
 /**
- * 独立锚点(空物体):顶栏按钮添加,橙色轴线交叉(Blender Plain
- * Axes 式:过原点的 ±X/±Y/±Z 三根线)。可点选、可拖(gizmo)、右键删
- * 除;可被相机瞄准,可绑定父级(Task 7)。仅编辑视角可见。
- * 线段拾取有 three 的默认阈值,轴线附近点击即选中(与相机视锥线一致)。
+ * 独立锚点(空物体):顶栏按钮添加,浅蓝轴线交叉(Blender Plain
+ * Axes 式:过原点的 ±X/±Y/±Z 三根线)+ 轴心小圆点。线条恒定普通色
+ * 不变;选中(画布/大纲)时只有圆点变橙高亮,demand 帧手动补一帧。
+ * 可点选、可拖(gizmo)、右键删除;可被相机瞄准,可绑定父级。
+ * 仅编辑视角可见。线段拾取有 three 默认阈值,轴线附近点击即选中
+ * (与相机视锥线一致),圆点是最精准的命中区。
  */
 import {editable as e} from '@dreamerbird/r3f'
 import {getStudioSync, types as t, val} from '@dreamerbird/core'
@@ -17,8 +19,8 @@ import React, {
 } from 'react'
 import type {MutableRefObject} from 'react'
 import {BufferGeometry, Float32BufferAttribute, Vector3} from 'three'
-import type {Group} from 'three'
-import {useFrame} from '@react-three/fiber'
+import type {Group, Mesh, MeshBasicMaterial} from 'three'
+import {invalidate, useFrame} from '@react-three/fiber'
 import type {ThreeEvent} from '@react-three/fiber'
 import {translate} from '@dreamerbird/studio/i18n'
 import {registerEditorOnly} from './editorOnly'
@@ -91,6 +93,13 @@ export function Anchors({
 /** 轴线臂长:对齐旧线框方块/小球的视觉尺寸(总跨距 0.5) */
 const ANCHOR_AXES_ARM = 0.25
 
+/** 锚点普通色:与相机视锥默认同款浅蓝。线条恒定此色,不随选中变 */
+const ANCHOR_COLOR = 0x6fb7ff
+/** 选中高亮色(锚点橙):只落在轴心圆点上 */
+const ANCHOR_HIGHLIGHT = 0xffb020
+/** 轴心小圆点半径:兼任最精准的点击命中区 */
+const ANCHOR_DOT_RADIUS = 0.06
+
 /** Blender Plain Axes 式几何:过原点的三根轴线(±X/±Y/±Z),6 顶点 */
 function createAnchorAxesGeometry(): BufferGeometry {
   const a = ANCHOR_AXES_ARM
@@ -122,9 +131,28 @@ function AnchorObject({
   // 轴线几何:随组件建,卸载释放(6 顶点线段,极轻)
   const axesGeo = useMemo(createAnchorAxesGeometry, [])
   useEffect(() => () => axesGeo.dispose(), [axesGeo])
+  const dotRef = useRef<Mesh>(null!)
   const setObjRef = (obj: ISheetObject<any> | null) => {
     objRef.current = obj ?? undefined
   }
+
+  // 选中高亮:只有轴心圆点变色(浅蓝→橙),轴线恒定普通色。对齐
+  // ShotCamera 的订阅模式;值不变 setState 自动跳过,无关切换不重渲染;
+  // demand 帧模式下换色不重画,手动 invalidate 补一帧
+  const [selected, setSelected] = useState(false)
+  useEffect(() => {
+    const studio = getStudioSync()
+    if (!studio) return
+    const sync = () =>
+      setSelected((studio.selection as unknown[]).includes(objRef.current))
+    sync()
+    return studio.onSelectionChange(sync)
+  }, [objRef])
+  useEffect(() => {
+    const mat = dotRef.current?.material as MeshBasicMaterial | undefined
+    mat?.color.set(selected ? ANCHOR_HIGHLIGHT : ANCHOR_COLOR)
+    invalidate()
+  }, [selected])
 
   // 新锚点落地:消费位置种子(顶栏添加时从导演视角捕获)
   useLayoutEffect(() => {
@@ -319,8 +347,12 @@ function AnchorObject({
       }}
     >
       <lineSegments geometry={axesGeo}>
-        <lineBasicMaterial color="#ffb020" />
+        <lineBasicMaterial color={ANCHOR_COLOR} />
       </lineSegments>
+      <mesh ref={dotRef}>
+        <sphereGeometry args={[ANCHOR_DOT_RADIUS, 16, 16]} />
+        <meshBasicMaterial color={ANCHOR_COLOR} />
+      </mesh>
     </e.group>
   )
 }
