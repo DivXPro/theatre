@@ -19,6 +19,7 @@ import {useSelectionGizmoTarget} from './PlacementManager'
 import {consumeAnchorSeed, useAnchorsList} from './anchorsRegistry'
 import {
   anchorParentOptionsFor,
+  detachAnchorMesh,
   localOffsetForParent,
   needsParentEstablish,
   registerAnchorObject,
@@ -109,14 +110,18 @@ function AnchorObject({
   }, [anchorKey])
 
   // 登记运行时对象(瞄准解析 anchor:)与选中 gizmo;卸载清理
+  // 体内先捕获 mesh:passive cleanup 执行时 React 已把 ref 置 null
+  // (复审实测 React 19.2.8;layout cleanup 才仍 non-null),cleanup 里
+  // 读 meshRef.current 是空操作,幽灵网格原样残留
   useEffect(() => {
-    registerAnchorObject(anchorKey, meshRef.current)
+    const mesh = meshRef.current
+    registerAnchorObject(anchorKey, mesh)
     return () => {
       registerAnchorObject(anchorKey, null)
       // fiber v9 卸载按 JSX 父实例 remove,对命令式换父后的网格是 no-op:
-      // 已绑到骨骼/模型上的锚点被删时,必须显式脱离当前父级,
+      // 已绑到骨骼/模型上的锚点被删时,必须显式脱离当前父级(捕获值),
       // 否则网格残留在场景里,可见不可选,绑骨骼上还会跟动画
-      meshRef.current?.removeFromParent()
+      detachAnchorMesh(mesh)
       objRef.current = undefined
     }
   }, [anchorKey])

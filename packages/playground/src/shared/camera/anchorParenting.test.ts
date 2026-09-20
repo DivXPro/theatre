@@ -5,6 +5,7 @@ import {
   localOffsetForParent,
   needsParentEstablish,
   shouldClearMissingParent,
+  detachAnchorMesh,
 } from './aimTargets'
 
 describe('isDescendantAnchor', () => {
@@ -78,5 +79,22 @@ describe('Critical-1 回归:恢复未建立的绑定不被看护清除,由重试
   test('无父级:看护与重试都不动作', () => {
     expect(shouldClearMissingParent('model:X', '', false)).toBe(false)
     expect(needsParentEstablish('model:X', '')).toBe(false)
+  })
+})
+
+describe('detachAnchorMesh(终审复审:删锚清幽灵网格)', () => {
+  test('绑在伪造骨骼上的锚点网格被移除,骨骼子树无残留', () => {
+    const bone = new Object3D()
+    const mesh = new Object3D()
+    bone.add(mesh)
+    expect(bone.children).toContain(mesh)
+
+    detachAnchorMesh(mesh)
+
+    expect(mesh.parent).toBeNull()
+    expect(bone.children).toHaveLength(0)
+  })
+  test('null(卸载时 ref 已置空的等价输入)静默 no-op', () => {
+    expect(() => detachAnchorMesh(null)).not.toThrow()
   })
 })

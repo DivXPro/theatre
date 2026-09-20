@@ -278,6 +278,18 @@ export function localOffsetForParent(
 }
 
 /**
+ * 锚点卸载时脱离命令式父级(骨骼/模型上的锚点被删的清理)。
+ * fiber v9 卸载按 JSX 父实例 remove,对换父后的网格是 no-op,不脱离会
+ * 残留在场景里,可见不可选,绑骨骼上还会跟随动画。
+ * 注意:passive useEffect cleanup 执行时 React 已把 ref 置 null
+ * (实测 React 19.2.8,layout cleanup 才保有),调用方必须在 effect
+ * 体内捕获 mesh 传进来。
+ */
+export function detachAnchorMesh(mesh: Object3D | null): void {
+  mesh?.removeFromParent()
+}
+
+/**
  * 绑定重试循环的判定:有父级目标、且本会话尚未对当前 parentId 绑定
  * 成功。刷新/撤销恢复的持久绑定在异步目标(放置模型/骨骼锚点,
  * Suspense 加载完才注册)就绪前一直满足本条件,由 useFrame 每帧补建;
