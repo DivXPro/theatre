@@ -5,6 +5,13 @@ import styled from 'styled-components'
 import logo from '@dreamerbird/studio/assets/logo.png'
 import DropdownChevron from '@dreamerbird/studio/uiComponents/icons/DropdownChevron'
 import BaseMenu from '@dreamerbird/studio/uiComponents/simpleContextMenu/ContextMenu/BaseMenu'
+import {
+  getLanguage,
+  getRegisteredLanguages,
+  languageDisplayName,
+  setLanguage,
+  translate,
+} from '@dreamerbird/studio/i18n'
 
 const Container = styled.div`
   height: 100%;
@@ -34,21 +41,41 @@ const AppButton: React.FC<{}> = (props) => {
       invoke: {
         type: 'popover',
         render: ({close}) => {
+          // 菜单在点开时才渲染:这里读的语言/词条列表是打开那一刻的最新值
+          const languages = getRegisteredLanguages()
+          const current = getLanguage()
+          const languageItems =
+            languages.length > 1
+              ? [
+                  {type: 'separator' as const},
+                  // 当前语言打勾;显示名按当前语言给(中文界面看「简体中文」)
+                  ...languages.map((lang) => ({
+                    label: `${
+                      lang === current ? '✓ ' : '  '
+                    }${languageDisplayName(lang, current)}`,
+                    callback: () => {
+                      // 用户手动选择:写入持久化偏好,下次启动优先
+                      setLanguage(lang)
+                    },
+                  })),
+                ]
+              : []
           return (
             <BaseMenu
               onRequestClose={close}
               items={[
-                {label: "What's new?", callback: () => {}},
+                {label: translate('menu.whatsNew'), callback: () => {}},
                 {type: 'separator'},
-                {label: 'Chat with us', callback: () => {}},
-                {label: 'Help', callback: () => {}},
-                {label: 'Changelog', callback: () => {}},
+                {label: translate('menu.chatWithUs'), callback: () => {}},
+                {label: translate('menu.help'), callback: () => {}},
+                {label: translate('menu.changelog'), callback: () => {}},
                 {type: 'separator'},
-                {label: 'Github', callback: () => {}},
-                {label: 'Discord', callback: () => {}},
-                {label: 'Twitter', callback: () => {}},
+                {label: translate('menu.github'), callback: () => {}},
+                {label: translate('menu.discord'), callback: () => {}},
+                {label: translate('menu.twitter'), callback: () => {}},
+                ...languageItems,
                 {type: 'separator'},
-                {label: 'Settings', callback: () => {}},
+                {label: translate('menu.settings'), callback: () => {}},
               ]}
               displayName={appButtonTitle}
             />

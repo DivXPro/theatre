@@ -16,6 +16,7 @@ import ToolbarSwitchSelectContainer from '@dreamerbird/studio/uiComponents/toolb
 import Cube from '@dreamerbird/studio/uiComponents/icons/Cube'
 import Camera from '@dreamerbird/studio/uiComponents/icons/Camera'
 import useMenu from '@dreamerbird/studio/uiComponents/simpleContextMenu/useMenu'
+import {useT} from '@dreamerbird/studio/i18n'
 import {buildExportMenuItems} from './menuModel'
 import type {ExportSink} from './videoExport/sinks'
 
@@ -194,6 +195,7 @@ export function TopToolbar({
   libraryDisabled?: boolean
 }) {
   const exportButtonRef = useRef<HTMLButtonElement>(null)
+  const t = useT()
   const exportMenuItems = useCallback(
     () => buildExportMenuItems(exportSinks, (sink) => onPickExportSink(sink)),
     [exportSinks, onPickExportSink],
@@ -206,11 +208,11 @@ export function TopToolbar({
         <ToolbarBtn
           disabled={libraryDisabled}
           onClick={onToggleModelLibrary}
-          tip="添加模型"
+          tip={t('pg.toolbar.addModel')}
           hint={
             libraryDisabled
-              ? '放置中:先确认或取消当前放置'
-              : '打开模型库,点击或拖拽把模型放进场景'
+              ? t('pg.toolbar.placing')
+              : t('pg.toolbar.addModel.hint')
           }
         >
           <Cube />
@@ -218,19 +220,19 @@ export function TopToolbar({
         <ToolbarBtn
           disabled={libraryDisabled}
           onClick={onTogglePathLibrary}
-          tip="添加路径"
+          tip={t('pg.toolbar.addPath')}
           hint={
             libraryDisabled
-              ? '放置中:先确认或取消当前放置'
-              : '打开路径预设库,点击或拖拽生成相机轨迹'
+              ? t('pg.toolbar.placing')
+              : t('pg.toolbar.addPath.hint')
           }
         >
           <PathIcon />
         </ToolbarBtn>
         <ToolbarBtn
           onClick={onAddCamera}
-          tip="添加相机"
-          hint="从当前导演视角创建一台相机(落地即活动相机)"
+          tip={t('pg.toolbar.addCamera')}
+          hint={t('pg.toolbar.addCamera.hint')}
         >
           <Camera />
         </ToolbarBtn>
@@ -238,13 +240,13 @@ export function TopToolbar({
           onClick={onTogglePip}
           disabled={pipDisabled}
           className={pipVisible && !pipDisabled ? 'selected' : undefined}
-          tip="画中画"
+          tip={t('pg.toolbar.pip')}
           hint={
             pipDisabled
-              ? '先添加相机'
+              ? t('pg.toolbar.pip.disabled')
               : pipVisible
-                ? '隐藏右下角的镜头画中画'
-                : '显示右下角的镜头画中画'
+                ? t('pg.toolbar.pip.hide')
+                : t('pg.toolbar.pip.show')
           }
         >
           <PipIcon />
@@ -263,13 +265,13 @@ export function TopToolbar({
               rect ? {clientX: rect.left, clientY: rect.bottom + 4} : undefined,
             )
           }}
-          tip={exporting ? '停止并保存' : '导出视频'}
+          tip={exporting ? t('pg.toolbar.stopExport') : t('pg.toolbar.export')}
           hint={
             exporting
-              ? 'Esc 取消'
+              ? t('pg.toolbar.export.esc')
               : exportDisabled
-                ? '先添加相机'
-                : '把镜头取景实时录成视频:序列从头播到尾,录完自动保存'
+                ? t('pg.toolbar.pip.disabled')
+                : t('pg.toolbar.export.hint')
           }
         >
           {exporting ? <StopIcon /> : <ExportIcon />}

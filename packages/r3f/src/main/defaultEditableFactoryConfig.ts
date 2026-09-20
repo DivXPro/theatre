@@ -22,12 +22,29 @@ import {
   PointLightHelper,
   SpotLightHelper,
 } from 'three'
+import {translate} from '@dreamerbird/studio/i18n'
+import './i18n'
+
+/**
+ * 属性面板显示名,函数形式:studio 每次渲染现调,语言切换热改。
+ * 本文件的配置都是模块级常量(只建一次),箭头引用天然稳定。
+ */
+const propLabel =
+  (key: string): (() => string) =>
+  () =>
+    translate(key)
 
 const baseObjectConfig = {
   props: {
-    position: createVectorPropConfig('position'),
-    rotation: createVectorPropConfig('rotation'),
-    scale: createVectorPropConfig('scale', createVector([1, 1, 1])),
+    position: createVectorPropConfig('position', createVector(), {
+      label: propLabel('r3f.props.position'),
+    }),
+    rotation: createVectorPropConfig('rotation', createVector(), {
+      label: propLabel('r3f.props.rotation'),
+    }),
+    scale: createVectorPropConfig('scale', createVector([1, 1, 1]), {
+      label: propLabel('r3f.props.scale'),
+    }),
   },
   useTransformControls: true,
   icon: 'cube' as const,
@@ -36,18 +53,32 @@ const baseObjectConfig = {
 
 const baseLightConfig = {
   ...extendObjectProps(baseObjectConfig, {
-    intensity: createNumberPropConfig('intensity', 1),
-    distance: createNumberPropConfig('distance'),
-    decay: createNumberPropConfig('decay'),
-    color: createColorPropConfig('color', new Color('white')),
+    intensity: createNumberPropConfig('intensity', 1, {
+      label: propLabel('r3f.props.intensity'),
+    }),
+    distance: createNumberPropConfig('distance', 0, {
+      label: propLabel('r3f.props.distance'),
+    }),
+    decay: createNumberPropConfig('decay', 0, {
+      label: propLabel('r3f.props.decay'),
+    }),
+    color: createColorPropConfig('color', new Color('white'), {
+      label: propLabel('r3f.props.color'),
+    }),
   }),
   dimensionless: true,
 }
 
 const baseCameraConfig = {
   ...extendObjectProps(baseObjectConfig, {
-    near: createNumberPropConfig('near', 0.1, {nudgeMultiplier: 0.1}),
-    far: createNumberPropConfig('far', 2000, {nudgeMultiplier: 0.1}),
+    near: createNumberPropConfig('near', 0.1, {
+      nudgeMultiplier: 0.1,
+      label: propLabel('r3f.props.near'),
+    }),
+    far: createNumberPropConfig('far', 2000, {
+      nudgeMultiplier: 0.1,
+      label: propLabel('r3f.props.far'),
+    }),
   }),
   updateObject: (camera: PerspectiveCamera | OrthographicCamera) => {
     camera.updateProjectionMatrix()
@@ -72,8 +103,14 @@ const defaultEditableFactoryConfig = {
   },
   spotLight: {
     ...extendObjectProps(baseLightConfig, {
-      angle: createNumberPropConfig('angle', 0, {nudgeMultiplier: 0.001}),
-      penumbra: createNumberPropConfig('penumbra', 0, {nudgeMultiplier: 0.001}),
+      angle: createNumberPropConfig('angle', 0, {
+        nudgeMultiplier: 0.001,
+        label: propLabel('r3f.props.angle'),
+      }),
+      penumbra: createNumberPropConfig('penumbra', 0, {
+        nudgeMultiplier: 0.001,
+        label: propLabel('r3f.props.penumbra'),
+      }),
     }),
     icon: 'spotLight' as const,
     createHelper: (light: SpotLight) =>
@@ -81,8 +118,12 @@ const defaultEditableFactoryConfig = {
   },
   directionalLight: {
     ...extendObjectProps(baseObjectConfig, {
-      intensity: createNumberPropConfig('intensity', 1),
-      color: createColorPropConfig('color', new Color('white')),
+      intensity: createNumberPropConfig('intensity', 1, {
+        label: propLabel('r3f.props.intensity'),
+      }),
+      color: createColorPropConfig('color', new Color('white'), {
+        label: propLabel('r3f.props.color'),
+      }),
     }),
     icon: 'sun' as const,
     dimensionless: true,
@@ -97,24 +138,39 @@ const defaultEditableFactoryConfig = {
   },
   ambientLight: {
     props: {
-      intensity: createNumberPropConfig('intensity', 1),
-      color: createColorPropConfig('color', new Color('white')),
+      intensity: createNumberPropConfig('intensity', 1, {
+        label: propLabel('r3f.props.intensity'),
+      }),
+      color: createColorPropConfig('color', new Color('white'), {
+        label: propLabel('r3f.props.color'),
+      }),
     },
     useTransformControls: false,
     icon: 'lightBulb' as const,
   },
   hemisphereLight: {
     props: {
-      intensity: createNumberPropConfig('intensity', 1),
-      color: createColorPropConfig('color', new Color('white')),
-      groundColor: createColorPropConfig('groundColor', new Color('white')),
+      intensity: createNumberPropConfig('intensity', 1, {
+        label: propLabel('r3f.props.intensity'),
+      }),
+      color: createColorPropConfig('color', new Color('white'), {
+        label: propLabel('r3f.props.color'),
+      }),
+      groundColor: createColorPropConfig('groundColor', new Color('white'), {
+        label: propLabel('r3f.props.groundColor'),
+      }),
     },
     useTransformControls: false,
     icon: 'lightBulb' as const,
   },
   perspectiveCamera: extendObjectProps(baseCameraConfig, {
-    fov: createNumberPropConfig('fov', 50, {nudgeMultiplier: 0.1}),
-    zoom: createNumberPropConfig('zoom', 1),
+    fov: createNumberPropConfig('fov', 50, {
+      nudgeMultiplier: 0.1,
+      label: propLabel('r3f.props.fov'),
+    }),
+    zoom: createNumberPropConfig('zoom', 1, {
+      label: propLabel('r3f.props.zoom'),
+    }),
   }),
   orthographicCamera: baseCameraConfig,
   points: baseObjectConfig,
@@ -124,9 +180,17 @@ const defaultEditableFactoryConfig = {
   lineSegments: baseObjectConfig,
   fog: {
     props: {
-      color: createColorPropConfig('color'),
-      near: createNumberPropConfig('near', 1, {nudgeMultiplier: 0.1}),
-      far: createNumberPropConfig('far', 1000, {nudgeMultiplier: 0.1}),
+      color: createColorPropConfig('color', new Color('white'), {
+        label: propLabel('r3f.props.fogColor'),
+      }),
+      near: createNumberPropConfig('near', 1, {
+        nudgeMultiplier: 0.1,
+        label: propLabel('r3f.props.fogNear'),
+      }),
+      far: createNumberPropConfig('far', 1000, {
+        nudgeMultiplier: 0.1,
+        label: propLabel('r3f.props.fogFar'),
+      }),
     },
     useTransformControls: false,
     icon: 'cloud' as const,

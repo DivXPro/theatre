@@ -21,6 +21,7 @@ import React, {
 } from 'react'
 import type {MutableRefObject} from 'react'
 import {Canvas, useFrame, useThree} from '@react-three/fiber'
+import {useT} from '@dreamerbird/studio/i18n'
 import type {ThreeEvent} from '@react-three/fiber'
 import {useGLTF} from '@react-three/drei'
 import sceneGLB from './scene.glb'
@@ -591,6 +592,7 @@ function GroundGrid() {
 }
 
 function App() {
+  const t = useT()
   const cameraTargetRef = useRef<Mesh>(null!)
   const cameraObjRef = useRef<ISheetObject<any> | undefined>(undefined)
   const targetObjRef = useRef<ISheetObject<any> | undefined>(undefined)
@@ -1407,72 +1409,82 @@ function App() {
       {objectMenu && (
         <CanvasContextMenu
           position={{x: objectMenu.x, y: objectMenu.y}}
-          items={buildObjectMenuItems({
-            mode: gizmoMode,
-            onSelectMode: setGizmoMode,
-            onDelete: () => {
-              deletePlacement(sheet, objectMenu.key)
-              // 被删的对象留在选中列表里没意义，顺带清掉
-              getStudioSync()?.setSelection([])
+          items={buildObjectMenuItems(
+            {
+              mode: gizmoMode,
+              onSelectMode: setGizmoMode,
+              onDelete: () => {
+                deletePlacement(sheet, objectMenu.key)
+                // 被删的对象留在选中列表里没意义，顺带清掉
+                getStudioSync()?.setSelection([])
+              },
+              // 库来源模型才有姿势/动作可套(本地遗留放置体没有库 id);
+              // 骨架不匹配的置灰由框体自己兜
+              ...(readPlacementEntries(sheet).find(
+                (e) => e.key === objectMenu.key,
+              )?.libraryEntryId !== undefined
+                ? {
+                    onChangePose: () => openFrame('pose'),
+                    onPlayAnimation: () => openFrame('animation'),
+                  }
+                : {}),
             },
-            // 库来源模型才有姿势/动作可套(本地遗留放置体没有库 id);
-            // 骨架不匹配的置灰由框体自己兜
-            ...(readPlacementEntries(sheet).find(
-              (e) => e.key === objectMenu.key,
-            )?.libraryEntryId !== undefined
-              ? {
-                  onChangePose: () => openFrame('pose'),
-                  onPlayAnimation: () => openFrame('animation'),
-                }
-              : {}),
-          })}
+            t,
+          )}
           onClose={closeObjectMenu}
         />
       )}
       {pathMenu && (
         <CanvasContextMenu
           position={{x: pathMenu.x, y: pathMenu.y}}
-          items={buildPathMenuItems({
-            metaKey: pathMenu.metaKey,
-            editing: editingPath === pathMenu.metaKey,
-            onToggleEdit: () => {
-              if (editingPath === pathMenu.metaKey) {
-                exitPathEdit()
-              } else {
-                enterPathEdit(pathMenu.metaKey)
-              }
+          items={buildPathMenuItems(
+            {
+              metaKey: pathMenu.metaKey,
+              editing: editingPath === pathMenu.metaKey,
+              onToggleEdit: () => {
+                if (editingPath === pathMenu.metaKey) {
+                  exitPathEdit()
+                } else {
+                  enterPathEdit(pathMenu.metaKey)
+                }
+              },
+              // 有活动相机且它没绑这条时才出「绑定到活动相机」
+              onBindToActiveCamera: (() => {
+                const cam = activeCamera
+                  ? shotRefsMapRef.current.get(activeCamera.cameraKey)?.camera
+                      .current
+                  : undefined
+                if (!cam) return undefined
+                if (val(cam.props.pathKey) === pathMenu.metaKey)
+                  return undefined
+                return () => bindPathToActiveCamera(pathMenu.metaKey)
+              })(),
+              onDelete: () => removePath(pathMenu.metaKey),
             },
-            // 有活动相机且它没绑这条时才出「绑定到活动相机」
-            onBindToActiveCamera: (() => {
-              const cam = activeCamera
-                ? shotRefsMapRef.current.get(activeCamera.cameraKey)?.camera
-                    .current
-                : undefined
-              if (!cam) return undefined
-              if (val(cam.props.pathKey) === pathMenu.metaKey) return undefined
-              return () => bindPathToActiveCamera(pathMenu.metaKey)
-            })(),
-            onDelete: () => removePath(pathMenu.metaKey),
-          })}
+            t,
+          )}
           onClose={closePathMenu}
         />
       )}
       {cameraMenu && (
         <CanvasContextMenu
           position={cameraMenu}
-          items={buildCameraMenuItems({
-            // 查看此镜头 = 设为活动 + 进镜头视角
-            onViewShot: () => {
-              setActiveCameraKey(cameraMenu.cameraKey)
-              setShotView(true)
+          items={buildCameraMenuItems(
+            {
+              // 查看此镜头 = 设为活动 + 进镜头视角
+              onViewShot: () => {
+                setActiveCameraKey(cameraMenu.cameraKey)
+                setShotView(true)
+              },
+              onDeleteCamera: () => {
+                const entry = cameras.find(
+                  (e) => e.cameraKey === cameraMenu.cameraKey,
+                )
+                if (entry) deleteCamera(entry)
+              },
             },
-            onDeleteCamera: () => {
-              const entry = cameras.find(
-                (e) => e.cameraKey === cameraMenu.cameraKey,
-              )
-              if (entry) deleteCamera(entry)
-            },
-          })}
+            t,
+          )}
           onClose={closeCameraMenu}
         />
       )}
@@ -1675,13 +1687,17 @@ function PathPanelActionsRegistrar({
   onMovePathToCamera: (pathKey: string) => void
 }) {
   const hasPoints = usePathHasPoints(sheet, pathKey)
+  const t = useT()
   const actions = useMemo(
     () =>
-      buildPathPanelActions({
-        hasPoints,
-        onMovePathToCamera: () => onMovePathToCamera(pathKey),
-      }),
-    [hasPoints, onMovePathToCamera, pathKey],
+      buildPathPanelActions(
+        {
+          hasPoints,
+          onMovePathToCamera: () => onMovePathToCamera(pathKey),
+        },
+        t,
+      ),
+    [hasPoints, onMovePathToCamera, pathKey, t],
   )
   useEffect(() => {
     // setPathPanelActions 内部走 sheet.object,查不存在会顺手创建——

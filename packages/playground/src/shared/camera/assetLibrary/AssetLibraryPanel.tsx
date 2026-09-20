@@ -10,6 +10,7 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react'
 import styled from 'styled-components'
 import DetailPanelButton from '@dreamerbird/studio/uiComponents/DetailPanelButton'
+import {useI18n} from '@dreamerbird/studio/i18n'
 import {CanvasContextMenu} from '../contextMenu'
 import {countLibraryEntryUsage} from '../PlacementManager'
 import {PATH_PRESETS} from '../pathPresets'
@@ -24,12 +25,17 @@ import type {AnimationEntry, ModelEntry, PoseEntry} from './types'
 
 export type AssetKind = 'model' | 'pose' | 'animation' | 'path'
 
-/** 框体标题:一个组件四个实例,按类型各显各的 */
-const KIND_TITLE: Record<AssetKind, string> = {
-  model: '模型库',
-  pose: '姿势库',
-  animation: '动作库',
-  path: '路径预设',
+/** 框体标题:一个组件四个实例,按类型各显各的(key 见 ./i18n) */
+const KIND_TITLE_KEYS: Record<AssetKind, string> = {
+  model: 'pg.lib.title.model',
+  pose: 'pg.lib.title.pose',
+  animation: 'pg.lib.title.animation',
+  path: 'pg.lib.title.path',
+}
+
+/** 预设卡片的显示名:内置预设自带中英双名,按界面语言取 */
+function presetDisplayName(preset: PathPreset, language: string): string {
+  return language.toLowerCase().startsWith('zh') ? preset.name : preset.en
 }
 
 /** 多框体同开时贴左边缘按类型错开,避免完全重叠 */
@@ -384,6 +390,7 @@ export function AssetLibraryPanel({
   const models = useLibraryEntries('model') as ModelEntry[]
   const poses = useLibraryEntries('pose') as PoseEntry[]
   const animations = useLibraryEntries('animation') as AnimationEntry[]
+  const {t, language} = useI18n()
   const fileRef = useRef<HTMLInputElement>(null)
   const [plan, setPlan] = useState<ImportPlan | null>(null)
   const [choices, setChoices] = useState<Array<'reuse' | 'keep'>>([])
@@ -446,7 +453,9 @@ export function AssetLibraryPanel({
     rigAliases[rig] ?? (rig.length > 12 ? rig.slice(0, 11) + '…' : rig)
   const renameRig = (rig: string) => (ev: React.MouseEvent) => {
     ev.stopPropagation() // 标签在卡片内,不能触发卡片的放置/套用
-    const name = window.prompt('骨架族名称', rigAliases[rig] ?? '')?.trim()
+    const name = window
+      .prompt(t('pg.lib.rigRenamePrompt'), rigAliases[rig] ?? '')
+      ?.trim()
     if (name)
       void getLibrary()
         .setRigAlias(rig, name)
@@ -461,6 +470,7 @@ export function AssetLibraryPanel({
         [...files],
         getLibrary().backend,
         realImportDeps(),
+        t,
       )
       if (!mountedRef.current) return
       setChoices(p.similar.map(() => 'reuse'))
@@ -492,8 +502,8 @@ export function AssetLibraryPanel({
     const usage = countLibraryEntryUsage(id)
     const message =
       usage > 0
-        ? `删除「${entry.name}」?场景中有 ${usage} 个实例正在使用它,删除后这些实例将回退为绑定姿势/无动作或无法加载。`
-        : `删除「${entry.name}」?场景里已放置的实例不受影响。`
+        ? t('pg.lib.delete.inUse', {name: entry.name, count: usage})
+        : t('pg.lib.delete.unused', {name: entry.name})
     if (!window.confirm(message)) return
     await getLibrary().deleteEntryDeep(id)
     if (mountedRef.current) {
@@ -507,7 +517,7 @@ export function AssetLibraryPanel({
   const renameEntry = async (id: string) => {
     const entry = await getLibrary().backend.getEntry(id)
     if (!entry) return
-    const name = window.prompt('重命名', entry.name)?.trim()
+    const name = window.prompt(t('pg.lib.renamePrompt'), entry.name)?.trim()
     if (name) await getLibrary().renameEntry(id, name)
   }
 
@@ -568,11 +578,11 @@ export function AssetLibraryPanel({
         <Thumb>{icon}</Thumb>
         <Tag
           style={{cursor: 'pointer'}}
-          title={`${entry.rig}\n点击给这套骨架起名`}
+          title={t('pg.lib.rigTitle', {rig: entry.rig})}
           onClick={renameRig(entry.rig)}
         >
           {rigLabel(entry.rig)}
-          {rigMismatch && ' · 骨架不匹配'}
+          {rigMismatch && t('pg.lib.rigMismatch')}
         </Tag>
         <Label title={entry.name}>{entry.name}</Label>
         {extra}
@@ -607,12 +617,12 @@ export function AssetLibraryPanel({
       key={preset.id}
       onPointerDown={presetGesture(preset)}
       onDragStart={(ev) => ev.preventDefault()}
-      title="点击放到场景中心;按住拖到画布指定落点"
+      title={t('pg.lib.modelCardTitle')}
     >
       <Thumb style={{fontSize: 0}}>
         <PathPresetThumb preset={preset} />
       </Thumb>
-      <Label>{preset.name}</Label>
+      <Label>{presetDisplayName(preset, language)}</Label>
     </Card>
   )
 
@@ -623,18 +633,18 @@ export function AssetLibraryPanel({
     <Panel style={{left: KIND_OFFSET[kind]}}>
       {/* 头部:类型标题 + 导入(路径框体没有)+ 关闭 */}
       <Head>
-        <HeadTitle>{KIND_TITLE[kind]}</HeadTitle>
+        <HeadTitle>{t(KIND_TITLE_KEYS[kind])}</HeadTitle>
         <HeadSpacer />
         {kind !== 'path' && (
           <HeadButton
             disabled={busy}
             onClick={() => fileRef.current?.click()}
-            title="导入文件"
+            title={t('pg.lib.import')}
           >
             <ImportIcon />
           </HeadButton>
         )}
-        <HeadButton onClick={onClose} title="关闭">
+        <HeadButton onClick={onClose} title={t('pg.lib.close')}>
           <CloseIcon />
         </HeadButton>
       </Head>
@@ -652,7 +662,7 @@ export function AssetLibraryPanel({
 
       {/* filterRig 提示条:姿势/动作共用 */}
       {(kind === 'animation' || kind === 'pose') && filterRig && (
-        <HintBar>只列出同骨架族的条目可套用,不同族的已置灰</HintBar>
+        <HintBar>{t('pg.lib.filterHint')}</HintBar>
       )}
 
       {/* 姿势框体顶部工具行:抽帧存姿势 */}
@@ -661,9 +671,9 @@ export function AssetLibraryPanel({
           <DetailPanelButton
             disabled={!canSavePose}
             onClick={() => void onSavePose?.()}
-            title={canSavePose ? undefined : '先选中一个带骨架的已放置模型'}
+            title={canSavePose ? undefined : t('pg.lib.savePoseDisabled')}
           >
-            存当前姿势
+            {t('pg.lib.savePose')}
           </DetailPanelButton>
         </ToolRow>
       )}
@@ -708,7 +718,7 @@ export function AssetLibraryPanel({
           {plan.similar.length > 0 && (
             <div style={{marginBottom: 12}}>
               <MutedText style={{marginBottom: 6}}>
-                检测到相似模型,请选择处理方式:
+                {t('pg.lib.similar.title')}
               </MutedText>
               {plan.similar.map((s, idx) => (
                 <SimilarCard key={`${s.index}-${s.existingName}`}>
@@ -718,7 +728,10 @@ export function AssetLibraryPanel({
                       color: 'var(--theatre-text-primary, #ffffff)',
                     }}
                   >
-                    新文件「{s.newName}」与库中「{s.existingName}」相似
+                    {t('pg.lib.similar.desc', {
+                      newName: s.newName,
+                      existingName: s.existingName,
+                    })}
                   </div>
                   <label style={{marginRight: 16, cursor: 'pointer'}}>
                     <input
@@ -734,7 +747,7 @@ export function AssetLibraryPanel({
                       }
                       style={{marginRight: 4}}
                     />
-                    复用库中(丢弃新文件)
+                    {t('pg.lib.similar.reuse')}
                   </label>
                   <label style={{cursor: 'pointer'}}>
                     <input
@@ -750,7 +763,7 @@ export function AssetLibraryPanel({
                       }
                       style={{marginRight: 4}}
                     />
-                    保留为新条目
+                    {t('pg.lib.similar.keep')}
                   </label>
                 </SimilarCard>
               ))}
@@ -759,10 +772,10 @@ export function AssetLibraryPanel({
 
           <div style={{display: 'flex', gap: 10, justifyContent: 'flex-end'}}>
             <GhostButton disabled={busy} onClick={() => setPlan(null)}>
-              取消
+              {t('pg.lib.cancel')}
             </GhostButton>
             <ConfirmButton disabled={busy} onClick={() => void confirmImport()}>
-              确认
+              {t('pg.lib.confirm')}
             </ConfirmButton>
           </div>
         </Overlay>
@@ -776,7 +789,7 @@ export function AssetLibraryPanel({
           items={[
             {
               type: 'normal',
-              label: '重命名',
+              label: t('pg.lib.ctx.rename'),
               callback: () => {
                 void renameEntry(menu.id)
                 setMenu(null)
@@ -784,7 +797,7 @@ export function AssetLibraryPanel({
             },
             {
               type: 'normal',
-              label: '删除',
+              label: t('pg.lib.ctx.delete'),
               callback: () => {
                 void removeEntry(menu.id)
                 setMenu(null)

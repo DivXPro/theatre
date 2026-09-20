@@ -11,6 +11,7 @@ import type {
 import last from 'lodash-es/last'
 import {useTempTransactionEditingTools} from './useTempTransactionEditingTools'
 import {__private} from '@dreamerbird/core'
+import {usePropLabel} from '@dreamerbird/studio/i18n'
 const {valueInProp} = __private.propTypeUtils
 
 const SingleKeyframePropEditorContainer = styled.div`
@@ -71,7 +72,7 @@ export function DeterminePropEditorForKeyframeTree(
       </>
     )
   } else if (p.type === 'propWithChildren') {
-    const label = p.propConfig.label ?? last(p.pathToProp)
+    const label = usePropLabel(p.propConfig.label) ?? last(p.pathToProp)
     return (
       <>
         <SingleKeyframePropLabel
@@ -109,7 +110,7 @@ const SingleKeyframeSimplePropEditorContainer = styled.div`
 function PrimitivePropEditor(
   p: PrimitivePropEditingOptions & {autoFocusInput?: boolean; indent: number},
 ) {
-  const label = p.propConfig.label ?? last(p.pathToProp)
+  const label = usePropLabel(p.propConfig.label) ?? last(p.pathToProp)
   const editingTools = useEditingToolsForKeyframeEditorPopover(p)
 
   if (p.propConfig.type === 'enum') {

@@ -6,23 +6,27 @@ import ErrorTooltip from '@dreamerbird/studio/uiComponents/Popover/ErrorTooltip'
 import BasicTooltip from '@dreamerbird/studio/uiComponents/Popover/BasicTooltip'
 import {val} from '@dreamerbird/dataverse'
 import usePopover from '@dreamerbird/studio/uiComponents/Popover/usePopover'
+import {useT} from '@dreamerbird/studio/i18n'
 import MoreMenu from './MoreMenu/MoreMenu'
 
 export function useOutlineTriggerTooltip(
   conflicts: ReturnType<typeof useConflicts>,
 ) {
+  const t = useT()
   return useTooltip(
     {enabled: conflicts.length > 0, enterDelay: conflicts.length > 0 ? 0 : 200},
     () =>
       conflicts.length > 0 ? (
         <ErrorTooltip>
           {conflicts.length === 1
-            ? `There is a state conflict in project "${conflicts[0].projectId}". Select the project in the outline below in order to fix it.`
-            : `There are ${conflicts.length} projects that have state conflicts. They are highlighted in the outline below. `}
+            ? t('toolbar.outline.conflict.one', {
+                projectId: conflicts[0].projectId,
+              })
+            : t('toolbar.outline.conflict.many', {count: conflicts.length})}
         </ErrorTooltip>
       ) : (
         <BasicTooltip>
-          <>Outline</>
+          <>{t('toolbar.outline.tooltip')}</>
         </BasicTooltip>
       ),
   )

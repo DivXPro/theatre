@@ -2,6 +2,7 @@ import type {$IntentionalAny} from '@dreamerbird/core/types/public'
 import React from 'react'
 import styled from 'styled-components'
 import {env} from '@dreamerbird/studio/env'
+import {useT} from '@dreamerbird/studio/i18n'
 
 const Container = styled.div`
   width: 138px;
@@ -105,6 +106,7 @@ const Divider = styled.div`
 const version: string = env.THEATRE_VERSION ?? '0.4.0'
 
 const MoreMenu = React.forwardRef((props: {}, ref) => {
+  const t = useT()
   return (
     <Container ref={ref as $IntentionalAny}>
       <Link
@@ -113,7 +115,7 @@ const MoreMenu = React.forwardRef((props: {}, ref) => {
         className=""
         target="_blank"
       >
-        Docs
+        {t('menu.docs')}
       </Link>
 
       <Link
@@ -122,7 +124,7 @@ const MoreMenu = React.forwardRef((props: {}, ref) => {
         className=""
         target="_blank"
       >
-        Changelog
+        {t('menu.changelog')}
       </Link>
 
       <Divider />
@@ -132,7 +134,7 @@ const MoreMenu = React.forwardRef((props: {}, ref) => {
         className=""
         target="_blank"
       >
-        Github
+        {t('menu.github')}
       </Link>
       <Link
         as="a"
@@ -140,7 +142,7 @@ const MoreMenu = React.forwardRef((props: {}, ref) => {
         className=""
         target="_blank"
       >
-        Twitter
+        {t('menu.twitter')}
       </Link>
       <Link
         className=""
@@ -148,11 +150,11 @@ const MoreMenu = React.forwardRef((props: {}, ref) => {
         href="https://discord.gg/bm9f8F9Y9N"
         target="_blank"
       >
-        Discord
+        {t('menu.discord')}
       </Link>
       <Divider />
       <VersionContainer>
-        <VersionLabel>Version</VersionLabel>
+        <VersionLabel>{t('menu.version')}</VersionLabel>
         <VersionValueRow>
           <VersionValue>{version}</VersionValue>
         </VersionValueRow>

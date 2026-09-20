@@ -30,6 +30,10 @@ import {
   Vector3,
 } from 'three'
 import type {PerspectiveCamera as PerspectiveCameraImpl} from 'three'
+import {translate} from '@dreamerbird/studio/i18n'
+// 副作用导入:本模块在模块加载时就 translate 属性标签,必须先注册词条,
+// 否则入口文件 import 顺序不保险时会把原始 key 烘焙进配置
+import './i18n'
 import {registerEditorOnly, withEditorOnlyHidden} from './editorOnly'
 import {useSelectionGizmoTarget} from './PlacementManager'
 import {
@@ -95,7 +99,10 @@ const FRUSTUM_FILL_OPACITY = 0.12
 let dropdownSheet: ISheet | null = null
 
 function pathBindingOptions(): {[key: string]: string} {
-  const options: {[key: string]: string} = {'': '手动(不绑定)'}
+  // 选项函数每次读取都会调,经 t() 取词:语言切换后面板重渲染即生效
+  const options: {[key: string]: string} = {
+    '': translate('pg.props.pathManual'),
+  }
   if (!dropdownSheet) return options
   try {
     for (const entry of readPathEntries(getPathsRegistry(dropdownSheet))) {
@@ -115,16 +122,23 @@ function pathBindingOptions(): {[key: string]: string} {
  * pathKey 是绑定的单一直径:下拉选项动态来自注册表(见
  * pathBindingOptions),选「手动」= 解绑。moveMode 是双属性时代的
  * 历史属性,隐藏保留只为兼容已持久化的状态值,不再显示也不再读写。
+ *
+ * label 用函数形式(() => translate(...)):studio 属性面板每次渲染
+ * 都会现调(resolvePropLabel),所以语言切换后这两个标签跟着热改,
+ * 不再需要刷新页面。箭头函数在模块级定义,引用稳定,满足 deep-equal。
+ * moveMode 已 hidden(双属性时代遗留),不再显示,硬编码留着无碍。
  */
 const shotCameraAdditionalProps = {
-  trackTarget: t.boolean(true, {label: '朝向绑定 Target'}),
+  trackTarget: t.boolean(true, {
+    label: () => translate('pg.props.trackTarget'),
+  }),
   moveMode: t.stringLiteral(
     'manual',
     {manual: '手动', path: '路径'},
     {label: '机位驱动', hidden: true},
   ),
   pathKey: t.stringLiteral('', pathBindingOptions, {
-    label: '绑定路径',
+    label: () => translate('pg.props.pathKey'),
     as: 'menu',
   }),
 }

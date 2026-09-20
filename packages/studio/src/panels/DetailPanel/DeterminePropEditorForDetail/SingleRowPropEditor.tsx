@@ -11,6 +11,7 @@ import type {PropHighlighted} from '@dreamerbird/studio/panels/SequenceEditorPan
 import {rowIndentationFormulaCSS} from './rowIndentationFormulaCSS'
 import {getDetailRowHighlightBackground} from './getDetailRowHighlightBackground'
 import {useVal} from '@dreamerbird/react'
+import {usePropLabel} from '@dreamerbird/studio/i18n'
 import useChordial from '@dreamerbird/studio/uiComponents/chordial/useChodrial'
 import type {$FixMe} from '@dreamerbird/core/types/public'
 
@@ -105,7 +106,8 @@ export function SingleRowPropEditor<T>({
   any,
   any
 > | null {
-  const label = propConfig.label ?? last(getPointerParts(pointerToProp).path)
+  const label =
+    usePropLabel(propConfig.label) ?? last(getPointerParts(pointerToProp).path)
 
   const title = ['obj', 'props', ...getPointerParts(pointerToProp).path].join(
     '.',

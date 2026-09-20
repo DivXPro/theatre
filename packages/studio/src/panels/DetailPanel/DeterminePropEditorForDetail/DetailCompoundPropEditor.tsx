@@ -28,6 +28,7 @@ import memoizeFn from '@dreamerbird/utils/memoizeFn'
 import {collapsedMap} from './collapsedMap'
 import useChordial from '@dreamerbird/studio/uiComponents/chordial/useChodrial'
 import {__private} from '@dreamerbird/core'
+import {usePropLabel} from '@dreamerbird/studio/i18n'
 
 const {isPropConfigComposite} = __private.propTypeUtils
 
@@ -173,7 +174,8 @@ function DetailCompoundPropEditor<
   visualIndentation,
 }: ICompoundPropDetailEditorProps<TPropTypeConfig>) {
   const propName =
-    propConfig.label ?? (last(getPointerParts(pointerToProp).path) as string)
+    usePropLabel(propConfig.label) ??
+    (last(getPointerParts(pointerToProp).path) as string)
 
   const allSubs = Object.entries(propConfig.props)
   const compositeSubs = allSubs.filter(([_, conf]) =>

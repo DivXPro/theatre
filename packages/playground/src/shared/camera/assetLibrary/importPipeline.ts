@@ -1,4 +1,5 @@
 import type {AnimationClip, Group, Object3D} from 'three'
+import {translate, type TFunction} from '@dreamerbird/studio/i18n'
 import {classifyModel, validatePoseJson} from './classify'
 import {createGLTFLoader} from './gltfLoader'
 import {exportAnimationGLB, exportModelGLB} from './exportGLB'
@@ -98,15 +99,21 @@ export function baseName(fileName: string): string {
   return fileName.replace(/\.[^.]+$/, '').replace(/\.pose$/, '')
 }
 
-function summarize(items: ImportItem[]): string {
+function summarize(items: ImportItem[], tr: TFunction): string {
   const count = (t: ImportItem['type']) =>
     items.filter((i) => i.type === t).length
   const parts: string[] = []
-  if (count('model')) parts.push(`模型 ×${count('model')}`)
-  if (count('animation')) parts.push(`动作 ×${count('animation')}`)
-  if (count('pose')) parts.push(`姿势 ×${count('pose')}`)
-  if (count('skip')) parts.push(`跳过 ×${count('skip')}`)
-  return parts.length ? `识别为:${parts.join(' + ')}` : '没有可导入的内容'
+  if (count('model'))
+    parts.push(tr('pg.import.summary.models', {count: count('model')}))
+  if (count('animation'))
+    parts.push(tr('pg.import.summary.animations', {count: count('animation')}))
+  if (count('pose'))
+    parts.push(tr('pg.import.summary.poses', {count: count('pose')}))
+  if (count('skip'))
+    parts.push(tr('pg.import.summary.skips', {count: count('skip')}))
+  return parts.length
+    ? tr('pg.import.summary.prefix') + parts.join(' + ')
+    : tr('pg.import.summary.empty')
 }
 
 function newId(): string {
@@ -122,6 +129,7 @@ export async function planImport(
   files: File[],
   backend: LibraryBackend,
   deps: ImportDeps,
+  tr: TFunction = translate,
 ): Promise<ImportPlan> {
   const existing = await backend.listEntries()
   const items: ImportItem[] = []
@@ -139,7 +147,7 @@ export async function planImport(
         items.push({
           type: 'skip',
           name: file.name,
-          reason: '姿势 JSON 格式不正确',
+          reason: tr('pg.import.reason.badPoseJson'),
         })
       } else {
         items.push({
@@ -156,7 +164,11 @@ export async function planImport(
     try {
       loaded = await deps.load(file)
     } catch {
-      items.push({type: 'skip', name: file.name, reason: '文件解析失败'})
+      items.push({
+        type: 'skip',
+        name: file.name,
+        reason: tr('pg.import.reason.parseFailed'),
+      })
       continue
     }
     const cls = classifyModel(loaded.root, loaded.animations)
@@ -164,7 +176,7 @@ export async function planImport(
       items.push({
         type: 'skip',
         name: file.name,
-        reason: '无网格也无动画,无法识别',
+        reason: tr('pg.import.reason.noContent'),
       })
       continue
     }
@@ -181,7 +193,7 @@ export async function planImport(
         items.push({
           type: 'skip',
           name: baseName(file.name),
-          reason: '模型导出失败',
+          reason: tr('pg.import.reason.modelExportFailed'),
         })
       }
       if (glb) {
@@ -222,7 +234,7 @@ export async function planImport(
           items.push({
             type: 'skip',
             name: baseName(file.name),
-            reason: '模型已存在(同库中「' + dup.name + '」)',
+            reason: tr('pg.import.reason.modelExists', {name: dup.name}),
           })
         }
         // dup 命中:模型跳过,下面的动作照常提取
@@ -239,7 +251,7 @@ export async function planImport(
         items.push({
           type: 'skip',
           name: `${baseName(file.name)}/${clip.name}`,
-          reason: '动作导出失败',
+          reason: tr('pg.import.reason.animationExportFailed'),
         })
         continue
       }
@@ -252,7 +264,7 @@ export async function planImport(
         items.push({
           type: 'skip',
           name: `${baseName(file.name)}/${clip.name}`,
-          reason: '动作已在库中',
+          reason: tr('pg.import.reason.animationExists'),
         })
         continue
       }
@@ -267,7 +279,7 @@ export async function planImport(
     }
   }
 
-  return {items, similar, summary: summarize(items)}
+  return {items, similar, summary: summarize(items, tr)}
 }
 
 /** 落库:choices 与 plan.similar 一一对应,'reuse' 丢弃对应 model 项 */

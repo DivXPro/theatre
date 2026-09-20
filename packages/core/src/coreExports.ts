@@ -12,6 +12,7 @@ import {getCoreTicker} from './coreTicker'
 import {privateAPI} from './privateAPIs'
 export {notify} from '@dreamerbird/core/utils/notify'
 export {types}
+export {resolvePropLabel} from './propTypes'
 export {createRafDriver} from './rafDrivers'
 import * as propTypeUtils from './propTypes/utils'
 import * as ids from './utils/ids'

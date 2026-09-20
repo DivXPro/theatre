@@ -10,6 +10,15 @@ import {executeImport, planImport} from './importPipeline'
 import type {ImportDeps} from './importPipeline'
 import {Library} from './library'
 import type {LibraryBackend, LibraryEntry, ModelEntry} from './types'
+import {makeDictT, zhCN} from '../i18n'
+
+// 断言中文文案:注入 zh-CN 词典 t,不依赖全局单例语言
+const zhT = makeDictT(zhCN)
+const planImportZh = (
+  files: File[],
+  backend: LibraryBackend,
+  deps: ImportDeps,
+) => planImport(files, backend, deps, zhT)
 
 function skinnedModel(...bones: string[]): Group {
   const root = new Group()
@@ -58,7 +67,7 @@ function memoryBackend(existing: LibraryEntry[] = []): LibraryBackend {
 
 describe('planImport', () => {
   it('模型文件:1 模型 + 动画逐个提取', async () => {
-    const plan = await planImport(
+    const plan = await planImportZh(
       [file('hero.fbx')],
       memoryBackend(),
       depsFor({
@@ -83,7 +92,7 @@ describe('planImport', () => {
     const b = new Bone()
     b.name = 'Hips'
     root.add(b)
-    const plan = await planImport(
+    const plan = await planImportZh(
       [file('walk.fbx')],
       memoryBackend(),
       depsFor({'walk.fbx': {root, animations: [clip('walk')]}}),
@@ -102,7 +111,7 @@ describe('planImport', () => {
       throw new Error('THREE.GLTFExporter: No valid image data found')
     }
     // 修复前:planImport 直接拒绝,整批导入无声消失
-    const plan = await planImport([file('kate.fbx')], memoryBackend(), deps)
+    const plan = await planImportZh([file('kate.fbx')], memoryBackend(), deps)
     expect(plan.items.map((i) => i.type)).toEqual(['skip', 'animation'])
     expect(plan.items[0]).toMatchObject({
       name: 'kate',
@@ -122,7 +131,7 @@ describe('planImport', () => {
       if (c.name === 'bad') throw new Error('export boom')
       return realExportAnim(root, c)
     }
-    const plan = await planImport([file('mix.fbx')], memoryBackend(), deps)
+    const plan = await planImportZh([file('mix.fbx')], memoryBackend(), deps)
     expect(plan.items.map((i) => i.type)).toEqual([
       'model',
       'skip',
@@ -136,7 +145,7 @@ describe('planImport', () => {
 
   it('完全相同的模型已在库中:跳过模型,只收新动作', async () => {
     // 第一层去重:contentHash 命中。假导出器输出固定字节,先算出会命中的 hash
-    const probe = await planImport(
+    const probe = await planImportZh(
       [file('a.fbx')],
       memoryBackend(),
       depsFor({'a.fbx': {root: skinnedModel('Hips'), animations: []}}),
@@ -153,7 +162,7 @@ describe('planImport', () => {
       vertexCount: 24,
       createdAt: 1,
     }
-    const plan = await planImport(
+    const plan = await planImportZh(
       [file('b.fbx')],
       memoryBackend([existing]),
       depsFor({
@@ -179,13 +188,13 @@ describe('planImport', () => {
       createdAt: 1,
     }
     // 让 rig 相同:需要真实骨骼名一致——rigIdOf 是真算的,existing.rig 要对上
-    const probePlan = await planImport(
+    const probePlan = await planImportZh(
       [file('c.fbx')],
       memoryBackend(),
       depsFor({'c.fbx': {root: skinnedModel('Hips'), animations: []}}),
     )
     existing.rig = (probePlan.items[0] as any).rig
-    const plan = await planImport(
+    const plan = await planImportZh(
       [file('c.fbx')],
       memoryBackend([{...existing, contentHash: 'different'}]),
       depsFor({'c.fbx': {root: skinnedModel('Hips'), animations: []}}),
@@ -200,7 +209,7 @@ describe('planImport', () => {
       [JSON.stringify({rig: 'rig-x', bones: {Hips: {rotation: [0, 0, 0, 1]}}})],
       '弓步.pose.json',
     )
-    const plan = await planImport(
+    const plan = await planImportZh(
       [pose, file('empty.fbx'), file('bad.fbx')],
       memoryBackend(),
       depsFor({'empty.fbx': {root: new Group(), animations: []}}),
@@ -216,7 +225,7 @@ describe('executeImport', () => {
     const lib = new Library(backend)
     let events = 0
     lib.subscribe(() => events++)
-    const plan = await planImport(
+    const plan = await planImportZh(
       [file('hero.fbx')],
       backend,
       depsFor({
@@ -233,7 +242,7 @@ describe('executeImport', () => {
   it('choices 选 keep 时模型照常入库', async () => {
     const backend = memoryBackend()
     const lib = new Library(backend)
-    const plan = await planImport(
+    const plan = await planImportZh(
       [file('hero.fbx')],
       backend,
       depsFor({'hero.fbx': {root: skinnedModel('Hips'), animations: []}}),

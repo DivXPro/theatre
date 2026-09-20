@@ -29,6 +29,7 @@ import type {Deferred} from '@dreamerbird/utils/defer'
 import {defer} from '@dreamerbird/utils/defer'
 import {DEFAULT_PERSISTENCE_KEY, sanitizeOpts} from './sanitizeOpts'
 import shallowEqual from 'shallowequal'
+import {registerFallback, registerMessages, setLanguage} from './i18n'
 import {createStore} from './IDBStorage'
 import {getAllPossibleAssetIDs} from '@dreamerbird/studio/utils/assets'
 import {notify} from './notify'
@@ -466,6 +467,19 @@ export class Studio {
     const reconfigure = opts?.reconfigure === true
 
     const extensionId = extension.id
+
+    // i18n 扩展:注册词条/回退链先行于语言指定(语言匹配依赖词典);
+    // 显式 language 是最高优先级,但不写用户持久化偏好
+    if (extension.i18n) {
+      const {messages, language, fallbacks} = extension.i18n
+      for (const [lang, dict] of Object.entries(messages ?? {})) {
+        registerMessages(lang, dict)
+      }
+      for (const [from, to] of Object.entries(fallbacks ?? {})) {
+        registerFallback(from, to)
+      }
+      if (language) setLanguage(language, {explicit: true})
+    }
 
     const prevExtension = this.ephemeralAtom.get().extensions.byId[extensionId]
     if (prevExtension) {

@@ -30,6 +30,16 @@ import type SheetTemplate from '@dreamerbird/core/sheets/SheetTemplate'
 import type SheetObjectTemplate from '@dreamerbird/core/sheetObjects/SheetObjectTemplate'
 import type {PaneInstanceId} from '@dreamerbird/core/types/public'
 import {__private} from '@dreamerbird/core'
+import {
+  getLanguage,
+  getRegisteredLanguages,
+  languageDisplayName,
+  onLanguageChange,
+  registerFallback,
+  registerMessages,
+  setLanguage,
+  translate,
+} from './i18n'
 const {
   isSheet,
   isProject,
@@ -56,6 +66,34 @@ export default class TheatreStudio implements IStudio {
 
     renderToolset(toolsetId: string, htmlNode: HTMLElement) {
       return getStudio().ui.renderToolset(toolsetId, htmlNode)
+    },
+  }
+
+  /** i18n:取词条/切语言/注入词典(详见 IStudioI18nAPI) */
+  readonly i18n = {
+    t(key: string, vars?: Record<string, string | number>): string {
+      return translate(key, vars)
+    },
+    getLanguage(): string {
+      return getLanguage()
+    },
+    setLanguage(lang: string): void {
+      setLanguage(lang)
+    },
+    registerMessages(lang: string, messages: Record<string, string>): void {
+      registerMessages(lang, messages)
+    },
+    registerFallback(from: string, to: string): void {
+      registerFallback(from, to)
+    },
+    onLanguageChange(fn: () => void): () => void {
+      return onLanguageChange(fn)
+    },
+    getRegisteredLanguages(): string[] {
+      return getRegisteredLanguages()
+    },
+    languageDisplayName(code: string, inLanguage?: string): string {
+      return languageDisplayName(code, inLanguage)
     },
   }
 

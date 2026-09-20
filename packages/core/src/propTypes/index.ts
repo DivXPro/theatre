@@ -12,8 +12,11 @@ import {clamp, mapValues} from 'lodash-es'
 import {
   propTypeSymbol,
   type NumberNudgeFn,
+  type PropLabel,
 } from '@dreamerbird/core/types/public'
 import {sanitizeCompoundProps} from './internals'
+
+export type {PropLabel} from '@dreamerbird/core/types/public'
 
 import type {
   Interpolator,
@@ -54,22 +57,26 @@ const validateCommonOpts = (fnCallSignature: string, opts?: CommonOpts) => {
     }
     if (Object.prototype.hasOwnProperty.call(opts, 'label')) {
       const {label} = opts
-      if (typeof label !== 'string') {
+      // 函数形式(动态显示名,如 i18n 热切换)只校验类型;字符串的
+      // 空白/空串约束对函数不适用(结果运行时才可知)
+      if (typeof label !== 'string' && typeof label !== 'function') {
         throw new Error(
-          `opts.label in ${fnCallSignature} should be a string. ${userReadableTypeOfValue(
+          `opts.label in ${fnCallSignature} should be a string or a function returning a string. ${userReadableTypeOfValue(
             label,
           )} given.`,
         )
       }
-      if (label.trim().length !== label.length) {
-        throw new Error(
-          `opts.label in ${fnCallSignature} should not start/end with whitespace. "${label}" given.`,
-        )
-      }
-      if (label.length === 0) {
-        throw new Error(
-          `opts.label in ${fnCallSignature} should not be an empty string. If you wish to have no label, remove opts.label from opts.`,
-        )
+      if (typeof label === 'string') {
+        if (label.trim().length !== label.length) {
+          throw new Error(
+            `opts.label in ${fnCallSignature} should not start/end with whitespace. "${label}" given.`,
+          )
+        }
+        if (label.length === 0) {
+          throw new Error(
+            `opts.label in ${fnCallSignature} should not be an empty string. If you wish to have no label, remove opts.label from opts.`,
+          )
+        }
       }
     }
     if (Object.prototype.hasOwnProperty.call(opts, 'hidden')) {
@@ -183,7 +190,7 @@ export const file = (
   // The defaultValue parameter is a string for convenience, but it will be converted to an Asset object
   defaultValue: File['id'],
   opts: {
-    label?: string
+    label?: PropLabel
     hidden?: boolean
     interpolate?: Interpolator<File['id']>
   } = {},
@@ -253,7 +260,7 @@ export const image = (
   // The defaultValue parameter is a string for convenience, but it will be converted to an Asset object
   defaultValue: Asset['id'],
   opts: {
-    label?: string
+    label?: PropLabel
     hidden?: boolean
     interpolate?: Interpolator<Asset['id']>
   } = {},
@@ -349,7 +356,7 @@ export const number = (
     nudgeFn?: PropTypeConfig_Number['nudgeFn']
     range?: PropTypeConfig_Number['range']
     nudgeMultiplier?: number
-    label?: string
+    label?: PropLabel
     hidden?: boolean
   } = {},
 ): PropTypeConfig_Number => {
@@ -569,7 +576,7 @@ const _interpolateRgba = (
 export const boolean = (
   defaultValue: boolean,
   opts: {
-    label?: string
+    label?: PropLabel
     hidden?: boolean
     interpolate?: Interpolator<boolean>
   } = {},
@@ -629,7 +636,7 @@ function leftInterpolate<T>(left: T): T {
 export const string = (
   defaultValue: string,
   opts: {
-    label?: string
+    label?: PropLabel
     hidden?: boolean
     interpolate?: Interpolator<string>
   } = {},
@@ -703,7 +710,7 @@ export function stringLiteral<
    */
   opts: {
     as?: 'menu' | 'switch'
-    label?: string
+    label?: PropLabel
     hidden?: boolean
     interpolate?: Interpolator<Extract<keyof ValuesAndLabels, string>>
   } = {},
@@ -768,6 +775,11 @@ const defaultNumberNudgeFn: NumberNudgeFn = ({
   return deltaX * magnitude * (config.nudgeMultiplier ?? 1)
 }
 
+/** 读取属性显示名:函数则调用,字符串原样返回 */
+export const resolvePropLabel = (
+  label: PropLabel | undefined,
+): string | undefined => (typeof label === 'function' ? label() : label)
+
 type CommonOpts = {
   /**
    * Each prop type may be given a custom label instead of the name of the sub-prop
@@ -781,7 +793,7 @@ type CommonOpts = {
    * }
    * ```
    */
-  label?: string
+  label?: PropLabel
   /**
    * Hide this prop from the studio's details/properties panel
    * (see {@link IBasePropType.hidden}). Data behavior is unaffected.

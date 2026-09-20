@@ -4,6 +4,7 @@ import {encodePathToProp} from '@dreamerbird/utils/pathToProp'
 import pointerDeep from '@dreamerbird/utils/pointerDeep'
 import {usePrism} from '@dreamerbird/react'
 import type {$IntentionalAny} from '@dreamerbird/core/types/public'
+import {usePropLabel} from '@dreamerbird/studio/i18n'
 import type {Pointer} from '@dreamerbird/dataverse'
 import {val} from '@dreamerbird/dataverse'
 import React, {useCallback, useRef} from 'react'
@@ -135,7 +136,8 @@ const PrimitivePropRow: React.FC<{
   }, [leaf])
 
   const label =
-    leaf.propConf.label ?? leaf.pathToProp[leaf.pathToProp.length - 1]
+    usePropLabel(leaf.propConf.label) ??
+    leaf.pathToProp[leaf.pathToProp.length - 1]
   const isSelectable = true
 
   const headRef = useRef<HTMLDivElement | null>(null)

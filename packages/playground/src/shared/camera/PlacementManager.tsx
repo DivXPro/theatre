@@ -3,6 +3,7 @@ import {getStudioSync, onChange, types as t, val} from '@dreamerbird/core'
 import type {IProject, IScrub, ISheet, ISheetObject} from '@dreamerbird/core'
 import {privateAPI} from '@dreamerbird/core/privateAPIs'
 import {useVal} from '@dreamerbird/react'
+import {translate} from '@dreamerbird/studio/i18n'
 import {TransformControls, useFBX} from '@react-three/drei'
 import {useFrame, useThree} from '@react-three/fiber'
 import type {ThreeEvent} from '@react-three/fiber'
@@ -120,7 +121,15 @@ function literalConfigFor(
     config = t.stringLiteral(
       '',
       () => entryOptions(getLibrary().getEntriesSnapshot(), kind, modelEntryId),
-      {label: kind === 'animation' ? '动作' : '姿势', as: 'menu'},
+      // label 用函数形式:studio 每次渲染现调(resolvePropLabel),
+      // 语言切换热改;箭头在缓存首次创建时定义,引用稳定
+      {
+        label: () =>
+          translate(
+            kind === 'animation' ? 'pg.props.animation' : 'pg.props.pose',
+          ),
+        as: 'menu',
+      },
     )
     literalConfigCache.set(cacheKey, config)
   }
@@ -1244,14 +1253,8 @@ class PlacedModelErrorBoundary extends React.Component<
   }
 }
 
-/** gizmo 的三种操作模式 */
+/** gizmo 的三种操作模式(标签文案在 menuModel 里经 t() 取) */
 export type GizmoMode = 'translate' | 'rotate' | 'scale'
-
-export const GIZMO_MODE_LABELS: Record<GizmoMode, string> = {
-  translate: '移动',
-  rotate: '旋转',
-  scale: '缩放',
-}
 
 /**
  * 快捷键切换 gizmo 模式(对齐 Blender):G 移动 / R 旋转 / S 缩放。

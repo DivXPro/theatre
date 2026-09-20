@@ -20,6 +20,7 @@ import {ProvideLogger} from '@dreamerbird/studio/uiComponents/useLogger'
 import {Notifier} from '@dreamerbird/studio/notify'
 import {useChordialCaptureEvents} from '@dreamerbird/studio/uiComponents/chordial/useChodrial'
 import {ChordialOverlay} from '@dreamerbird/studio/uiComponents/chordial/ChordialOverlay'
+import {I18nProvider} from '@dreamerbird/studio/i18n'
 
 const MakeRootHostContainStatic =
   typeof window !== 'undefined'
@@ -85,30 +86,32 @@ export default function UIRoot(props: {
       <ProvideLogger logger={logger}>
         <MountExtensionComponents />
         <PortalContext.Provider value={portalLayer}>
-          <ProvideStyles
-            target={
-              window.__IS_VISUAL_REGRESSION_TESTING === true
-                ? undefined
-                : props.containerShadow
-            }
-          >
-            <>
-              <MakeRootHostContainStatic />
-              <Container
-                className={
-                  visiblityState === 'everythingIsHidden' ? 'invisible' : ''
-                }
-                // @ts-ignore
-                ref={chordialRootRef}
-              >
-                <PortalLayer ref={portalLayerRef} />
-                <ChordialOverlay />
-                <GlobalToolbar />
-                <PanelsRoot />
-                <Notifier />
-              </Container>
-            </>
-          </ProvideStyles>
+          <I18nProvider>
+            <ProvideStyles
+              target={
+                window.__IS_VISUAL_REGRESSION_TESTING === true
+                  ? undefined
+                  : props.containerShadow
+              }
+            >
+              <>
+                <MakeRootHostContainStatic />
+                <Container
+                  className={
+                    visiblityState === 'everythingIsHidden' ? 'invisible' : ''
+                  }
+                  // @ts-ignore
+                  ref={chordialRootRef}
+                >
+                  <PortalLayer ref={portalLayerRef} />
+                  <ChordialOverlay />
+                  <GlobalToolbar />
+                  <PanelsRoot />
+                  <Notifier />
+                </Container>
+              </>
+            </ProvideStyles>
+          </I18nProvider>
         </PortalContext.Provider>
       </ProvideLogger>
     )

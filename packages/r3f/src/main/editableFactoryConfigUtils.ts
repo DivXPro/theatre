@@ -1,6 +1,7 @@
 import type {UnknownShorthandCompoundProps} from '@dreamerbird/core'
 import {notify} from '@dreamerbird/core'
 import {types} from '@dreamerbird/core'
+import type {PropLabel} from '@dreamerbird/core/types/public'
 import type {Object3D} from 'three'
 import type {ThreeElements} from '@react-three/fiber'
 import type {IconID} from '../extension/icons'
@@ -54,7 +55,10 @@ export const createVector = (components?: [number, number, number]) => {
 export const createVectorPropConfig = (
   key: string,
   defaultValue = createVector(),
-  {nudgeMultiplier = 0.01} = {},
+  {
+    nudgeMultiplier = 0.01,
+    label,
+  }: {nudgeMultiplier?: number; label?: PropLabel} = {},
 ): PropConfig<Vector3> => ({
   parse: (props) => {
     const propValue = props[key]
@@ -103,18 +107,25 @@ To fix this, make sure the prop is set to either a number, an array of numbers, 
     object[key].set(value.x, value.y, value.z)
   },
   type: {
-    [key]: {
-      x: types.number(defaultValue.x, {nudgeMultiplier}),
-      y: types.number(defaultValue.y, {nudgeMultiplier}),
-      z: types.number(defaultValue.z, {nudgeMultiplier}),
-    },
+    // 长式 compound:简写形式挂不了 label;函数 label 每次渲染现调,语言热改
+    [key]: types.compound(
+      {
+        x: types.number(defaultValue.x, {nudgeMultiplier}),
+        y: types.number(defaultValue.y, {nudgeMultiplier}),
+        z: types.number(defaultValue.z, {nudgeMultiplier}),
+      },
+      {label},
+    ),
   },
 })
 
 export const createNumberPropConfig = (
   key: string,
   defaultValue: number = 0,
-  {nudgeMultiplier = 0.01} = {},
+  {
+    nudgeMultiplier = 0.01,
+    label,
+  }: {nudgeMultiplier?: number; label?: PropLabel} = {},
 ): PropConfig<number> => ({
   parse: (props) => {
     return props[key] ?? defaultValue
@@ -123,7 +134,7 @@ export const createNumberPropConfig = (
     object[key] = value
   },
   type: {
-    [key]: types.number(defaultValue, {nudgeMultiplier}),
+    [key]: types.number(defaultValue, {nudgeMultiplier, label}),
   },
 })
 
@@ -137,6 +148,7 @@ export type Rgba = {
 export const createColorPropConfig = (
   key: string,
   defaultValue = new Color(0, 0, 0),
+  {label}: {label?: PropLabel} = {},
 ): PropConfig<Rgba> => ({
   parse: (props) => {
     return {...(props[key] ?? defaultValue), a: 1}
@@ -145,7 +157,7 @@ export const createColorPropConfig = (
     object[key].setRGB(value.r, value.g, value.b)
   },
   type: {
-    [key]: types.rgba({...defaultValue, a: 1}),
+    [key]: types.rgba({...defaultValue, a: 1}, {label}),
   },
 })
 

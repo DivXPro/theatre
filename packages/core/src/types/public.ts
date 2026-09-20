@@ -774,6 +774,15 @@ export interface IRafDriver {
  */
 export type Interpolator<T> = (left: T, right: T, progression: number) => T
 
+/**
+ * 属性在编辑器里的显示名。可以是字符串,也可以是返回字符串的函数——
+ * 函数形式在编辑器每次渲染时现取(和 stringLiteral 动态选项同一套
+ * 语义),能跟随外部状态变化,典型场景:i18n 语言热切换。
+ * 注意:函数必须是稳定引用(sheet.object 要求重复调用的配置
+ * deep-equal,函数按引用比较),请在模块级定义、不要在 render 里新建。
+ */
+export type PropLabel = string | (() => string)
+
 export interface IBasePropType<
   LiteralIdentifier extends string,
   ValueType,
@@ -801,7 +810,7 @@ export interface IBasePropType<
    * }
    * ```
    */
-  label: string | undefined
+  label: PropLabel | undefined
   /**
    * If true, the studio's details/properties panel skips this prop entirely
    * (the prop still exists: readable/writable via the API, persistable,
@@ -1134,12 +1143,50 @@ export type ToolsetConfig = Array<ToolConfig>
  * A Theatre.js Studio extension. You can define one either
  * in a separate package, or within your project.
  */
+/** i18n 词条:平铺点分键 → 文案;`{var}` 占位由 t() 插值 */
+export type I18nMessages = {[key: string]: string}
+export type I18nVars = Record<string, string | number>
+
+/** studio.i18n 命名空间:宿主命令式接入(非 React 环境也可直接用) */
+export interface IStudioI18nAPI {
+  /** 取词条:当前语言 → 回退链 → key 原文;查不到永不抛错 */
+  t(key: string, vars?: I18nVars): string
+  getLanguage(): string
+  /** 切换语言并记住(写入用户持久化偏好) */
+  setLanguage(lang: string): void
+  /** 注册(合并)词条;同 key 后注册覆盖先注册 */
+  registerMessages(lang: string, messages: I18nMessages): void
+  /** 语言回退链:from 查不到时沿 to 继续查 */
+  registerFallback(from: string, to: string): void
+  /** 语言变化通知,返回注销函数 */
+  onLanguageChange(fn: () => void): () => void
+  /** 已注册词条的语言列表(注册顺序)——语言选择菜单的数据源 */
+  getRegisteredLanguages(): string[]
+  /** 语言的本地显示名(如 zh-CN → "简体中文");给语言选择菜单用 */
+  languageDisplayName(code: string, inLanguage?: string): string
+}
+
+/** IExtension.i18n:随 studio.extend() 注入的 i18n 配置 */
+export interface IExtensionI18n {
+  /** 各语言词条;同 key 覆盖 studio 内置(品牌定制) */
+  messages?: {[lang: string]: I18nMessages}
+  /** 强制初始语言(最高优先级;不写用户持久化偏好) */
+  language?: string
+  /** 语言回退链 */
+  fallbacks?: {[from: string]: string}
+}
+
 export interface IExtension {
   /**
    * Pick a unique ID for your extension. Ideally the name would be unique if
    * the extension was to be published to the npm repository.
    */
   id: string
+  /**
+   * i18n 扩展:注入语言词条(可覆盖 studio 内置)、指定初始语言、
+   * 注册语言回退链。与 toolbars/panes 同级,随 extend() 生效。
+   */
+  i18n?: IExtensionI18n
   /**
    * Set this if you'd like to add a component to the global toolbar (on the top)
    *
@@ -1228,6 +1275,12 @@ export interface InitOpts {
  */
 export interface IStudio {
   readonly ui: IStudioUI
+
+  /**
+   * i18n:取词条、切语言、注入词典。宿主应用可注册自己的语言/覆盖
+   * studio 内置词条(见 IExtension.i18n 扩展点)。
+   */
+  readonly i18n: IStudioI18nAPI
 
   /**
    * Runs an undo-able transaction. Creates a single undo level for all

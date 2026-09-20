@@ -2,6 +2,7 @@
 module.exports = {
   testMatch: [
     '<rootDir>/packages/*/src/**/*.test.ts',
+    '<rootDir>/packages/*/src/**/*.test.tsx',
     '<rootDir>/devEnv/**/*.test.ts',
   ],
   moduleNameMapper: {

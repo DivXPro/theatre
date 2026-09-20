@@ -1,4 +1,33 @@
-import {number, string, stringLiteral} from './index'
+import {number, resolvePropLabel, string, stringLiteral} from './index'
+
+describe('label 选项(PropLabel:字符串或函数)', () => {
+  it('字符串 label 原样存入配置', () => {
+    expect(string('a', {label: 'Name'}).label).toBe('Name')
+  })
+
+  it('函数 label 原样存入配置(resolvePropLabel 每次渲染现调)', () => {
+    const label = () => 'Name'
+    expect(string('a', {label}).label).toBe(label)
+  })
+
+  it('resolvePropLabel:字符串原样返回,undefined 原样返回', () => {
+    expect(resolvePropLabel('Name')).toBe('Name')
+    expect(resolvePropLabel(undefined)).toBeUndefined()
+  })
+
+  it('resolvePropLabel:函数调用取返回值(i18n 热切换的支撑)', () => {
+    let lang = 'en'
+    const label = () => (lang === 'en' ? 'Name' : '名称')
+    expect(resolvePropLabel(label)).toBe('Name')
+    lang = 'zh-CN'
+    // 同一个函数引用,返回值跟随外部状态——属性名无需刷新即换语言
+    expect(resolvePropLabel(label)).toBe('名称')
+  })
+
+  it('非法 label(数字)开发模式下抛错', () => {
+    expect(() => string('a', {label: 42 as never})).toThrow(/opts\.label/)
+  })
+})
 
 describe('hidden 选项(属性面板隐藏纯数据属性)', () => {
   it('hidden 透传进配置;不传则为 undefined', () => {

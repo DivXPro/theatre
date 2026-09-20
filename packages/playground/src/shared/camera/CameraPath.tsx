@@ -30,6 +30,9 @@ import {
 import type {CurvePath, Object3D} from 'three'
 import {registerEditorOnly} from './editorOnly'
 import {useModalGrab} from './modalGrab'
+import {translate} from '@dreamerbird/studio/i18n'
+// 模块顶层 label 用 translate:自带副作用导入,保证词条先注册(同 ShotCamera)
+import './i18n'
 import {
   isSelectSuppressed,
   suppressSelectBriefly,
@@ -133,18 +136,21 @@ export function getPathMeta(sheet: ISheet, metaKey: string) {
     // hidden: 纯数据底账不在属性面板出现(编辑全在视口/菜单,勿手改)
     config = {
       points: t.string('[]', {label: '控制点名单(JSON)', hidden: true}),
-      progress: t.number(0, {range: [0, 1], label: '行进进度'}),
+      progress: t.number(0, {
+        range: [0, 1],
+        label: () => translate('pg.props.pathProgress'),
+      }),
       position: t.compound(
         {x: t.number(0), y: t.number(0), z: t.number(0)},
-        {label: '位置'},
+        {label: () => translate('pg.props.position')},
       ),
       rotation: t.compound(
         {x: t.number(0), y: t.number(0), z: t.number(0)},
-        {label: '旋转(弧度)'},
+        {label: () => translate('pg.props.rotationRadian')},
       ),
       scale: t.compound(
         {x: t.number(1), y: t.number(1), z: t.number(1)},
-        {label: '缩放'},
+        {label: () => translate('pg.props.scale')},
       ),
     }
     metaConfigCache.set(metaKey, config)
