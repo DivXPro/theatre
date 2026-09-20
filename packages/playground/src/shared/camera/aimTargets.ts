@@ -6,8 +6,8 @@
  * 解析分两层:纯函数 resolveTargetObject(id, lookup) 供测试注入;
  * resolveAimTarget / resolveAnchorParent 读运行时登记表,供帧驱动调用。
  */
-import {Matrix4, Vector3} from 'three'
-import type {Object3D} from 'three'
+import {Matrix4} from 'three'
+import type {Object3D, Vector3} from 'three'
 import {translate} from '@dreamerbird/studio/i18n'
 import {val} from '@dreamerbird/core'
 import {privateAPI} from '@dreamerbird/core/privateAPIs'
@@ -275,11 +275,6 @@ export function localOffsetForParent(
   parentObj.updateWorldMatrix(true, false)
   const inv = new Matrix4().copy(parentObj.matrixWorld).invert()
   return out.copy(childWorld).applyMatrix4(inv)
-}
-
-export function worldPositionOf(obj: Object3D, out: Vector3): Vector3 {
-  obj.updateWorldMatrix(true, false)
-  return out.copy(obj.getWorldPosition(new Vector3()))
 }
 
 /**

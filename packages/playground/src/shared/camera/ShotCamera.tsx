@@ -420,10 +420,13 @@ export function ShotCamera({
   const aimTargetId = useObjPropScalar<string>(cameraObjRef, 'aimTarget', '')
   const aimObj = aimTargetId ? resolveAimTarget(aimTargetId) : null
   const tracking = aimObj !== null
-  // 目标登记表(锚点/相机运行时对象)变更订阅:持久态 aimTarget 指向的
-  // 目标在目标挂载登记/注销的瞬间,tracking(渲染期解析)立即翻正,不等
-  // 到无关重渲染;锚点被删同理即时触发下面的定格看护(规格§4 回退自由
-  // 朝向)。bones/placedInstances 两条登记路径 Task 8 接线后同机制生效
+  // 目标登记表变更订阅:四条登记路径——独立锚点(registerAnchorObject)、
+  // 拍摄相机(registerShotCameraObject)、骨骼锚点(registerBoneAnchors/
+  // unregisterBoneAnchors)、放置实例(registerPlacedInstance/
+  // unregisterPlacedInstance)——写表后都经 notifyTargetRegistryChange
+  // 广播:持久态 aimTarget 指向的目标在目标挂载登记/注销的瞬间,tracking
+  // (渲染期解析)立即翻正,不等到无关重渲染;目标被删同理即时触发下面
+  // 的定格看护(规格§4 回退自由朝向)
   const [, bumpTargetRegistry] = useState(0)
   useEffect(
     () => subscribeTargetRegistry(() => bumpTargetRegistry((n) => n + 1)),

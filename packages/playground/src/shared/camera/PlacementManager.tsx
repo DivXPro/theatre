@@ -20,6 +20,7 @@ import {AnimationMixer, Box3, Raycaster, Vector3} from 'three'
 import type {Group, Mesh, Object3D, AnimationClip, AnimationAction} from 'three'
 import {SkeletonUtils} from 'three-stdlib'
 import {registerBoneAnchors, unregisterBoneAnchors} from './boneAnchors'
+import {notifyTargetRegistryChange} from './aimTargets'
 import {createGLTFLoader} from './assetLibrary/gltfLoader'
 import {getLibrary} from './assetLibrary/library'
 import {entryOptions} from './assetLibrary/options'
@@ -239,13 +240,30 @@ export function getPlacedModelRoots(): ReadonlySet<Object3D> {
 /** 放置实例登记表:placementKey → 场景实例根(父级绑定的 model: 解析用) */
 const placedInstances = new Map<string, Group>()
 
+/**
+ * 登记/注销放置实例并广播目标登记表变更:持久化的瞄准/父级绑定在
+ * 异步实例(模型加载)挂载瞬间即可解析,ShotCamera/Anchors 无需等
+ * 无关重渲染(对齐 registerAnchorObject 的广播语义;注销同理——
+ * 被瞄准的模型删除后 tracking/看护立即回退,不卡死)。usePlacedInstance
+ * 的 hook 语义拆成命令式对,测试可直接断言广播。
+ */
+export function registerPlacedInstance(key: string, instance: Group): void {
+  placedInstances.set(key, instance)
+  notifyTargetRegistryChange()
+}
+
+export function unregisterPlacedInstance(key: string): void {
+  placedInstances.delete(key)
+  notifyTargetRegistryChange()
+}
+
 /** 放置实例登记/注销的便利 hook(PlacedModelCore 用) */
 function usePlacedInstance(key: string, instance: Group | null) {
   useEffect(() => {
     if (!instance) return
-    placedInstances.set(key, instance)
+    registerPlacedInstance(key, instance)
     return () => {
-      placedInstances.delete(key)
+      unregisterPlacedInstance(key)
     }
   }, [key, instance])
 }
@@ -1068,16 +1086,23 @@ function PlacedModelCore({
 
   // 登记当前 theatre 对象与 PlacementEntry 的映射,App 用 selection 反查 rig;
   // 同时保留场景实例,供资产库面板统计引用与 Task 6 抽帧。
+  // 骨骼锚点:按实例骨架登记头/胸口/双手/双腿(运行时,非 theatre 对象),
+  // 登记/注销都广播目标登记表——持久化的瞄准/父级绑定在模型加载完、
+  // 或模型被删的瞬间立即生效/回退,ShotCamera 与 Anchors 订阅见各自组件。
+  // deps 只挂 entry.key:注册表 list 任何增删都会 parse 出全新 entry 身份,
+  // 挂 entry 本体等于"增删任一模型重建全部骨骼锚点节点",已绑在骨骼锚点
+  // 上的锚点网格会随之脱离场景树;entry 内容放置后不可变,同 key 内容恒等。
   useEffect(() => {
     if (!sheetObject) return
     placementObjects.set(sheetObject, {entry, instance})
-    // 骨骼锚点:按实例骨架登记头/胸口/双手/双腿(运行时,非 theatre 对象)
     registerBoneAnchors(entry.key, instance)
+    notifyTargetRegistryChange()
     return () => {
       placementObjects.delete(sheetObject)
       unregisterBoneAnchors(entry.key)
+      notifyTargetRegistryChange()
     }
-  }, [sheetObject, entry, instance])
+  }, [sheetObject, entry.key, instance])
 
   // animation 属性变化时加载库动画 GLB
   useEffect(() => {

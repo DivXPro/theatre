@@ -85,15 +85,23 @@ export function parseBoneAnchorId(
 /** anchorId(bone:…#part)→ 骨骼下的锚点节点 */
 const boneAnchors = new Map<string, Object3D>()
 
+/** 已登记的 placementKey → 当时的骨架根:同根重复登记直接短路——
+ * 放置注册表增删任一模型都会让所有 PlacedModelCore 的登记 effect
+ * 重跑,不守卫会把骨骼上的锚点节点摘掉重建,而已绑定到骨骼锚点上的
+ * 锚点网格(其子节点)随之脱离场景树,再没有任何路径把它挂回来 */
+const registeredRoots = new Map<string, Object3D>()
+
 /**
  * 在放置实例上登记骨骼锚点:解析部位 → 挂节点 → 入表。
- * 同 placementKey 重复调用先清旧组(热更新/重挂载防堆积)。
+ * 同 placementKey 重复调用先清旧组(热更新/重挂载防堆积);
+ * 同根重复调用(注册表增删导致的 effect 重跑)保持节点身份不重建。
  * 无骨骼的模型自然解析为空,不进表。
  */
 export function registerBoneAnchors(
   placementKey: string,
   root: Object3D,
 ): void {
+  if (registeredRoots.get(placementKey) === root) return
   unregisterBoneAnchors(placementKey)
   const found = resolveAnchorBones(root)
   for (const part of BONE_PARTS) {
@@ -104,6 +112,7 @@ export function registerBoneAnchors(
     bone.add(anchor)
     boneAnchors.set(makeBoneAnchorId(placementKey, part), anchor)
   }
+  registeredRoots.set(placementKey, root)
 }
 
 export function unregisterBoneAnchors(placementKey: string): void {
@@ -115,6 +124,7 @@ export function unregisterBoneAnchors(placementKey: string): void {
       boneAnchors.delete(id)
     }
   }
+  registeredRoots.delete(placementKey)
 }
 
 export function getBoneAnchorObjects(): ReadonlyMap<string, Object3D> {

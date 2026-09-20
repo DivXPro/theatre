@@ -7,7 +7,7 @@
 import {editable as e} from '@dreamerbird/r3f'
 import {getStudioSync, types as t, val} from '@dreamerbird/core'
 import type {ISheet, ISheetObject} from '@dreamerbird/core'
-import React, {useEffect, useLayoutEffect, useRef} from 'react'
+import React, {useEffect, useLayoutEffect, useRef, useState} from 'react'
 import type {MutableRefObject} from 'react'
 import {Vector3} from 'three'
 import type {Mesh} from 'three'
@@ -24,6 +24,7 @@ import {
   registerAnchorObject,
   resolveAnchorParent,
   shouldClearMissingParent,
+  subscribeTargetRegistry,
 } from './aimTargets'
 import {useObjPropScalar} from './ShotCamera'
 
@@ -112,6 +113,10 @@ function AnchorObject({
     registerAnchorObject(anchorKey, meshRef.current)
     return () => {
       registerAnchorObject(anchorKey, null)
+      // fiber v9 卸载按 JSX 父实例 remove,对命令式换父后的网格是 no-op:
+      // 已绑到骨骼/模型上的锚点被删时,必须显式脱离当前父级,
+      // 否则网格残留在场景里,可见不可选,绑骨骼上还会跟动画
+      meshRef.current?.removeFromParent()
       objRef.current = undefined
     }
   }, [anchorKey])
@@ -216,6 +221,14 @@ function AnchorObject({
   // 闸(shouldClearMissingParent):从未绑定成功过的父级(刷新恢复/
   // 加载中)不清不定格,交给上面的重试循环——否则异步目标加载完成前
   // 的空窗会被误当"父级消失",持久绑定被清掉(Critical-1 回归)
+  // 目标登记表(bones/placedInstances)变更订阅:undo/对端删除模型不
+  // 触发本组件重渲染,下面的看护(无依赖、每次渲染跑)靠这里的 bump
+  // 才能及时检查到 model:/bone: 父级消失(对齐 ShotCamera 的订阅)
+  const [, bumpParentCheck] = useState(0)
+  useEffect(
+    () => subscribeTargetRegistry(() => bumpParentCheck((n) => n + 1)),
+    [],
+  )
   useEffect(() => {
     if (
       !shouldClearMissingParent(
