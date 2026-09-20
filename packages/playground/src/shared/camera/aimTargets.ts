@@ -282,6 +282,33 @@ export function worldPositionOf(obj: Object3D, out: Vector3): Vector3 {
   return out.copy(obj.getWorldPosition(new Vector3()))
 }
 
+/**
+ * 绑定重试循环的判定:有父级目标、且本会话尚未对当前 parentId 绑定
+ * 成功。刷新/撤销恢复的持久绑定在异步目标(放置模型/骨骼锚点,
+ * Suspense 加载完才注册)就绪前一直满足本条件,由 useFrame 每帧补建;
+ * 建立成功后写入 boundParentId,不再重试。
+ */
+export function needsParentEstablish(
+  boundParentId: string | null,
+  parentId: string,
+): boolean {
+  return parentId !== '' && boundParentId !== parentId
+}
+
+/**
+ * 父级消失看护的清除判定:本会话曾对当前 parentId 绑定成功、且此刻
+ * 解析不到 → 允许「清除 parent + 定格世界坐标」。从未绑定成功过的
+ * 父级(刷新恢复/加载中)判 false:不清不定格,交给重试循环直到建立
+ * ——否则异步目标加载完成前的空窗会被误当「父级消失」,持久绑定被清掉。
+ */
+export function shouldClearMissingParent(
+  boundParentId: string | null,
+  parentId: string,
+  resolvable: boolean,
+): boolean {
+  return parentId !== '' && boundParentId === parentId && !resolvable
+}
+
 /** 从放置注册表反查模型显示名;放置注册表未建好时回退原 key */
 function placementDisplayName(sheet: ISheet, placementKey: string): string {
   try {
