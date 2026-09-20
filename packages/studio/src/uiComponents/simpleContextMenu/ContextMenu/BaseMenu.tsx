@@ -19,7 +19,22 @@ const MenuContainer = styled.ul`
 
   background: rgb(45 55 66 / 75%);
   backdrop-filter: blur(8px) brightness(70%);
-  color: var(--theatre-text-primary);
+  // 同值兜底:菜单可能被外层应用(如 playground)在自己的 React 树里渲染,
+  // portal 落在主文档,studio 的 --theatre-* 令牌(定义在 shadow DOM
+  // :host 上)在那里不存在——不带兜底会回落到文档默认字体/黑色文字
+  color: var(--theatre-text-primary, #ffffff);
+  font-family: var(
+    --theatre-font-family,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe WPC',
+    'Segoe Editor',
+    HelveticaNeue-Light,
+    Ubuntu,
+    'Droid Sans',
+    sans-serif
+  );
+  font-size: var(--theatre-font-size, 11px);
   border: 0.5px solid #6262622c;
   box-sizing: border-box;
   box-shadow: ${transparentize(0.75, '#000000')} 0px 4px 20px;
