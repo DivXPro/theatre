@@ -19,6 +19,7 @@ import React, {
 import {AnimationMixer, Box3, Raycaster, Vector3} from 'three'
 import type {Group, Mesh, Object3D, AnimationClip, AnimationAction} from 'three'
 import {SkeletonUtils} from 'three-stdlib'
+import {registerBoneAnchors, unregisterBoneAnchors} from './boneAnchors'
 import {createGLTFLoader} from './assetLibrary/gltfLoader'
 import {getLibrary} from './assetLibrary/library'
 import {entryOptions} from './assetLibrary/options'
@@ -1051,6 +1052,8 @@ function PlacedModelCore({
   // 所以每个实例克隆一份(SkinnedMesh 安全),配独立的 AnimationMixer。
   const instance = useMemo(() => SkeletonUtils.clone(group) as Group, [group])
   const mixer = useMemo(() => new AnimationMixer(instance), [instance])
+  // 登记进 placedInstances 表:锚点父级绑定的 model: 解析用
+  usePlacedInstance(entry.key, instance)
   const bindPoseRef = useRef<PoseEntry['bones']>({})
   // 实例刚克隆出来时同步捕获绑定姿势,确保后续姿势应用 effect 运行前已就位
   useLayoutEffect(() => {
@@ -1068,8 +1071,11 @@ function PlacedModelCore({
   useEffect(() => {
     if (!sheetObject) return
     placementObjects.set(sheetObject, {entry, instance})
+    // 骨骼锚点:按实例骨架登记头/胸口/双手/双腿(运行时,非 theatre 对象)
+    registerBoneAnchors(entry.key, instance)
     return () => {
       placementObjects.delete(sheetObject)
+      unregisterBoneAnchors(entry.key)
     }
   }, [sheetObject, entry, instance])
 
