@@ -10,6 +10,7 @@ import StudioStore from './StudioStore/StudioStore'
 import type {
   IExtension,
   IStudio,
+  IWorkspaceButtonConfig,
   PaneClassDefinition,
   InitOpts,
 } from '@dreamerbird/core/types/public'
@@ -86,6 +87,7 @@ export type StudioOpts = {
   persistenceKey: string
   usePersistentStorage: boolean
   rafDriver: RafDriverPrivateAPI
+  workspaceButton?: IWorkspaceButtonConfig
 }
 
 export class Studio {
@@ -127,6 +129,9 @@ export class Studio {
     // internal signal: connection state of the direct-ws sync link. Only set in
     // direct self-host mode; always 'connected' otherwise (local/offline).
     connectionStatus: 'connected' | 'reconnecting'
+    // UI config for the global toolbar's workspace button, sanitized from
+    // InitOpts.workspaceButton at initialize() time. Undefined = default look.
+    workspaceButton?: IWorkspaceButtonConfig
     coreByProject: {[projectId in string]: ProjectEphemeralState}
     extensions: {
       byId: {[extensionId in string]?: IExtension}
@@ -384,7 +389,13 @@ export class Studio {
     }
 
     if (this._optsDeferred.status === 'pending') {
-      this._optsDeferred.resolve(sanitizeOpts(opts, this._coreBits))
+      const sanitizedOpts = sanitizeOpts(opts, this._coreBits)
+      this._optsDeferred.resolve(sanitizedOpts)
+      // workspaceButton 配置同步进 ephemeralAtom,UI 组件用 useVal 订阅
+      this.ephemeralAtom.setByPointer(
+        (p) => p.workspaceButton,
+        sanitizedOpts.workspaceButton,
+      )
     }
 
     return this._initializedPromise

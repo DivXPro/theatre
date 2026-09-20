@@ -1,7 +1,6 @@
 import type {CoreBits} from '@dreamerbird/core/CoreBundle'
 import type {$IntentionalAny, InitOpts} from '@dreamerbird/core/types/public'
 import type {StudioOpts} from './Studio'
-
 export const DEFAULT_PERSISTENCE_KEY = 'theatre-0.4'
 
 export function sanitizeOpts(
@@ -55,6 +54,35 @@ export function sanitizeOpts(
       )
     }
     storeOpts.rafDriver = rafDriverPrivateApi
+  }
+
+  const wb = opts?.workspaceButton
+  if (wb !== undefined) {
+    if (typeof wb !== 'object' || wb === null) {
+      throw new Error(
+        'parameter `workspaceButton` in `theatre.init({studio: true, workspaceButton})` must be an object like {team?, name?, icon?, menu?}',
+      )
+    }
+    if (wb.menu !== undefined) {
+      if (!Array.isArray(wb.menu)) {
+        throw new Error(
+          'parameter `workspaceButton.menu` must be an array of {label, onClick}',
+        )
+      }
+      for (const item of wb.menu) {
+        if (
+          typeof item !== 'object' ||
+          item === null ||
+          typeof item.label !== 'string' ||
+          typeof item.onClick !== 'function'
+        ) {
+          throw new Error(
+            'each item of `workspaceButton.menu` must be {label: string, onClick: function}',
+          )
+        }
+      }
+    }
+    storeOpts.workspaceButton = wb
   }
 
   return storeOpts

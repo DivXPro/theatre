@@ -1,6 +1,7 @@
 import type {Pointer} from '@dreamerbird/dataverse'
 import type CoreBundle from '@dreamerbird/core/CoreBundle'
 import type {OnDiskState} from './private/core'
+import type {ReactNode} from 'react'
 
 /** For `any`s that aren't meant to stay `any`*/
 export type $FixMe = any
@@ -1250,6 +1251,55 @@ export interface InitOpts {
   rafDriver?: IRafDriver | undefined
 
   serverUrl?: string | undefined
+
+  /**
+   * Customizes the workspace button at the left of the studio's global
+   * toolbar (the pill that by default reads "Team / Workspace").
+   *
+   * When omitted, the button keeps its default look and is not clickable.
+   *
+   * @example
+   * ```ts
+   * theatre.init({
+   *   studio: true,
+   *   workspaceButton: {
+   *     team: 'Camera',
+   *     name: 'Playground',
+   *     icon: <MyIcon />, // any React node: SVG JSX, component, or emoji string
+   *     menu: [{label: 'Settings', onClick: () => {}}],
+   *   },
+   * })
+   * ```
+   */
+  workspaceButton?: IWorkspaceButtonConfig
+}
+
+/**
+ * Configuration for the studio global toolbar's workspace button
+ * (see {@link InitOpts.workspaceButton}).
+ */
+export interface IWorkspaceButtonConfig {
+  /**
+   * Grey prefix shown before the name (like "Team" in "Team / Workspace").
+   */
+  team?: string
+  /**
+   * Main label of the button.
+   */
+  name?: string
+  /**
+   * Icon rendered before the label. Any React node is accepted: an SVG in
+   * JSX, a component, or a plain string such as an emoji.
+   */
+  icon?: ReactNode
+  /**
+   * When provided, clicking the button opens a dropdown menu with these
+   * items. When omitted, the button is not clickable.
+   */
+  menu?: Array<{
+    label: string
+    onClick: () => void
+  }>
 }
 
 /**
