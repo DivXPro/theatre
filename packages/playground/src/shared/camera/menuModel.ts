@@ -139,3 +139,19 @@ export function buildExportMenuItems<S extends {label: string}>(
     callback: () => onPick(sink),
   }))
 }
+
+/** 右键锚点:删除(注册表移除,组件卸载;持久数据清理见 removeAnchor) */
+export function buildAnchorMenuItems(
+  opts: {
+    onDeleteAnchor: () => void
+  },
+  t: MenuT = translate,
+): ContextMenuItem[] {
+  return [
+    {
+      type: 'normal',
+      label: t('pg.menu.deleteAnchor'),
+      callback: opts.onDeleteAnchor,
+    },
+  ]
+}

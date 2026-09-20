@@ -86,9 +86,31 @@ export function resolveTargetObject(
 /** 独立锚点的 theatreKey → 场景网格(Anchors 组件登记) */
 const anchorObjects = new Map<string, Object3D>()
 
+/**
+ * 运行时目标登记表(锚点/相机,bones/placedInstances 在 Task 8 接线)
+ * 的变更订阅:挂载登记/卸载注销时广播。ShotCamera 订阅后重渲染,
+ * 持久态 aimTarget 指向的目标在目标挂载登记瞬间 tracking 立即翻正,
+ * 不等到无关重渲染;目标被删同理即时回退自由朝向(规格§4)。
+ */
+const targetRegistryListeners = new Set<() => void>()
+
+/** 订阅登记表变更,返回退订函数 */
+export function subscribeTargetRegistry(fn: () => void): () => void {
+  targetRegistryListeners.add(fn)
+  return () => {
+    targetRegistryListeners.delete(fn)
+  }
+}
+
+/** 登记表变更广播;各 register/unregister 路径在写表后调用 */
+export function notifyTargetRegistryChange(): void {
+  for (const fn of targetRegistryListeners) fn()
+}
+
 export function registerAnchorObject(key: string, obj: Object3D | null): void {
   if (obj) anchorObjects.set(key, obj)
   else anchorObjects.delete(key)
+  notifyTargetRegistryChange()
 }
 
 export function getAnchorObjects(): ReadonlyMap<string, Object3D> {

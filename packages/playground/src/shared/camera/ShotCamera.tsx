@@ -41,7 +41,11 @@ import {
 import {resolveBoundPathKey} from './pathBinding'
 import {getPathsRegistry, readPathEntries, usePathsList} from './pathRegistry'
 import {consumeCameraSeed, registerShotCameraObject} from './cameraRegistry'
-import {resolveAimTarget, aimTargetOptions} from './aimTargets'
+import {
+  resolveAimTarget,
+  aimTargetOptions,
+  subscribeTargetRegistry,
+} from './aimTargets'
 
 /**
  * 场景摄像机(shot camera):独立于编辑主视角的"镜头",取景画面用于
@@ -416,6 +420,15 @@ export function ShotCamera({
   const aimTargetId = useObjPropScalar<string>(cameraObjRef, 'aimTarget', '')
   const aimObj = aimTargetId ? resolveAimTarget(aimTargetId) : null
   const tracking = aimObj !== null
+  // 目标登记表(锚点/相机运行时对象)变更订阅:持久态 aimTarget 指向的
+  // 目标在目标挂载登记/注销的瞬间,tracking(渲染期解析)立即翻正,不等
+  // 到无关重渲染;锚点被删同理即时触发下面的定格看护(规格§4 回退自由
+  // 朝向)。bones/placedInstances 两条登记路径 Task 8 接线后同机制生效
+  const [, bumpTargetRegistry] = useState(0)
+  useEffect(
+    () => subscribeTargetRegistry(() => bumpTargetRegistry((n) => n + 1)),
+    [],
+  )
   const prevTrackingRef = useRef<boolean | null>(null)
   const capturePosTmp = useRef(new Vector3())
   useEffect(() => {

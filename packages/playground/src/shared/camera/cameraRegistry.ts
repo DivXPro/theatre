@@ -12,6 +12,7 @@ import {getStudioSync, types as t, val} from '@dreamerbird/core'
 import type {ISheet, ISheetObject} from '@dreamerbird/core'
 import {useEffect, useMemo, useState} from 'react'
 import type {Object3D} from 'three'
+import {notifyTargetRegistryChange} from './aimTargets'
 
 /** 注册表对象的 theatre key(大纲顶层 "Cameras" 行,和 Placements 同款) */
 export const CAMERAS_REGISTRY_KEY = 'Cameras'
@@ -176,6 +177,9 @@ export function registerShotCameraObject(
 ): void {
   if (obj) shotCameraObjects.set(cameraKey, obj)
   else shotCameraObjects.delete(cameraKey)
+  // 与 registerAnchorObject 同机制:登记表变更广播,ShotCamera 等的
+  // 瞄准/父级解析随挂载/注销即时翻正(循环 import 仅运行时调用,安全)
+  notifyTargetRegistryChange()
 }
 
 export function getShotCameraObjects(): ReadonlyMap<string, Object3D> {

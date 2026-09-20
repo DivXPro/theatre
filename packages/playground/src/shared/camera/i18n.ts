@@ -27,6 +27,9 @@ export const en: Messages = {
   'pg.toolbar.addCamera': 'Add camera',
   'pg.toolbar.addCamera.hint':
     'Create a camera from the current director view (becomes the active camera)',
+  'pg.toolbar.addAnchor': 'Add anchor',
+  'pg.toolbar.addAnchor.hint':
+    'Place an empty anchor in front of the current view (aim target / parentable)',
   'pg.toolbar.pip': 'Picture in picture',
   'pg.toolbar.pip.show': 'Show the shot preview in the bottom-right corner',
   'pg.toolbar.pip.hide': 'Hide the shot preview',
@@ -41,6 +44,7 @@ export const en: Messages = {
 
   'pg.menu.viewShot': 'View this shot',
   'pg.menu.deleteCamera': 'Delete camera',
+  'pg.menu.deleteAnchor': 'Delete anchor',
   'pg.menu.editPath': 'Edit path (Tab)',
   'pg.menu.exitEditPath': 'Exit editing (Tab)',
   'pg.menu.bindCamera': 'Bind to active camera',
@@ -117,6 +121,9 @@ export const zhCN: Messages = {
   'pg.toolbar.addPath.hint': '打开路径预设库,点击或拖拽生成相机轨迹',
   'pg.toolbar.addCamera': '添加相机',
   'pg.toolbar.addCamera.hint': '从当前导演视角创建一台相机(落地即活动相机)',
+  'pg.toolbar.addAnchor': '添加锚点',
+  'pg.toolbar.addAnchor.hint':
+    '在当前视角前方放一个空锚点(可被相机瞄准、可绑父级)',
   'pg.toolbar.pip': '画中画',
   'pg.toolbar.pip.show': '显示右下角的镜头画中画',
   'pg.toolbar.pip.hide': '隐藏右下角的镜头画中画',
@@ -130,6 +137,7 @@ export const zhCN: Messages = {
 
   'pg.menu.viewShot': '查看此镜头',
   'pg.menu.deleteCamera': '删除相机',
+  'pg.menu.deleteAnchor': '删除锚点',
   'pg.menu.editPath': '编辑路径(Tab)',
   'pg.menu.exitEditPath': '退出编辑(Tab)',
   'pg.menu.bindCamera': '绑定到活动相机',

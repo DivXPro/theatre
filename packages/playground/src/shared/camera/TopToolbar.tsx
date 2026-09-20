@@ -77,6 +77,19 @@ const StopIcon = () => (
   </svg>
 )
 
+const AnchorIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+    <circle cx="8" cy="8" r="3.2" stroke="currentColor" strokeWidth="1.3" />
+    <path
+      d="M8 1.5v3M8 11.5v3M1.5 8h3M11.5 8h3"
+      stroke="currentColor"
+      strokeWidth="1.3"
+      strokeLinecap="round"
+    />
+    <circle cx="8" cy="8" r="0.9" fill="currentColor" />
+  </svg>
+)
+
 // ---------------------------------------------------------------------------
 
 const Positioning = styled.div`
@@ -168,6 +181,7 @@ export function TopToolbar({
   onToggleModelLibrary,
   onTogglePathLibrary,
   onAddCamera,
+  onAddAnchor,
   exportSinks,
   exporting,
   exportDisabled,
@@ -181,6 +195,7 @@ export function TopToolbar({
   onToggleModelLibrary: () => void
   onTogglePathLibrary: () => void
   onAddCamera: () => void
+  onAddAnchor: () => void
   exportSinks: readonly ExportSink[]
   exporting: boolean
   exportDisabled: boolean
@@ -235,6 +250,13 @@ export function TopToolbar({
           hint={t('pg.toolbar.addCamera.hint')}
         >
           <Camera />
+        </ToolbarBtn>
+        <ToolbarBtn
+          onClick={onAddAnchor}
+          tip={t('pg.toolbar.addAnchor')}
+          hint={t('pg.toolbar.addAnchor.hint')}
+        >
+          <AnchorIcon />
         </ToolbarBtn>
         <ToolbarBtn
           onClick={onTogglePip}

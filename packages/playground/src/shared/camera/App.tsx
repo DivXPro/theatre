@@ -27,6 +27,7 @@ import {useGLTF} from '@react-three/drei'
 import sceneGLB from './scene.glb'
 import {
   Color,
+  Euler,
   LinearSRGBColorSpace,
   MOUSE,
   PMREMGenerator,
@@ -56,12 +57,21 @@ import {
 import {CanvasContextMenu} from './contextMenu'
 import {registerEditorOnly} from './editorOnly'
 import {
+  buildAnchorMenuItems,
   buildCameraMenuItems,
   buildObjectMenuItems,
   buildPathMenuItems,
   buildPathPanelActions,
 } from './menuModel'
 import {TopToolbar} from './TopToolbar'
+import {Anchors} from './Anchors'
+import {setAimOptionsSheet} from './aimTargets'
+import {
+  addAnchorToRegistry,
+  nextAnchorKey,
+  removeAnchor,
+  useAnchorsList,
+} from './anchorsRegistry'
 import {PipCameraSelector} from './PipCameraSelector'
 import {usePipBottom} from './pipLayout'
 import {AssetLibraryPanel} from './assetLibrary/AssetLibraryPanel'
@@ -645,7 +655,13 @@ function App() {
   const project = getProject('Space')
   const sheet = project.sheet('Scene')
 
+  // 「瞄准目标」下拉的动态选项(aimTargetOptions)在 studio 面板渲染时
+  // 调用,不在 React 上下文里——把当前 sheet 喂给模块级 optionsSheet,
+  // 选项函数经它读 Anchors 注册表
+  useEffect(() => setAimOptionsSheet(sheet), [sheet])
+
   const cameras = useCamerasList(sheet)
+  const anchors = useAnchorsList(sheet)
   // 活动相机:画中画/镜头视角/导出只对它生效(右键「查看此镜头」= 设活动)。
   // 持久化没必要(session 态);key 失效(被删)时顺位回退清单第一台
   const [activeCameraKey, setActiveCameraKey] = useState<string | null>(null)
@@ -678,6 +694,36 @@ function App() {
     // 新相机落地即活动(用户刚加的就是他想看的)
     setActiveCameraKey(entry.cameraKey)
   }, [cameras, sheet])
+
+  // 添加锚点:落在当前导演视角前方约 5 单位(无导演相机退场景中心上方)
+  const addAnchor = useCallback(() => {
+    const key = nextAnchorKey(anchors)
+    const mainCam = cameraObjRef.current
+    const pos = mainCam
+      ? (() => {
+          const p = val(mainCam.props.position) as {
+            x: number
+            y: number
+            z: number
+          }
+          const r = val(mainCam.props.rotation) as {
+            x: number
+            y: number
+            z: number
+          }
+          // 导演相机 -Z 前方 5 单位(three 相机朝向约定)
+          const forward = new Vector3(0, 0, -1).applyEuler(
+            new Euler(r.x, r.y, r.z, 'XYZ'),
+          )
+          return {
+            x: p.x + forward.x * 5,
+            y: p.y + forward.y * 5,
+            z: p.z + forward.z * 5,
+          }
+        })()
+      : {x: 0, y: 1, z: 0}
+    addAnchorToRegistry(sheet, key, {position: pos})
+  }, [anchors, sheet])
 
   // 删除相机(右键菜单):真删——持久数据清掉、大纲行消失;
   // 活动相机被删时 activeCamera 推导自动顺位给清单第一台
@@ -727,6 +773,21 @@ function App() {
     x: number
     y: number
   } | null>(null)
+  // 右键锚点弹出的菜单:记录是哪个锚点和光标位置(Anchors 组件经
+  // pg:anchor-context-menu 自定义事件透传,避免层层 props)
+  const [anchorMenu, setAnchorMenu] = useState<{
+    key: string
+    x: number
+    y: number
+  } | null>(null)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const {key, x, y} = (e as CustomEvent).detail
+      setAnchorMenu({key, x, y})
+    }
+    window.addEventListener('pg:anchor-context-menu', handler)
+    return () => window.removeEventListener('pg:anchor-context-menu', handler)
+  }, [])
   // 调试/自动化验证挂钩:浏览器里直接读写 sheet 对象与选中态
   ;(window as any).__cameraShot = {
     cameraObjRef,
@@ -797,6 +858,7 @@ function App() {
   const closeObjectMenu = useCallback(() => setObjectMenu(null), [])
   const closePathMenu = useCallback(() => setPathMenu(null), [])
   const closeCameraMenu = useCallback(() => setCameraMenu(null), [])
+  const closeAnchorMenu = useCallback(() => setAnchorMenu(null), [])
 
   // 导出目标在运行环境稳定后不再变化,useMemo 避免每次渲染重建数组
   const exportSinks = useMemo(() => listSinks(), [])
@@ -1306,6 +1368,7 @@ function App() {
         onToggleModelLibrary={() => toggleFrame('model')}
         onTogglePathLibrary={() => toggleFrame('path')}
         onAddCamera={addCamera}
+        onAddAnchor={addAnchor}
         exportSinks={exportSinks}
         exporting={exporting}
         onPickExportSink={handlePickExportSink}
@@ -1502,6 +1565,19 @@ function App() {
           onClose={closeCameraMenu}
         />
       )}
+      {anchorMenu && (
+        <CanvasContextMenu
+          position={{x: anchorMenu.x, y: anchorMenu.y}}
+          items={buildAnchorMenuItems({
+            onDeleteAnchor: () => {
+              removeAnchor(sheet, anchorMenu.key)
+              // 被删的锚点留在选中列表里没意义,顺带清掉
+              getStudioSync()?.setSelection([])
+            },
+          })}
+          onClose={closeAnchorMenu}
+        />
+      )}
       {editingPath && !shotView && (
         <PathEditBar
           hasSelection={
@@ -1564,6 +1640,7 @@ function App() {
               }
             />
           ))}
+          <Anchors sheet={sheet} shotView={shotView} />
           {paths.map((entry) => (
             <PathPanelActionsRegistrar
               key={`actions-${entry.pathKey}`}
