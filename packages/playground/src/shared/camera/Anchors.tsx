@@ -1,15 +1,23 @@
 // packages/playground/src/shared/camera/Anchors.tsx
 /**
- * 独立锚点(空物体):顶栏按钮添加,橙色线框小球体。可点选、可拖
- * (gizmo)、右键删除;可被相机瞄准,可绑定父级(Task 7)。仅编辑视角可见。
+ * 独立锚点(空物体):顶栏按钮添加,橙色轴线交叉(Blender Plain
+ * Axes 式:过原点的 ±X/±Y/±Z 三根线)。可点选、可拖(gizmo)、右键删
+ * 除;可被相机瞄准,可绑定父级(Task 7)。仅编辑视角可见。
+ * 线段拾取有 three 的默认阈值,轴线附近点击即选中(与相机视锥线一致)。
  */
 import {editable as e} from '@dreamerbird/r3f'
 import {getStudioSync, types as t, val} from '@dreamerbird/core'
 import type {ISheet, ISheetObject} from '@dreamerbird/core'
-import React, {useEffect, useLayoutEffect, useRef, useState} from 'react'
+import React, {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import type {MutableRefObject} from 'react'
-import {Vector3} from 'three'
-import type {Mesh} from 'three'
+import {BufferGeometry, Float32BufferAttribute, Vector3} from 'three'
+import type {Group} from 'three'
 import {useFrame} from '@react-three/fiber'
 import type {ThreeEvent} from '@react-three/fiber'
 import {translate} from '@dreamerbird/studio/i18n'
@@ -80,6 +88,23 @@ export function Anchors({
   )
 }
 
+/** 轴线臂长:对齐旧线框方块/小球的视觉尺寸(总跨距 0.5) */
+const ANCHOR_AXES_ARM = 0.25
+
+/** Blender Plain Axes 式几何:过原点的三根轴线(±X/±Y/±Z),6 顶点 */
+function createAnchorAxesGeometry(): BufferGeometry {
+  const a = ANCHOR_AXES_ARM
+  const geo = new BufferGeometry()
+  geo.setAttribute(
+    'position',
+    new Float32BufferAttribute(
+      [-a, 0, 0, a, 0, 0, 0, -a, 0, 0, a, 0, 0, 0, -a, 0, 0, a],
+      3,
+    ),
+  )
+  return geo
+}
+
 function AnchorObject({
   anchorKey,
   shotView,
@@ -91,7 +116,12 @@ function AnchorObject({
   homeRef: MutableRefObject<import('three').Group | null>
   objRef: MutableRefObject<ISheetObject<any> | undefined>
 }) {
-  const meshRef = useRef<Mesh>(null!)
+  // 锚点节点:Group 包一根线段几何(Plain Axes 视觉);挂载/脱离/
+  // gizmo 附着只认 Object3D,不挑几何类型
+  const nodeRef = useRef<Group>(null!)
+  // 轴线几何:随组件建,卸载释放(6 顶点线段,极轻)
+  const axesGeo = useMemo(createAnchorAxesGeometry, [])
+  useEffect(() => () => axesGeo.dispose(), [axesGeo])
   const setObjRef = (obj: ISheetObject<any> | null) => {
     objRef.current = obj ?? undefined
   }
@@ -109,23 +139,23 @@ function AnchorObject({
   }, [anchorKey])
 
   // 登记运行时对象(瞄准解析 anchor:)与选中 gizmo;卸载清理
-  // 体内先捕获 mesh:passive cleanup 执行时 React 已把 ref 置 null
+  // 体内先捕获 node:passive cleanup 执行时 React 已把 ref 置 null
   // (复审实测 React 19.2.8;layout cleanup 才仍 non-null),cleanup 里
-  // 读 meshRef.current 是空操作,幽灵网格原样残留
+  // 读 nodeRef.current 是空操作,幽灵网格原样残留
   useEffect(() => {
-    const mesh = meshRef.current
-    registerAnchorObject(anchorKey, mesh)
+    const node = nodeRef.current
+    registerAnchorObject(anchorKey, node)
     return () => {
       registerAnchorObject(anchorKey, null)
       // fiber v9 卸载按 JSX 父实例 remove,对命令式换父后的网格是 no-op:
       // 已绑到骨骼/模型上的锚点被删时,必须显式脱离当前父级(捕获值),
       // 否则网格残留在场景里,可见不可选,绑骨骼上还会跟动画
-      detachAnchorMesh(mesh)
+      detachAnchorMesh(node)
       objRef.current = undefined
     }
   }, [anchorKey])
-  useSelectionGizmoTarget(objRef, meshRef, true)
-  useEffect(() => registerEditorOnly(meshRef.current), [])
+  useSelectionGizmoTarget(objRef, nodeRef, true)
+  useEffect(() => registerEditorOnly(nodeRef.current), [])
 
   // 响应式读 parent 属性(复用 ShotCamera 的 useObjPropScalar)
   const parentId = useObjPropScalar<string>(objRef, 'parent', '')
@@ -139,8 +169,8 @@ function AnchorObject({
   const boundParentRef = useRef<{parentId: string} | null>(null)
   const tmpWorld = useRef(new Vector3())
   useLayoutEffect(() => {
-    const mesh = meshRef.current
-    if (!mesh) return
+    const node = nodeRef.current
+    if (!node) return
     const prev = prevParentRef.current
     if (prev === null) {
       // 挂载首次:持久态恢复,场景位置由包装器按属性恢复,不干预。
@@ -169,8 +199,8 @@ function AnchorObject({
     // 换父后的"属性应取值" = 新父(根则恒等)矩阵逆 × 世界坐标
     if (parentId === '') {
       // 解绑(下拉选「无」/看护清除后的跟随):挂回娘家,属性=世界坐标
-      const world = mesh.getWorldPosition(tmpWorld.current).clone()
-      homeRef.current?.add(mesh)
+      const world = node.getWorldPosition(tmpWorld.current).clone()
+      homeRef.current?.add(node)
       const scrub = studio.scrub()
       scrub.capture(({set}) =>
         set(obj.props.position, {x: world.x, y: world.y, z: world.z}),
@@ -186,9 +216,9 @@ function AnchorObject({
       // 由 useFrame 重试循环以"只挂不换算"建立,成功前游标停在 prev
       return
     }
-    const world = mesh.getWorldPosition(tmpWorld.current).clone()
-    newParentObj.add(mesh)
-    mesh.updateWorldMatrix(true, false)
+    const world = node.getWorldPosition(tmpWorld.current).clone()
+    newParentObj.add(node)
+    node.updateWorldMatrix(true, false)
     const local = localOffsetForParent(world, newParentObj, tmpWorld.current)
     const scrub = studio.scrub()
     scrub.capture(({set}) =>
@@ -213,9 +243,9 @@ function AnchorObject({
       return
     const newParentObj = resolveAnchorParent(id)
     if (!newParentObj) return // 目标还没加载出来,下一帧再试
-    const mesh = meshRef.current
-    if (!mesh) return
-    newParentObj.add(mesh)
+    const node = nodeRef.current
+    if (!node) return
+    newParentObj.add(node)
     prevParentRef.current = id
     boundParentRef.current = {parentId: id}
   })
@@ -243,11 +273,11 @@ function AnchorObject({
     )
       return
     const obj = objRef.current
-    const mesh = meshRef.current
+    const node = nodeRef.current
     const studio = getStudioSync()
-    if (!obj || !mesh || !studio) return
-    const world = mesh.getWorldPosition(new Vector3())
-    homeRef.current?.add(mesh)
+    if (!obj || !node || !studio) return
+    const world = node.getWorldPosition(new Vector3())
+    homeRef.current?.add(node)
     const scrub = studio.scrub()
     scrub.capture(({set}) => {
       set(obj.props.parent, '')
@@ -264,10 +294,10 @@ function AnchorObject({
   }
 
   return (
-    <e.mesh
+    <e.group
       theatreKey={anchorKey}
       objRef={setObjRef}
-      ref={meshRef}
+      ref={nodeRef}
       position={[0, 1, 0]}
       visible={!shotView}
       additionalProps={anchorPropsFor(anchorKey)}
@@ -288,8 +318,9 @@ function AnchorObject({
         )
       }}
     >
-      <sphereGeometry args={[0.125, 16, 16]} />
-      <meshBasicMaterial color="#ffb020" wireframe />
-    </e.mesh>
+      <lineSegments geometry={axesGeo}>
+        <lineBasicMaterial color="#ffb020" />
+      </lineSegments>
+    </e.group>
   )
 }
