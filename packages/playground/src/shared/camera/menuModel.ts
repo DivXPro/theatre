@@ -140,7 +140,8 @@ export function buildExportMenuItems<S extends {label: string}>(
   }))
 }
 
-/** 右键锚点:删除(注册表移除,组件卸载;持久数据清理见 removeAnchor) */
+/** 右键锚点:仅「删除」一项;真删由 App 的回调实现(对象传给
+ * removeAnchor 做 forgetObject + 注册表移除,对齐相机) */
 export function buildAnchorMenuItems(
   opts: {
     onDeleteAnchor: () => void

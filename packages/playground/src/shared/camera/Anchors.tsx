@@ -16,7 +16,19 @@ import {useSelectionGizmoTarget} from './PlacementManager'
 import {consumeAnchorSeed, useAnchorsList} from './anchorsRegistry'
 import {registerAnchorObject} from './aimTargets'
 
-export function Anchors({sheet, shotView}: {sheet: ISheet; shotView: boolean}) {
+export function Anchors({
+  sheet,
+  shotView,
+  getAnchorRef,
+}: {
+  sheet: ISheet
+  shotView: boolean
+  /** 每个锚点一个 objRef(App 持有的映射,仿相机 shotRefsMapRef;右键
+   * 删除时经它取对象做真删——forgetObject 清持久数据) */
+  getAnchorRef: (
+    anchorKey: string,
+  ) => MutableRefObject<ISheetObject<any> | undefined>
+}) {
   const anchorKeys = useAnchorsList(sheet)
   // 锚点网格的"娘家":r3f 原挂载点,解绑/父级消失时挂回这里
   const homeRef = useRef<React.ElementRef<'group'>>(null!)
@@ -28,6 +40,7 @@ export function Anchors({sheet, shotView}: {sheet: ISheet; shotView: boolean}) {
           anchorKey={key}
           shotView={shotView}
           homeRef={homeRef}
+          objRef={getAnchorRef(key)}
         />
       ))}
     </group>
@@ -38,13 +51,14 @@ function AnchorObject({
   anchorKey,
   shotView,
   homeRef,
+  objRef,
 }: {
   anchorKey: string
   shotView: boolean
   homeRef: MutableRefObject<import('three').Group | null>
+  objRef: MutableRefObject<ISheetObject<any> | undefined>
 }) {
   const meshRef = useRef<Mesh>(null!)
-  const objRef = useRef<ISheetObject<any> | undefined>(undefined)
   const setObjRef = (obj: ISheetObject<any> | null) => {
     objRef.current = obj ?? undefined
   }

@@ -619,6 +619,23 @@ function App() {
     }
     return refs
   }
+  // 每个锚点一个 objRef(多锚点:单对 ref 会被 map 里的实例互相覆盖)。
+  // App 持有而非组件自持:右键删除时要经它取到对象传给 removeAnchor
+  // 做真删(forgetObject 清持久数据,对齐相机)
+  const anchorRefsMapRef = useRef(
+    new Map<string, MutableRefObject<ISheetObject<any> | undefined>>(),
+  )
+  const getAnchorRef = (
+    anchorKey: string,
+  ): MutableRefObject<ISheetObject<any> | undefined> => {
+    const map = anchorRefsMapRef.current
+    let ref = map.get(anchorKey)
+    if (!ref) {
+      ref = {current: undefined}
+      map.set(anchorKey, ref)
+    }
+    return ref
+  }
   // true = 全屏镜头视角(导演视角让位,轨道控制器/导航块停用)
   const [shotView, setShotView] = useState(false)
   // 画中画开关(顶栏按钮):只管编辑视角右下角的小窗,不影响镜头全屏视角
@@ -675,6 +692,14 @@ function App() {
       if (!cameras.some((e) => e.cameraKey === key)) map.delete(key)
     }
   }, [cameras])
+
+  // 锚点被删(含对端同步):清掉它的 ref slot,不留失效引用
+  useEffect(() => {
+    const map = anchorRefsMapRef.current
+    for (const key of [...map.keys()]) {
+      if (!anchors.includes(key)) map.delete(key)
+    }
+  }, [anchors])
 
   const activeShotRefs = activeCamera
     ? getShotRefs(activeCamera.cameraKey)
@@ -1570,7 +1595,13 @@ function App() {
           position={{x: anchorMenu.x, y: anchorMenu.y}}
           items={buildAnchorMenuItems({
             onDeleteAnchor: () => {
-              removeAnchor(sheet, anchorMenu.key)
+              // 真删:forgetObject 清持久数据(静态覆盖/时间轴轨道),再移除
+              // 注册表(对齐相机;不传对象会残留持久态,同名重加时旧数据复活)
+              removeAnchor(
+                sheet,
+                anchorMenu.key,
+                anchorRefsMapRef.current.get(anchorMenu.key)?.current,
+              )
               // 被删的锚点留在选中列表里没意义,顺带清掉
               getStudioSync()?.setSelection([])
             },
@@ -1640,7 +1671,11 @@ function App() {
               }
             />
           ))}
-          <Anchors sheet={sheet} shotView={shotView} />
+          <Anchors
+            sheet={sheet}
+            shotView={shotView}
+            getAnchorRef={getAnchorRef}
+          />
           {paths.map((entry) => (
             <PathPanelActionsRegistrar
               key={`actions-${entry.pathKey}`}
