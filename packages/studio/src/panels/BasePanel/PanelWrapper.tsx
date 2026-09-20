@@ -31,6 +31,7 @@ const PanelWrapper = React.forwardRef(
         // @ts-ignore
         ref={ref}
         {...otherProps}
+        data-panel-id={stuff.panelId}
         style={{
           width: stuff.dims.width + 'px',
           height: stuff.dims.height + 'px',
