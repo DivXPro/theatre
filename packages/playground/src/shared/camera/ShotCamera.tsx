@@ -249,7 +249,7 @@ function updateFrustum(
 }
 
 /** 响应式读对象的某个标量属性(值没变就返回原引用,不触发重渲染) */
-function useObjPropScalar<T>(
+export function useObjPropScalar<T>(
   objRef: MutableRefObject<ISheetObject<any> | undefined>,
   prop: string,
   fallback: T,

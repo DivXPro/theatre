@@ -61,6 +61,8 @@ export const en: Messages = {
 
   'pg.props.aimTarget': 'Aim target',
   'pg.props.aimNone': 'None',
+  'pg.props.anchorParent': 'Parent',
+  'pg.props.parentNone': 'None',
   'pg.props.pathKey': 'Bound path',
   'pg.props.pathManual': 'None',
   'pg.props.animation': 'Animation',
@@ -154,6 +156,8 @@ export const zhCN: Messages = {
 
   'pg.props.aimTarget': '瞄准目标',
   'pg.props.aimNone': '无',
+  'pg.props.anchorParent': '父级',
+  'pg.props.parentNone': '无',
   'pg.props.pathKey': '绑定路径',
   'pg.props.pathManual': '无',
   'pg.props.animation': '动作',

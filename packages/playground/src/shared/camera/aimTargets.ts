@@ -6,8 +6,11 @@
  * 解析分两层:纯函数 resolveTargetObject(id, lookup) 供测试注入;
  * resolveAimTarget / resolveAnchorParent 读运行时登记表,供帧驱动调用。
  */
+import {Matrix4, Vector3} from 'three'
 import type {Object3D} from 'three'
 import {translate} from '@dreamerbird/studio/i18n'
+import {val} from '@dreamerbird/core'
+import {privateAPI} from '@dreamerbird/core/privateAPIs'
 import {
   getBoneAnchorObjects,
   makeBoneAnchorId,
@@ -15,7 +18,12 @@ import {
 } from './boneAnchors'
 import type {BonePart} from './boneAnchors'
 import {getPlacedInstances, readPlacementEntries} from './PlacementManager'
-import {getShotCameraObjects} from './cameraRegistry'
+import {
+  cameraDisplayName,
+  getCamerasRegistry,
+  getShotCameraObjects,
+  readCameraEntries,
+} from './cameraRegistry'
 import type {ISheet} from '@dreamerbird/core'
 import {getAnchorsRegistry, readAnchorKeys} from './anchorsRegistry'
 
@@ -171,6 +179,107 @@ export function aimTargetOptions(): {[key: string]: string} {
     }
   }
   return options
+}
+
+/**
+ * 「父级」下拉选项(锚点面板,按锚点 key 排除自己与后代防环)。
+ * 候选:其他锚点 + 拍摄相机 + 放置模型 + 骨骼锚点。
+ */
+export function anchorParentOptionsFor(selfKey: string): {
+  [key: string]: string
+} {
+  const options: {[key: string]: string} = {
+    '': translate('pg.props.parentNone'),
+  }
+  if (!optionsSheet) return options
+  const sheet = optionsSheet
+  const parentOf = (key: string): string => {
+    try {
+      // 只探测不创建:sheet.object 会把不存在的对象顺手建出来
+      // (对齐 CameraPath.pathExists 的 privateAPI 用法)
+      const obj = (privateAPI(sheet) as any).getObject(key)
+      return obj ? (val(obj.props.parent) as string | undefined) ?? '' : ''
+    } catch {
+      return ''
+    }
+  }
+  try {
+    for (const key of readAnchorKeys(getAnchorsRegistry(sheet))) {
+      if (key === selfKey) continue
+      if (isDescendantAnchor(selfKey, key, parentOf)) continue
+      options[makeTargetId('anchor', key)] = key
+    }
+  } catch {
+    // 注册表未建
+  }
+  try {
+    for (const entry of readCameraEntries(getCamerasRegistry(sheet))) {
+      options[makeTargetId('camera', entry.cameraKey)] = cameraDisplayName(
+        entry.cameraKey,
+      )
+    }
+  } catch {
+    // 相机注册表未建
+  }
+  try {
+    for (const entry of readPlacementEntries(sheet)) {
+      options[makeTargetId('model', entry.key)] = entry.key.replace(
+        /^Models \/ /,
+        '',
+      )
+    }
+  } catch {
+    // 放置注册表未建
+  }
+  // 骨骼锚点(分组同 aimTargetOptions)
+  const byPlacement = new Map<string, BonePart[]>()
+  for (const id of getBoneAnchorObjects().keys()) {
+    const parsed = parseBoneAnchorId(id)
+    if (!parsed) continue
+    const list = byPlacement.get(parsed.placementKey) ?? []
+    list.push(parsed.part)
+    byPlacement.set(parsed.placementKey, list)
+  }
+  for (const [placementKey, parts] of byPlacement) {
+    const modelName = placementDisplayName(sheet, placementKey)
+    for (const part of parts) {
+      options[makeTargetId('bone', placementKey, part)] =
+        `${modelName} · ${translate(`pg.parts.${part}`)}`
+    }
+  }
+  return options
+}
+
+/** 环检测:candidate 沿父链向上能否到达 selfKey(candidate 是 self 的后代) */
+export function isDescendantAnchor(
+  selfKey: string,
+  candidateKey: string,
+  parentOf: (key: string) => string,
+): boolean {
+  let cur = parentOf(candidateKey)
+  let guard = 0
+  while (cur && guard++ < 100) {
+    if (cur === `anchor:${selfKey}`) return true
+    const parsed = parseTargetId(cur)
+    cur = parsed && parsed.kind === 'anchor' ? parentOf(parsed.key) : ''
+  }
+  return false
+}
+
+/** 世界坐标 → 父级局部偏移(纯函数,绑定/解绑定格用) */
+export function localOffsetForParent(
+  childWorld: Vector3,
+  parentObj: Object3D,
+  out: Vector3,
+): Vector3 {
+  parentObj.updateWorldMatrix(true, false)
+  const inv = new Matrix4().copy(parentObj.matrixWorld).invert()
+  return out.copy(childWorld).applyMatrix4(inv)
+}
+
+export function worldPositionOf(obj: Object3D, out: Vector3): Vector3 {
+  obj.updateWorldMatrix(true, false)
+  return out.copy(obj.getWorldPosition(new Vector3()))
 }
 
 /** 从放置注册表反查模型显示名;放置注册表未建好时回退原 key */
