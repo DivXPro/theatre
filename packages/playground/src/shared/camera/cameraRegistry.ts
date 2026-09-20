@@ -11,6 +11,7 @@
 import {getStudioSync, types as t, val} from '@dreamerbird/core'
 import type {ISheet, ISheetObject} from '@dreamerbird/core'
 import {useEffect, useMemo, useState} from 'react'
+import type {Object3D} from 'three'
 
 /** 注册表对象的 theatre key(大纲顶层 "Cameras" 行,和 Placements 同款) */
 export const CAMERAS_REGISTRY_KEY = 'Cameras'
@@ -163,4 +164,19 @@ export function removeCamera(
     ),
   )
   scrub.commit()
+}
+
+/** 拍摄相机的 cameraKey → three 相机对象(锚点父级绑定的 camera: 解析用) */
+const shotCameraObjects = new Map<string, Object3D>()
+
+export function registerShotCameraObject(
+  cameraKey: string,
+  obj: Object3D | null,
+): void {
+  if (obj) shotCameraObjects.set(cameraKey, obj)
+  else shotCameraObjects.delete(cameraKey)
+}
+
+export function getShotCameraObjects(): ReadonlyMap<string, Object3D> {
+  return shotCameraObjects
 }

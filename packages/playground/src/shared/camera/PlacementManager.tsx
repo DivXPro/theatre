@@ -235,6 +235,24 @@ export function getPlacedModelRoots(): ReadonlySet<Object3D> {
   return placedModelRoots
 }
 
+/** 放置实例登记表:placementKey → 场景实例根(父级绑定的 model: 解析用) */
+const placedInstances = new Map<string, Group>()
+
+/** 放置实例登记/注销的便利 hook(PlacedModelCore 用) */
+function usePlacedInstance(key: string, instance: Group | null) {
+  useEffect(() => {
+    if (!instance) return
+    placedInstances.set(key, instance)
+    return () => {
+      placedInstances.delete(key)
+    }
+  }, [key, instance])
+}
+
+export function getPlacedInstances(): ReadonlyMap<string, Group> {
+  return placedInstances
+}
+
 /**
  * 选中 gizmo 的目标登记表:"theatre 对象 → 场景节点"。
  * 想让某个可编辑对象被选中后挂移动箭头,就用 useSelectionGizmoTarget
