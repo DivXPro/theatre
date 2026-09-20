@@ -487,11 +487,10 @@ function GizmoNav({
   )
 }
 
-// 每台相机一对 objRef(多相机:单对 ref 会被 map 里的实例互相覆盖)。
+// 每台相机一个 camera objRef(多相机:单对 ref 会被 map 里的实例互相覆盖)。
 // 普通对象即可,不进 React 渲染——可放 Map 里按 key 取
 type ShotObjRefs = {
   camera: MutableRefObject<ISheetObject<any> | undefined>
-  target: MutableRefObject<ISheetObject<any> | undefined>
 }
 
 /**
@@ -605,7 +604,7 @@ function App() {
     const map = shotRefsMapRef.current
     let refs = map.get(cameraKey)
     if (!refs) {
-      refs = {camera: {current: undefined}, target: {current: undefined}}
+      refs = {camera: {current: undefined}}
       map.set(cameraKey, refs)
     }
     return refs
@@ -665,19 +664,16 @@ function App() {
     ? getShotRefs(activeCamera.cameraKey)
     : undefined
 
-  // 添加相机:新机位/朝向/瞄准点都取当前导演视角(用户正看着的画面)
+  // 添加相机:新机位/朝向都取当前导演视角(用户正看着的画面)
   const addCamera = useCallback(() => {
     const entry = nextCameraEntry(cameras)
     const mainCam = cameraObjRef.current
-    const mainTarget = targetObjRef.current
-    const seed =
-      mainCam && mainTarget
-        ? {
-            position: val(mainCam.props.position),
-            rotation: val(mainCam.props.rotation),
-            targetPosition: val(mainTarget.props.position),
-          }
-        : undefined
+    const seed = mainCam
+      ? {
+          position: val(mainCam.props.position),
+          rotation: val(mainCam.props.rotation),
+        }
+      : undefined
     addCameraToRegistry(sheet, entry, seed)
     // 新相机落地即活动(用户刚加的就是他想看的)
     setActiveCameraKey(entry.cameraKey)
@@ -688,10 +684,7 @@ function App() {
   const deleteCamera = useCallback(
     (entry: CameraEntry) => {
       const refs = shotRefsMapRef.current.get(entry.cameraKey)
-      removeCamera(sheet, entry, {
-        camera: refs?.camera.current,
-        target: refs?.target.current,
-      })
+      removeCamera(sheet, entry, {camera: refs?.camera.current})
     },
     [sheet],
   )
@@ -1561,13 +1554,11 @@ function App() {
             <ShotCamera
               key={entry.cameraKey}
               cameraKey={entry.cameraKey}
-              targetKey={entry.targetKey}
               isActive={entry.cameraKey === activeCamera?.cameraKey}
               shotView={shotView}
               pipVisible={pipVisible}
               pipBottom={pipBottom}
               cameraObjRef={getShotRefs(entry.cameraKey).camera}
-              targetObjRef={getShotRefs(entry.cameraKey).target}
               onCameraContextMenu={(x, y) =>
                 setCameraMenu({cameraKey: entry.cameraKey, x, y})
               }

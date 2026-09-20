@@ -64,7 +64,6 @@ describe('相机取景种子', () => {
     const seed = {
       position: {x: 1, y: 2, z: 3},
       rotation: {x: 0, y: 0, z: 0},
-      targetPosition: {x: 0, y: 1, z: 0},
     }
     stashCameraSeed('Shot Camera / Camera', seed)
     expect(consumeCameraSeed('Shot Camera / Camera')).toEqual(seed)

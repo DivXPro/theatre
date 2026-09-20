@@ -1,8 +1,8 @@
 // packages/playground/src/shared/camera/cameraRegistry.ts
 /**
- * 相机注册表:场景里有几台相机 = 注册表清单里有几行,每台相机是一对
- * theatre 对象(相机 + 瞄准点 Target)。照搬放置模型(Placements)的
- * 注册表模式,结构天然支持多相机;P1 在工具条上限一台。
+ * 相机注册表:场景里有几台相机 = 注册表清单里有几行,每台相机是一个
+ * theatre 对象。照搬放置模型(Placements)的注册表模式,结构天然支持
+ * 多相机;P1 在工具条上限一台。
  *
  * 生命周期:添加 = 注册表加一行(App 按清单渲染 ShotCamera,组件挂载
  * 即创建对象、大纲行出现);删除 = forgetObject 清持久数据 + 注册表
@@ -139,13 +139,13 @@ export function addCameraToRegistry(
 export function removeCamera(
   sheet: ISheet,
   entry: CameraEntry,
-  objects: {camera?: ISheetObject<any>; target?: ISheetObject<any>},
+  objects: {camera?: ISheetObject<any>},
 ) {
   const studio = getStudioSync()
   if (!studio) return
   // 没来得及挂载消费掉的取景种子一并清掉,不留残留
   pendingSeeds.delete(entry.cameraKey)
-  for (const obj of [objects.camera, objects.target]) {
+  for (const obj of [objects.camera]) {
     if (!obj) continue
     try {
       studio.transaction(({forgetObject}) => forgetObject(obj as any))

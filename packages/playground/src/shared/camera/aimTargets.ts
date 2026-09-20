@@ -7,14 +7,17 @@
  * resolveAimTarget / resolveAnchorParent 读运行时登记表,供帧驱动调用。
  */
 import type {Object3D} from 'three'
+import {translate} from '@dreamerbird/studio/i18n'
 import {
   getBoneAnchorObjects,
   makeBoneAnchorId,
   parseBoneAnchorId,
 } from './boneAnchors'
 import type {BonePart} from './boneAnchors'
-import {getPlacedInstances} from './PlacementManager'
+import {getPlacedInstances, readPlacementEntries} from './PlacementManager'
 import {getShotCameraObjects} from './cameraRegistry'
+import type {ISheet} from '@dreamerbird/core'
+import {getAnchorsRegistry, readAnchorKeys} from './anchorsRegistry'
 
 export type TargetKind = 'anchor' | 'bone' | 'model' | 'camera'
 
@@ -107,4 +110,56 @@ export function resolveAimTarget(id: string): Object3D | null {
 
 export function resolveAnchorParent(id: string): Object3D | null {
   return resolveTargetObject(id, defaultTargetLookup())
+}
+
+/**
+ * 「瞄准目标」下拉选项(模块级,studio 面板渲染时调用)。
+ * 「无」+ 独立锚点(经 optionsSheet 读 Anchors 注册表,Task 6 落地,
+ * 未落地前退化为空)+ 骨骼锚点(遍历运行时表,Task 8 接入数据)。
+ */
+let optionsSheet: ISheet | null = null
+export function setAimOptionsSheet(sheet: ISheet | null): void {
+  optionsSheet = sheet
+}
+
+export function aimTargetOptions(): {[key: string]: string} {
+  const options: {[key: string]: string} = {'': translate('pg.props.aimNone')}
+  if (!optionsSheet) return options
+  try {
+    for (const key of readAnchorKeys(getAnchorsRegistry(optionsSheet))) {
+      options[makeTargetId('anchor', key)] = key
+    }
+  } catch {
+    // Anchors 注册表尚未创建:跳过
+  }
+  // 骨骼锚点按模型分组:bone:<placement>#part → "<模型显示名> · <部位名>"
+  const byPlacement = new Map<string, BonePart[]>()
+  for (const id of getBoneAnchorObjects().keys()) {
+    const parsed = parseBoneAnchorId(id)
+    if (!parsed) continue
+    const list = byPlacement.get(parsed.placementKey) ?? []
+    list.push(parsed.part)
+    byPlacement.set(parsed.placementKey, list)
+  }
+  for (const [placementKey, parts] of byPlacement) {
+    const modelName = placementDisplayName(optionsSheet, placementKey)
+    for (const part of parts) {
+      options[makeTargetId('bone', placementKey, part)] =
+        `${modelName} · ${translate(`pg.parts.${part}`)}`
+    }
+  }
+  return options
+}
+
+/** 从放置注册表反查模型显示名;放置注册表未建好时回退原 key */
+function placementDisplayName(sheet: ISheet, placementKey: string): string {
+  try {
+    const entry = readPlacementEntries(sheet).find(
+      (e) => e.key === placementKey,
+    )
+    if (entry) return entry.key.replace(/^Models \/ /, '')
+  } catch {
+    // 放置注册表尚未创建
+  }
+  return placementKey
 }

@@ -1,11 +1,13 @@
 // packages/playground/src/shared/camera/aimTargets.test.ts
 import {Object3D} from 'three'
+import {registerMessages, translate} from '@dreamerbird/studio/i18n'
 import {
   parseTargetId,
   makeTargetId,
   resolveTargetObject,
   registerAnchorObject,
   getAnchorObjects,
+  aimTargetOptions,
 } from './aimTargets'
 import {makeBoneAnchorId} from './boneAnchors'
 
@@ -82,5 +84,17 @@ describe('registerAnchorObject', () => {
     expect(getAnchorObjects().get('Anchor 1')).toBe(obj)
     registerAnchorObject('Anchor 1', null)
     expect(getAnchorObjects().size).toBe(0)
+  })
+})
+
+describe('aimTargetOptions', () => {
+  // 选项函数读运行时登记表;此处只验证纯函数层:未注入 sheet 时
+  // 只有「无」一项(锚点/骨骼注册表的读取在注入后才有候选,Task 8
+  // 统一浏览器冒烟)。动态选项组装依赖 studio 面板渲染上下文,
+  // 不进单元测试。
+  test('未注入 sheet 时只有「无」一项', () => {
+    registerMessages('en', {'pg.props.aimNone': 'None'})
+    registerMessages('zh-CN', {'pg.props.aimNone': '无'})
+    expect(aimTargetOptions()).toEqual({'': translate('pg.props.aimNone')})
   })
 })

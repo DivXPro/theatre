@@ -32,7 +32,7 @@ test('最坏 import 顺序下(先 ShotCamera)属性标签也不会烘焙 key', (
     require('./ShotCamera')
     const {translate} = require('@dreamerbird/studio/i18n')
     for (const key of [
-      'pg.props.trackTarget',
+      'pg.props.aimTarget',
       'pg.props.pathKey',
       'pg.props.pathManual',
       'pg.props.animation',

@@ -1,8 +1,4 @@
-import {
-  editable as e,
-  PerspectiveCamera,
-  useCurrentSheet,
-} from '@dreamerbird/r3f'
+import {PerspectiveCamera, useCurrentSheet} from '@dreamerbird/r3f'
 import {getStudioSync, types as t, val} from '@dreamerbird/core'
 import type {ISheet, ISheetObject} from '@dreamerbird/core'
 import React, {
@@ -44,16 +40,18 @@ import {
 } from './CameraPath'
 import {resolveBoundPathKey} from './pathBinding'
 import {getPathsRegistry, readPathEntries, usePathsList} from './pathRegistry'
-import {consumeCameraSeed} from './cameraRegistry'
+import {consumeCameraSeed, registerShotCameraObject} from './cameraRegistry'
+import {resolveAimTarget, aimTargetOptions} from './aimTargets'
 
 /**
  * 场景摄像机(shot camera):独立于编辑主视角的"镜头",取景画面用于
  * 画中画预览和之后的视频导出,对标 Blender 的场景 Camera 对象。
  *
- * - theatre 对象 Shot Camera(位置/旋转/fov 可上时间轴)+ Shot Target
- *   (瞄准点),朝向始终 lookAt Target——对齐 Blender 的 Track To 约束:
- *   相机没有"朝向模式",目标怎么动是它的自由(Target 的移动直接在
- *   时间轴上给 position 打关键帧,不需要单独的路径对象)
+ * - theatre 对象 Shot Camera(位置/旋转/fov 可上时间轴)。朝向不再自带
+ *   Target 对象:由面板上的「瞄准目标」下拉(aimTarget 属性)选目标,
+ *   目标可解析时相机 lookAt 它,对齐 Blender 的 Track To 约束
+ *   (约束的目标槽换成运行时登记表里的锚点/骨骼/模型/相机);
+ *   解绑或目标消失时把当前朝向定格进 rotation 属性,画面不跳
  * - 运镜驱动:机位可以切到"沿路径"(相机面板的「绑定路径」下拉选一条
  *   路径,对齐 Blender 的约束跟随),由 CameraPath 的曲线 + 路径对象的
  *   行进进度(0~1,对齐曲线侧的 Evaluation Time)驱动,
@@ -62,10 +60,10 @@ import {consumeCameraSeed} from './cameraRegistry'
  *   平面画成半透明色块(自绘 LineSegments + 半透明 Plane,不用
  *   CameraHelper——它无法被 scene.clone() 复制,r3f 快照编辑器克隆
  *   场景时必炸),点线或色块即选中摄像机,挂三轴箭头拖动摆机位;
- *   Target 线框小方块同理。机位被路径接管时相机箭头不出现
+ *   机位被路径接管时相机箭头不出现
  *   (对齐 Blender 的约束:驱动期间物体拖不动,要挪就挪路径/进度)
  * - 画中画:右下角小窗实时渲染镜头取景;切到"镜头视角"时全屏取景
- * - 视锥线/手柄/选中箭头都登记进 editorOnly,画中画与镜头视角渲染时
+ * - 视锥线/手柄都登记进 editorOnly,画中画与镜头视角渲染时
  *   隐藏,取景画面始终干净
  */
 
@@ -87,8 +85,9 @@ const FRUSTUM_FILL_OPACITY = 0.12
  * 归路径**(绑定路径对象的 progress 属性,打关键帧 = 调运镜节奏;
  * 对齐曲线侧的 Evaluation Time)。路径被删回退手动(机位定格当前,
  * 对齐 Blender 约束目标消失),不产生异常画面。
- * trackTarget=false = 解除朝向绑定(对齐 Blender 关掉 Track To 约束):
- * 解绑瞬间把当前朝向定格进 rotation 属性,画面不跳。
+ * 朝向绑定归「瞄准目标」下拉(aimTarget 属性):选「无」或目标消失
+ * = 解除朝向绑定(对齐 Blender 关掉 Track To 约束):解绑瞬间把当前
+ * 朝向定格进 rotation 属性,画面不跳。
  */
 
 /**
@@ -129,8 +128,15 @@ function pathBindingOptions(): {[key: string]: string} {
  * moveMode 已 hidden(双属性时代遗留),不再显示,硬编码留着无碍。
  */
 const shotCameraAdditionalProps = {
+  // 旧「朝向绑定」开关已并入 aimTarget 下拉(选「无」= 解绑):
+  // 属性隐藏保留只为兼容已持久化的状态值,不再显示也不再读写
   trackTarget: t.boolean(true, {
     label: () => translate('pg.props.trackTarget'),
+    hidden: true,
+  }),
+  aimTarget: t.stringLiteral('', aimTargetOptions, {
+    label: () => translate('pg.props.aimTarget'),
+    as: 'menu',
   }),
   moveMode: t.stringLiteral(
     'manual',
@@ -263,59 +269,57 @@ function useObjPropScalar<T>(
 
 export function ShotCamera({
   cameraKey,
-  targetKey,
   isActive,
   shotView,
   pipVisible,
   pipBottom,
   cameraObjRef,
-  targetObjRef,
   onCameraContextMenu,
 }: {
   cameraKey: string
-  targetKey: string
   /** 活动相机:画中画/镜头视角全屏/导出都只对它生效 */
   isActive: boolean
-  /** 镜头视角全屏中(此时非活动相机的视锥/Target 也全部隐藏) */
+  /** 镜头视角全屏中(此时非活动相机的视锥也全部隐藏) */
   shotView: boolean
   /** 画中画开关(顶栏按钮);只影响编辑视角的右下角小窗,镜头全屏视角不受它管 */
   pipVisible: boolean
   /** 画中画底部留白(px,DOM 边框层同源):悬在时间轴面板上方 */
   pipBottom: number
   cameraObjRef: MutableRefObject<ISheetObject<any> | undefined>
-  targetObjRef: MutableRefObject<ISheetObject<any> | undefined>
   /** 右键相机:弹出相机菜单 */
   onCameraContextMenu?: (x: number, y: number) => void
 }) {
   // true = 镜头视角全屏(主相机让位);false = 编辑视角,右下角画中画
   const makeDefault = shotView && isActive
   const camRef = useRef<PerspectiveCameraImpl>(null!)
-  const targetRef = useRef<Mesh>(null!)
-  // 瞄准代理:wrapper 的 lookAt 每帧读它的位置。Target 的位置在优先级
-  // -1 先写进代理,wrapper 优先级 0 的 lookAt 读到的就是本帧的值,
-  // 朝向不晚一帧
+  // 登记 three 相机对象,供锚点父级绑定的 camera: 解析
+  useEffect(() => {
+    registerShotCameraObject(cameraKey, camRef.current)
+    return () => registerShotCameraObject(cameraKey, null)
+  }, [cameraKey])
+  // 瞄准代理:wrapper 的 lookAt 每帧读它的位置。瞄准目标(aimTarget)
+  // 解析出的运行时对象每帧先把世界位置写进代理,wrapper 优先级 0 的
+  // lookAt 读到的就是本帧的值,朝向不晚一帧
   const aimRef = useRef<Object3D>(new Object3D())
   const frustum = useMemo(makeFrustumLines, [])
   const frustumFill = useMemo(makeFrustumFill, [])
   const upTriangle = useMemo(makeUpTriangle, [])
 
-  // 新相机落地即取景:添加时从导演视角捕获的种子(机位/朝向/瞄准点),
+  // 新相机落地即取景:添加时从导演视角捕获的种子(机位/朝向),
   // 挂载后消费一次——此后相机数据归面板/拖拽/时间轴管,种子不再介入
   useLayoutEffect(() => {
     const seed = consumeCameraSeed(cameraKey)
     const camObj = cameraObjRef.current
-    const targetObj = targetObjRef.current
-    if (!seed || !camObj || !targetObj) return
+    if (!seed || !camObj) return
     const studio = getStudioSync()
     if (!studio) return
     const scrub = studio.scrub()
     scrub.capture(({set}) => {
       set(camObj.props.position, seed.position)
       set(camObj.props.rotation, seed.rotation)
-      set(targetObj.props.position, seed.targetPosition)
     })
     scrub.commit()
-    // cameraObjRef/targetObjRef 是稳定引用;子组件(editable)的 layout
+    // cameraObjRef 是稳定引用;子组件(editable)的 layout
     // effect 先跑,到这里 objRef 已填好
   }, [cameraKey])
 
@@ -324,9 +328,8 @@ export function ShotCamera({
   useEffect(
     () => () => {
       cameraObjRef.current = undefined
-      targetObjRef.current = undefined
     },
-    [cameraObjRef, targetObjRef],
+    [cameraObjRef],
   )
 
   // 驱动锁(对齐 Blender 的约束语义):机位被路径接管期间,
@@ -407,23 +410,18 @@ export function ShotCamera({
     scrub.commit()
   }, [boundKey, cameraObjRef])
 
-  // 朝向绑定(Track To):trackTarget 是相机面板上的开关;关掉时把当前
-  // 朝向定格进 rotation 属性,画面不跳(对齐 Blender:约束失效,物体
-  // 保持当前变换)
-  const trackTarget = useObjPropScalar(cameraObjRef, 'trackTarget', true)
-  const tracking = trackTarget
-  // 失效瞬间定格:theatre 值变化会触发包装器全量应用属性,过期的
-  // rotation 可能已把相机顶回——但位置没变,用瞄准点位置重算朝向
-  // (Matrix4.lookAt 与相机 lookAt 同语义:-Z 朝目标),就是用户看到
-  // 的最后画面。不存"上一帧四元数":按需渲染下可能没有上一帧
+  // 朝向绑定:aimTarget 下拉选目标(对齐 Blender Track To 的目标槽)。
+  // tracking = 目标存在且可解析;目标被删/选「无」→ 定格当前朝向进
+  // rotation 属性,画面不跳(对齐 Blender 约束失效)
+  const aimTargetId = useObjPropScalar<string>(cameraObjRef, 'aimTarget', '')
+  const aimObj = aimTargetId ? resolveAimTarget(aimTargetId) : null
+  const tracking = aimObj !== null
   const prevTrackingRef = useRef<boolean | null>(null)
   const capturePosTmp = useRef(new Vector3())
   useEffect(() => {
     const prev = prevTrackingRef.current
     prevTrackingRef.current = tracking
-    // prev=null 是挂载后的首次跑(持久态恢复:trackTarget 初值 fallback
-    // 是 true,恢复出 false 会假摔一次)——持久态里的 rotation 本来
-    // 就是对的,跳过
+    // prev=null 是挂载首次跑(持久态恢复):rotation 本来就是对的,跳过
     if (prev !== true || tracking) return
     const cam = camRef.current
     const obj = cameraObjRef.current
@@ -431,30 +429,29 @@ export function ShotCamera({
     if (!cam || !obj || !studio) return
     // 此刻包装器刚全量应用过属性、帧驱动还没跑:机位被路径接管时
     // cam.position 是过期的 position 属性值,不是画面里的真实机位——
-    // 真实机位用路径采样重算;瞄准点直接读 Target 网格(包装器同步
-    // 应用过属性,比每帧镜像的 aimRef 新)
+    // 真实机位用路径采样重算;瞄准方向读 aimRef(每帧镜像目标位置,
+    // 此刻存的是最后画面里的目标位置)
     const sampled = capturePosTmp.current
     const from =
       boundMeta &&
       samplePathPoint(boundKey!, val(boundMeta.props.progress), sampled)
         ? sampled
         : cam.position
-    const m = new Matrix4().lookAt(from, targetRef.current.position, cam.up)
+    const m = new Matrix4().lookAt(from, aimRef.current.position, cam.up)
     const e = new Euler().setFromRotationMatrix(m, 'XYZ')
     const scrub = studio.scrub()
     scrub.capture(({set}) => set(obj.props.rotation, {x: e.x, y: e.y, z: e.z}))
     scrub.commit()
   }, [tracking, cameraObjRef, boundKey, boundMeta])
 
-  // 选中后挂三轴移动箭头:摄像机本体和瞄准点都能拖(机位被路径接管时
+  // 选中后挂三轴移动箭头:摄像机本体可拖(机位被路径接管时
   // 相机除外,见上)
   useSelectionGizmoTarget(cameraObjRef, camRef, !camDriveLocked)
-  useSelectionGizmoTarget(targetObjRef, targetRef, true)
 
   // 运镜驱动(优先级 -1,赶在 wrapper 的 lookAt 之前):
   // 机位路径非空且 moveMode=path → 机位取路径上行进进度处。
-  // 相机始终 lookAt Target 本体;路径为空时自动回退手动,不会出现
-  // "相机消失"
+  // 瞄准目标可解析时每帧把它的世界位置写进代理;目标为空时
+  // 自动回退手动朝向(rotation 属性),不会出现"相机消失"
   const pathSampleTmp = useRef(new Vector3())
   useFrame(() => {
     const cam = camRef.current
@@ -469,17 +466,16 @@ export function ShotCamera({
       drivenPosRef.current.copy(tmp)
       drivenPosValidRef.current = true
     }
-    if (targetRef.current) {
-      aimRef.current.position.copy(targetRef.current.position)
-    }
+    // useFrame 回调里读外层渲染作用域的 aimTargetId——它在帧间变化会
+    // 触发重渲染,闭包是新的,安全
+    const aimObj = aimTargetId ? resolveAimTarget(aimTargetId) : null
+    if (aimObj) aimObj.getWorldPosition(aimRef.current.position)
   }, -1)
 
-  // 视锥线/显示面/瞄准点手柄只在编辑视角出现;镜头视角全屏时人已经在镜头里,直接藏
-  // (Target 的可见性走下面 e.mesh 的 visible 属性:镜头视角或软删时都藏)
+  // 视锥线/显示面只在编辑视角出现;镜头视角全屏时人已经在镜头里,直接藏
   useEffect(() => registerEditorOnly(frustum), [frustum])
   useEffect(() => registerEditorOnly(frustumFill), [frustumFill])
   useEffect(() => registerEditorOnly(upTriangle), [upTriangle])
-  useEffect(() => registerEditorOnly(targetRef.current), [])
   useEffect(() => {
     frustum.visible = !shotView
     frustumFill.visible = !shotView
@@ -497,7 +493,7 @@ export function ShotCamera({
     if (isActive) (window as any).__shotCam3 = camRef.current
   }, [isActive])
 
-  // 点视锥线 = 选中摄像机;点 Target 方块 = 选中瞄准点
+  // 点视锥线 = 选中摄像机
   const select =
     (objRef: MutableRefObject<ISheetObject<any> | undefined>) =>
     (event: ThreeEvent<MouseEvent>) => {
@@ -509,7 +505,6 @@ export function ShotCamera({
     }
 
   // 右键相机 = 选中 + 弹出相机菜单
-  // (Target 没有右键菜单:软删走相机面板的开关)
   const contextMenu =
     (objRef: MutableRefObject<ISheetObject<any> | undefined>) =>
     (event: ThreeEvent<MouseEvent>) => {
@@ -554,17 +549,6 @@ export function ShotCamera({
           onContextMenu={contextMenu(cameraObjRef)}
         />
       </PerspectiveCamera>
-      <e.mesh
-        theatreKey={targetKey}
-        objRef={targetObjRef}
-        ref={targetRef}
-        position={[0, 1, 0]}
-        visible={!shotView}
-        onClick={select(targetObjRef)}
-      >
-        <boxGeometry args={[0.25, 0.25, 0.25]} />
-        <meshBasicMaterial color="#ffb020" wireframe />
-      </e.mesh>
       {isActive && (
         <ShotCameraRenderer
           camRef={camRef}

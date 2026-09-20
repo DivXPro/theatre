@@ -55,7 +55,8 @@ export const en: Messages = {
 
   'pg.action.movePathToCamera': 'Move path to camera',
 
-  'pg.props.trackTarget': 'Aim at Target',
+  'pg.props.aimTarget': 'Aim target',
+  'pg.props.aimNone': 'None',
   'pg.props.pathKey': 'Bound path',
   'pg.props.pathManual': 'None',
   'pg.props.animation': 'Animation',
@@ -143,7 +144,8 @@ export const zhCN: Messages = {
 
   'pg.action.movePathToCamera': '路径平移到相机',
 
-  'pg.props.trackTarget': '朝向目标',
+  'pg.props.aimTarget': '瞄准目标',
+  'pg.props.aimNone': '无',
   'pg.props.pathKey': '绑定路径',
   'pg.props.pathManual': '无',
   'pg.props.animation': '动作',
