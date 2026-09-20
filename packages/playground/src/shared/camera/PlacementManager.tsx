@@ -173,7 +173,11 @@ export function countLibraryEntryUsage(entryId: string): number {
 function fileConfigFor(assetId: string) {
   let config = fileConfigCache.get(assetId)
   if (!config) {
-    config = t.file(assetId)
+    // label 函数形式:面板每次渲染现调,语言切换热改(对齐
+    // literalConfigFor);缓存在首次创建时固化引用,满足 deep-equal
+    config = t.file(assetId, {
+      label: () => translate('pg.props.source'),
+    })
     fileConfigCache.set(assetId, config)
   }
   return config

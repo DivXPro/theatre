@@ -28,7 +28,7 @@ import memoizeFn from '@dreamerbird/utils/memoizeFn'
 import {collapsedMap} from './collapsedMap'
 import useChordial from '@dreamerbird/studio/uiComponents/chordial/useChodrial'
 import {__private} from '@dreamerbird/core'
-import {usePropLabel} from '@dreamerbird/studio/i18n'
+import {usePropLabel, useT} from '@dreamerbird/studio/i18n'
 
 const {isPropConfigComposite} = __private.propTypeUtils
 
@@ -173,6 +173,7 @@ function DetailCompoundPropEditor<
   propConfig,
   visualIndentation,
 }: ICompoundPropDetailEditorProps<TPropTypeConfig>) {
+  const t = useT()
   const propName =
     usePropLabel(propConfig.label) ??
     (last(getPointerParts(pointerToProp).path) as string)
@@ -191,7 +192,8 @@ function DetailCompoundPropEditor<
     propConfig,
   )
 
-  const label: string = propName || 'Props'
+  // 根 compound(对象本身的属性树)没有 propName,回退到收编的"Props/属性"
+  const label: string = propName || t('detailPanel.propsRoot')
 
   const lastSubPropIsComposite = compositeSubs.length > 0
 

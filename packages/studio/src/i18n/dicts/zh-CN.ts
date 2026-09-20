@@ -18,4 +18,5 @@ export const zhCN: Messages = {
   'menu.discord': 'Discord',
   'menu.version': '版本',
   'menu.language': '语言',
+  'detailPanel.propsRoot': '属性',
 }

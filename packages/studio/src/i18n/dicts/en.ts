@@ -21,4 +21,5 @@ export const en: Messages = {
   'menu.discord': 'Discord',
   'menu.version': 'Version',
   'menu.language': 'Language',
+  'detailPanel.propsRoot': 'Props',
 }
