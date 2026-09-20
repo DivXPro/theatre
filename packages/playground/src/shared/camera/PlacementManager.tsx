@@ -20,7 +20,7 @@ import {AnimationMixer, Box3, Raycaster, Vector3} from 'three'
 import type {Group, Mesh, Object3D, AnimationClip, AnimationAction} from 'three'
 import {SkeletonUtils} from 'three-stdlib'
 import {registerBoneAnchors, unregisterBoneAnchors} from './boneAnchors'
-import {notifyTargetRegistryChange} from './aimTargets'
+import {notifyTargetRegistryChange, sheetObjectExists} from './aimTargets'
 import {createGLTFLoader} from './assetLibrary/gltfLoader'
 import {getLibrary} from './assetLibrary/library'
 import {entryOptions} from './assetLibrary/options'
@@ -356,16 +356,24 @@ export function readPlacementEntries(sheet: ISheet): PlacementEntry[] {
 }
 
 /**
- * 放置模型的 theatreKey:归在 "Models /" 命名空间,与演示模型同级平等呈现。
- * 名字取自文件名(去扩展名,不安全字符换下划线);撞名才追加 -2/-3 序号,
- * 平时保持干净(theatreKey 必须唯一,同名模型放两次需要区分)。
+ * 放置模型的 theatreKey:顶层扁平化(不再套 "Models /" 文件夹),名字取自
+ * 文件名(去扩展名,不安全字符换下划线)。撞名才追加 -2/-3 序号,平时保持
+ * 干净(theatreKey 必须唯一,同名模型放两次需要区分)。防撞查两处:放置
+ * 清单(注册表已写、对象尚未挂载的空窗) + 全场景路径探测(顶层名字可能与
+ * 相机/灯光/演示模型撞,如 "Camera.fbx"、"Thingy.fbx",只查不建)
  */
-function uniquePlacedModelKey(sheet: ISheet, label: string): string {
+export function uniquePlacedModelKey(sheet: ISheet, label: string): string {
   const base = label.replace(/\.[^.]+$/, '').replace(/[^\w-]/g, '_') || 'model'
-  const taken = new Set(readPlacementEntries(sheet).map((e) => e.key))
-  let key = `Models / ${base}`
-  for (let i = 2; taken.has(key); i++) {
-    key = `Models / ${base}-${i}`
+  let taken: Set<string>
+  try {
+    taken = new Set(readPlacementEntries(sheet).map((e) => e.key))
+  } catch {
+    // 注册表对象尚未创建(理论外场景):按空清单处理,探测兜底防重
+    taken = new Set()
+  }
+  let key = base
+  for (let i = 2; taken.has(key) || sheetObjectExists(sheet, key); i++) {
+    key = `${base}-${i}`
   }
   return key
 }

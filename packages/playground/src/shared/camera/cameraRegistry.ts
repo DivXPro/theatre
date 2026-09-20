@@ -12,7 +12,7 @@ import {getStudioSync, types as t, val} from '@dreamerbird/core'
 import type {ISheet, ISheetObject} from '@dreamerbird/core'
 import {useEffect, useMemo, useState} from 'react'
 import type {Object3D} from 'three'
-import {notifyTargetRegistryChange} from './aimTargets'
+import {notifyTargetRegistryChange, sheetObjectExists} from './aimTargets'
 
 /** 注册表对象的 theatre key(大纲顶层 "Cameras" 行,和 Placements 同款) */
 export const CAMERAS_REGISTRY_KEY = 'Cameras'
@@ -27,11 +27,6 @@ export type CameraEntry = {cameraKey: string}
 export type CameraSeed = {
   position: {x: number; y: number; z: number}
   rotation: {x: number; y: number; z: number}
-}
-
-/** 第一台的 key:相机收在一个文件夹里,与导演相机的 "Camera" 组区分 */
-const FIRST_CAMERA: CameraEntry = {
-  cameraKey: 'Shot Camera / Camera',
 }
 
 export function getCamerasRegistry(sheet: ISheet) {
@@ -66,19 +61,26 @@ export function readCameraEntries(registry: ISheetObject<any>): CameraEntry[] {
   return parseCameraEntries(val(registry.props.list) as string)
 }
 
-/** 多相机(P2)的命名:第一台 Shot Camera,之后 Shot Camera 2 / 3… */
-export function nextCameraEntry(existing: readonly CameraEntry[]): CameraEntry {
-  if (existing.length === 0) return FIRST_CAMERA
+/**
+ * 多相机(P2)的命名:第一台 Shot Camera,之后 Shot Camera 2 / 3…。
+ * 顶层扁平后无前缀隔离,编号要同时避开注册表已用 key 和全场景已占用
+ * 路径(放置模型可能叫 "Shot Camera 2.fbx" 这种,探测只查不建)
+ */
+export function nextCameraEntry(
+  sheet: ISheet,
+  existing: readonly CameraEntry[],
+): CameraEntry {
   const used = new Set(existing.map((e) => e.cameraKey))
-  for (let n = 2; ; n++) {
-    const cameraKey = `Shot Camera ${n} / Camera`
-    if (!used.has(cameraKey)) {
+  for (let n = 1; ; n++) {
+    const cameraKey = n === 1 ? 'Shot Camera' : `Shot Camera ${n}`
+    if (!used.has(cameraKey) && !sheetObjectExists(sheet, cameraKey)) {
       return {cameraKey}
     }
   }
 }
 
-/** 界面显示名:cameraKey 去掉 " / Camera" 后缀("Shot Camera 1 / Camera" → "Shot Camera 1") */
+/** 界面显示名:旧状态(套文件夹时期)的 key 去掉 " / Camera" 后缀;
+ *  扁平化后的新 key 无后缀,原样即显示名 */
 export function cameraDisplayName(cameraKey: string): string {
   return cameraKey.replace(/ \/ Camera$/, '')
 }

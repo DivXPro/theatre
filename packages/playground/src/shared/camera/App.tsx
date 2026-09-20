@@ -168,13 +168,13 @@ function Model({url, selectLocked}: {url: string; selectLocked?: boolean}) {
     >
       <e.group
         ref={thingyGroupRef}
-        theatreKey="Models / Thingy"
+        theatreKey="Thingy"
         objRef={thingyObjRef}
         onClick={selectThingy}
         rotation={[Math.PI / 13.5, -Math.PI / 5.8, Math.PI / 5.6]}
       >
         <e.mesh
-          theatreKey="Models / Thingy / Debris 2"
+          theatreKey="Thingy / Debris 2"
           objRef={debris2ObjRef}
           ref={debris2Ref}
           receiveShadow
@@ -183,7 +183,7 @@ function Model({url, selectLocked}: {url: string; selectLocked?: boolean}) {
           material={nodes.planet002.material}
         />
         <e.mesh
-          theatreKey="Models / Thingy / Debris 1"
+          theatreKey="Thingy / Debris 1"
           objRef={debris1ObjRef}
           ref={debris1Ref}
           geometry={nodes.planet003.geometry}
@@ -707,7 +707,7 @@ function App() {
 
   // 添加相机:新机位/朝向都取当前导演视角(用户正看着的画面)
   const addCamera = useCallback(() => {
-    const entry = nextCameraEntry(cameras)
+    const entry = nextCameraEntry(sheet, cameras)
     const mainCam = cameraObjRef.current
     const seed = mainCam
       ? {

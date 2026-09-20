@@ -63,6 +63,19 @@ export function makeTargetId(
   return `${kind}:${key}`
 }
 
+/**
+ * 只探测不创建:sheet.object 会把不存在的对象顺手建出来。顶层扁平化
+ * (相机/模型不再套文件夹)后取名要与全场景对象防撞,靠它先问路径占用。
+ * 探测不到/注册表未建一律 false(对齐 aimTargetOptions 的 privateAPI 用法)
+ */
+export function sheetObjectExists(sheet: ISheet, key: string): boolean {
+  try {
+    return Boolean((privateAPI(sheet) as any).getObject(key))
+  } catch {
+    return false
+  }
+}
+
 export interface TargetLookup {
   anchors: ReadonlyMap<string, Object3D>
   bones: ReadonlyMap<string, Object3D>

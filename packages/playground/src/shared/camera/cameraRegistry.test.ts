@@ -1,4 +1,5 @@
 // packages/playground/src/shared/camera/cameraRegistry.test.ts
+import {setPrivateAPI} from '@dreamerbird/core/privateAPIs'
 import {
   nextCameraEntry,
   parseCameraEntries,
@@ -30,32 +31,42 @@ describe('parseCameraEntries', () => {
 })
 
 describe('cameraDisplayName', () => {
-  test('去掉 " / Camera" 后缀', () => {
+  test('旧格式(套文件夹时期)的 key 去掉 " / Camera" 后缀', () => {
     expect(cameraDisplayName('Shot Camera / Camera')).toBe('Shot Camera')
     expect(cameraDisplayName('Shot Camera 3 / Camera')).toBe('Shot Camera 3')
   })
-  test('无后缀/异常 key 原样返回', () => {
+  test('扁平化后的新 key 无后缀,原样即显示名', () => {
     expect(cameraDisplayName('Shot Camera')).toBe('Shot Camera')
+    expect(cameraDisplayName('Shot Camera 2')).toBe('Shot Camera 2')
     expect(cameraDisplayName('')).toBe('')
   })
 })
 
 describe('nextCameraEntry', () => {
-  test('空清单给第一台(兼容既有状态的 key)', () => {
-    expect(nextCameraEntry([])).toEqual({
-      cameraKey: 'Shot Camera / Camera',
-    })
+  // 顶层扁平化后的命名:第一台 Shot Camera,之后 Shot Camera 2/3…;
+  // 编号同时避开注册表已用 key 与全场景已占用路径(sheetObjectExists 探测)
+  test('空清单给第一台', () => {
+    expect(nextCameraEntry({} as any, [])).toEqual({cameraKey: 'Shot Camera'})
   })
   test('占用后递增编号,跳过已用的', () => {
-    const existing = [
-      {cameraKey: 'Shot Camera / Camera'},
-      {
-        cameraKey: 'Shot Camera 3 / Camera',
-      },
-    ]
-    expect(nextCameraEntry(existing)).toEqual({
-      cameraKey: 'Shot Camera 2 / Camera',
+    const existing = [{cameraKey: 'Shot Camera'}, {cameraKey: 'Shot Camera 3'}]
+    expect(nextCameraEntry({} as any, existing)).toEqual({
+      cameraKey: 'Shot Camera 2',
     })
+  })
+  test('旧格式(套文件夹)key 不占新名:新旧路径不同,第一台仍给 Shot Camera', () => {
+    expect(
+      nextCameraEntry({} as any, [{cameraKey: 'Shot Camera / Camera'}]),
+    ).toEqual({
+      cameraKey: 'Shot Camera',
+    })
+  })
+  test('全场景路径被占(如模型叫了 Shot Camera.fbx)时跳过', () => {
+    const sheet = {type: 'Sheet'} as any
+    setPrivateAPI(sheet, {
+      getObject: (key: string) => (key === 'Shot Camera' ? {} : undefined),
+    } as any)
+    expect(nextCameraEntry(sheet, [])).toEqual({cameraKey: 'Shot Camera 2'})
   })
 })
 
