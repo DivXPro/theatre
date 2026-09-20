@@ -75,6 +75,11 @@ export function nextCameraEntry(existing: readonly CameraEntry[]): CameraEntry {
   }
 }
 
+/** 界面显示名:cameraKey 去掉 " / Camera" 后缀("Shot Camera 1 / Camera" → "Shot Camera 1") */
+export function cameraDisplayName(cameraKey: string): string {
+  return cameraKey.replace(/ \/ Camera$/, '')
+}
+
 /** 响应式读相机清单:scrub 提交/撤销/同步都会触发 onValuesChange */
 export function useCamerasList(sheet: ISheet): CameraEntry[] {
   const registry = useMemo(() => getCamerasRegistry(sheet), [sheet])

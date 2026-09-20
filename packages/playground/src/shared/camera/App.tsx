@@ -62,6 +62,8 @@ import {
   buildPathPanelActions,
 } from './menuModel'
 import {TopToolbar} from './TopToolbar'
+import {PipCameraSelector} from './PipCameraSelector'
+import {usePipBottom} from './pipLayout'
 import {AssetLibraryPanel} from './assetLibrary/AssetLibraryPanel'
 import {getLibrary} from './assetLibrary/library'
 import {ShotCamera} from './ShotCamera'
@@ -612,6 +614,29 @@ function App() {
   const [shotView, setShotView] = useState(false)
   // 画中画开关(顶栏按钮):只管编辑视角右下角的小窗,不影响镜头全屏视角
   const [pipVisible, setPipVisible] = useState(true)
+  // 画中画底部留白:悬在时间轴面板上方,随面板高度/收拢展开自动跟
+  const pipBottom = usePipBottom()
+  // 画中画边框层是 pointerEvents:none,收不到 hover——用窗口 mousemove
+  // 按画中画的几何位置(与边框层/ShotCamera 同源)判定光标是否在它上面
+  const [pipHovered, setPipHovered] = useState(false)
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      const w = window.innerWidth
+      const h = window.innerHeight
+      const pipW = w * 0.28
+      const pipH = (pipW * 9) / 16
+      const left = w - 16 - pipW
+      const top = h - pipBottom - pipH
+      setPipHovered(
+        e.clientX >= left &&
+          e.clientX <= left + pipW &&
+          e.clientY >= top &&
+          e.clientY <= top + pipH,
+      )
+    }
+    window.addEventListener('mousemove', onMove)
+    return () => window.removeEventListener('mousemove', onMove)
+  }, [pipBottom])
   // 视频导出:进行中的导出句柄 / 导出前的视角(导完恢复)
   const [exporting, setExporting] = useState(false)
   const exportHandleRef = useRef<ShotExportHandle | null>(null)
@@ -1304,27 +1329,23 @@ function App() {
             // 画中画边框:与 ShotCamera 渲染的右下角小窗同位置同尺寸
             position: 'absolute',
             right: 16,
-            bottom: 16,
+            bottom: pipBottom,
             width: '28%',
             aspectRatio: '16 / 9',
-            border: '1px solid #6fb7ff55',
+            border: '1px solid rgba(255,255,255,0.14)',
             borderRadius: 2,
+            background: 'rgba(24,24,28,0.4)',
             pointerEvents: 'none',
             zIndex: 5,
           }}
         >
-          <span
-            style={{
-              position: 'absolute',
-              top: 4,
-              left: 6,
-              fontSize: 11,
-              color: '#6fb7ff',
-              opacity: 0.8,
-            }}
-          >
-            镜头
-          </span>
+          {/* 左上角:相机选择器(hover 到画中画才显示,点选 = 设为活动相机) */}
+          <PipCameraSelector
+            cameras={cameras}
+            activeKey={activeCamera.cameraKey}
+            onSelect={setActiveCameraKey}
+            visible={pipHovered}
+          />
         </div>
       )}
       {(modelDragging || presetDrag) && (
@@ -1544,6 +1565,7 @@ function App() {
               isActive={entry.cameraKey === activeCamera?.cameraKey}
               shotView={shotView}
               pipVisible={pipVisible}
+              pipBottom={pipBottom}
               cameraObjRef={getShotRefs(entry.cameraKey).camera}
               targetObjRef={getShotRefs(entry.cameraKey).target}
               onCameraContextMenu={(x, y) =>

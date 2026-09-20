@@ -267,6 +267,7 @@ export function ShotCamera({
   isActive,
   shotView,
   pipVisible,
+  pipBottom,
   cameraObjRef,
   targetObjRef,
   onCameraContextMenu,
@@ -279,6 +280,8 @@ export function ShotCamera({
   shotView: boolean
   /** 画中画开关(顶栏按钮);只影响编辑视角的右下角小窗,镜头全屏视角不受它管 */
   pipVisible: boolean
+  /** 画中画底部留白(px,DOM 边框层同源):悬在时间轴面板上方 */
+  pipBottom: number
   cameraObjRef: MutableRefObject<ISheetObject<any> | undefined>
   targetObjRef: MutableRefObject<ISheetObject<any> | undefined>
   /** 右键相机:弹出相机菜单 */
@@ -567,6 +570,7 @@ export function ShotCamera({
           camRef={camRef}
           pip={!makeDefault}
           pipVisible={pipVisible}
+          pipBottom={pipBottom}
         />
       )}
     </>
@@ -584,10 +588,12 @@ function ShotCameraRenderer({
   camRef,
   pip,
   pipVisible,
+  pipBottom,
 }: {
   camRef: MutableRefObject<PerspectiveCameraImpl>
   pip: boolean
   pipVisible: boolean
+  pipBottom: number
 }) {
   // frameloop="demand":切换镜头视角/画中画只是 React 状态变化,
   // 不触发新帧的话画布上会留着上一帧(全屏取景的右下角)当"画中画"
@@ -625,7 +631,8 @@ function ShotCameraRenderer({
     const pipW = Math.round(w * PIP_WIDTH_FRACTION)
     const pipH = Math.round((pipW * 9) / 16)
     const x = w - pipW - PIP_MARGIN_PX
-    const y = PIP_MARGIN_PX // gl viewport 原点在左下角
+    // gl viewport 原点在左下角;底部留白与 DOM 边框层同源(悬在时间轴上方)
+    const y = pipBottom
 
     withEditorOnlyHidden(() => {
       shotCam.aspect = pipW / pipH

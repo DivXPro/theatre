@@ -2,6 +2,7 @@
 import {
   nextCameraEntry,
   parseCameraEntries,
+  cameraDisplayName,
   stashCameraSeed,
   consumeCameraSeed,
 } from './cameraRegistry'
@@ -22,6 +23,17 @@ describe('parseCameraEntries', () => {
         '[{"cameraKey":"A","targetKey":"B"},{"foo":"bar"},{"cameraKey":1,"targetKey":"T"}]',
       ),
     ).toEqual([{cameraKey: 'A', targetKey: 'B'}])
+  })
+})
+
+describe('cameraDisplayName', () => {
+  test('去掉 " / Camera" 后缀', () => {
+    expect(cameraDisplayName('Shot Camera / Camera')).toBe('Shot Camera')
+    expect(cameraDisplayName('Shot Camera 3 / Camera')).toBe('Shot Camera 3')
+  })
+  test('无后缀/异常 key 原样返回', () => {
+    expect(cameraDisplayName('Shot Camera')).toBe('Shot Camera')
+    expect(cameraDisplayName('')).toBe('')
   })
 })
 
