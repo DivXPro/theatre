@@ -16,20 +16,21 @@ import type {Object3D} from 'three'
 /** 注册表对象的 theatre key(大纲顶层 "Cameras" 行,和 Placements 同款) */
 export const CAMERAS_REGISTRY_KEY = 'Cameras'
 
-/** 一台相机 = 一对 theatre 对象;清单里只存 key */
-export type CameraEntry = {cameraKey: string; targetKey: string}
+/**
+ * 一台相机 = 一个 theatre 对象;旧清单里的 targetKey 解析时忽略
+ * (不做迁移,老相机自由朝向)
+ */
+export type CameraEntry = {cameraKey: string}
 
 /** 新相机的初始取景(添加时从导演视角捕获,组件挂载后消费) */
 export type CameraSeed = {
   position: {x: number; y: number; z: number}
   rotation: {x: number; y: number; z: number}
-  targetPosition: {x: number; y: number; z: number}
 }
 
-/** 第一台的 key:相机对收在一个文件夹里,与导演相机的 "Camera" 组区分 */
+/** 第一台的 key:相机收在一个文件夹里,与导演相机的 "Camera" 组区分 */
 const FIRST_CAMERA: CameraEntry = {
   cameraKey: 'Shot Camera / Camera',
-  targetKey: 'Shot Camera / Target',
 }
 
 export function getCamerasRegistry(sheet: ISheet) {
@@ -46,15 +47,15 @@ export function parseCameraEntries(json: string): CameraEntry[] {
   try {
     const list = JSON.parse(json)
     if (!Array.isArray(list)) return []
-    return list.filter(
-      (item): item is CameraEntry =>
-        typeof item === 'object' &&
-        item !== null &&
-        typeof item.cameraKey === 'string' &&
-        item.cameraKey.length > 0 &&
-        typeof item.targetKey === 'string' &&
-        item.targetKey.length > 0,
-    )
+    return list
+      .filter(
+        (item): item is {cameraKey: string} =>
+          typeof item === 'object' &&
+          item !== null &&
+          typeof item.cameraKey === 'string' &&
+          item.cameraKey.length > 0,
+      )
+      .map((item) => ({cameraKey: item.cameraKey}))
   } catch {
     return []
   }
@@ -71,7 +72,7 @@ export function nextCameraEntry(existing: readonly CameraEntry[]): CameraEntry {
   for (let n = 2; ; n++) {
     const cameraKey = `Shot Camera ${n} / Camera`
     if (!used.has(cameraKey)) {
-      return {cameraKey, targetKey: `Shot Camera ${n} / Target`}
+      return {cameraKey}
     }
   }
 }

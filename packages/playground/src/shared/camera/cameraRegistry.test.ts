@@ -13,7 +13,10 @@ describe('parseCameraEntries', () => {
     const one = [
       {cameraKey: 'Shot Camera / Camera', targetKey: 'Shot Camera / Target'},
     ]
-    expect(parseCameraEntries(JSON.stringify(one))).toEqual(one)
+    // 旧格式宽容解析:targetKey 被忽略
+    expect(parseCameraEntries(JSON.stringify(one))).toEqual([
+      {cameraKey: 'Shot Camera / Camera'},
+    ])
     expect(parseCameraEntries('not json')).toEqual([])
     expect(parseCameraEntries('{"a":1}')).toEqual([])
   })
@@ -22,7 +25,7 @@ describe('parseCameraEntries', () => {
       parseCameraEntries(
         '[{"cameraKey":"A","targetKey":"B"},{"foo":"bar"},{"cameraKey":1,"targetKey":"T"}]',
       ),
-    ).toEqual([{cameraKey: 'A', targetKey: 'B'}])
+    ).toEqual([{cameraKey: 'A'}])
   })
 })
 
@@ -41,20 +44,17 @@ describe('nextCameraEntry', () => {
   test('空清单给第一台(兼容既有状态的 key)', () => {
     expect(nextCameraEntry([])).toEqual({
       cameraKey: 'Shot Camera / Camera',
-      targetKey: 'Shot Camera / Target',
     })
   })
   test('占用后递增编号,跳过已用的', () => {
     const existing = [
-      {cameraKey: 'Shot Camera / Camera', targetKey: 'Shot Camera / Target'},
+      {cameraKey: 'Shot Camera / Camera'},
       {
         cameraKey: 'Shot Camera 3 / Camera',
-        targetKey: 'Shot Camera 3 / Target',
       },
     ]
     expect(nextCameraEntry(existing)).toEqual({
       cameraKey: 'Shot Camera 2 / Camera',
-      targetKey: 'Shot Camera 2 / Target',
     })
   })
 })
