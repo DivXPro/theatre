@@ -9,7 +9,7 @@ import React, {
   useState,
 } from 'react'
 import type {MutableRefObject} from 'react'
-import {useFrame, useThree} from '@react-three/fiber'
+import {invalidate, useFrame, useThree} from '@react-three/fiber'
 import type {ThreeEvent} from '@react-three/fiber'
 import {
   BufferAttribute,
@@ -78,6 +78,13 @@ const FRUSTUM_COLOR = 0x6fb7ff
 const FRUSTUM_DISPLAY_LENGTH = 0.75
 /** 末端平面的不透明度 */
 const FRUSTUM_FILL_OPACITY = 0.12
+/** 选中高亮色:与锚点同色(Blender 式选中橙),选中时整套视锥换色 */
+const FRUSTUM_HIGHLIGHT = 0xffb020
+/**
+ * 尾部内缩比例:机位射向远端矩形角点的 4 根线,从机位前方「视锥长度
+ * × 该比例」处才开始画,4 根线不再在机位精确交汇成亮点,尾部更干净
+ */
+const FRUSTUM_TAIL_INSET = 0.125
 
 /**
  * 运镜驱动属性,挂在 Shot Camera 对象上(模块级常量:
@@ -224,7 +231,6 @@ function updateFrustum(
     [w, h, z],
     [-w, h, z],
   ]
-  const apex = [0, 0, 0]
   const attr = lines.geometry.getAttribute('position') as BufferAttribute
   const arr = attr.array as Float32Array
   let o = 0
@@ -238,7 +244,16 @@ function updateFrustum(
   }
   for (let i = 0; i < 4; i++) {
     seg(corners[i], corners[(i + 1) % 4])
-    seg(apex, corners[i])
+    // 尾部内缩:起点从机位沿角点方向前移视锥长度的 FRUSTUM_TAIL_INSET,
+    // 4 根线起点错开,不再交汇成亮点
+    seg(
+      [
+        corners[i][0] * FRUSTUM_TAIL_INSET,
+        corners[i][1] * FRUSTUM_TAIL_INSET,
+        corners[i][2] * FRUSTUM_TAIL_INSET,
+      ],
+      corners[i],
+    )
   }
   attr.needsUpdate = true
   fill.scale.set(2 * w, 2 * h, 1)
@@ -497,6 +512,28 @@ export function ShotCamera({
     frustumFill.visible = !shotView
     upTriangle.visible = !shotView
   }, [shotView, frustum, frustumFill, upTriangle])
+
+  // 选中高亮:视锥三件套整套换橙色,对齐锚点色与 Blender 选中惯例。
+  // studio 选中变化驱动(值不变 setState 自动跳过,无关切换不重渲染);
+  // demand 帧模式下换色不重画,手动 invalidate 补一帧
+  const [selected, setSelected] = useState(false)
+  useEffect(() => {
+    const studio = getStudioSync()
+    if (!studio) return
+    const sync = () =>
+      setSelected(
+        (studio.selection as unknown[]).includes(cameraObjRef.current),
+      )
+    sync()
+    return studio.onSelectionChange(sync)
+  }, [cameraObjRef])
+  useEffect(() => {
+    const color = selected ? FRUSTUM_HIGHLIGHT : FRUSTUM_COLOR
+    ;(frustum.material as LineBasicMaterial).color.set(color)
+    ;(frustumFill.material as MeshBasicMaterial).color.set(color)
+    ;(upTriangle.material as MeshBasicMaterial).color.set(color)
+    invalidate()
+  }, [selected, frustum, frustumFill, upTriangle])
 
   useFrame(() => {
     if (camRef.current && frustum.visible) {
