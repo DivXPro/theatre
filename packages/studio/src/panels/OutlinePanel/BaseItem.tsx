@@ -88,6 +88,23 @@ const Head_Label = styled.span`
   box-sizing: border-box;
 `
 
+const NameInput = styled.input`
+  ${outlineItemFont};
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 2px;
+  color: rgba(255, 255, 255, 0.95);
+  height: 18px;
+  padding: 0 4px;
+  width: 150px;
+  outline: none;
+  box-sizing: border-box;
+
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.35);
+  }
+`
+
 const Head_IconContainer = styled.div`
   font-weight: 500;
   display: flex;
@@ -142,6 +159,12 @@ const BaseItem: React.FC<{
   collapsed?: boolean
   setIsCollapsed?: (v: boolean) => void
   headerRef?: React.MutableRefObject<$FixMe>
+  rename?: {
+    editing: boolean
+    placeholder?: string
+    onSubmit: (name: string) => void
+    onCancel: () => void
+  }
 }> = ({
   label,
   children,
@@ -152,6 +175,7 @@ const BaseItem: React.FC<{
   collapsed = false,
   setIsCollapsed,
   headerRef,
+  rename,
 }) => {
   const canContainChildren = children !== undefined
 
@@ -186,7 +210,26 @@ const BaseItem: React.FC<{
         </Head_IconContainer>
 
         <Head_Label>
-          <span>{label}</span>
+          {rename?.editing ? (
+            <NameInput
+              autoFocus
+              defaultValue={typeof label === 'string' ? label : ''}
+              placeholder={rename.placeholder}
+              onFocus={(e) => e.currentTarget.select()}
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => {
+                // 输入态接管按键:别让折叠/全局快捷键抢(spec §8)
+                e.stopPropagation()
+                if (e.key === 'Enter') {
+                  rename.onSubmit(e.currentTarget.value)
+                } else if (e.key === 'Escape') {
+                  rename.onCancel()
+                }
+              }}
+            />
+          ) : (
+            <span>{label}</span>
+          )}
         </Head_Label>
         {labelDecoration}
       </Header>

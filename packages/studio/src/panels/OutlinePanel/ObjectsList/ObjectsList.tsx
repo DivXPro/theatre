@@ -9,7 +9,8 @@ import BaseItem from '@dreamerbird/studio/panels/OutlinePanel/BaseItem'
 import {useCollapseStateInOutlinePanel} from '@dreamerbird/studio/panels/OutlinePanel/outlinePanelUtils'
 import getStudio from '@dreamerbird/studio/getStudio'
 import {outlineSelection} from '@dreamerbird/studio/selectors'
-import useChordial from '@dreamerbird/studio/uiComponents/chordial/useChodrial'
+import {translate} from '@dreamerbird/studio/i18n'
+import {useOutlineObjectMenu} from '@dreamerbird/studio/panels/OutlinePanel/outlineOps/useOutlineObjectMenu'
 
 export const Li = styled.li<{$isSelected: boolean}>`
   color: ${(props) => (props.$isSelected ? 'white' : 'hsl(1, 1%, 80%)')};
@@ -156,14 +157,12 @@ const MergedObjectItem: React.FC<{
     })
   }
   const selection = useVal(outlineSelection)
-  const {targetRef} = useChordial(() => ({
-    title: `Object: ${sheetObject.address.objectKey}`,
-    items: [],
-  }))
+  const {targetRef, displayName, editingMode, submitEditing, cancelEditing} =
+    useOutlineObjectMenu(sheetObject)
   return (
     <BaseItem
       select={select}
-      label={label}
+      label={displayName ?? label}
       depth={depth}
       headerRef={targetRef}
       selectionStatus={
@@ -172,6 +171,15 @@ const MergedObjectItem: React.FC<{
       children={children}
       collapsed={collapsed}
       setIsCollapsed={setIsCollapsed}
+      rename={{
+        editing: editingMode !== null,
+        placeholder:
+          editingMode === 'newCollection'
+            ? translate('outline.ctx.collectionNamePlaceholder')
+            : undefined,
+        onSubmit: submitEditing,
+        onCancel: cancelEditing,
+      }}
     />
   )
 }

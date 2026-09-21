@@ -4,7 +4,8 @@ import React from 'react'
 import BaseItem from '@dreamerbird/studio/panels/OutlinePanel/BaseItem'
 import {useVal} from '@dreamerbird/react'
 import {outlineSelection} from '@dreamerbird/studio/selectors'
-import useChordial from '@dreamerbird/studio/uiComponents/chordial/useChodrial'
+import {translate} from '@dreamerbird/studio/i18n'
+import {useOutlineObjectMenu} from '@dreamerbird/studio/panels/OutlinePanel/outlineOps/useOutlineObjectMenu'
 
 export const ObjectItem: React.FC<{
   sheetObject: SheetObject
@@ -21,22 +22,27 @@ export const ObjectItem: React.FC<{
 
   const selection = useVal(outlineSelection)
 
-  const {targetRef} = useChordial(() => {
-    return {
-      title: `Object: ${sheetObject.address.objectKey}`,
-      items: [],
-    }
-  })
+  const {targetRef, displayName, editingMode, submitEditing, cancelEditing} =
+    useOutlineObjectMenu(sheetObject)
 
   return (
     <BaseItem
       select={select}
-      label={overrideLabel ?? sheetObject.address.objectKey}
+      label={displayName ?? overrideLabel ?? sheetObject.address.objectKey}
       depth={depth}
       headerRef={targetRef}
       selectionStatus={
         selection.includes(sheetObject) ? 'selected' : 'not-selected'
       }
+      rename={{
+        editing: editingMode !== null,
+        placeholder:
+          editingMode === 'newCollection'
+            ? translate('outline.ctx.collectionNamePlaceholder')
+            : undefined,
+        onSubmit: submitEditing,
+        onCancel: cancelEditing,
+      }}
     />
   )
 }
