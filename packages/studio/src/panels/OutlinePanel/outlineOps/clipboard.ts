@@ -21,7 +21,7 @@ export function snapshotSheetObject(obj: SheetObject): ObjectSnapshot {
   const props = obj.template.staticConfig.props
   const values: Record<string, SerializableValue> = {}
   for (const key of Object.keys(props)) {
-    const v = val((obj as $FixMe).props[key])
+    const v = val((obj.propsP as $FixMe)[key])
     // 快照要脱开引用,JSON 克隆即可(值均为 SerializableValue)
     values[key] = JSON.parse(JSON.stringify(v))
   }
@@ -55,7 +55,7 @@ export function pasteSnapshot(
   snap: ObjectSnapshot,
 ): void {
   for (const [key, value] of Object.entries(snap.values)) {
-    setProp((target as $FixMe).props[key] as Pointer<$FixMe>, value)
+    setProp((target.propsP as $FixMe)[key] as Pointer<$FixMe>, value)
   }
 }
 

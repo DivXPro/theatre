@@ -29,7 +29,7 @@ function makeObject(values: {
 }) {
   const atom = new Atom(values)
   return {
-    props: atom.pointer,
+    propsP: atom.pointer,
     template: {staticConfig},
   } as unknown as import('@dreamerbird/core/sheetObjects/SheetObject').default
 }
@@ -58,7 +58,7 @@ describe('对象剪贴板', () => {
     } as unknown as SheetObjectPropTypeConfig
     const otherAtom = new Atom({other: 1})
     const foreign = {
-      props: otherAtom.pointer,
+      propsP: otherAtom.pointer,
       template: {staticConfig: otherConfig},
     } as any
     const snap = snapshotSheetObject(foreign)
