@@ -122,6 +122,12 @@ import type {ShotExportHandle} from './videoExport/exporter'
 import type {AnimationEntry, ModelEntry, PoseEntry} from './assetLibrary/types'
 import {capturePose} from './assetLibrary/pose'
 import {rigIdOf} from './assetLibrary/rig'
+import {
+  cameraOutlineMenuExtensionId,
+  cameraOutlineObjectMenu,
+  setCameraOutlineMenuCtx,
+} from './outlineObjectMenu'
+import {pruneObjectFromOutlineCollections} from '@dreamerbird/studio/panels/OutlinePanel/outlineOps/stateOps'
 
 document.body.style.backgroundColor = '#171717'
 
@@ -759,6 +765,53 @@ function App() {
     },
     [sheet],
   )
+
+  // 大纲右键删除走宿主注册表删除流程(与画布右键同一套真删);
+  // extend 按 id 幂等覆盖,重复执行安全
+  useEffect(() => {
+    getStudioSync()?.extend({
+      id: cameraOutlineMenuExtensionId,
+      outlineObjectMenu: cameraOutlineObjectMenu,
+    })
+  }, [])
+
+  // 每渲染刷新菜单上下文:注册表清单 + 删除处理器(含集合名单清理)。
+  // App 不卸载;卸载时清 ctx,防止悬空 sheet 引用
+  useEffect(() => {
+    const projectId = sheet.address.projectId
+    setCameraOutlineMenuCtx({
+      sheet,
+      cameras,
+      anchors,
+      placements: readPlacementEntries(sheet),
+      paths,
+      handlers: {
+        removeCamera: (entry) => {
+          deleteCamera(entry)
+          pruneObjectFromOutlineCollections(projectId, entry.cameraKey)
+        },
+        removeAnchor: (key, object) => {
+          // studio 传进来的是 publicApi;若拿到内部对象则剥一层
+          const anchorObj =
+            (object as {publicApi?: ISheetObject<any>} | undefined)
+              ?.publicApi ?? object
+          removeAnchor(sheet, key, anchorObj)
+          getStudioSync()?.setSelection([])
+          pruneObjectFromOutlineCollections(projectId, key)
+        },
+        removePlacement: (key) => {
+          deletePlacement(sheet, key)
+          getStudioSync()?.setSelection([])
+          pruneObjectFromOutlineCollections(projectId, key)
+        },
+        removePath: (pathKey) => {
+          removePath(pathKey)
+          pruneObjectFromOutlineCollections(projectId, pathKey)
+        },
+      },
+    })
+    return () => setCameraOutlineMenuCtx(undefined)
+  })
 
   // 无相机:镜头视角强制退出(没有镜头可看)
   useEffect(() => {
