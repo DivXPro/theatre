@@ -7,7 +7,6 @@
  * 即可断言任何语言;词条见 ./i18n.ts。
  */
 import type {ContextMenuItem} from '@dreamerbird/studio/uiComponents/chordial/chordialInternals'
-import type {SheetObjectActionsConfig} from '@dreamerbird/core/types/public'
 import type {TFunction} from '@dreamerbird/studio/i18n'
 import {translate} from '@dreamerbird/studio/i18n'
 import type {GizmoMode} from './PlacementManager'
@@ -116,17 +115,6 @@ export function buildObjectMenuItems(
     {type: 'separator'},
     {type: 'normal', label: t('pg.menu.delete'), callback: opts.onDelete},
   ]
-}
-
-export function buildPathPanelActions(
-  opts: {
-    hasPoints: boolean
-    onMovePathToCamera: () => void
-  },
-  t: MenuT = translate,
-): SheetObjectActionsConfig {
-  if (!opts.hasPoints) return {}
-  return {[t('pg.action.movePathToCamera')]: () => opts.onMovePathToCamera()}
 }
 
 export function buildExportMenuItems<S extends {label: string}>(

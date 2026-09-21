@@ -61,7 +61,6 @@ import {
   buildCameraMenuItems,
   buildObjectMenuItems,
   buildPathMenuItems,
-  buildPathPanelActions,
 } from './menuModel'
 import {TopToolbar} from './TopToolbar'
 import {Anchors} from './Anchors'
@@ -97,10 +96,7 @@ import {
   POS_PATH_KEY,
   readPathPoints,
   samplePathPoint,
-  setPathPanelActions,
-  translatePath,
   usePathExists,
-  usePathHasPoints,
 } from './CameraPath'
 import {
   addPathToRegistry,
@@ -1210,25 +1206,6 @@ function App() {
     [sheet],
   )
 
-  // 路径平移到活动相机机位(采样起点对齐相机;空路径采样失败不出手)
-  const movePathToCamera = useCallback(
-    (pathKey: string) => {
-      const cam = activeCamera
-        ? shotRefsMapRef.current.get(activeCamera.cameraKey)?.camera.current
-        : undefined
-      if (!cam) return
-      const tmp = new Vector3()
-      if (!samplePathPoint(pathKey, 0, tmp)) return
-      const c = val(cam.props.position)
-      translatePath(sheet, pathKey, {
-        x: c.x - tmp.x,
-        y: c.y - tmp.y,
-        z: c.z - tmp.z,
-      })
-    },
-    [sheet, activeCamera],
-  )
-
   // 绑定到活动相机:只写 pathKey(绑定的单一直径,见 pathBinding.ts);
   // 这里是无相机面板时的入口(路径右键菜单)
   const bindPathToActiveCamera = useCallback(
@@ -1750,14 +1727,6 @@ function App() {
             getAnchorRef={getAnchorRef}
           />
           {paths.map((entry) => (
-            <PathPanelActionsRegistrar
-              key={`actions-${entry.pathKey}`}
-              sheet={sheet}
-              pathKey={entry.pathKey}
-              onMovePathToCamera={movePathToCamera}
-            />
-          ))}
-          {paths.map((entry) => (
             <CameraPath
               key={entry.pathKey}
               metaKey={entry.pathKey}
@@ -1868,41 +1837,6 @@ function App() {
       </Canvas>
     </div>
   )
-}
-
-/**
- * 给单条已注册路径挂面板动作(「路径平移到相机」):hasPoints 要响应式
- * (加点/删点/撤销都反映),每条路径一个实例,避开 hooks 不能按动态清单
- * 调用的问题
- */
-function PathPanelActionsRegistrar({
-  sheet,
-  pathKey,
-  onMovePathToCamera,
-}: {
-  sheet: ISheet
-  pathKey: string
-  onMovePathToCamera: (pathKey: string) => void
-}) {
-  const hasPoints = usePathHasPoints(sheet, pathKey)
-  const t = useT()
-  const actions = useMemo(
-    () =>
-      buildPathPanelActions(
-        {
-          hasPoints,
-          onMovePathToCamera: () => onMovePathToCamera(pathKey),
-        },
-        t,
-      ),
-    [hasPoints, onMovePathToCamera, pathKey, t],
-  )
-  useEffect(() => {
-    // setPathPanelActions 内部走 sheet.object,查不存在会顺手创建——
-    // 必须登记在册(注册表里有)才注册动作;本组件只在 paths.map 里渲染
-    if (pathExists(sheet, pathKey)) setPathPanelActions(sheet, pathKey, actions)
-  }, [sheet, pathKey, actions])
-  return null
 }
 
 /**

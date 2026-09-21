@@ -2,7 +2,6 @@ import {
   buildCameraMenuItems,
   buildPathMenuItems,
   buildObjectMenuItems,
-  buildPathPanelActions,
   buildExportMenuItems,
 } from './menuModel'
 import {makeDictT, zhCN} from './i18n'
@@ -120,25 +119,6 @@ test('对象右键菜单:只传姿势回调时只有「改变姿势」一项', (
   // [改变姿势, sep, translate, rotate, scale, sep, 删除]
   expect(items).toHaveLength(7)
   expect(String((items[0] as any).label)).toContain('改变姿势')
-})
-
-test('路径面板动作:空路径不含平移', () => {
-  expect(
-    Object.keys(
-      buildPathPanelActions(
-        {hasPoints: false, onMovePathToCamera: jest.fn()},
-        t,
-      ),
-    ),
-  ).toEqual([])
-  expect(
-    Object.keys(
-      buildPathPanelActions(
-        {hasPoints: true, onMovePathToCamera: jest.fn()},
-        t,
-      ),
-    ),
-  ).toEqual(['路径平移到相机'])
 })
 
 test('导出菜单:每个 sink 一项,点击回传 sink', () => {

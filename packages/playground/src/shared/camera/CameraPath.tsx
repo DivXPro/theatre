@@ -4,7 +4,6 @@ import {privateAPI} from '@dreamerbird/core/privateAPIs'
 import getStudioInternal from '@dreamerbird/studio/getStudio'
 import getDeep from '@dreamerbird/utils/getDeep'
 import type {IScrub, ISheet, ISheetObject} from '@dreamerbird/core'
-import type {SheetObjectActionsConfig} from '@dreamerbird/core/types/public'
 import React, {useEffect, useMemo, useRef, useState} from 'react'
 import {useFrame, useThree} from '@react-three/fiber'
 import type {ThreeEvent} from '@react-three/fiber'
@@ -160,24 +159,6 @@ export function getPathMeta(sheet: ISheet, metaKey: string) {
   // 名单对象从这里直接读(同 __cameraShot 的用法)
   ;((window as any).__cameraPathMeta ??= {})[metaKey] = meta
   return meta
-}
-
-/**
- * 给路径对象挂面板动作(属性后的按钮区,core 的 __actions__ 机制)。
- * 重复调用同 key 同 config 只更新 actions;actions 传 {} = 清空。
- * 调用前必须保证 getPathMeta 跑过(metaConfigCache 里有 config)。
- */
-export function setPathPanelActions(
-  sheet: ISheet,
-  metaKey: string,
-  actions: SheetObjectActionsConfig,
-) {
-  const config = metaConfigCache.get(metaKey)
-  if (!config) return
-  sheet.object(metaKey, config, {
-    __actions__THIS_API_IS_UNSTABLE_AND_WILL_CHANGE_IN_THE_NEXT_VERSION:
-      actions,
-  })
 }
 
 /** 响应式读名单:meta 为 null(对象不存在)时按空名单算 */
@@ -405,26 +386,6 @@ export function readPathPoints(
   metaKey: string,
 ): PathPointEntry[] {
   return parsePathPoints(getPathMeta(sheet, metaKey).value.points)
-}
-
-/**
- * 整条路径平移 delta:改路径对象的位置属性(Blender 物体模式的整体
- * 移动),控制点的局部数据不动。一次 scrub 提交 = 一步撤销
- */
-export function translatePath(sheet: ISheet, metaKey: string, delta: Vec3Like) {
-  const studio = getStudioSync()
-  if (!studio) return
-  const meta = getPathMeta(sheet, metaKey)
-  const cur = readPathTransform(meta).position
-  const scrub = studio.scrub()
-  scrub.capture(({set}) =>
-    set(meta.props.position, {
-      x: cur.x + delta.x,
-      y: cur.y + delta.y,
-      z: cur.z + delta.z,
-    }),
-  )
-  scrub.commit()
 }
 
 // ---------------------------------------------------------------------------

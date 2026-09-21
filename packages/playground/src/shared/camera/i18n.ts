@@ -57,8 +57,6 @@ export const en: Messages = {
   'pg.gizmo.rotate': 'Rotate',
   'pg.gizmo.scale': 'Scale',
 
-  'pg.action.movePathToCamera': 'Move path to camera',
-
   'pg.props.aimTarget': 'Aim target',
   'pg.props.aimNone': 'None',
   'pg.props.anchorParent': 'Parent',
@@ -158,8 +156,6 @@ export const zhCN: Messages = {
   'pg.gizmo.translate': '移动',
   'pg.gizmo.rotate': '旋转',
   'pg.gizmo.scale': '缩放',
-
-  'pg.action.movePathToCamera': '路径平移到相机',
 
   'pg.props.aimTarget': '瞄准目标',
   'pg.props.aimNone': '无',
