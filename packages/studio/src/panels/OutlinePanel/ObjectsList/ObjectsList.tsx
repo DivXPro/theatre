@@ -11,33 +11,101 @@ import getStudio from '@dreamerbird/studio/getStudio'
 import {outlineSelection} from '@dreamerbird/studio/selectors'
 import {translate} from '@dreamerbird/studio/i18n'
 import {useOutlineObjectMenu} from '@dreamerbird/studio/panels/OutlinePanel/outlineOps/useOutlineObjectMenu'
+import {nanoid as generateNonSecure} from 'nanoid/non-secure'
+import {CollectionItem} from './CollectionItem'
+import {createEmptyCollection} from '@dreamerbird/studio/panels/OutlinePanel/outlineOps/stateOps'
+import {nextDefaultCollectionName} from '@dreamerbird/studio/panels/OutlinePanel/outlineOps/collectOutlineMenuItems'
+import type {ChordialOpts} from '@dreamerbird/studio/uiComponents/chordial/chordialInternals'
+import useChordial from '@dreamerbird/studio/uiComponents/chordial/useChodrial'
 
 export const Li = styled.li<{$isSelected: boolean}>`
   color: ${(props) => (props.$isSelected ? 'white' : 'hsl(1, 1%, 80%)')};
+`
+
+const ListContainer = styled.div`
+  display: flex;
+  flex-direction: column;
 `
 
 const ObjectsList: React.FC<{
   depth: number
   sheet: Sheet
 }> = ({sheet, depth}) => {
+  // 空白处右键:仅"新建集合…"(容器上独立 chordial;行内菜单按 DOM 就近
+  // 优先,右键落在对象行时自然落到行的菜单,spec §4)
+  const {targetRef: emptyAreaRef} = useChordial(
+    (): ChordialOpts => ({
+      title: translate('outline.ctx.newCollection'),
+      items: [
+        {
+          type: 'normal',
+          label: translate('outline.ctx.newCollection'),
+          callback: () => {
+            const projectId = sheet.address.projectId
+            const current =
+              val(
+                getStudio().atomP.historic.projects.stateByProjectId[projectId]
+                  .outlineCollections,
+              ) ?? []
+            createEmptyCollection(
+              projectId,
+              generateNonSecure(10),
+              nextDefaultCollectionName(current, translate),
+            )
+          },
+        },
+      ],
+    }),
+  )
+
   return usePrism(() => {
     const objectsMap = val(sheet.objectsP)
     const objects = Object.values(objectsMap).filter(
       (a): a is SheetObject => a != null && !a.template.hideFromOutline,
     )
 
+    const collections =
+      val(
+        getStudio().atomP.historic.projects.stateByProjectId[
+          sheet.address.projectId
+        ].outlineCollections,
+      ) ?? []
+
+    // 成员对象从默认命名空间树过滤(spec §4);真删残留的 key 在这里
+    // 自然消失(求交),不用先清理名单
+    const memberOf = new Map<string, string>()
+    for (const c of collections) {
+      for (const m of c.members) memberOf.set(m, c.id)
+    }
+    const visibleObjects = objects.filter(
+      (o) => !memberOf.has(o.address.objectKey),
+    )
+
     const rootObject: NamespacedObjects = new Map()
-    objects.forEach((object) => {
+    visibleObjects.forEach((object) => {
       addToNamespace(rootObject, object)
     })
 
     return (
-      <NamespaceTree
-        namespace={rootObject}
-        visualIndentation={depth}
-        path={[]}
-        sheet={sheet}
-      />
+      <ListContainer ref={emptyAreaRef}>
+        {collections.map((collection) => (
+          <CollectionItem
+            key={`collection:${collection.id}`}
+            collection={collection}
+            members={objects.filter((o) =>
+              collection.members.includes(o.address.objectKey),
+            )}
+            sheet={sheet}
+            depth={depth}
+          />
+        ))}
+        <NamespaceTree
+          namespace={rootObject}
+          visualIndentation={depth}
+          path={[]}
+          sheet={sheet}
+        />
+      </ListContainer>
     )
   }, [sheet, depth])
 }
