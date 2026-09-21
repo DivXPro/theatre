@@ -778,7 +778,7 @@ function App() {
   // 每渲染刷新菜单上下文:注册表清单 + 删除处理器(含集合名单清理)。
   // App 不卸载;卸载时清 ctx,防止悬空 sheet 引用
   useEffect(() => {
-    const projectId = sheet.address.projectId
+    const {projectId, sheetId, sheetInstanceId} = sheet.address
     setCameraOutlineMenuCtx({
       sheet,
       cameras,
@@ -788,7 +788,12 @@ function App() {
       handlers: {
         removeCamera: (entry) => {
           deleteCamera(entry)
-          pruneObjectFromOutlineCollections(projectId, entry.cameraKey)
+          pruneObjectFromOutlineCollections(
+            projectId,
+            sheetId,
+            sheetInstanceId,
+            entry.cameraKey,
+          )
         },
         removeAnchor: (key, object) => {
           // studio 传进来的是 publicApi;若拿到内部对象则剥一层
@@ -797,16 +802,31 @@ function App() {
               ?.publicApi ?? object
           removeAnchor(sheet, key, anchorObj)
           getStudioSync()?.setSelection([])
-          pruneObjectFromOutlineCollections(projectId, key)
+          pruneObjectFromOutlineCollections(
+            projectId,
+            sheetId,
+            sheetInstanceId,
+            key,
+          )
         },
         removePlacement: (key) => {
           deletePlacement(sheet, key)
           getStudioSync()?.setSelection([])
-          pruneObjectFromOutlineCollections(projectId, key)
+          pruneObjectFromOutlineCollections(
+            projectId,
+            sheetId,
+            sheetInstanceId,
+            key,
+          )
         },
         removePath: (pathKey) => {
           removePath(pathKey)
-          pruneObjectFromOutlineCollections(projectId, pathKey)
+          pruneObjectFromOutlineCollections(
+            projectId,
+            sheetId,
+            sheetInstanceId,
+            pathKey,
+          )
         },
       },
     })

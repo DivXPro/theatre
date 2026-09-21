@@ -1,6 +1,10 @@
 import type {ContextMenuItem} from '@dreamerbird/studio/uiComponents/chordial/chordialInternals'
 import type {OutlineCollectionState} from '@dreamerbird/core/types/private/studio'
-import type {OutlineMenuItem} from '@dreamerbird/core/types/public'
+import type {
+  OutlineMenuItem,
+  SheetId,
+  SheetInstanceId,
+} from '@dreamerbird/core/types/public'
 import type {ObjectSnapshot} from './clipboard'
 
 export type OutlineT = (
@@ -94,6 +98,17 @@ export function collectOutlineMenuItems(p: {
     })
   }
   return items
+}
+
+/** 只留对得上当前 sheet 的集合(spec §4:集合挂 sheet 维度) */
+export function collectionsOfSheet(
+  collections: OutlineCollectionState[],
+  sheetId: SheetId,
+  sheetInstanceId: SheetInstanceId,
+): OutlineCollectionState[] {
+  return collections.filter(
+    (c) => c.sheetId === sheetId && c.sheetInstanceId === sheetInstanceId,
+  )
 }
 
 /** 空白处"新建集合"的默认名:集合 N(N 从现有数量+1 起,冲突顺延) */

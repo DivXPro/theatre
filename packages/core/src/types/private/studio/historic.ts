@@ -117,6 +117,13 @@ export type StudioHistoricStateProject = {
 export type OutlineCollectionState = {
   id: string
   name: string
+  /**
+   * 集合挂在 sheet 维度(spec §4):创建时记录当前 sheet 地址,
+   * 渲染/菜单只显示对得上当前 sheet 的集合,单归属驱逐与名单
+   * 清理也按 sheet 限定作用域。
+   */
+  sheetId: SheetId
+  sheetInstanceId: SheetInstanceId
   members: string[]
 }
 

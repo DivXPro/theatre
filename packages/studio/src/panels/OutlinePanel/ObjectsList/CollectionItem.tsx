@@ -14,6 +14,7 @@ import {
   deleteCollection,
   renameCollection,
 } from '@dreamerbird/studio/panels/OutlinePanel/outlineOps/stateOps'
+import {collectionsOfSheet} from '@dreamerbird/studio/panels/OutlinePanel/outlineOps/collectOutlineMenuItems'
 
 /**
  * 伪集合行:不是对象,不参与选区;右键 = 重命名(行内)/删除集合
@@ -34,12 +35,17 @@ export const CollectionItem: React.FC<{
   })
   const [editing, setEditing] = useState(false)
 
-  const collections =
+  const allCollections =
     useVal(
       getStudio().atomP.historic.projects.stateByProjectId[projectId]
         .outlineCollections,
     ) ?? []
-  // 同名集合显示去重:第二个同名起加序号后缀
+  // 同名集合显示去重:只在当前 sheet 内比较(spec §4,跨 sheet 同名互不影响)
+  const collections = collectionsOfSheet(
+    allCollections,
+    sheet.address.sheetId,
+    sheet.address.sheetInstanceId,
+  )
   const nameIndex = collections
     .filter((c) => c.name === collection.name)
     .findIndex((c) => c.id === collection.id)

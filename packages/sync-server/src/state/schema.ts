@@ -24,6 +24,8 @@ import type {
   SerializableValue,
   IRange,
   ProjectId,
+  SheetId,
+  SheetInstanceId,
 } from '@dreamerbird/core/types/public'
 
 import {
@@ -492,11 +494,19 @@ export namespace stateEditors {
             export function addCollection(
               draft: Draft,
               api: API,
-              p: {projectId: ProjectId; id: string; name: string},
+              p: {
+                projectId: ProjectId
+                sheetId: SheetId
+                sheetInstanceId: SheetInstanceId
+                id: string
+                name: string
+              },
             ) {
               _ensureCollections(draft, api, p).push({
                 id: p.id,
                 name: p.name,
+                sheetId: p.sheetId,
+                sheetInstanceId: p.sheetInstanceId,
                 members: [],
               })
             }
@@ -529,13 +539,20 @@ export namespace stateEditors {
               api: API,
               p: {
                 projectId: ProjectId
+                sheetId: SheetId
+                sheetInstanceId: SheetInstanceId
                 collectionId: string
                 objectKey: string
               },
             ) {
               const collections = _ensureCollections(draft, api, p)
-              // 单归属:先从所有旧集合移出
+              // 单归属:先从同 sheet 的旧集合移出(spec §4,驱逐不跨 sheet)
               for (const c of collections) {
+                if (
+                  c.sheetId !== p.sheetId ||
+                  c.sheetInstanceId !== p.sheetInstanceId
+                )
+                  continue
                 c.members = c.members.filter((m) => m !== p.objectKey)
               }
               const target = collections.find((c) => c.id === p.collectionId)
@@ -564,11 +581,22 @@ export namespace stateEditors {
             export function removeObjectFromAllCollections(
               draft: Draft,
               api: API,
-              p: {projectId: ProjectId; objectKey: string},
+              p: {
+                projectId: ProjectId
+                sheetId: SheetId
+                sheetInstanceId: SheetInstanceId
+                objectKey: string
+              },
             ) {
               const project = _ensureProject(draft, api, p)
               if (!project.outlineCollections) return
               for (const c of project.outlineCollections) {
+                // 只清同 sheet 的名单(spec §4,不误清其它 sheet 同名对象)
+                if (
+                  c.sheetId !== p.sheetId ||
+                  c.sheetInstanceId !== p.sheetInstanceId
+                )
+                  continue
                 c.members = c.members.filter((m) => m !== p.objectKey)
               }
             }

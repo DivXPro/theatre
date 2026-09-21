@@ -14,6 +14,7 @@ import {useOutlineObjectMenu} from '@dreamerbird/studio/panels/OutlinePanel/outl
 import {nanoid as generateNonSecure} from 'nanoid/non-secure'
 import {CollectionItem} from './CollectionItem'
 import {createEmptyCollection} from '@dreamerbird/studio/panels/OutlinePanel/outlineOps/stateOps'
+import {collectionsOfSheet} from '@dreamerbird/studio/panels/OutlinePanel/outlineOps/collectOutlineMenuItems'
 import {nextDefaultCollectionName} from '@dreamerbird/studio/panels/OutlinePanel/outlineOps/collectOutlineMenuItems'
 import type {ChordialOpts} from '@dreamerbird/studio/uiComponents/chordial/chordialInternals'
 import useChordial from '@dreamerbird/studio/uiComponents/chordial/useChodrial'
@@ -42,15 +43,23 @@ const ObjectsList: React.FC<{
           label: translate('outline.ctx.newCollection'),
           callback: () => {
             const projectId = sheet.address.projectId
-            const current =
+            const allCollections =
               val(
                 getStudio().atomP.historic.projects.stateByProjectId[projectId]
                   .outlineCollections,
               ) ?? []
+            // 集合挂 sheet 维度(spec §4):默认名也只在当前 sheet 内顺延
+            const collections = collectionsOfSheet(
+              allCollections,
+              sheet.address.sheetId,
+              sheet.address.sheetInstanceId,
+            )
             createEmptyCollection(
               projectId,
+              sheet.address.sheetId,
+              sheet.address.sheetInstanceId,
               generateNonSecure(10),
-              nextDefaultCollectionName(current, translate),
+              nextDefaultCollectionName(collections, translate),
             )
           },
         },
@@ -64,12 +73,19 @@ const ObjectsList: React.FC<{
       (a): a is SheetObject => a != null && !a.template.hideFromOutline,
     )
 
-    const collections =
+    // 集合挂 sheet 维度(spec §4):只渲染当前 sheet 的集合,
+    // 成员过滤与渲染同源,跨 sheet 同名 objectKey 不会互相吸附
+    const allCollections =
       val(
         getStudio().atomP.historic.projects.stateByProjectId[
           sheet.address.projectId
         ].outlineCollections,
       ) ?? []
+    const collections = collectionsOfSheet(
+      allCollections,
+      sheet.address.sheetId,
+      sheet.address.sheetInstanceId,
+    )
 
     // 成员对象从默认命名空间树过滤(spec §4);真删残留的 key 在这里
     // 自然消失(求交),不用先清理名单

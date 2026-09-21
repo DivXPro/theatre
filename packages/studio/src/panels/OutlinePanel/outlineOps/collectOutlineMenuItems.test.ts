@@ -1,6 +1,22 @@
 import {collectOutlineMenuItems} from './collectOutlineMenuItems'
 import type {OutlineCollectionState} from '@dreamerbird/core/types/private/studio'
 import type {OutlineMenuItem} from '@dreamerbird/core/types/public'
+import type {SheetId, SheetInstanceId} from '@dreamerbird/core/types/public'
+
+const sh1 = 'sh1' as SheetId
+const si1 = 'si1' as SheetInstanceId
+
+const collection = (
+  id: string,
+  name: string,
+  members: string[],
+): OutlineCollectionState => ({
+  id,
+  name,
+  sheetId: sh1,
+  sheetInstanceId: si1,
+  members,
+})
 
 const t = (key: string, vars?: {[name: string]: string | number}) =>
   vars?.name !== undefined ? `${key}:{${vars.name}}` : key
@@ -64,8 +80,8 @@ describe('collectOutlineMenuItems', () => {
 
   it('集合项:非当前集合出"移到集合",当前集合出"从集合移出"', () => {
     const collections: OutlineCollectionState[] = [
-      {id: 'c1', name: 'A', members: ['Obj']},
-      {id: 'c2', name: 'B', members: []},
+      collection('c1', 'A', ['Obj']),
+      collection('c2', 'B', []),
     ]
     const items = collectOutlineMenuItems({
       ...base,

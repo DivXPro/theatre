@@ -1,4 +1,8 @@
-import type {ProjectId} from '@dreamerbird/core/types/public'
+import type {
+  ProjectId,
+  SheetId,
+  SheetInstanceId,
+} from '@dreamerbird/core/types/public'
 import type SheetObject from '@dreamerbird/core/sheetObjects/SheetObject'
 import getStudio from '@dreamerbird/studio/getStudio'
 
@@ -15,9 +19,11 @@ export function setObjectDisplayName(
   })
 }
 
-/** 一步事务:建集合并把对象移入(单条撤销记录) */
+/** 一步事务:建集合并把对象移入(单条撤销记录);集合挂 sheet 维度(spec §4) */
 export function createCollectionAndAddMember(
   projectId: ProjectId,
+  sheetId: SheetId,
+  sheetInstanceId: SheetInstanceId,
   id: string,
   name: string,
   objectKey: string,
@@ -25,13 +31,21 @@ export function createCollectionAndAddMember(
   getStudio().transaction(({stateEditors}) => {
     const outline =
       stateEditors.studio.historic.projects.stateByProjectId.outline
-    outline.addCollection({projectId, id, name})
-    outline.addCollectionMember({projectId, collectionId: id, objectKey})
+    outline.addCollection({projectId, sheetId, sheetInstanceId, id, name})
+    outline.addCollectionMember({
+      projectId,
+      sheetId,
+      sheetInstanceId,
+      collectionId: id,
+      objectKey,
+    })
   })
 }
 
 export function createEmptyCollection(
   projectId: ProjectId,
+  sheetId: SheetId,
+  sheetInstanceId: SheetInstanceId,
   id: string,
   name: string,
 ): void {
@@ -39,6 +53,8 @@ export function createEmptyCollection(
     stateEditors.studio.historic.projects.stateByProjectId.outline.addCollection(
       {
         projectId,
+        sheetId,
+        sheetInstanceId,
         id,
         name,
       },
@@ -72,12 +88,14 @@ export function deleteCollection(projectId: ProjectId, id: string): void {
 
 export function moveObjectToCollection(
   projectId: ProjectId,
+  sheetId: SheetId,
+  sheetInstanceId: SheetInstanceId,
   collectionId: string,
   objectKey: string,
 ): void {
   getStudio().transaction(({stateEditors}) => {
     stateEditors.studio.historic.projects.stateByProjectId.outline.addCollectionMember(
-      {projectId, collectionId, objectKey},
+      {projectId, sheetId, sheetInstanceId, collectionId, objectKey},
     )
   })
 }
@@ -94,14 +112,16 @@ export function removeObjectFromCollection(
   })
 }
 
-/** 对象真删后清掉所有集合名单残留(spec §4;渲染求交是另一道兜底) */
+/** 对象真删后清掉同 sheet 所有集合名单残留(spec §4;渲染求交是另一道兜底) */
 export function pruneObjectFromOutlineCollections(
   projectId: ProjectId,
+  sheetId: SheetId,
+  sheetInstanceId: SheetInstanceId,
   objectKey: string,
 ): void {
   getStudio().transaction(({stateEditors}) => {
     stateEditors.studio.historic.projects.stateByProjectId.outline.removeObjectFromAllCollections(
-      {projectId, objectKey},
+      {projectId, sheetId, sheetInstanceId, objectKey},
     )
   })
 }
@@ -124,6 +144,8 @@ export function deleteOutlineObject(sheetObject: SheetObject): void {
   }
   pruneObjectFromOutlineCollections(
     sheetObject.address.projectId,
+    sheetObject.address.sheetId,
+    sheetObject.address.sheetInstanceId,
     sheetObject.address.objectKey,
   )
 }

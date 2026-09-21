@@ -22,6 +22,7 @@ import {
 } from './clipboard'
 import {
   collectOutlineMenuItems,
+  collectionsOfSheet,
   nextDefaultCollectionName,
 } from './collectOutlineMenuItems'
 import {
@@ -62,11 +63,17 @@ export function useOutlineObjectMenu(sheetObject: SheetObject): {
     const extensionsById = val(
       getStudio().ephemeralAtom.pointer.extensions.byId,
     )
-    const collections =
+    // 集合挂 sheet 维度(spec §4):菜单只列当前 sheet 的集合
+    const allCollections =
       val(
         getStudio().atomP.historic.projects.stateByProjectId[projectId]
           .outlineCollections,
       ) ?? []
+    const collections = collectionsOfSheet(
+      allCollections,
+      address.sheetId,
+      address.sheetInstanceId,
+    )
     const currentCollectionId = collections.find((c) =>
       c.members.includes(address.objectKey),
     )?.id
@@ -93,7 +100,13 @@ export function useOutlineObjectMenu(sheetObject: SheetObject): {
         onStartRename: () => setEditingMode('name'),
         onDelete: () => deleteOutlineObject(sheetObject),
         onMoveToCollection: (collectionId) =>
-          moveObjectToCollection(projectId, collectionId, address.objectKey),
+          moveObjectToCollection(
+            projectId,
+            address.sheetId,
+            address.sheetInstanceId,
+            collectionId,
+            address.objectKey,
+          ),
         onRemoveFromCollection: () => {
           if (currentCollectionId) {
             removeObjectFromCollection(
@@ -116,17 +129,24 @@ export function useOutlineObjectMenu(sheetObject: SheetObject): {
       if (editingMode === 'name') {
         setObjectDisplayName(projectId, addressKey, value)
       } else if (editingMode === 'newCollection') {
-        const collections =
+        const allCollections =
           val(
             getStudio().atomP.historic.projects.stateByProjectId[projectId]
               .outlineCollections,
           ) ?? []
+        const collections = collectionsOfSheet(
+          allCollections,
+          address.sheetId,
+          address.sheetInstanceId,
+        )
         const name =
           value.trim() !== ''
             ? value
             : nextDefaultCollectionName(collections, translate)
         createCollectionAndAddMember(
           projectId,
+          address.sheetId,
+          address.sheetInstanceId,
           generateNonSecure(10),
           name,
           address.objectKey,
