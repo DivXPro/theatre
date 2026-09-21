@@ -23,7 +23,7 @@ export const zhCN: Messages = {
   'outline.ctx.paste': '粘贴',
   'outline.ctx.rename': '重命名',
   'outline.ctx.delete': '删除',
-  'outline.ctx.newCollection': '新建集合…',
+  'outline.ctx.newCollection': '新建集合',
   'outline.ctx.moveToCollection': '移到集合:{name}',
   'outline.ctx.removeFromCollection': '从集合移出',
   'outline.ctx.deleteCollection': '删除集合',

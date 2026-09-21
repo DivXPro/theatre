@@ -26,7 +26,7 @@ export const en: Messages = {
   'outline.ctx.paste': 'Paste',
   'outline.ctx.rename': 'Rename',
   'outline.ctx.delete': 'Delete',
-  'outline.ctx.newCollection': 'New collection…',
+  'outline.ctx.newCollection': 'New collection',
   'outline.ctx.moveToCollection': 'Move to collection: {name}',
   'outline.ctx.removeFromCollection': 'Remove from collection',
   'outline.ctx.deleteCollection': 'Delete collection',
