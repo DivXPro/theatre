@@ -76,7 +76,7 @@ export const en: Messages = {
   'pg.parts.legR': 'Right leg',
   'pg.props.pathProgress': 'Travel Progress',
   'pg.props.position': 'Position',
-  'pg.props.rotationRadian': 'Rotation (radians)',
+  'pg.props.rotationRadian': 'Rotation',
   'pg.props.scale': 'Scale',
 
   'pg.lib.title.model': 'Models',
@@ -178,7 +178,7 @@ export const zhCN: Messages = {
   'pg.parts.legR': '右腿',
   'pg.props.pathProgress': '行进进度',
   'pg.props.position': '位置',
-  'pg.props.rotationRadian': '旋转(弧度)',
+  'pg.props.rotationRadian': '旋转',
   'pg.props.scale': '缩放',
 
   'pg.lib.title.model': '模型库',
