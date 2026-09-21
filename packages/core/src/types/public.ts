@@ -1177,6 +1177,17 @@ export interface IExtensionI18n {
   fallbacks?: {[from: string]: string}
 }
 
+export type OutlineMenuItem = {
+  type: 'normal'
+  label: string
+  onSelect: () => void
+  enabled?: boolean
+  /** role: 'delete' 表示该项接管 studio 内置删除（studio 不再显示默认删除项） */
+  role?: 'delete'
+}
+
+export type OutlineObjectMenuContribution = {items: OutlineMenuItem[]}
+
 export interface IExtension {
   /**
    * Pick a unique ID for your extension. Ideally the name would be unique if
@@ -1207,6 +1218,17 @@ export interface IExtension {
    * TODO
    */
   panes?: Array<PaneClassDefinition>
+
+  /**
+   * 大纲树对象行右键菜单扩展：按对象返回追加菜单项。
+   * studio 把各扩展（注册顺序）返回的 items 追加在内置项之后；
+   * 任一 item 带 role: 'delete' 时，该对象的内置删除项被隐藏
+   * （宿主接管删除，如注册表式对象需要"注册表移除 + 组件卸载 +
+   * forgetObject"三步真删的场景）。
+   */
+  outlineObjectMenu?: (
+    object: ISheetObject<UnknownShorthandCompoundProps>,
+  ) => OutlineObjectMenuContribution | undefined
 }
 
 export type PaneInstance<ClassName extends string> = {
