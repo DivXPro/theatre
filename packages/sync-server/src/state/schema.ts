@@ -23,6 +23,7 @@ import type {
   SerializablePrimitive,
   SerializableValue,
   IRange,
+  ProjectId,
 } from '@dreamerbird/core/types/public'
 
 import {
@@ -39,6 +40,7 @@ import set from 'lodash-es/set'
 import type {
   KeyframeWithPathToPropFromCommonRoot,
   OutlineSelectionState,
+  OutlineCollectionState,
   PaneInstanceDescriptor,
   PanelPosition,
   StudioAhistoricState,
@@ -446,6 +448,128 @@ export namespace stateEditors {
                 )
                 const marker = currentMarkerSet.byId[options.markerId]
                 if (marker !== undefined) marker.label = options.label
+              }
+            }
+          }
+
+          export namespace outline {
+            function _ensureProject(
+              draft: Draft,
+              api: API,
+              p: {projectId: ProjectId},
+            ) {
+              return stateEditors.studio.historic.projects.stateByProjectId._ensure(
+                draft,
+                api,
+                p,
+              )
+            }
+
+            export function setObjectDisplayName(
+              draft: Draft,
+              api: API,
+              p: {projectId: ProjectId; addressKey: string; name: string},
+            ) {
+              const project = _ensureProject(draft, api, p)
+              project.outlineNamesByObjectAddress ??= {}
+              if (p.name.trim() === '') {
+                delete project.outlineNamesByObjectAddress[p.addressKey]
+              } else {
+                project.outlineNamesByObjectAddress[p.addressKey] = p.name
+              }
+            }
+
+            function _ensureCollections(
+              draft: Draft,
+              api: API,
+              p: {projectId: ProjectId},
+            ): OutlineCollectionState[] {
+              const project = _ensureProject(draft, api, p)
+              project.outlineCollections ??= []
+              return project.outlineCollections
+            }
+
+            export function addCollection(
+              draft: Draft,
+              api: API,
+              p: {projectId: ProjectId; id: string; name: string},
+            ) {
+              _ensureCollections(draft, api, p).push({
+                id: p.id,
+                name: p.name,
+                members: [],
+              })
+            }
+
+            export function renameCollection(
+              draft: Draft,
+              api: API,
+              p: {projectId: ProjectId; id: string; name: string},
+            ) {
+              const collection = _ensureCollections(draft, api, p).find(
+                (c) => c.id === p.id,
+              )
+              if (collection) collection.name = p.name
+            }
+
+            export function deleteCollection(
+              draft: Draft,
+              api: API,
+              p: {projectId: ProjectId; id: string},
+            ) {
+              const project = _ensureProject(draft, api, p)
+              if (!project.outlineCollections) return
+              project.outlineCollections = project.outlineCollections.filter(
+                (c) => c.id !== p.id,
+              )
+            }
+
+            export function addCollectionMember(
+              draft: Draft,
+              api: API,
+              p: {
+                projectId: ProjectId
+                collectionId: string
+                objectKey: string
+              },
+            ) {
+              const collections = _ensureCollections(draft, api, p)
+              // 单归属:先从所有旧集合移出
+              for (const c of collections) {
+                c.members = c.members.filter((m) => m !== p.objectKey)
+              }
+              const target = collections.find((c) => c.id === p.collectionId)
+              if (target && !target.members.includes(p.objectKey)) {
+                target.members.push(p.objectKey)
+              }
+            }
+
+            export function removeCollectionMember(
+              draft: Draft,
+              api: API,
+              p: {
+                projectId: ProjectId
+                collectionId: string
+                objectKey: string
+              },
+            ) {
+              const target = _ensureCollections(draft, api, p).find(
+                (c) => c.id === p.collectionId,
+              )
+              if (target) {
+                target.members = target.members.filter((m) => m !== p.objectKey)
+              }
+            }
+
+            export function removeObjectFromAllCollections(
+              draft: Draft,
+              api: API,
+              p: {projectId: ProjectId; objectKey: string},
+            ) {
+              const project = _ensureProject(draft, api, p)
+              if (!project.outlineCollections) return
+              for (const c of project.outlineCollections) {
+                c.members = c.members.filter((m) => m !== p.objectKey)
               }
             }
           }

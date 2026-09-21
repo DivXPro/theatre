@@ -105,6 +105,19 @@ export type StudioHistoricStateProjectSheet = {
 /** See {@link StudioHistoricState} */
 export type StudioHistoricStateProject = {
   stateBySheetId: StrictRecord<SheetId, StudioHistoricStateProjectSheet>
+  /**
+   * 大纲显示名（key = 对象地址的稳定 JSON，见 outlineOps/addressKey.ts）。
+   * 只影响显示，不触碰 core 存储键。
+   */
+  outlineNamesByObjectAddress?: StrictRecord<string, string>
+  /** 伪集合：显示层名单（扁平、单归属），members 存 objectKey */
+  outlineCollections?: OutlineCollectionState[]
+}
+
+export type OutlineCollectionState = {
+  id: string
+  name: string
+  members: string[]
 }
 
 export type StudioHistoricState = {
