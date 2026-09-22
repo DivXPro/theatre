@@ -1,4 +1,5 @@
 import {outlineSelection} from '@dreamerbird/studio/selectors'
+import {objectDisplayNameOf} from '@dreamerbird/studio/panels/OutlinePanel/outlineOps/displayName'
 import {usePrism, useVal} from '@dreamerbird/react'
 import React, {
   createContext,
@@ -123,6 +124,13 @@ const DetailPanel: React.FC<{}> = (props) => {
     const obj = selection.find(isSheetObject)
 
     if (obj) {
+      // 显示名与大纲行同一来源(覆盖名 ?? objectKey),保证两处一致
+      const address = obj.address
+      const namesByAddress = val(
+        getStudio().atomP.historic.projects.stateByProjectId[address.projectId]
+          .outlineNamesByObjectAddress,
+      )
+      const shownName = objectDisplayNameOf(namesByAddress, address)
       return (
         <Container
           data-testid="DetailPanel-Object"
@@ -137,7 +145,7 @@ const DetailPanel: React.FC<{}> = (props) => {
         >
           <Header>
             <Title
-              title={`${obj.sheet.address.sheetId}: ${obj.sheet.address.sheetInstanceId} > ${obj.address.objectKey}`}
+              title={`${obj.sheet.address.sheetId}: ${obj.sheet.address.sheetInstanceId} > ${shownName}`}
             >
               <TitleBar_Piece>{obj.sheet.address.sheetId} </TitleBar_Piece>
 
@@ -147,7 +155,7 @@ const DetailPanel: React.FC<{}> = (props) => {
               </TitleBar_Piece>
 
               <TitleBar_Punctuation>&nbsp;&rarr;&nbsp;</TitleBar_Punctuation>
-              <TitleBar_Piece>{obj.address.objectKey}</TitleBar_Piece>
+              <TitleBar_Piece>{shownName}</TitleBar_Piece>
             </Title>
           </Header>
           <Body>
