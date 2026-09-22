@@ -156,7 +156,7 @@ const preset = {id: 'p1'} as never
 describe('createHostFlows', () => {
   it('七个动作逐一转发到注入的 deps,dropPointFromClient 挂上模块实现', async () => {
     const deps = makeDeps()
-    const flows = createHostFlows(deps)
+    const flows = createHostFlows(() => deps)
     await flows.startPlacingModel(entry)
     expect(deps.startPlacingFromLibrary).toHaveBeenCalledWith(entry)
     flows.placeModelAt(entry, {x: 1, y: 2, z: 3})
@@ -182,6 +182,21 @@ describe('createHostFlows', () => {
     expect(deps.importModel).toHaveBeenCalledWith(file)
     // 未设 dropPoint 上下文时按模块实现返 null
     expect(flows.dropPointFromClient(0, 0)).toBeNull()
+  })
+  it('调用时才取 deps,无缓存:替换 deps 对象后新调用打到第二组', () => {
+    const depsA = makeDeps()
+    const depsB = makeDeps()
+    const holder: {deps: HostFlowDeps} = {deps: depsA}
+    const flows = createHostFlows(() => holder.deps)
+    flows.addCamera()
+    expect(depsA.addCamera).toHaveBeenCalledTimes(1)
+    expect(depsB.addCamera).not.toHaveBeenCalled()
+    // 模拟 App 侧依赖换代(activeCamera 切换级联重建 placePresetPath 等)
+    holder.deps = depsB
+    flows.addCamera()
+    expect(depsB.addCamera).toHaveBeenCalledTimes(1)
+    // 第一组不再被追加调用——句柄转发的是最新实现,无陈旧闭包
+    expect(depsA.addCamera).toHaveBeenCalledTimes(1)
   })
 })
 

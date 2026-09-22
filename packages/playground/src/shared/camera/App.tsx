@@ -131,7 +131,7 @@ import {
   setHostFlowsHandle,
   setPlacingSnapshot,
 } from './hostFlows'
-import type {CameraFlows} from './hostFlows'
+import type {CameraFlows, HostFlowDeps} from './hostFlows'
 import {importModelFile} from './assetLibrary/importModelFile'
 
 document.body.style.backgroundColor = '#171717'
@@ -1457,25 +1457,23 @@ function App({
   // 在选择框里调 startPlacingModel(点选)/ placeModelAt + dropPointFromClient(拖拽)。
   // 必须放在 return 之前:placePresetPath 等在组件体内更靠前定义,
   // 放解构处会触发暂时性死区。
+  // latest-ref:规格要求句柄整个场景生命周期稳定、一次性交付。deps 直接
+  // 进 useMemo 依赖链时,activeCamera 切换会经 pathPresetHeight →
+  // placePresetPath 级联重建 flows、重发 onFlows;改成 ref 每次渲染刷新、
+  // 句柄方法调用时才取最新 deps,useMemo([]) 只组装一次,无陈旧闭包。
+  const hostFlowDepsRef = useRef<HostFlowDeps | null>(null)
+  hostFlowDepsRef.current = {
+    startPlacingFromLibrary,
+    placeLibraryEntryAt,
+    placePresetPath,
+    addCamera,
+    addAnchor,
+    cancelPlacing,
+    importModel: importModelFile,
+  }
   const flows = useMemo(
-    () =>
-      createHostFlows({
-        startPlacingFromLibrary,
-        placeLibraryEntryAt,
-        placePresetPath,
-        addCamera,
-        addAnchor,
-        cancelPlacing,
-        importModel: importModelFile,
-      }),
-    [
-      startPlacingFromLibrary,
-      placeLibraryEntryAt,
-      placePresetPath,
-      addCamera,
-      addAnchor,
-      cancelPlacing,
-    ],
+    () => createHostFlows(() => hostFlowDepsRef.current!),
+    [],
   )
   useEffect(() => {
     setPlacingSnapshot(placing)

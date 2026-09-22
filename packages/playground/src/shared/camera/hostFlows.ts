@@ -94,7 +94,13 @@ export function dropPointFromClient(
 }
 
 // ── 句柄组装与按钮分流 ──────────────────────────────────────
-/** App 用既有函数注入组装 CameraFlows;纯转发,可单测。 */
+/**
+ * App 用既有函数注入组装 CameraFlows;纯转发,可单测。
+ * 注入改为 getDeps 惰性取数:句柄生命周期内 App 侧的依赖函数可能换代
+ * (如 activeCamera 切换经 pathPresetHeight 级联重建 placePresetPath),
+ * 各方法在调用时才执行 getDeps() 取最新 deps 转发,不缓存——保证
+ * createHostFlows([]) 一次组装的句柄永远调最新实现,无陈旧闭包。
+ */
 export type HostFlowDeps = {
   startPlacingFromLibrary: (entry: ModelEntry) => Promise<void>
   placeLibraryEntryAt: (entry: ModelEntry, point: Vec3) => void
@@ -104,15 +110,15 @@ export type HostFlowDeps = {
   cancelPlacing: () => void
   importModel: (file: File) => Promise<ModelEntry>
 }
-export function createHostFlows(deps: HostFlowDeps): CameraFlows {
+export function createHostFlows(getDeps: () => HostFlowDeps): CameraFlows {
   return {
-    startPlacingModel: (entry) => deps.startPlacingFromLibrary(entry),
-    placeModelAt: (entry, point) => deps.placeLibraryEntryAt(entry, point),
-    addPresetPath: (preset, at) => deps.placePresetPath(preset, at),
-    addCamera: () => deps.addCamera(),
-    addAnchor: () => deps.addAnchor(),
-    cancelPlacing: () => deps.cancelPlacing(),
-    importModel: (file) => deps.importModel(file),
+    startPlacingModel: (entry) => getDeps().startPlacingFromLibrary(entry),
+    placeModelAt: (entry, point) => getDeps().placeLibraryEntryAt(entry, point),
+    addPresetPath: (preset, at) => getDeps().placePresetPath(preset, at),
+    addCamera: () => getDeps().addCamera(),
+    addAnchor: () => getDeps().addAnchor(),
+    cancelPlacing: () => getDeps().cancelPlacing(),
+    importModel: (file) => getDeps().importModel(file),
     dropPointFromClient,
   }
 }
