@@ -57,3 +57,38 @@ export function subscribePlacing(l: () => void): () => void {
 export function usePlacing(): PlacingState | null {
   return useSyncExternalStore(subscribePlacing, getPlacingSnapshot)
 }
+
+// ── 落点换算 ────────────────────────────────────────────────
+// 场景内(HostFlowsDropPointCapture,App 的 Canvas 子树)把 gl/camera
+// 捕获进来;宿主 dragover/drop 事件里的 clientX/clientY 直接喂给
+// dropPointFromClient,规则与放置幽灵一致(表面优先、地面兜底)。
+import {Raycaster} from 'three'
+import type {Camera} from 'three'
+import {computeDropPoint} from './dropPoint'
+import {getPlacementSurfaces} from './PlacementManager'
+
+export type DropPointContext = {
+  gl: {domElement: HTMLElement}
+  camera: Camera
+}
+let dropCtx: DropPointContext | null = null
+export function setDropPointContext(ctx: DropPointContext | null): void {
+  dropCtx = ctx
+}
+export function dropPointFromClient(
+  clientX: number,
+  clientY: number,
+): Vec3 | null {
+  if (!dropCtx) return null
+  const {gl, camera} = dropCtx
+  const rect = gl.domElement.getBoundingClientRect()
+  const p = computeDropPoint(
+    new Raycaster(),
+    camera,
+    getPlacementSurfaces(),
+    rect,
+    clientX,
+    clientY,
+  )
+  return {x: p.x, y: p.y, z: p.z}
+}
