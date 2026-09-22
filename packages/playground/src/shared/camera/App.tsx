@@ -124,6 +124,15 @@ import {
   setCameraOutlineMenuCtx,
 } from './outlineObjectMenu'
 import {pruneObjectFromOutlineCollections} from '@dreamerbird/studio/panels/OutlinePanel/outlineOps/stateOps'
+import {
+  createHostFlows,
+  pickerToggleHandler,
+  setDropPointContext,
+  setHostFlowsHandle,
+  setPlacingSnapshot,
+} from './hostFlows'
+import type {CameraFlows} from './hostFlows'
+import {importModelFile} from './assetLibrary/importModelFile'
 
 document.body.style.backgroundColor = '#171717'
 
@@ -604,7 +613,18 @@ function GroundGrid() {
   )
 }
 
-function App() {
+function App({
+  onFlows,
+  onOpenModelPicker,
+  onOpenPathPicker,
+}: {
+  /** 场景 mount 后一次性交付能力句柄;句柄生命周期内稳定 */
+  onFlows?: (flows: CameraFlows) => void
+  /** 点了顶栏"添加模型"按钮;不传 = 打开内置模型框体(现状) */
+  onOpenModelPicker?: () => void
+  /** 点了顶栏"添加路径"按钮;不传 = 打开内置路径框体(现状) */
+  onOpenPathPicker?: () => void
+} = {}) {
   const t = useT()
   const cameraTargetRef = useRef<Mesh>(null!)
   const cameraObjRef = useRef<ISheetObject<any> | undefined>(undefined)
@@ -1432,6 +1452,43 @@ function App() {
     selectedPlacementInstance !== undefined &&
     rigIdOf(selectedPlacementInstance) !== 'static'
 
+  // ── 宿主能力句柄(规格:host-picker-integration)────────────
+  // 纯转发既有函数;宿主注入自己的选择框后,经 onFlows 拿到句柄,
+  // 在选择框里调 startPlacingModel(点选)/ placeModelAt + dropPointFromClient(拖拽)。
+  // 必须放在 return 之前:placePresetPath 等在组件体内更靠前定义,
+  // 放解构处会触发暂时性死区。
+  const flows = useMemo(
+    () =>
+      createHostFlows({
+        startPlacingFromLibrary,
+        placeLibraryEntryAt,
+        placePresetPath,
+        addCamera,
+        addAnchor,
+        cancelPlacing,
+        importModel: importModelFile,
+      }),
+    [
+      startPlacingFromLibrary,
+      placeLibraryEntryAt,
+      placePresetPath,
+      addCamera,
+      addAnchor,
+      cancelPlacing,
+    ],
+  )
+  useEffect(() => {
+    setPlacingSnapshot(placing)
+  }, [placing])
+  const handleToggleModel = useMemo(
+    () => pickerToggleHandler(onOpenModelPicker, toggleFrame, 'model'),
+    [onOpenModelPicker, toggleFrame],
+  )
+  const handleTogglePath = useMemo(
+    () => pickerToggleHandler(onOpenPathPicker, toggleFrame, 'path'),
+    [onOpenPathPicker, toggleFrame],
+  )
+
   return (
     <div
       style={{
@@ -1439,9 +1496,10 @@ function App() {
         position: 'relative',
       }}
     >
+      <HostFlowsWiring flows={flows} onFlows={onFlows} />
       <TopToolbar
-        onToggleModelLibrary={() => toggleFrame('model')}
-        onTogglePathLibrary={() => toggleFrame('path')}
+        onToggleModelLibrary={handleToggleModel}
+        onTogglePathLibrary={handleTogglePath}
         onAddCamera={addCamera}
         onAddAnchor={addAnchor}
         exportSinks={exportSinks}
@@ -1519,7 +1577,7 @@ function App() {
           镜头视角 · Esc 返回导演视角
         </div>
       )}
-      {frameOpen.model && (
+      {!onOpenModelPicker && frameOpen.model && (
         <AssetLibraryPanel
           kind="model"
           onPlaceModel={placeModelAtDefault}
@@ -1528,7 +1586,7 @@ function App() {
           onClose={() => closeFrame('model')}
         />
       )}
-      {frameOpen.path && (
+      {!onOpenPathPicker && frameOpen.path && (
         <AssetLibraryPanel
           kind="path"
           onPlacePreset={(preset: PathPreset) => placePresetPath(preset)}
@@ -1696,6 +1754,7 @@ function App() {
         }}
       >
         <SheetProvider sheet={sheet}>
+          <HostFlowsDropPointCapture />
           <MainOrbitControls
             targetRef={cameraTargetRef}
             cameraObjRef={cameraObjRef}
@@ -1897,6 +1956,36 @@ function ExitPathEditOnEmptyClick({
       gl.domElement.removeEventListener('click', onClick)
     }
   }, [gl, camera, scene, isEditing, onExit])
+  return null
+}
+
+/**
+ * 宿主拖拽落点的上下文捕获:把 gl/camera 塞进 hostFlows 模块,
+ * 宿主 dropPointFromClient 闭包读取。挂 Canvas 子树,卸载即清。
+ */
+function HostFlowsDropPointCapture() {
+  const gl = useThree((s) => s.gl)
+  const camera = useThree((s) => s.camera)
+  useEffect(() => {
+    setDropPointContext({gl, camera})
+    return () => setDropPointContext(null)
+  }, [gl, camera])
+  return null
+}
+
+/** 句柄交付/清理独立成组件,便于脱离整树做单测。 */
+export function HostFlowsWiring({
+  flows,
+  onFlows,
+}: {
+  flows: CameraFlows
+  onFlows?: (f: CameraFlows) => void
+}) {
+  useEffect(() => {
+    setHostFlowsHandle(flows)
+    onFlows?.(flows)
+    return () => setHostFlowsHandle(null)
+  }, [flows, onFlows])
   return null
 }
 
