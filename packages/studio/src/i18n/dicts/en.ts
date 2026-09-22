@@ -30,6 +30,5 @@ export const en: Messages = {
   'outline.ctx.moveToCollection': 'Move to collection: {name}',
   'outline.ctx.removeFromCollection': 'Remove from collection',
   'outline.ctx.deleteCollection': 'Delete collection',
-  'outline.ctx.collectionNamePlaceholder': 'Collection name',
   'outline.ctx.defaultCollectionName': 'Collection {n}',
 }

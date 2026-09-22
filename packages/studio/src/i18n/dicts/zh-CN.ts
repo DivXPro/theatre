@@ -27,6 +27,5 @@ export const zhCN: Messages = {
   'outline.ctx.moveToCollection': '移到集合:{name}',
   'outline.ctx.removeFromCollection': '从集合移出',
   'outline.ctx.deleteCollection': '删除集合',
-  'outline.ctx.collectionNamePlaceholder': '集合名称',
   'outline.ctx.defaultCollectionName': '集合 {n}',
 }

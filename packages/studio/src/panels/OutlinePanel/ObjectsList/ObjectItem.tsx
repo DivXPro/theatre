@@ -4,7 +4,6 @@ import React from 'react'
 import BaseItem from '@dreamerbird/studio/panels/OutlinePanel/BaseItem'
 import {useVal} from '@dreamerbird/react'
 import {outlineSelection} from '@dreamerbird/studio/selectors'
-import {translate} from '@dreamerbird/studio/i18n'
 import {useOutlineObjectMenu} from '@dreamerbird/studio/panels/OutlinePanel/outlineOps/useOutlineObjectMenu'
 
 export const ObjectItem: React.FC<{
@@ -36,10 +35,6 @@ export const ObjectItem: React.FC<{
       }
       rename={{
         editing: editingMode !== null,
-        placeholder:
-          editingMode === 'newCollection'
-            ? translate('outline.ctx.collectionNamePlaceholder')
-            : undefined,
         onSubmit: submitEditing,
         onCancel: cancelEditing,
       }}

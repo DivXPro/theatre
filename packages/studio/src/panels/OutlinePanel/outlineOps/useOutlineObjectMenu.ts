@@ -32,6 +32,7 @@ import {
   removeObjectFromCollection,
   setObjectDisplayName,
 } from './stateOps'
+import {setPendingCollectionRename} from './pendingCollectionRename'
 
 /**
  * 对象行的右键菜单 + 显示名 + 行内编辑态。
@@ -42,7 +43,7 @@ import {
 export function useOutlineObjectMenu(sheetObject: SheetObject): {
   targetRef: MutableRefObject<$FixMe>
   displayName: string | undefined
-  editingMode: null | 'name' | 'newCollection'
+  editingMode: null | 'name'
   submitEditing(value: string): void
   cancelEditing(): void
 } {
@@ -55,9 +56,7 @@ export function useOutlineObjectMenu(sheetObject: SheetObject): {
       .outlineNamesByObjectAddress[addressKey],
   )
 
-  const [editingMode, setEditingMode] = useState<
-    null | 'name' | 'newCollection'
-  >(null)
+  const [editingMode, setEditingMode] = useState<null | 'name'>(null)
 
   const optsFn = useCallback((): ChordialOpts => {
     const extensionsById = val(
@@ -116,7 +115,29 @@ export function useOutlineObjectMenu(sheetObject: SheetObject): {
             )
           }
         },
-        onStartNewCollection: () => setEditingMode('newCollection'),
+        onStartNewCollection: () => {
+          // 立即建空集合(默认名),名字输入发生在集合行自己挂载时
+          // (pendingCollectionRename 登记认领),不在对象行输入
+          const allCollections =
+            val(
+              getStudio().atomP.historic.projects.stateByProjectId[projectId]
+                .outlineCollections,
+            ) ?? []
+          const collections = collectionsOfSheet(
+            allCollections,
+            address.sheetId,
+            address.sheetInstanceId,
+          )
+          const id = generateNonSecure(10)
+          createEmptyCollection(
+            projectId,
+            address.sheetId,
+            address.sheetInstanceId,
+            id,
+            nextDefaultCollectionName(collections, translate),
+          )
+          setPendingCollectionRename(id)
+        },
       },
     })
     return {title: `Object: ${address.objectKey}`, items}
@@ -128,33 +149,10 @@ export function useOutlineObjectMenu(sheetObject: SheetObject): {
     (value: string) => {
       if (editingMode === 'name') {
         setObjectDisplayName(projectId, addressKey, value)
-      } else if (editingMode === 'newCollection') {
-        // 顶层空集合,不吸纳触发它的对象(与空白处菜单同行为)
-        const allCollections =
-          val(
-            getStudio().atomP.historic.projects.stateByProjectId[projectId]
-              .outlineCollections,
-          ) ?? []
-        const collections = collectionsOfSheet(
-          allCollections,
-          address.sheetId,
-          address.sheetInstanceId,
-        )
-        const name =
-          value.trim() !== ''
-            ? value
-            : nextDefaultCollectionName(collections, translate)
-        createEmptyCollection(
-          projectId,
-          address.sheetId,
-          address.sheetInstanceId,
-          generateNonSecure(10),
-          name,
-        )
       }
       setEditingMode(null)
     },
-    [editingMode, projectId, addressKey, address.objectKey],
+    [editingMode, projectId, addressKey],
   )
 
   return {

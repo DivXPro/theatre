@@ -257,10 +257,6 @@ const MergedObjectItem: React.FC<{
       setIsCollapsed={setIsCollapsed}
       rename={{
         editing: editingMode !== null,
-        placeholder:
-          editingMode === 'newCollection'
-            ? translate('outline.ctx.collectionNamePlaceholder')
-            : undefined,
         onSubmit: submitEditing,
         onCancel: cancelEditing,
       }}

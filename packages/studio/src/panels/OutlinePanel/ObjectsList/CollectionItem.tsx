@@ -1,4 +1,4 @@
-import React, {useState} from 'react'
+import React, {useEffect, useState} from 'react'
 import {useVal} from '@dreamerbird/react'
 import type Sheet from '@dreamerbird/core/sheets/Sheet'
 import type {OutlineCollectionState} from '@dreamerbird/core/types/private/studio'
@@ -14,6 +14,7 @@ import {
   deleteCollection,
   renameCollection,
 } from '@dreamerbird/studio/panels/OutlinePanel/outlineOps/stateOps'
+import {takePendingCollectionRename} from '@dreamerbird/studio/panels/OutlinePanel/outlineOps/pendingCollectionRename'
 import {collectionsOfSheet} from '@dreamerbird/studio/panels/OutlinePanel/outlineOps/collectOutlineMenuItems'
 
 /**
@@ -34,6 +35,12 @@ export const CollectionItem: React.FC<{
     id: collection.id,
   })
   const [editing, setEditing] = useState(false)
+
+  // 新建集合后在此处直接进改名输入态:创建动作登记了待改名 id,
+  // 认领即清,只生效一次
+  useEffect(() => {
+    if (takePendingCollectionRename(collection.id)) setEditing(true)
+  }, [collection.id])
 
   const allCollections =
     useVal(
@@ -82,7 +89,10 @@ export const CollectionItem: React.FC<{
       rename={{
         editing,
         onSubmit: (name) => {
-          renameCollection(projectId, collection.id, name)
+          // 空白名保持现状:避免造出无名集合
+          const trimmed = name.trim()
+          if (trimmed !== '')
+            renameCollection(projectId, collection.id, trimmed)
           setEditing(false)
         },
         onCancel: () => setEditing(false),
