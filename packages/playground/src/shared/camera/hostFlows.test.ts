@@ -9,17 +9,21 @@ import {act} from 'react-dom/test-utils'
 import ReactDOM from 'react-dom/client'
 import React from 'react'
 import {PerspectiveCamera} from 'three'
+import type {ModelEntry} from './assetLibrary/types'
 import type {PlacingState} from './PlacementManager'
 import {
+  createHostFlows,
   dropPointFromClient,
   getHostFlowsHandle,
   getPlacingSnapshot,
+  pickerToggleHandler,
   setDropPointContext,
   setHostFlowsHandle,
   setPlacingSnapshot,
   subscribePlacing,
   usePlacing,
 } from './hostFlows'
+import type {HostFlowDeps} from './hostFlows'
 
 const placingA: PlacingState = {
   url: 'blob:a',
@@ -132,5 +136,66 @@ describe('dropPointFromClient', () => {
     })
     setDropPointContext(null)
     expect(dropPointFromClient(50, 50)).toBeNull()
+  })
+})
+
+function makeDeps(): HostFlowDeps & Record<string, jest.Mock> {
+  return {
+    startPlacingFromLibrary: jest.fn(async () => undefined),
+    placeLibraryEntryAt: jest.fn(),
+    placePresetPath: jest.fn(),
+    addCamera: jest.fn(),
+    addAnchor: jest.fn(),
+    cancelPlacing: jest.fn(),
+    importModel: jest.fn(async () => ({id: 'm1'}) as unknown as ModelEntry),
+  }
+}
+const entry = {id: 'e1', name: 'A'} as unknown as ModelEntry
+const preset = {id: 'p1'} as never
+
+describe('createHostFlows', () => {
+  it('七个动作逐一转发到注入的 deps,dropPointFromClient 挂上模块实现', async () => {
+    const deps = makeDeps()
+    const flows = createHostFlows(deps)
+    await flows.startPlacingModel(entry)
+    expect(deps.startPlacingFromLibrary).toHaveBeenCalledWith(entry)
+    flows.placeModelAt(entry, {x: 1, y: 2, z: 3})
+    expect(deps.placeLibraryEntryAt).toHaveBeenCalledWith(entry, {
+      x: 1,
+      y: 2,
+      z: 3,
+    })
+    flows.addPresetPath(preset, {x: 0, y: 5, z: 0})
+    expect(deps.placePresetPath).toHaveBeenCalledWith(preset, {
+      x: 0,
+      y: 5,
+      z: 0,
+    })
+    flows.addCamera()
+    expect(deps.addCamera).toHaveBeenCalled()
+    flows.addAnchor()
+    expect(deps.addAnchor).toHaveBeenCalled()
+    flows.cancelPlacing()
+    expect(deps.cancelPlacing).toHaveBeenCalled()
+    const file = new File(['x'], 'm.fbx')
+    await flows.importModel(file)
+    expect(deps.importModel).toHaveBeenCalledWith(file)
+    // 未设 dropPoint 上下文时按模块实现返 null
+    expect(flows.dropPointFromClient(0, 0)).toBeNull()
+  })
+})
+
+describe('pickerToggleHandler', () => {
+  it('宿主回调存在时只调宿主回调,toggleFrame 不执行', () => {
+    const hostCb = jest.fn()
+    const toggleFrame = jest.fn()
+    pickerToggleHandler(hostCb, toggleFrame, 'model')()
+    expect(hostCb).toHaveBeenCalledTimes(1)
+    expect(toggleFrame).not.toHaveBeenCalled()
+  })
+  it('宿主回调缺省时走 toggleFrame(kind)', () => {
+    const toggleFrame = jest.fn()
+    pickerToggleHandler(undefined, toggleFrame, 'path')()
+    expect(toggleFrame).toHaveBeenCalledWith('path')
   })
 })

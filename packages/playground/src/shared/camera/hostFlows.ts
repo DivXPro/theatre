@@ -92,3 +92,39 @@ export function dropPointFromClient(
   )
   return {x: p.x, y: p.y, z: p.z}
 }
+
+// ── 句柄组装与按钮分流 ──────────────────────────────────────
+/** App 用既有函数注入组装 CameraFlows;纯转发,可单测。 */
+export type HostFlowDeps = {
+  startPlacingFromLibrary: (entry: ModelEntry) => Promise<void>
+  placeLibraryEntryAt: (entry: ModelEntry, point: Vec3) => void
+  placePresetPath: (preset: PathPreset, at?: Vec3) => void
+  addCamera: () => void
+  addAnchor: () => void
+  cancelPlacing: () => void
+  importModel: (file: File) => Promise<ModelEntry>
+}
+export function createHostFlows(deps: HostFlowDeps): CameraFlows {
+  return {
+    startPlacingModel: (entry) => deps.startPlacingFromLibrary(entry),
+    placeModelAt: (entry, point) => deps.placeLibraryEntryAt(entry, point),
+    addPresetPath: (preset, at) => deps.placePresetPath(preset, at),
+    addCamera: () => deps.addCamera(),
+    addAnchor: () => deps.addAnchor(),
+    cancelPlacing: () => deps.cancelPlacing(),
+    importModel: (file) => deps.importModel(file),
+    dropPointFromClient,
+  }
+}
+
+/** 顶栏按钮分流:宿主接了选择框就只通知宿主,否则开内置框体(现状)。 */
+export function pickerToggleHandler(
+  hostCb: (() => void) | undefined,
+  toggleFrame: (kind: 'model' | 'path') => void,
+  kind: 'model' | 'path',
+): () => void {
+  return () => {
+    if (hostCb) hostCb()
+    else toggleFrame(kind)
+  }
+}
