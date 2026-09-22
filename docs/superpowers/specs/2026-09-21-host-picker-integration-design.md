@@ -83,9 +83,11 @@ type CameraFlows = {
 }
 ```
 
-`ModelEntry` 复用资产库现有类型;宿主模型不进内置库时,补一个薄工厂
-`makeExternalModelEntry(ref: {url: string; name: string; rig?: string}): ModelEntry`
-(占位条目,放置管线只依赖 url/名称,rig 用于骨架姿势匹配,可选)。
+`ModelEntry` 复用资产库现有类型。宿主模型不进内置库时,用句柄的
+`importModel(file: File): Promise<ModelEntry>` 走**既有导入管线**
+(planImport/executeImport)入库后拿到正式条目——放置管线只认库条目
+(按 id 从注册表解析 blob),该路径零新行为,姿势/骨架匹配/持久化全部
+照常工作。宿主侧用法:`fetch(url)` → `new File(...)` → `importModel`。
 
 ### 3. 响应式:placing 状态用 hook 读
 
