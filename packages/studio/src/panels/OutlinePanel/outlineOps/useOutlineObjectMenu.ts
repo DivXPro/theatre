@@ -26,7 +26,7 @@ import {
   nextDefaultCollectionName,
 } from './collectOutlineMenuItems'
 import {
-  createCollectionAndAddMember,
+  createEmptyCollection,
   deleteOutlineObject,
   moveObjectToCollection,
   removeObjectFromCollection,
@@ -129,6 +129,7 @@ export function useOutlineObjectMenu(sheetObject: SheetObject): {
       if (editingMode === 'name') {
         setObjectDisplayName(projectId, addressKey, value)
       } else if (editingMode === 'newCollection') {
+        // 顶层空集合,不吸纳触发它的对象(与空白处菜单同行为)
         const allCollections =
           val(
             getStudio().atomP.historic.projects.stateByProjectId[projectId]
@@ -143,13 +144,12 @@ export function useOutlineObjectMenu(sheetObject: SheetObject): {
           value.trim() !== ''
             ? value
             : nextDefaultCollectionName(collections, translate)
-        createCollectionAndAddMember(
+        createEmptyCollection(
           projectId,
           address.sheetId,
           address.sheetInstanceId,
           generateNonSecure(10),
           name,
-          address.objectKey,
         )
       }
       setEditingMode(null)

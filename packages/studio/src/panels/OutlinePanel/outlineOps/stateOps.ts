@@ -19,29 +19,6 @@ export function setObjectDisplayName(
   })
 }
 
-/** 一步事务:建集合并把对象移入(单条撤销记录);集合挂 sheet 维度(spec §4) */
-export function createCollectionAndAddMember(
-  projectId: ProjectId,
-  sheetId: SheetId,
-  sheetInstanceId: SheetInstanceId,
-  id: string,
-  name: string,
-  objectKey: string,
-): void {
-  getStudio().transaction(({stateEditors}) => {
-    const outline =
-      stateEditors.studio.historic.projects.stateByProjectId.outline
-    outline.addCollection({projectId, sheetId, sheetInstanceId, id, name})
-    outline.addCollectionMember({
-      projectId,
-      sheetId,
-      sheetInstanceId,
-      collectionId: id,
-      objectKey,
-    })
-  })
-}
-
 export function createEmptyCollection(
   projectId: ProjectId,
   sheetId: SheetId,
