@@ -25,6 +25,8 @@ import {anyControlDragging} from './dragState'
 import {stringifyPoseOverride} from './poseOverride'
 import {
   clearPoseSession,
+  isPoseDirty,
+  markPoseDirty,
   onPoseExitRequested,
   setPoseHitTester,
 } from './poseSession'
@@ -134,8 +136,10 @@ export function PoseModeRig({
       if (key !== placementKey) return
       const studio = getStudioSync()
       // 脏检查:没拖过控制点就不提交(threeIK 首解有微小漂移,
-      // 空进空出写回会产生幻影撤销步;语义对齐 modalGrab 的 moved)
-      if (studio && dirtyRef.current) {
+      // 空进空出写回会产生幻影撤销步;语义对齐 modalGrab 的 moved)。
+      // 双通道或:dirtyRef 由 isDragging 轮询记(帧间隙完整的拖动),
+      // isPoseDirty 由 pointerdown 事件记(同帧间隙的按下-拖-松,轮询漏检)
+      if (studio && (dirtyRef.current || isPoseDirty())) {
         const bones = capturePose(instance)
         const scrub = studio.scrub()
         scrub.capture(({set}) => {
@@ -176,6 +180,7 @@ export function PoseModeRig({
   useEffect(() => {
     const dom = gl.domElement
     const down = () => {
+      markPoseDirty() // 按下即记脏:isDragging 轮询会漏同帧间隙的按下-拖-松
       pressingRef.current = true
       invalidate()
     }

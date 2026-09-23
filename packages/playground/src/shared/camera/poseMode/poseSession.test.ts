@@ -10,6 +10,8 @@ import {
   isModelDoubleClick,
   setPoseHitTester,
   poseHitTest,
+  markPoseDirty,
+  isPoseDirty,
 } from './poseSession'
 
 beforeEach(() => {
@@ -84,4 +86,24 @@ test('命中测试:注册后代理调用,null 时恒 false', () => {
   expect(poseHitTest({clientX: 1, clientY: 2})).toBe(true)
   setPoseHitTester(null)
   expect(poseHitTest({clientX: 1, clientY: 2})).toBe(false)
+})
+
+test('markPoseDirty 与 isDragging 轮询双通道或语义:任一通道记脏即提交', () => {
+  // 同帧间隙拖动(帧没跑,isDragging 轮询漏检)由按下事件兜底记脏
+  enterPoseSession('k')
+  expect(isPoseDirty()).toBe(false)
+  markPoseDirty() // pointerdown 监听在帧外调用
+  expect(isPoseDirty()).toBe(true)
+  // 门控读后照常清理
+  clearPoseSession()
+  expect(isPoseDirty()).toBe(false)
+})
+
+test('脏标记随 clearPoseSession 清零(requestPoseExit 兜底清理同样生效)', () => {
+  enterPoseSession('k')
+  markPoseDirty()
+  expect(isPoseDirty()).toBe(true)
+  requestPoseExit() // 无监听者,模块兜底 clearPoseSession
+  expect(getPoseSession()).toBeNull()
+  expect(isPoseDirty()).toBe(false)
 })

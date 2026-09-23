@@ -55,9 +55,29 @@ export function enterPoseSession(key: string): void {
   emitChange()
 }
 
+// —— 退出提交的脏标记 ——
+
+/** 会话脏标记:用户在会话里按下过指针(可能拖了控制点)即为脏。
+ *  退出提交门控读它:空进空出不写 poseOverride、不产生幻影撤销步
+ *  (对齐 modalGrab 的 moved 语义)。
+ *  threeIK 的 isDragging 只能覆盖完整帧间隙的拖动;同帧间隙内按下-拖-松
+ *  (帧没跑、骨骼没动)也会被这里的按下事件记脏——多提交无害,漏提交才是 bug。 */
+let poseDirty = false
+
+/** PoseModeRig 的 canvas pointerdown 监听调用:按下即记脏(见上) */
+export function markPoseDirty(): void {
+  poseDirty = true
+}
+
+/** 退出提交门控读;clearPoseSession 时已随会话清零 */
+export function isPoseDirty(): boolean {
+  return poseDirty
+}
+
 export function clearPoseSession(): void {
   if (!session) return
   session = null
+  poseDirty = false
   emitChange()
 }
 
