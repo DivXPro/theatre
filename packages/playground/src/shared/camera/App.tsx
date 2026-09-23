@@ -1388,6 +1388,8 @@ function App({
       const scrub = studio.scrub()
       scrub.capture(({set}) => {
         set(selectedPlacement.props.pose, poseEntry.id)
+        // 应用库姿势 = 明确覆盖手工摆的,清掉内联 override
+        set(selectedPlacement.props.poseOverride as any, '')
       })
       scrub.commit()
     },

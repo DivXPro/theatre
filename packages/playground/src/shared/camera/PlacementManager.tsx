@@ -33,6 +33,7 @@ import {
 import {useModalGrab} from './modalGrab'
 import {disposeObjectTree} from './assetLibrary/dispose'
 import {applyPose, captureBindPose} from './assetLibrary/pose'
+import {effectivePoseBones} from './poseMode/poseOverride'
 import type {ModelEntry, PoseEntry} from './assetLibrary/types'
 
 /**
@@ -1063,6 +1064,10 @@ function PlacedModelCore({
     const props: Record<string, any> = {
       animation: literalConfigFor('animation', modelEntryId),
       pose: literalConfigFor('pose', modelEntryId),
+      // 摆姿势的内联产物(JSON 字符串);label 函数形式,i18n 热切换对齐既有写法
+      poseOverride: t.string('', {
+        label: () => translate('pg.props.poseOverride'),
+      }),
     }
     if (sourceType === 'local' && entry.assetId) {
       props.source = fileConfigFor(entry.assetId)
@@ -1129,6 +1134,7 @@ function PlacedModelCore({
   }, [instance])
   const animationId = useVal(sheetObject?.props.animation) ?? ''
   const poseId = useVal(sheetObject?.props.pose) ?? ''
+  const poseOverrideJson = useVal(sheetObject?.props.poseOverride) ?? ''
   const [clip, setClip] = useState<AnimationClip | null>(null)
   const [poseBones, setPoseBones] = useState<PoseEntry['bones'] | null>(null)
   const currentActionRef = useRef<AnimationAction | null>(null)
@@ -1264,17 +1270,23 @@ function PlacedModelCore({
       if (playing) {
         invalidate()
       } else {
-        applyPose(instance, poseBones ?? bindPoseRef.current)
+        applyPose(
+          instance,
+          effectivePoseBones(poseOverrideJson, poseBones, bindPoseRef.current),
+        )
         invalidate()
       }
     })
-  }, [sheet, invalidate, instance, poseBones])
+  }, [sheet, invalidate, instance, poseBones, poseOverrideJson])
   // pose 数据变化且当前未播放时立即应用,覆盖 poseId 切换与撤销/重做路径
   useEffect(() => {
     if (val(sheet.sequence.pointer.playing)) return
-    applyPose(instance, poseBones ?? bindPoseRef.current)
+    applyPose(
+      instance,
+      effectivePoseBones(poseOverrideJson, poseBones, bindPoseRef.current),
+    )
     invalidate()
-  }, [instance, poseBones, invalidate, sheet])
+  }, [instance, poseBones, poseOverrideJson, invalidate, sheet])
   useFrame((_, delta) => {
     if (!val(sheet.sequence.pointer.playing)) return
     mixer.update(delta)
