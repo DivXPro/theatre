@@ -68,14 +68,6 @@ export function PoseModeRig({
       camera,
       dom: gl.domElement,
       controls: spec,
-      // 展开传:当前 @dreamerbird/threeik 0.0.1 的类型/运行时都还没有这两个
-      // 选项(README 的 W/E 走 ctl.setManipulatorMode,库本身不监听键盘),
-      // 对象字面量直传会撞 TS 多余属性检查;运行时被忽略,留作前向兼容。
-      // Esc 天然留给 App 退出会话(threeik 不监听 Esc)。
-      ...{
-        hotkeys: {move: ['w'], rotate: ['e'], deselect: []},
-        onManipulatorModeChange: () => invalidate(),
-      },
       dragControl: {
         lock: () => {
           if (orbitControls) orbitControls.enabled = false
@@ -86,6 +78,25 @@ export function PoseModeRig({
       },
     })
     ctlRef.current = ctl
+
+    // threeIK 0.0.1 无内置热键:自监听 W/E 切操纵器模式(仿 useGizmoMode 风格)。
+    // Esc 未被监听,天然留给 App 退出会话。
+    const onKey = (ev: KeyboardEvent) => {
+      if (ev.repeat) return
+      const target = ev.target as HTMLElement | null
+      if (
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable)
+      )
+        return
+      if (ev.code === 'KeyW') ctl.setManipulatorMode('move')
+      else if (ev.code === 'KeyE') ctl.setManipulatorMode('rotate')
+      else return
+      invalidate() // demand 帧循环:无指针按下时补帧,环/箭头立刻可见
+    }
+    window.addEventListener('keydown', onKey)
 
     // 双击空白退出的命中测试:点在被摆模型或控制球上不算空白
     const raycaster = new Raycaster()
@@ -123,6 +134,7 @@ export function PoseModeRig({
     return () => {
       offExit()
       setPoseHitTester(null)
+      window.removeEventListener('keydown', onKey)
       ctl.dispose()
       ctlRef.current = null
       rigRef.current = null
