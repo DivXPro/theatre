@@ -5,7 +5,7 @@ import {
   GizmoHelper,
   GizmoViewport,
 } from '@react-three/drei'
-import {getProject, getStudioSync, val} from '@dreamerbird/core'
+import {getProject, getStudioSync, onChange, val} from '@dreamerbird/core'
 import {privateAPI} from '@dreamerbird/core/privateAPIs'
 import getDeep from '@dreamerbird/utils/getDeep'
 import {usePrism} from '@dreamerbird/react'
@@ -117,7 +117,7 @@ import {startShotExport} from './videoExport/exporter'
 import type {ShotExportHandle} from './videoExport/exporter'
 import type {AnimationEntry, ModelEntry, PoseEntry} from './assetLibrary/types'
 import {capturePose} from './assetLibrary/pose'
-import {rigIdOf} from './assetLibrary/rig'
+import {rigIdOf, collectBoneNames} from './assetLibrary/rig'
 import {
   cameraOutlineMenuExtensionId,
   cameraOutlineObjectMenu,
@@ -133,6 +133,15 @@ import {
 } from './hostFlows'
 import type {CameraFlows, HostFlowDeps} from './hostFlows'
 import {importModelFile} from './assetLibrary/importModelFile'
+import {resolveControlSpec} from './poseMode/controlSpec'
+import {
+  enterPoseSession,
+  getPoseSession,
+  isModelDoubleClick,
+  poseHitTest,
+  requestPoseExit,
+  usePoseSessionKey,
+} from './poseMode/poseSession'
 
 document.body.style.backgroundColor = '#171717'
 
@@ -919,6 +928,8 @@ function App({
     clearPending,
   } = usePlacementController(project, sheet)
   const [gizmoMode, setGizmoMode] = useGizmoMode()
+  // 正在摆姿势的 placementKey(无会话为 null):Esc/双击空白/播放自动退出都靠它
+  const poseSessionKey = usePoseSessionKey()
   // 资产库拆成四个独立框体,按使用需要弹出:模型/路径走顶栏按钮,
   // 姿势/动作走右键模型的菜单;框体不自动收起,各关各的
   type LibraryFrameKind = 'model' | 'pose' | 'animation' | 'path'
@@ -1339,6 +1350,38 @@ function App({
     return () => window.removeEventListener('keydown', onKey)
   }, [shotView, exporting])
 
+  // 姿势模式下 Esc 退出(提交);导出中/镜头视角的 Esc 语义优先,不抢
+  useEffect(() => {
+    if (!poseSessionKey || shotView || exporting) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') requestPoseExit()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [poseSessionKey, shotView, exporting])
+
+  // 双击空白退出姿势模式:落在模型上的双击由模型自己处理(进入/切换);
+  // 落在控制球/被摆模型上不算空白(poseHitTest);只认画布,UI 面板里的
+  // 双击不退出
+  useEffect(() => {
+    if (!poseSessionKey) return
+    const onDblClick = (e: MouseEvent) => {
+      if (!(e.target instanceof HTMLCanvasElement)) return
+      if (isModelDoubleClick(e.timeStamp)) return
+      if (poseHitTest(e)) return
+      requestPoseExit()
+    }
+    window.addEventListener('dblclick', onDblClick)
+    return () => window.removeEventListener('dblclick', onDblClick)
+  }, [poseSessionKey])
+
+  // 序列开始播放 = mixer 接管骨骼,姿势模式自动提交退出
+  useEffect(() => {
+    return onChange(sheet.sequence.pointer.playing, (playing) => {
+      if (playing && getPoseSession()) requestPoseExit()
+    })
+  }, [sheet])
+
   // 选中单个库来源模型时,异步查其 rig 给面板过滤动画
   useEffect(() => {
     let cancelled = false
@@ -1640,6 +1683,24 @@ function App({
                     onPlayAnimation: () => openFrame('animation'),
                   }
                 : {}),
+              // 摆姿势:有骨骼就显示;映射不出人形关键骨的置灰带原因
+              // (独立于 libraryEntryId:本地人形模型也能摆)
+              ...(() => {
+                const inst = selectedPlacement
+                  ? getPlacementInstanceForObject(selectedPlacement)
+                  : undefined
+                const entry = selectedPlacement
+                  ? getPlacementEntryForObject(selectedPlacement)
+                  : undefined
+                if (!inst || !entry || entry.key !== objectMenu.key) return {}
+                if (collectBoneNames(inst.instance).length === 0) return {}
+                const supported = resolveControlSpec(inst.instance) !== null
+                return {
+                  onPoseMode: () => enterPoseSession(objectMenu.key),
+                  poseModeEnabled: supported,
+                  poseModeHint: t('pg.menu.poseModeUnsupported'),
+                }
+              })(),
             },
             t,
           )}

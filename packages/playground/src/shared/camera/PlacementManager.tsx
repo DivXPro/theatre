@@ -35,7 +35,12 @@ import {disposeObjectTree} from './assetLibrary/dispose'
 import {applyPose, captureBindPose} from './assetLibrary/pose'
 import {effectivePoseBones} from './poseMode/poseOverride'
 import {PoseModeRig} from './poseMode/PoseModeRig'
-import {usePoseSessionKey} from './poseMode/poseSession'
+import {
+  enterPoseSession,
+  noteModelDoubleClick,
+  usePoseSessionKey,
+} from './poseMode/poseSession'
+import {resolveControlSpec} from './poseMode/controlSpec'
 import type {ModelEntry, PoseEntry} from './assetLibrary/types'
 
 /**
@@ -1122,6 +1127,20 @@ function PlacedModelCore({
     )
   }
 
+  // 双击已选中的人形模型进入姿势模式。第一件事记录 timeStamp:
+  // App 的"双击空白退出"靠它区分落在模型上的双击。
+  const enterPoseViaDoubleClick = (event: ThreeEvent<MouseEvent>) => {
+    noteModelDoubleClick(event.nativeEvent.timeStamp)
+    if (selectLocked || isSelectSuppressed()) return
+    const studio = getStudioSync()
+    if (!studio || !objRef.current) return
+    // 未选中不进:双击的第一击已由 selectSelf 选中,第二击这里自然满足
+    if (!studio.selection.includes(objRef.current)) return
+    if (!resolveControlSpec(instance)) return // 骨架不支持:静默不进
+    event.stopPropagation()
+    enterPoseSession(entry.key)
+  }
+
   // 骨架动画:加载结果按 URL 缓存,同一文件放多个会共享同一份骨架,
   // 互相打架(多个 <primitive> 挂同一个 Object3D 也只有最后一个能显示)。
   // 所以每个实例克隆一份(SkinnedMesh 安全),配独立的 AnimationMixer。
@@ -1337,6 +1356,7 @@ function PlacedModelCore({
       scale={scale}
       onClick={selectSelf}
       onContextMenu={openMenu}
+      onDoubleClick={enterPoseViaDoubleClick}
     >
       <primitive object={instance} position={[0, lift, 0]} />
       {sheetObject && poseSessionKey === entry.key && (

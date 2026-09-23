@@ -122,6 +122,55 @@ test('对象右键菜单:只传姿势回调时只有「改变姿势」一项', (
   expect(String((items[0] as any).label)).toContain('改变姿势')
 })
 
+test('摆姿势菜单项:提供 onPoseMode 时排在最前,可点击', () => {
+  const onPoseMode = jest.fn()
+  const items = buildObjectMenuItems(
+    {
+      mode: 'select',
+      onSelectMode: jest.fn(),
+      onDelete: jest.fn(),
+      onPoseMode,
+    },
+    t,
+  )
+  expect(String((items[0] as any).label)).toContain('摆姿势')
+  ;(items[0] as any).callback?.({} as any)
+  expect(onPoseMode).toHaveBeenCalled()
+})
+
+test('摆姿势菜单项:poseModeEnabled=false 时置灰且不可点', () => {
+  const onPoseMode = jest.fn()
+  const items = buildObjectMenuItems(
+    {
+      mode: 'select',
+      onSelectMode: jest.fn(),
+      onDelete: jest.fn(),
+      onPoseMode,
+      poseModeEnabled: false,
+      poseModeHint: '骨架不支持摆姿势',
+    },
+    t,
+  )
+  expect((items[0] as any).enabled).toBe(false)
+  expect((items[0] as any).callback).toBeUndefined()
+  expect(String((items[0] as any).label)).toContain('骨架不支持摆姿势')
+})
+
+test('摆姿势菜单项:与改变姿势共存时摆姿势在前', () => {
+  const items = buildObjectMenuItems(
+    {
+      mode: 'select',
+      onSelectMode: jest.fn(),
+      onDelete: jest.fn(),
+      onPoseMode: jest.fn(),
+      onChangePose: jest.fn(),
+    },
+    t,
+  )
+  expect(String((items[0] as any).label)).toContain('摆姿势')
+  expect(String((items[1] as any).label)).toContain('改变姿势')
+})
+
 test('导出菜单:每个 sink 一项,点击回传 sink', () => {
   const onPick = jest.fn()
   const sinks = [

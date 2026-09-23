@@ -79,6 +79,11 @@ export function buildObjectMenuItems(
     mode: GizmoMode
     onSelectMode: (mode: GizmoMode) => void
     onDelete: () => void
+    /** 提供时菜单顶部出「摆姿势」(双击已选人形模型的入口同款) */
+    onPoseMode?: () => void
+    /** 骨架不支持人形控制点映射时置灰(callback 不传,原因拼进 label) */
+    poseModeEnabled?: boolean
+    poseModeHint?: string
     /** 提供时菜单顶部出「改变姿势」(右键库来源模型时由 App 传入) */
     onChangePose?: () => void
     /** 提供时菜单顶部出「播放动作」 */
@@ -88,6 +93,18 @@ export function buildObjectMenuItems(
 ): ContextMenuItem[] {
   const modes: Array<GizmoMode> = ['select', 'translate', 'rotate', 'scale']
   const applyItems: ContextMenuItem[] = []
+  if (opts.onPoseMode) {
+    const enabled = opts.poseModeEnabled !== false
+    applyItems.push({
+      type: 'normal',
+      // 置灰时把原因拼进 label(ContextMenuItem 没有 tooltip 字段)
+      label: enabled
+        ? t('pg.menu.poseMode')
+        : `${t('pg.menu.poseMode')}(${opts.poseModeHint ?? ''})`,
+      enabled,
+      callback: enabled ? opts.onPoseMode : undefined,
+    } as ContextMenuItem)
+  }
   if (opts.onChangePose) {
     applyItems.push({
       type: 'normal',
