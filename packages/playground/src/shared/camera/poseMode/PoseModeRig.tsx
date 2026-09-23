@@ -25,6 +25,7 @@ import {anyControlDragging} from './dragState'
 import {stringifyPoseOverride} from './poseOverride'
 import {
   clearPoseSession,
+  clearPoseSessionIfCurrent,
   isPoseDirty,
   markPoseDirty,
   onPoseExitRequested,
@@ -161,8 +162,9 @@ export function PoseModeRig({
       ctl.dispose()
       ctlRef.current = null
       rigRef.current = null
-      // 会话外因素卸载(模型被删等):实例已毁,跳过提交只清会话态
-      clearPoseSession()
+      // 会话外因素卸载(模型被删等):实例已毁,跳过提交只清会话态。
+      // 按键清:A→B 直接切换时 session 已是 B,不能把它抹掉(切换坍塌)
+      clearPoseSessionIfCurrent(placementKey)
       invalidate()
     }
   }, [
@@ -179,8 +181,23 @@ export function PoseModeRig({
   // demand 帧循环:按下指针期间逐帧求解+续帧,松开即停
   useEffect(() => {
     const dom = gl.domElement
-    const down = () => {
-      markPoseDirty() // 按下即记脏:isDragging 轮询会漏同帧间隙的按下-拖-松
+    const raycaster = new Raycaster()
+    const ndc = new Vector2()
+    const down = (ev: PointerEvent) => {
+      // 只有按中控制球才记脏:isDragging 轮询会漏同帧间隙的按下-拖-松,
+      // 由这里兜底;空白/模型身上的按下(含双击空白退出的第一击)不记——
+      // 否则转下视角、退出手势本身都会制造幻影提交
+      const ctl = ctlRef.current
+      if (ctl) {
+        const rect = dom.getBoundingClientRect()
+        ndc.set(
+          ((ev.clientX - rect.left) / rect.width) * 2 - 1,
+          -(((ev.clientY - rect.top) / rect.height) * 2 - 1),
+        )
+        raycaster.setFromCamera(ndc, camera)
+        const balls = ctl.targets.map((t) => t.ball)
+        if (raycaster.intersectObjects(balls, true).length > 0) markPoseDirty()
+      }
       pressingRef.current = true
       invalidate()
     }
@@ -194,7 +211,7 @@ export function PoseModeRig({
       dom.removeEventListener('pointerdown', down)
       window.removeEventListener('pointerup', up)
     }
-  }, [gl, invalidate])
+  }, [gl, camera, invalidate])
 
   useFrame((_, delta) => {
     const rig = rigRef.current

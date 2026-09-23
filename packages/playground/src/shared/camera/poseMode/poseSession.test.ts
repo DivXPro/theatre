@@ -3,6 +3,7 @@ import {
   enterPoseSession,
   getPoseSession,
   clearPoseSession,
+  clearPoseSessionIfCurrent,
   requestPoseExit,
   onPoseSessionChange,
   onPoseExitRequested,
@@ -29,7 +30,7 @@ test('进入会话后 getPoseSession 返回该模型;清空后回到 null', () =
 
 test('会话唯一:已进入 A 再进入 B,先对 A 发退出请求再切到 B', () => {
   const exited: string[] = []
-  onPoseExitRequested((key) => {
+  const off = onPoseExitRequested((key) => {
     exited.push(key)
     clearPoseSession() // 仿 PoseModeRig:提交后清会话
   })
@@ -37,6 +38,7 @@ test('会话唯一:已进入 A 再进入 B,先对 A 发退出请求再切到 B',
   enterPoseSession('B')
   expect(exited).toEqual(['A'])
   expect(getPoseSession()).toEqual({key: 'B'})
+  off()
 })
 
 test('重复进入同一会话是空操作,不发退出请求', () => {
@@ -106,4 +108,38 @@ test('脏标记随 clearPoseSession 清零(requestPoseExit 兜底清理同样生
   requestPoseExit() // 无监听者,模块兜底 clearPoseSession
   expect(getPoseSession()).toBeNull()
   expect(isPoseDirty()).toBe(false)
+})
+
+test('clearPoseSessionIfCurrent:A→B 切换时 A 的卸载清理不能把 B 的新会话抹掉', () => {
+  // 镜像组件生命周期:enter(A) → enter(B)(A 的 rig 随后卸载,清理按键清)
+  enterPoseSession('A')
+  enterPoseSession('B')
+  clearPoseSessionIfCurrent('A') // A 的 PoseModeRig 卸载清理
+  expect(getPoseSession()).toEqual({key: 'B'}) // B 的会话必须存活
+  clearPoseSessionIfCurrent('B') // B 自己卸载时才清得掉
+  expect(getPoseSession()).toBeNull()
+})
+
+test('clearPoseSessionIfCurrent:无会话时安全空操作', () => {
+  clearPoseSessionIfCurrent('A') // 不抛即可
+  expect(getPoseSession()).toBeNull()
+})
+
+test('无会话时 markPoseDirty 不记脏(清理窗口期的按下不污染下一个会话)', () => {
+  markPoseDirty() // 会话已清、监听未卸的窗口期按下
+  expect(isPoseDirty()).toBe(false)
+  enterPoseSession('k') // 下一个会话进来是干净的
+  expect(isPoseDirty()).toBe(false)
+  markPoseDirty() // 会话中的按下才记脏
+  expect(isPoseDirty()).toBe(true)
+})
+
+test('requestPoseExit:监听抛异常也兜底清会话(异常照常上抛)', () => {
+  enterPoseSession('k')
+  const off = onPoseExitRequested(() => {
+    throw new Error('listener boom')
+  })
+  expect(() => requestPoseExit()).toThrow('listener boom')
+  expect(getPoseSession()).toBeNull() // 不卡死
+  off()
 })

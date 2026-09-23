@@ -38,13 +38,17 @@ function emitChange() {
   for (const cb of changeListeners) cb(session)
 }
 
-/** 请求退出当前会话;监听者没清会话时兜底清掉,防状态卡死 */
+/** 请求退出当前会话;监听者没清会话时兜底清掉,防状态卡死。
+ *  try/finally:监听抛异常(如 capturePose 失败)也兜底清理,异常照常上抛 */
 export function requestPoseExit(): void {
   if (!session) return
   // 先快照 key:监听者可能在回调里清会话,循环里再读 session.key 会崩
   const key = session.key
-  for (const cb of exitListeners) cb(key)
-  if (session) clearPoseSession()
+  try {
+    for (const cb of exitListeners) cb(key)
+  } finally {
+    if (session) clearPoseSession()
+  }
 }
 
 /** 会话唯一:已在摆别的模型时,先按退出流程提交旧会话再开新的 */
@@ -64,14 +68,23 @@ export function enterPoseSession(key: string): void {
  *  (帧没跑、骨骼没动)也会被这里的按下事件记脏——多提交无害,漏提交才是 bug。 */
 let poseDirty = false
 
-/** PoseModeRig 的 canvas pointerdown 监听调用:按下即记脏(见上) */
+/** PoseModeRig 的 canvas pointerdown 监听调用:按下即记脏(见上)。
+ *  无会话不记:清会话后、监听卸载前的窗口期按下不污染下一个会话 */
 export function markPoseDirty(): void {
+  if (!session) return
   poseDirty = true
 }
 
 /** 退出提交门控读;clearPoseSession 时已随会话清零 */
 export function isPoseDirty(): boolean {
   return poseDirty
+}
+
+/** PoseModeRig 卸载清理用:按键清会话——只清自己的。
+ *  A→B 直接切换时 enterPoseSession('B') 先同步落 session,A 的 rig 后卸载,
+ *  无条件的 clearPoseSession 会把 B 的新会话抹掉(切换坍塌) */
+export function clearPoseSessionIfCurrent(key: string): void {
+  if (session?.key === key) clearPoseSession()
 }
 
 export function clearPoseSession(): void {
