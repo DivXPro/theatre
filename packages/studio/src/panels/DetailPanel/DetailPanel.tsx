@@ -20,7 +20,6 @@ import ProjectDetails from './ProjectDetails'
 import getStudio from '@dreamerbird/studio/getStudio'
 import useHotspot from '@dreamerbird/studio/uiComponents/useHotspot'
 import {Atom, prism, val} from '@dreamerbird/dataverse'
-import EmptyState from './EmptyState'
 import useLockSet from '@dreamerbird/studio/uiComponents/useLockSet'
 import {usePresenceListenersOnRootElement} from '@dreamerbird/studio/uiComponents/usePresence'
 import {__private} from '@dreamerbird/core'
@@ -180,19 +179,8 @@ const DetailPanel: React.FC<{}> = (props) => {
       )
     }
 
-    return (
-      <Container
-        $pin={showDetailsPanel}
-        onMouseEnter={() => {
-          isDetailPanelHoveredB.set(true)
-        }}
-        onMouseLeave={() => {
-          isDetailPanelHoveredB.set(false)
-        }}
-      >
-        <EmptyState />
-      </Container>
-    )
+    // 无选中时不显示空态提示块,整个面板隐藏
+    return null
   }, [showDetailsPanel])
 }
 
