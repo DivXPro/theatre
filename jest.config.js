@@ -15,6 +15,11 @@ module.exports = {
     uuid: '<rootDir>/node_modules/uuid/dist/index.js',
     nanoid: '<rootDir>/node_modules/nanoid/index.cjs',
     'nanoid/non-secure': '<rootDir>/node_modules/nanoid/non-secure/index.cjs',
+    // ESM-only exports(只有 import 条件):直接指到 dist,靠 transformIgnorePatterns 例外转 CJS
+    '^@dreamerbird/threeik$':
+      '<rootDir>/node_modules/@dreamerbird/threeik/dist/index.js',
+    '^@dreamerbird/threeik/controls$':
+      '<rootDir>/node_modules/@dreamerbird/threeik/dist/controls/index.js',
     'react-icons/(.*)': 'identity-obj-proxy',
     'react-merge-refs': 'identity-obj-proxy',
     '@trpc/client': 'identity-obj-proxy',
@@ -48,7 +53,7 @@ module.exports = {
     '^.+\\.mjs$': './devEnv/jestMjsTransformer.js',
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(property-graph|@gltf-transform)/)',
+    'node_modules/(?!(property-graph|@gltf-transform|@dreamerbird/threeik)/)',
   ],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'mjs', 'json', 'node'],
 }
