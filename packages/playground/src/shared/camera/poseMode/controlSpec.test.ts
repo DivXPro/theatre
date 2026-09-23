@@ -1,6 +1,10 @@
 // packages/playground/src/shared/camera/poseMode/controlSpec.test.ts
 import {Bone, Group} from 'three'
-import {findRootBone, resolveControlSpec} from './controlSpec'
+import {
+  findRootBone,
+  measureSkeletonScale,
+  resolveControlSpec,
+} from './controlSpec'
 
 /** 按 Mixamo 命名习惯拼一棵骨架(平面树即可:映射只看骨名) */
 function skeletonWith(names: string[]): Group {
@@ -101,4 +105,41 @@ test('无骨骼 → null;findRootBone 找父不是 Bone 的第一根', () => {
   hips.add(spine)
   root.add(hips)
   expect(findRootBone(root)?.name).toBe('Hips')
+})
+
+// —— measureSkeletonScale ——
+function positionedSkeleton(positions: Record<string, number>): Group {
+  const root = new Group()
+  for (const [n, y] of Object.entries(positions)) {
+    const b = new Bone()
+    b.name = n
+    b.position.y = y
+    root.add(b)
+  }
+  return root
+}
+
+test('measureSkeletonScale: 3.4 单位高人形 → 倍率 ≈ 2', () => {
+  // Mixamo 全骨平铺,Head 在 3.4、双脚在 0 → 高 3.4 → 3.4/1.7 = 2
+  const pos: Record<string, number> = {}
+  for (const n of MIXAMO_REQUIRED) pos[n] = 0
+  pos['mixamorig:Head'] = 3.4
+  expect(measureSkeletonScale(positionedSkeleton(pos))).toBeCloseTo(2, 5)
+})
+
+test('measureSkeletonScale: 1.7 单位人形 → 倍率 1', () => {
+  const pos: Record<string, number> = {}
+  for (const n of MIXAMO_REQUIRED) pos[n] = 0
+  pos['mixamorig:Head'] = 1.7
+  expect(measureSkeletonScale(positionedSkeleton(pos))).toBeCloseTo(1, 5)
+})
+
+test('measureSkeletonScale: 缺关键骨 → 1;全骨同高(测不出高度)→ 1;巨人不超上限 8', () => {
+  const partial = MIXAMO_REQUIRED.filter((n) => n !== 'mixamorig:Head')
+  expect(measureSkeletonScale(skeletonWith(partial))).toBe(1)
+  expect(measureSkeletonScale(skeletonWith(MIXAMO_REQUIRED))).toBe(1)
+  const pos: Record<string, number> = {}
+  for (const n of MIXAMO_REQUIRED) pos[n] = 0
+  pos['mixamorig:Head'] = 100
+  expect(measureSkeletonScale(positionedSkeleton(pos))).toBe(8)
 })

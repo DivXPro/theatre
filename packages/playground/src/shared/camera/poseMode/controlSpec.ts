@@ -21,6 +21,37 @@ export function findRootBone(root: Object3D): Bone | null {
   return found
 }
 
+/** threeIK 控制点默认尺寸按其 playground 的米制人形(~1.7 单位高)标定 */
+const REFERENCE_HUMANOID_HEIGHT = 1.7
+
+/**
+ * 骨架世界高度(头骨 Y − 最低脚骨 Y)÷ 参考人形高 → 控制点尺寸倍率。
+ * threeIK 的球/环默认半径按 ~1.7 单位人形设计;场景里模型缩放不同(如 Y_Bot 0.026
+ * 缩放出 3.58 单位骨架)时等比缩放才看得见、点得中。非人形/测不出高度时返回 1。
+ */
+export function measureSkeletonScale(root: Object3D): number {
+  const names = collectBoneNames(root)
+  if (names.length === 0) return 1
+  const {map, coverage} = suggestBoneMap(names)
+  if (coverage < 1) return 1
+  root.updateWorldMatrix(true, true)
+  const worldY = (profile: string): number | null => {
+    const name = map.findModelBone(profile)
+    if (!name) return null
+    const obj = root.getObjectByName(name)
+    return obj ? obj.getWorldPosition(new Vector3()).y : null
+  }
+  const head = worldY('Head')
+  const footL = worldY('LeftFoot')
+  const footR = worldY('RightFoot')
+  if (head === null) return 1
+  const ground = Math.min(footL ?? Infinity, footR ?? Infinity)
+  if (!Number.isFinite(ground)) return 1
+  const height = head - ground
+  if (!(height > 0.01)) return 1
+  return Math.min(Math.max(height / REFERENCE_HUMANOID_HEIGHT, 0.25), 8)
+}
+
 export function resolveControlSpec(
   root: Object3D,
   facing: Vector3 = new Vector3(0, 0, -1),

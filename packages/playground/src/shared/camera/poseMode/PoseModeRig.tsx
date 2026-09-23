@@ -16,7 +16,12 @@ import type {Group} from 'three'
 import {SkeletonRig} from '@dreamerbird/threeik'
 import {createSkeletonControls} from '@dreamerbird/threeik/controls'
 import {capturePose} from '../assetLibrary/pose'
-import {resolveControlSpec, findRootBone} from './controlSpec'
+import {
+  measureSkeletonScale,
+  resolveControlSpec,
+  findRootBone,
+} from './controlSpec'
+import {anyControlDragging} from './dragState'
 import {stringifyPoseOverride} from './poseOverride'
 import {
   clearPoseSession,
@@ -46,6 +51,8 @@ export function PoseModeRig({
   const rigRef = useRef<SkeletonRig | null>(null)
   const ctlRef = useRef<ReturnType<typeof createSkeletonControls> | null>(null)
   const pressingRef = useRef(false)
+  const dirtyRef = useRef(false)
+  const controlNamesRef = useRef<string[]>([])
 
   useEffect(() => {
     const rootBone = findRootBone(instance)
@@ -62,12 +69,22 @@ export function PoseModeRig({
     )
     // 基准 = 当前姿势:没被控制点覆盖的骨骼保持原样,不弹回绑定姿势
     rig.captureBasePose()
+    controlNamesRef.current = spec.map((c) => c.name)
+    dirtyRef.current = false
+    const sizeScale = measureSkeletonScale(instance)
+    // threeIK 默认尺寸按 ~1.7 单位人形标定;球/环/注视随骨架世界高度等比,才看得见点得中
     const ctl = createSkeletonControls({
       rig,
       scene,
       camera,
       dom: gl.domElement,
       controls: spec,
+      defaults: {
+        ballRadius: 0.0225 * sizeScale,
+        rootRadius: 0.4 * sizeScale,
+        ringRadius: 0.16 * sizeScale,
+        lookAtRadius: 0.35 * sizeScale,
+      },
       dragControl: {
         lock: () => {
           if (orbitControls) orbitControls.enabled = false
@@ -116,7 +133,9 @@ export function PoseModeRig({
     const offExit = onPoseExitRequested((key) => {
       if (key !== placementKey) return
       const studio = getStudioSync()
-      if (studio) {
+      // 脏检查:没拖过控制点就不提交(threeIK 首解有微小漂移,
+      // 空进空出写回会产生幻影撤销步;语义对齐 modalGrab 的 moved)
+      if (studio && dirtyRef.current) {
         const bones = capturePose(instance)
         const scrub = studio.scrub()
         scrub.capture(({set}) => {
@@ -179,6 +198,9 @@ export function PoseModeRig({
     if (val(sheet.sequence.pointer.playing)) return // 播放时 mixer 写骨骼,不抢
     rig.update(delta)
     ctl.update()
+    if (!dirtyRef.current && anyControlDragging(ctl, controlNamesRef.current)) {
+      dirtyRef.current = true
+    }
     if (pressingRef.current) invalidate()
   })
 
