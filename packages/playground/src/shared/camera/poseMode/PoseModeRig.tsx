@@ -1,0 +1,174 @@
+// packages/playground/src/shared/camera/poseMode/PoseModeRig.tsx
+/**
+ * 姿势模式运行时:SkeletonRig + threeIK 控制点的生命周期、每帧求解、退出提交。
+ * 会话命中时由 PlacedModelCore 挂载;卸载(模型删除/会话切换)即 dispose 干净。
+ *
+ * 帧更新契约(threeIK README):基准姿势在进入时 captureBasePose 一次
+ * (= 当前姿势,含 poseOverride/库姿势/绑定姿势;不接 mixer 时无需每帧采),
+ * 之后每帧 rig.update + ctl.update;demand 帧循环下只在按下指针期间续帧。
+ */
+import {useEffect, useRef} from 'react'
+import {useFrame, useThree} from '@react-three/fiber'
+import {getStudioSync, val} from '@dreamerbird/core'
+import type {ISheet, ISheetObject} from '@dreamerbird/core'
+import {Raycaster, Vector2} from 'three'
+import type {Group} from 'three'
+import {SkeletonRig} from '@dreamerbird/threeik'
+import {createSkeletonControls} from '@dreamerbird/threeik/controls'
+import {capturePose} from '../assetLibrary/pose'
+import {resolveControlSpec, findRootBone} from './controlSpec'
+import {stringifyPoseOverride} from './poseOverride'
+import {
+  clearPoseSession,
+  onPoseExitRequested,
+  setPoseHitTester,
+} from './poseSession'
+
+export function PoseModeRig({
+  instance,
+  sheetObject,
+  placementKey,
+  sheet,
+}: {
+  instance: Group
+  sheetObject: ISheetObject<any>
+  placementKey: string
+  sheet: ISheet
+}): null {
+  const gl = useThree((s) => s.gl)
+  const camera = useThree((s) => s.camera)
+  const scene = useThree((s) => s.scene)
+  // drei makeDefault 的轨道控制器:拖控制球期间锁住,防视角跟转
+  const orbitControls = useThree((s) => s.controls) as unknown as {
+    enabled: boolean
+  } | null
+  const invalidate = useThree((s) => s.invalidate)
+  const rigRef = useRef<SkeletonRig | null>(null)
+  const ctlRef = useRef<ReturnType<typeof createSkeletonControls> | null>(null)
+  const pressingRef = useRef(false)
+
+  useEffect(() => {
+    const rootBone = findRootBone(instance)
+    const spec = resolveControlSpec(instance)
+    if (!rootBone || !spec) {
+      // 入口已拦(菜单置灰/双击静默),这里是防御:直接清会话不挂载
+      clearPoseSession()
+      return
+    }
+    const rig = new SkeletonRig(rootBone)
+    rigRef.current = rig
+    rig.on('warning', (payload) =>
+      console.warn('[poseMode]', (payload as {message?: string})?.message),
+    )
+    // 基准 = 当前姿势:没被控制点覆盖的骨骼保持原样,不弹回绑定姿势
+    rig.captureBasePose()
+    const ctl = createSkeletonControls({
+      rig,
+      scene,
+      camera,
+      dom: gl.domElement,
+      controls: spec,
+      // 展开传:当前 @dreamerbird/threeik 0.0.1 的类型/运行时都还没有这两个
+      // 选项(README 的 W/E 走 ctl.setManipulatorMode,库本身不监听键盘),
+      // 对象字面量直传会撞 TS 多余属性检查;运行时被忽略,留作前向兼容。
+      // Esc 天然留给 App 退出会话(threeik 不监听 Esc)。
+      ...{
+        hotkeys: {move: ['w'], rotate: ['e'], deselect: []},
+        onManipulatorModeChange: () => invalidate(),
+      },
+      dragControl: {
+        lock: () => {
+          if (orbitControls) orbitControls.enabled = false
+        },
+        unlock: () => {
+          if (orbitControls) orbitControls.enabled = true
+        },
+      },
+    })
+    ctlRef.current = ctl
+
+    // 双击空白退出的命中测试:点在被摆模型或控制球上不算空白
+    const raycaster = new Raycaster()
+    const ndc = new Vector2()
+    setPoseHitTester(({clientX, clientY}) => {
+      const rect = gl.domElement.getBoundingClientRect()
+      ndc.set(
+        ((clientX - rect.left) / rect.width) * 2 - 1,
+        -(((clientY - rect.top) / rect.height) * 2 - 1),
+      )
+      raycaster.setFromCamera(ndc, camera)
+      const balls = ctl.targets.map((t) => t.ball)
+      return raycaster.intersectObjects([instance, ...balls], true).length > 0
+    })
+
+    // 退出提交:捕获实时骨骼 → 一步 theatre 历史写 poseOverride(可撤销)
+    const offExit = onPoseExitRequested((key) => {
+      if (key !== placementKey) return
+      const studio = getStudioSync()
+      if (studio) {
+        const bones = capturePose(instance)
+        const scrub = studio.scrub()
+        scrub.capture(({set}) => {
+          set(
+            sheetObject.props.poseOverride as any,
+            stringifyPoseOverride(bones),
+          )
+        })
+        scrub.commit()
+      }
+      clearPoseSession()
+    })
+
+    invalidate() // 进姿势模式首帧:控制球立刻可见
+    return () => {
+      offExit()
+      setPoseHitTester(null)
+      ctl.dispose()
+      ctlRef.current = null
+      rigRef.current = null
+      // 会话外因素卸载(模型被删等):实例已毁,跳过提交只清会话态
+      clearPoseSession()
+      invalidate()
+    }
+  }, [
+    instance,
+    sheetObject,
+    placementKey,
+    scene,
+    camera,
+    gl,
+    orbitControls,
+    invalidate,
+  ])
+
+  // demand 帧循环:按下指针期间逐帧求解+续帧,松开即停
+  useEffect(() => {
+    const dom = gl.domElement
+    const down = () => {
+      pressingRef.current = true
+      invalidate()
+    }
+    const up = () => {
+      pressingRef.current = false
+      invalidate() // 松手补一帧:钳制回弹落定
+    }
+    dom.addEventListener('pointerdown', down)
+    window.addEventListener('pointerup', up)
+    return () => {
+      dom.removeEventListener('pointerdown', down)
+      window.removeEventListener('pointerup', up)
+    }
+  }, [gl, invalidate])
+
+  useFrame((_, delta) => {
+    const rig = rigRef.current
+    const ctl = ctlRef.current
+    if (!rig || !ctl) return
+    if (val(sheet.sequence.pointer.playing)) return // 播放时 mixer 写骨骼,不抢
+    rig.update(delta)
+    ctl.update()
+    if (pressingRef.current) invalidate()
+  })
+
+  return null
+}

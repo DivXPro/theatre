@@ -34,6 +34,8 @@ import {useModalGrab} from './modalGrab'
 import {disposeObjectTree} from './assetLibrary/dispose'
 import {applyPose, captureBindPose} from './assetLibrary/pose'
 import {effectivePoseBones} from './poseMode/poseOverride'
+import {PoseModeRig} from './poseMode/PoseModeRig'
+import {usePoseSessionKey} from './poseMode/poseSession'
 import type {ModelEntry, PoseEntry} from './assetLibrary/types'
 
 /**
@@ -1135,6 +1137,7 @@ function PlacedModelCore({
   const animationId = useVal(sheetObject?.props.animation) ?? ''
   const poseId = useVal(sheetObject?.props.pose) ?? ''
   const poseOverrideJson = useVal(sheetObject?.props.poseOverride) ?? ''
+  const poseSessionKey = usePoseSessionKey()
   const [clip, setClip] = useState<AnimationClip | null>(null)
   const [poseBones, setPoseBones] = useState<PoseEntry['bones'] | null>(null)
   const currentActionRef = useRef<AnimationAction | null>(null)
@@ -1336,6 +1339,14 @@ function PlacedModelCore({
       onContextMenu={openMenu}
     >
       <primitive object={instance} position={[0, lift, 0]} />
+      {sheetObject && poseSessionKey === entry.key && (
+        <PoseModeRig
+          instance={instance}
+          sheetObject={sheetObject}
+          placementKey={entry.key}
+          sheet={sheet}
+        />
+      )}
     </e.group>
   )
 }
