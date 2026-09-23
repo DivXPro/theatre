@@ -16,8 +16,16 @@ import React, {
   useRef,
   useState,
 } from 'react'
-import {AnimationMixer, Box3, Raycaster, Vector3} from 'three'
-import type {Group, Mesh, Object3D, AnimationClip, AnimationAction} from 'three'
+import {
+  AnimationMixer,
+  Box3,
+  BoxGeometry,
+  Mesh,
+  MeshBasicMaterial,
+  Raycaster,
+  Vector3,
+} from 'three'
+import type {Group, Object3D, AnimationClip, AnimationAction} from 'three'
 import {SkeletonUtils} from 'three-stdlib'
 import {registerBoneAnchors, unregisterBoneAnchors} from './boneAnchors'
 import {notifyTargetRegistryChange, sheetObjectExists} from './aimTargets'
@@ -1460,6 +1468,43 @@ export function deletePlacement(sheet: ISheet, key: string) {
 }
 
 /**
+ * 给 three-stdlib 版缩放手柄补一个居中的等比缩放块。drei 封装的这个
+ * 旧版手柄只有单轴/双轴和轴尖白块(XYZX/Y/Z,太小发现不了);它的拾取
+ * (axis = 拾取块 name)和拖动(axis 含 'XYZ' 即三轴同系数)逻辑原生支持
+ * 等比,所以往 gizmo/picker 的 scale 分组各加一个 name='XYZ' 的块即可,
+ * 拖动写回/撤销仍走 SelectionGizmo 现有链路。ref 回调每次渲染重挂,
+ * 这里按 name 查重保证幂等。依赖 three-stdlib 内部分组结构,升级
+ * drei/three-stdlib 时需复核。
+ */
+function ensureUniformScaleHandle(controls: any) {
+  // controls.gizmo 是 TransformControlsGizmo,可视/拾取分组挂在它下面
+  const gizmoScale = controls?.gizmo?.gizmo?.scale as Object3D | undefined
+  const pickerScale = controls?.gizmo?.picker?.scale as Object3D | undefined
+  if (!gizmoScale || !pickerScale) return
+  if (gizmoScale.children.some((child) => child.name === 'XYZ')) return
+  const visual = new Mesh(
+    new BoxGeometry(0.16, 0.16, 0.16),
+    new MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0.35,
+      depthTest: false,
+      depthWrite: false,
+      toneMapped: false,
+    }),
+  )
+  visual.name = 'XYZ'
+  visual.renderOrder = Infinity
+  const hit = new Mesh(
+    new BoxGeometry(0.26, 0.26, 0.26),
+    new MeshBasicMaterial({visible: false}),
+  )
+  hit.name = 'XYZ'
+  gizmoScale.add(visual)
+  pickerScale.add(hit)
+}
+
+/**
  * 选中对象的操作手柄:studio 选中状态里出现登记过的对象时,
  * 在它的节点上挂手柄(移动三轴/旋转圆环/缩放方块,由 mode 决定);
  * 取消选中或选中别的,手柄消失。
@@ -1483,8 +1528,27 @@ export function SelectionGizmo({
     boxHighlight: boolean
   } | null>(null)
   const invalidate = useThree((s) => s.invalidate)
+  const camera = useThree((s) => s.camera)
+  const gl = useThree((s) => s.gl)
   const scrubRef = useRef<IScrub | undefined>(undefined)
   const controlsRef = useRef<{detach?: () => void} | null>(null)
+  // 中心等比块的拖动修正:three-stdlib 对 axis==='XYZ' 用
+  // |pointEnd|/|pointStart| 算系数,抓点离手柄中心越近分母越小,轻轻一拖
+  // 就是几百倍。这里在写回前改用屏幕空间径向映射:以抓手处相对手柄中心
+  // 屏幕点的方向为轴,沿轴拖 250px ≈ 2 倍,可预期、不炸。
+  const uniDragRef = useRef<{
+    startScale: Vector3
+    startPointer: {x: number; y: number}
+    dir: {x: number; y: number}
+  } | null>(null)
+  const lastPointerRef = useRef({x: 0, y: 0})
+  useEffect(() => {
+    const onMove = (ev: PointerEvent) => {
+      lastPointerRef.current = {x: ev.clientX, y: ev.clientY}
+    }
+    window.addEventListener('pointermove', onMove)
+    return () => window.removeEventListener('pointermove', onMove)
+  }, [])
   // G 键模态抓取(Blender):选中对象跟随鼠标(过起点、正对相机的平面),
   // X/Y/Z 锁轴,左键/回车确认,右键/Esc 废弃弹回;和路径控制点共用一套
   const {start: startGrab, active: grabActive} = useModalGrab()
@@ -1599,6 +1663,7 @@ export function SelectionGizmo({
             // 箭头本体登记为"仅编辑视角":画中画/镜头视角渲染时不入画。
             // three 0.185 的 TransformControls 不是 Object3D,可视部分在 getHelper()
             if (!controls) return
+            ensureUniformScaleHandle(controls)
             const root: Object3D =
               typeof controls.getHelper === 'function'
                 ? controls.getHelper()
@@ -1611,6 +1676,34 @@ export function SelectionGizmo({
             suppressSelectBriefly()
             scrubRef.current = getStudioSync()?.scrub()
             invalidate()
+            const axis = (controlsRef.current as any)?.axis
+            if (mode === 'scale' && axis === 'XYZ') {
+              const ndc = target.node
+                .getWorldPosition(new Vector3())
+                .project(camera)
+              const rect = gl.domElement.getBoundingClientRect()
+              const cx = rect.left + ((ndc.x + 1) / 2) * rect.width
+              const cy = rect.top + ((1 - ndc.y) / 2) * rect.height
+              const p = lastPointerRef.current
+              let dx = p.x - cx
+              let dy = p.y - cy
+              const len = Math.hypot(dx, dy)
+              // 抓在正中心时没有方向,兜底向屏幕下方拉=放大
+              if (len < 4) {
+                dx = 0
+                dy = 1
+              } else {
+                dx /= len
+                dy /= len
+              }
+              uniDragRef.current = {
+                startScale: target.node.scale.clone(),
+                startPointer: {...p},
+                dir: {x: dx, y: dy},
+              }
+            } else {
+              uniDragRef.current = null
+            }
           }}
           onObjectChange={() => {
             suppressSelectBriefly()
@@ -1625,6 +1718,17 @@ export function SelectionGizmo({
                 const r = node.rotation
                 set(target.obj.props.rotation, {x: r.x, y: r.y, z: r.z})
               } else if (mode === 'scale') {
+                const uni = uniDragRef.current
+                if (uni && (controlsRef.current as any)?.axis === 'XYZ') {
+                  // 等比块:弃用 three-stdlib 的距离比(抓点近中心会炸),
+                  // 改屏幕空间径向映射,见 uniDragRef 注释
+                  const p = lastPointerRef.current
+                  const along =
+                    (p.x - uni.startPointer.x) * uni.dir.x +
+                    (p.y - uni.startPointer.y) * uni.dir.y
+                  const factor = Math.max(0.01, 1 + along / 250)
+                  node.scale.copy(uni.startScale).multiplyScalar(factor)
+                }
                 const s = node.scale
                 set(target.obj.props.scale, {x: s.x, y: s.y, z: s.z})
               } else {
@@ -1637,6 +1741,7 @@ export function SelectionGizmo({
             suppressSelectBriefly()
             scrubRef.current?.commit()
             scrubRef.current = undefined
+            uniDragRef.current = null
           }}
         />
       )}
