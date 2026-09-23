@@ -37,6 +37,7 @@ import {effectivePoseBones} from './poseMode/poseOverride'
 import {PoseModeRig} from './poseMode/PoseModeRig'
 import {
   enterPoseSession,
+  getPoseSession,
   noteModelDoubleClick,
   usePoseSessionKey,
 } from './poseMode/poseSession'
@@ -1103,6 +1104,12 @@ function PlacedModelCore({
   // 确认落点,不选中、不拦截;点 gizmo 箭头穿透过来的误点也要吞掉。
   const selectSelf = (event: ThreeEvent<MouseEvent>) => {
     if (selectLocked || isSelectSuppressed()) return
+    // 摆姿势期间单击(自己或别的模型)都不改选中;stopPropagation 保持
+    // "点击被模型处理"的语义,onPointerMissed 不会触发
+    if (getPoseSession()) {
+      event.stopPropagation()
+      return
+    }
     event.stopPropagation()
     const studio = getStudioSync()
     if (studio && objRef.current) {
@@ -1414,6 +1421,8 @@ export function useGizmoMode(): [GizmoMode, (mode: GizmoMode) => void] {
         (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')
       )
         return
+      // 姿势模式期间 W/E 归 threeIK 操纵器,G/R/S 不响应
+      if (getPoseSession()) return
       const next: GizmoMode | null =
         ev.code === 'KeyW'
           ? 'select'
@@ -1479,6 +1488,13 @@ export function SelectionGizmo({
   // G 键模态抓取(Blender):选中对象跟随鼠标(过起点、正对相机的平面),
   // X/Y/Z 锁轴,左键/回车确认,右键/Esc 废弃弹回;和路径控制点共用一套
   const {start: startGrab, active: grabActive} = useModalGrab()
+  const poseKey = usePoseSessionKey()
+  // 姿势模式期间:被摆模型的三轴手柄让位给 threeIK 操纵器(描边保留——只取
+  // 模型子树,控制点不在其中,互不干扰)
+  const isPosingTarget =
+    !!poseKey &&
+    !!target &&
+    getPlacementEntryForObject(target.obj)?.key === poseKey
 
   useEffect(() => {
     const studio = getStudioSync()
@@ -1511,6 +1527,7 @@ export function SelectionGizmo({
     if (hidden || !target) return
     const onKey = (ev: KeyboardEvent) => {
       if (ev.code !== 'KeyG') return
+      if (getPoseSession()) return
       const el = ev.target as HTMLElement | null
       if (
         el &&
@@ -1566,7 +1583,8 @@ export function SelectionGizmo({
     !!target &&
     !!target.node.parent &&
     !grabActive &&
-    mode !== 'select'
+    mode !== 'select' &&
+    !isPosingTarget
   // 选中轮廓:模式无关(选择模式下它是唯一的选中提示),抓取期间也跟随
   const showOutline =
     !hidden && !!target && !!target.node.parent && target.boxHighlight

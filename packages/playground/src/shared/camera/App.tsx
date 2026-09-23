@@ -1811,7 +1811,7 @@ function App({
         frameloop="demand"
         // 点到空处取消选中,gizmo 随之消失;放置模式下点空处是确认落点,不动选中
         onPointerMissed={() => {
-          if (!placing) getStudioSync()?.setSelection([])
+          if (!placing && !getPoseSession()) getStudioSync()?.setSelection([])
           // 控制点也取消选中,但路径编辑模式保持(编辑态是"粘"的)
           setSelectedPathPoint(null)
         }}
