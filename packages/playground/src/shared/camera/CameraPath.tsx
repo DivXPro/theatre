@@ -574,7 +574,10 @@ export function CameraPath({
   // 下注销,和控制点箭头不撞车
   const metaRef = useRef(meta)
   const pathRootRef = useRef(pathRoot)
-  useSelectionGizmoTarget(metaRef, pathRootRef, !editing)
+  // 路径有自己的选中高亮(线变亮黄),不再画包围盒
+  useSelectionGizmoTarget(metaRef, pathRootRef, !editing, {
+    boxHighlight: false,
+  })
 
   useEffect(() => registerEditorOnly(line), [line])
   useEffect(() => registerEditorOnly(marker), [marker])

@@ -182,7 +182,8 @@ function AnchorObject({
       objRef.current = undefined
     }
   }, [anchorKey])
-  useSelectionGizmoTarget(objRef, nodeRef, true)
+  // 锚点有自己的选中高亮(轴心圆点变橙),不再画包围盒
+  useSelectionGizmoTarget(objRef, nodeRef, true, {boxHighlight: false})
   useEffect(() => registerEditorOnly(nodeRef.current), [])
 
   // 响应式读 parent 属性(复用 ShotCamera 的 useObjPropScalar)

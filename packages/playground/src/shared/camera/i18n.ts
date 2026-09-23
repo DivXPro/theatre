@@ -53,9 +53,14 @@ export const en: Messages = {
   'pg.menu.playAnimation': 'Play animation',
   'pg.menu.delete': 'Delete',
 
+  'pg.gizmo.select': 'Select',
   'pg.gizmo.translate': 'Move',
   'pg.gizmo.rotate': 'Rotate',
   'pg.gizmo.scale': 'Scale',
+  'pg.gizmo.select.hint': 'Shortcut: W',
+  'pg.gizmo.translate.hint': 'Shortcut: G',
+  'pg.gizmo.rotate.hint': 'Shortcut: R',
+  'pg.gizmo.scale.hint': 'Shortcut: S',
 
   'pg.props.aimTarget': 'Aim target',
   'pg.props.aimNone': 'None',
@@ -153,9 +158,14 @@ export const zhCN: Messages = {
   'pg.menu.playAnimation': '播放动作',
   'pg.menu.delete': '删除',
 
+  'pg.gizmo.select': '选择',
   'pg.gizmo.translate': '移动',
   'pg.gizmo.rotate': '旋转',
   'pg.gizmo.scale': '缩放',
+  'pg.gizmo.select.hint': '快捷键 W',
+  'pg.gizmo.translate.hint': '快捷键 G',
+  'pg.gizmo.rotate.hint': '快捷键 R',
+  'pg.gizmo.scale.hint': '快捷键 S',
 
   'pg.props.aimTarget': '瞄准目标',
   'pg.props.aimNone': '无',

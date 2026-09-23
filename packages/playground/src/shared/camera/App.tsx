@@ -1496,6 +1496,8 @@ function App({
     >
       <HostFlowsWiring flows={flows} onFlows={onFlows} />
       <TopToolbar
+        gizmoMode={gizmoMode}
+        onSelectGizmoMode={setGizmoMode}
         onToggleModelLibrary={handleToggleModel}
         onTogglePathLibrary={handleTogglePath}
         onAddCamera={addCamera}

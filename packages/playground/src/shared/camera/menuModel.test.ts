@@ -53,7 +53,7 @@ test('路径右键菜单:编辑(带 Tab 标注)与删除,编辑中显示退出�
   expect(String((editingItems[0] as any).label)).toContain('退出编辑')
 })
 
-test('模型右键菜单:三种 gizmo 模式,当前模式打勾,末尾删除', () => {
+test('模型右键菜单:四种 gizmo 模式,当前模式打勾,末尾删除', () => {
   const onSelectMode = jest.fn()
   const onDelete = jest.fn()
   const items = buildObjectMenuItems(
@@ -64,11 +64,11 @@ test('模型右键菜单:三种 gizmo 模式,当前模式打勾,末尾删除', (
     },
     t,
   )
-  // [translate, rotate, scale, separator, 删除]
-  expect(items).toHaveLength(5)
+  // [select, translate, rotate, scale, separator, 删除]
+  expect(items).toHaveLength(6)
   expect(String((items[0] as any).label)).not.toContain('✓')
-  expect(String((items[1] as any).label)).toContain('✓')
-  expect(String((items[4] as any).label)).toContain('删除')
+  expect(String((items[2] as any).label)).toContain('✓')
+  expect(String((items[5] as any).label)).toContain('删除')
 })
 
 test('对象右键菜单:提供姿势/动作回调时多出两项,位于手柄模式上方', () => {
@@ -86,11 +86,12 @@ test('对象右键菜单:提供姿势/动作回调时多出两项,位于手柄�
     },
     t,
   )
-  // [改变姿势, 播放动作, sep, translate, rotate, scale, sep, 删除]
+  // [改变姿势, 播放动作, sep, select, translate, rotate, scale, sep, 删除]
   expect(items.map((i) => i.type)).toEqual([
     'normal',
     'normal',
     'separator',
+    'normal',
     'normal',
     'normal',
     'normal',
@@ -99,7 +100,7 @@ test('对象右键菜单:提供姿势/动作回调时多出两项,位于手柄�
   ])
   expect(String((items[0] as any).label)).toContain('改变姿势')
   expect(String((items[1] as any).label)).toContain('播放动作')
-  expect(String((items[7] as any).label)).toContain('删除')
+  expect(String((items[8] as any).label)).toContain('删除')
   ;(items[0] as any).callback?.({} as any)
   expect(onChangePose).toHaveBeenCalled()
   ;(items[1] as any).callback?.({} as any)
@@ -116,8 +117,8 @@ test('对象右键菜单:只传姿势回调时只有「改变姿势」一项', (
     },
     t,
   )
-  // [改变姿势, sep, translate, rotate, scale, sep, 删除]
-  expect(items).toHaveLength(7)
+  // [改变姿势, sep, select, translate, rotate, scale, sep, 删除]
+  expect(items).toHaveLength(8)
   expect(String((items[0] as any).label)).toContain('改变姿势')
 })
 

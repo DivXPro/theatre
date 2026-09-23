@@ -476,8 +476,10 @@ export function ShotCamera({
   }, [tracking, cameraObjRef, boundKey, boundMeta])
 
   // 选中后挂三轴移动箭头:摄像机本体可拖(机位被路径接管时
-  // 相机除外,见上)
-  useSelectionGizmoTarget(cameraObjRef, camRef, !camDriveLocked)
+  // 相机除外,见上)。视锥有自己的选中高亮(整套变橙),不再画包围盒
+  useSelectionGizmoTarget(cameraObjRef, camRef, !camDriveLocked, {
+    boxHighlight: false,
+  })
 
   // 运镜驱动(优先级 -1,赶在 wrapper 的 lookAt 之前):
   // 机位路径非空且 moveMode=path → 机位取路径上行进进度处。

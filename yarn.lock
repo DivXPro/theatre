@@ -8455,6 +8455,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@phosphor-icons/react@npm:^2.1.10":
+  version: 2.1.10
+  resolution: "@phosphor-icons/react@npm:2.1.10"
+  peerDependencies:
+    react: ">= 16.8"
+    react-dom: ">= 16.8"
+  checksum: ed74ce87ec2b7dd6be54d6820671d4027888e784c1b2d2d90cfcc304501a562461502f014b770fc5524d207737af50402fe7dda7827922137d4d08cf7cfa9fb1
+  languageName: node
+  linkType: hard
+
 "@pkgjs/parseargs@npm:0.11.0, @pkgjs/parseargs@npm:^0.11.0":
   version: 0.11.0
   resolution: "@pkgjs/parseargs@npm:0.11.0"
@@ -29859,6 +29869,7 @@ fsevents@^1.2.7:
     "@gltf-transform/core": ^4.0.0
     "@gltf-transform/extensions": ^4.0.0
     "@gltf-transform/functions": ^4.0.0
+    "@phosphor-icons/react": ^2.1.10
     "@playwright/test": ^1.36.2
     "@react-three/drei": ^10.7.8
     "@react-three/fiber": ^9.7.0

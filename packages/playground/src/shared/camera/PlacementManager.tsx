@@ -26,6 +26,10 @@ import {getLibrary} from './assetLibrary/library'
 import {entryOptions} from './assetLibrary/options'
 import {computeDropPoint} from './dropPoint'
 import {registerEditorOnly} from './editorOnly'
+import {
+  createSelectionOutlineRenderer,
+  type SelectionOutlineRenderer,
+} from './selectionOutline'
 import {useModalGrab} from './modalGrab'
 import {disposeObjectTree} from './assetLibrary/dispose'
 import {applyPose, captureBindPose} from './assetLibrary/pose'
@@ -277,11 +281,17 @@ export function getPlacedInstances(): ReadonlyMap<string, Group> {
 }
 
 /**
- * 选中 gizmo 的目标登记表:"theatre 对象 → 场景节点"。
+ * 选中 gizmo 的目标登记表:"theatre 对象 → 场景节点 + 高亮方式"。
  * 想让某个可编辑对象被选中后挂移动箭头,就用 useSelectionGizmoTarget
  * 把它的 theatre 对象和场景节点登记进来(已放置的模型、Thingy 都是)。
+ * boxHighlight:选中时是否画橙色包围盒线框——相机/路径/锚点有自己的
+ * 变色高亮,登记时关掉,不重复画。
  */
-const selectionGizmoTargets = new Map<ISheetObject<any>, Object3D>()
+type SelectionGizmoTargetEntry = {node: Object3D; boxHighlight: boolean}
+const selectionGizmoTargets = new Map<
+  ISheetObject<any>,
+  SelectionGizmoTargetEntry
+>()
 
 /**
  * 登记表变更通知:SelectionGizmo 只在选中变化时重算附着目标,
@@ -290,8 +300,40 @@ const selectionGizmoTargets = new Map<ISheetObject<any>, Object3D>()
  */
 const gizmoRegistryListeners = new Set<() => void>()
 
+/** 订阅登记表变更,返回退订函数 */
+export function onGizmoRegistryChange(listener: () => void): () => void {
+  gizmoRegistryListeners.add(listener)
+  return () => {
+    gizmoRegistryListeners.delete(listener)
+  }
+}
+
 function notifyGizmoRegistryChange() {
   gizmoRegistryListeners.forEach((l) => l())
+}
+
+/** 查某个 theatre 对象的登记项(SelectionGizmo 取附着目标用) */
+export function getGizmoTargetEntry(
+  obj: ISheetObject<any>,
+): SelectionGizmoTargetEntry | undefined {
+  return selectionGizmoTargets.get(obj)
+}
+
+/** 登记/注销选中 gizmo 目标;boxHighlight 默认开,返回注销函数 */
+export function registerGizmoTarget(
+  obj: ISheetObject<any>,
+  node: Object3D,
+  opts?: {boxHighlight?: boolean},
+): () => void {
+  selectionGizmoTargets.set(obj, {
+    node,
+    boxHighlight: opts?.boxHighlight ?? true,
+  })
+  notifyGizmoRegistryChange()
+  return () => {
+    selectionGizmoTargets.delete(obj)
+    notifyGizmoRegistryChange()
+  }
 }
 
 /**
@@ -303,18 +345,14 @@ export function useSelectionGizmoTarget(
   objRef: React.RefObject<ISheetObject<any> | undefined>,
   nodeRef: React.RefObject<Object3D | null>,
   enabled = true,
+  opts?: {boxHighlight?: boolean},
 ) {
   useEffect(() => {
     if (!enabled) return
     const obj = objRef.current
     const node = nodeRef.current
     if (!obj || !node) return
-    selectionGizmoTargets.set(obj, node)
-    notifyGizmoRegistryChange()
-    return () => {
-      selectionGizmoTargets.delete(obj)
-      notifyGizmoRegistryChange()
-    }
+    return registerGizmoTarget(obj, node, opts)
     // 两个 ref 都是挂载后不再变的;enabled 翻转时注销/重新登记
   }, [enabled])
 }
@@ -1314,17 +1352,17 @@ class PlacedModelErrorBoundary extends React.Component<
   }
 }
 
-/** gizmo 的三种操作模式(标签文案在 menuModel 里经 t() 取) */
-export type GizmoMode = 'translate' | 'rotate' | 'scale'
+/** gizmo 的操作模式(标签文案在 menuModel 里经 t() 取);select = 只点选不挂手柄 */
+export type GizmoMode = 'select' | 'translate' | 'rotate' | 'scale'
 
 /**
- * 快捷键切换 gizmo 模式(对齐 Blender):G 移动 / R 旋转 / S 缩放。
+ * 快捷键切换 gizmo 模式(对齐 Blender):W 选择 / G 移动 / R 旋转 / S 缩放。
  * 有选中对象时才响应;焦点在输入框时不抢按键(和 studio 快捷键同一套避让)。
- * G 另有模态抓取(选中对象跟随鼠标,见 SelectionGizmo);R/S 只切模式。
- * 返回 [当前模式, 设置模式]——右键菜单也用设置接口切模式。
+ * G 另有模态抓取(选中对象跟随鼠标,见 SelectionGizmo);W/R/S 只切模式。
+ * 返回 [当前模式, 设置模式]——顶栏模式组和右键菜单都用设置接口切模式。
  */
 export function useGizmoMode(): [GizmoMode, (mode: GizmoMode) => void] {
-  const [mode, setMode] = useState<GizmoMode>('translate')
+  const [mode, setMode] = useState<GizmoMode>('select')
   useEffect(() => {
     const onKey = (ev: KeyboardEvent) => {
       const target = ev.target as HTMLElement | null
@@ -1334,13 +1372,15 @@ export function useGizmoMode(): [GizmoMode, (mode: GizmoMode) => void] {
       )
         return
       const next: GizmoMode | null =
-        ev.code === 'KeyG'
-          ? 'translate'
-          : ev.code === 'KeyR'
-            ? 'rotate'
-            : ev.code === 'KeyS'
-              ? 'scale'
-              : null
+        ev.code === 'KeyW'
+          ? 'select'
+          : ev.code === 'KeyG'
+            ? 'translate'
+            : ev.code === 'KeyR'
+              ? 'rotate'
+              : ev.code === 'KeyS'
+                ? 'scale'
+                : null
       if (!next) return
       const studio = getStudioSync()
       if (!studio || studio.selection.length === 0) return
@@ -1388,6 +1428,7 @@ export function SelectionGizmo({
   const [target, setTarget] = useState<{
     obj: ISheetObject<any>
     node: Object3D
+    boxHighlight: boolean
   } | null>(null)
   const invalidate = useThree((s) => s.invalidate)
   const scrubRef = useRef<IScrub | undefined>(undefined)
@@ -1401,21 +1442,22 @@ export function SelectionGizmo({
     if (!studio) return
     const sync = () => {
       const selected = studio.selection.find((item) =>
-        selectionGizmoTargets.has(item as ISheetObject<any>),
+        getGizmoTargetEntry(item as ISheetObject<any>),
       ) as ISheetObject<any> | undefined
+      const entry = selected && getGizmoTargetEntry(selected)
       setTarget(
-        selected
-          ? {obj: selected, node: selectionGizmoTargets.get(selected)!}
+        selected && entry
+          ? {obj: selected, node: entry.node, boxHighlight: entry.boxHighlight}
           : null,
       )
       invalidate()
     }
     sync()
     // 选中变化、登记表变化(路径驱动启用把相机注销了等)都重算附着目标
-    gizmoRegistryListeners.add(sync)
+    const offRegistry = onGizmoRegistryChange(sync)
     const untapSelection = studio.onSelectionChange(sync)
     return () => {
-      gizmoRegistryListeners.delete(sync)
+      offRegistry()
       untapSelection()
     }
   }, [invalidate])
@@ -1474,54 +1516,100 @@ export function SelectionGizmo({
   }, [target])
 
   // 卸载兜底:对象被撤销掉(节点已不在场景里)时不挂手柄;
-  // 模态抓取期间也不挂:两套拖动不撞车(抓取结束后自动回来)
-  if (hidden || !target || !target.node.parent || grabActive) return null
+  // 模态抓取期间也不挂:两套拖动不撞车(抓取结束后自动回来);
+  // 选择模式(W)只点选不挂手柄(Blender 的 Select 工具)
+  const showControls =
+    !hidden &&
+    !!target &&
+    !!target.node.parent &&
+    !grabActive &&
+    mode !== 'select'
+  // 选中轮廓:模式无关(选择模式下它是唯一的选中提示),抓取期间也跟随
+  const showOutline =
+    !hidden && !!target && !!target.node.parent && target.boxHighlight
+  if (!target) return null
   return (
-    <TransformControls
-      ref={(controls: any) => {
-        controlsRef.current = controls
-        // 箭头本体登记为"仅编辑视角":画中画/镜头视角渲染时不入画。
-        // three 0.185 的 TransformControls 不是 Object3D,可视部分在 getHelper()
-        if (!controls) return
-        const root: Object3D =
-          typeof controls.getHelper === 'function'
-            ? controls.getHelper()
-            : controls
-        return registerEditorOnly(root)
-      }}
-      object={target.node}
-      mode={mode}
-      onMouseDown={() => {
-        suppressSelectBriefly()
-        scrubRef.current = getStudioSync()?.scrub()
-        invalidate()
-      }}
-      onObjectChange={() => {
-        suppressSelectBriefly()
-        invalidate()
-        const scrub = scrubRef.current
-        if (!scrub) return
-        const node = target.node
-        scrub.capture(({set}) => {
-          // 旋转/缩放写回的是节点本地值:theatre 的 rotation/scale 属性
-          // 本来就是本地空间,和面板里看到的数字一致
-          if (mode === 'rotate') {
-            const r = node.rotation
-            set(target.obj.props.rotation, {x: r.x, y: r.y, z: r.z})
-          } else if (mode === 'scale') {
-            const s = node.scale
-            set(target.obj.props.scale, {x: s.x, y: s.y, z: s.z})
-          } else {
-            const p = node.position
-            set(target.obj.props.position, {x: p.x, y: p.y, z: p.z})
-          }
-        })
-      }}
-      onMouseUp={() => {
-        suppressSelectBriefly()
-        scrubRef.current?.commit()
-        scrubRef.current = undefined
-      }}
-    />
+    <>
+      {showOutline && <SelectionOutlineHighlight node={target.node} />}
+      {showControls && (
+        <TransformControls
+          ref={(controls: any) => {
+            controlsRef.current = controls
+            // 箭头本体登记为"仅编辑视角":画中画/镜头视角渲染时不入画。
+            // three 0.185 的 TransformControls 不是 Object3D,可视部分在 getHelper()
+            if (!controls) return
+            const root: Object3D =
+              typeof controls.getHelper === 'function'
+                ? controls.getHelper()
+                : controls
+            return registerEditorOnly(root)
+          }}
+          object={target.node}
+          mode={mode}
+          onMouseDown={() => {
+            suppressSelectBriefly()
+            scrubRef.current = getStudioSync()?.scrub()
+            invalidate()
+          }}
+          onObjectChange={() => {
+            suppressSelectBriefly()
+            invalidate()
+            const scrub = scrubRef.current
+            if (!scrub) return
+            const node = target.node
+            scrub.capture(({set}) => {
+              // 旋转/缩放写回的是节点本地值:theatre 的 rotation/scale 属性
+              // 本来就是本地空间,和面板里看到的数字一致
+              if (mode === 'rotate') {
+                const r = node.rotation
+                set(target.obj.props.rotation, {x: r.x, y: r.y, z: r.z})
+              } else if (mode === 'scale') {
+                const s = node.scale
+                set(target.obj.props.scale, {x: s.x, y: s.y, z: s.z})
+              } else {
+                const p = node.position
+                set(target.obj.props.position, {x: p.x, y: p.y, z: p.z})
+              }
+            })
+          }}
+          onMouseUp={() => {
+            suppressSelectBriefly()
+            scrubRef.current?.commit()
+            scrubRef.current = undefined
+          }}
+        />
+      )}
+    </>
   )
+}
+
+/**
+ * 选中对象的轮廓描边(Blender 式,蒙版+边缘检测):没有自带选中高亮的
+ * 对象(放置的模型等)选中后由它提示选中态——模式无关,选择模式下它是
+ * 唯一的选中反馈。屏幕空间描边,不往场景挂任何网格;画中画/镜头取景/
+ * 导出不入画(镜头视角下 SelectionGizmo 整体不挂,这里随之缺席)。
+ * useFrame 优先级 1.5:在 drei Hud(优先级 1,主视角画面)之后、画中画
+ * (优先级 2)之前画,描边只叠在编辑主视角上。
+ */
+function SelectionOutlineHighlight({node}: {node: Object3D}) {
+  const invalidate = useThree((s) => s.invalidate)
+  const rendererRef = useRef<SelectionOutlineRenderer | null>(null)
+  useEffect(() => {
+    const renderer = createSelectionOutlineRenderer()
+    rendererRef.current = renderer
+    return () => {
+      renderer.dispose()
+      rendererRef.current = null
+    }
+  }, [])
+  // 选中切换/卸载都要触发重画:demand 模式下不 invalidate,
+  // 画面上会留着上一帧的描边残影
+  useEffect(() => {
+    invalidate()
+    return () => invalidate()
+  }, [node, invalidate])
+  useFrame(({gl, scene, camera, size, viewport}) => {
+    rendererRef.current?.render(gl, scene, camera, node, size, viewport.dpr)
+  }, 1.5)
+  return null
 }

@@ -68,6 +68,7 @@ export function buildPathMenuItems(
 }
 
 const GIZMO_MODE_KEYS: Record<GizmoMode, string> = {
+  select: 'pg.gizmo.select',
   translate: 'pg.gizmo.translate',
   rotate: 'pg.gizmo.rotate',
   scale: 'pg.gizmo.scale',
@@ -85,7 +86,7 @@ export function buildObjectMenuItems(
   },
   t: MenuT = translate,
 ): ContextMenuItem[] {
-  const modes: Array<GizmoMode> = ['translate', 'rotate', 'scale']
+  const modes: Array<GizmoMode> = ['select', 'translate', 'rotate', 'scale']
   const applyItems: ContextMenuItem[] = []
   if (opts.onChangePose) {
     applyItems.push({

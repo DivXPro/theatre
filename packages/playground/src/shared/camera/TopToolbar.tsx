@@ -1,94 +1,43 @@
 /**
- * 顶栏工具条:只放全局动作——添加模型、添加路径(各弹各的框体)、添加
- * 相机、画中画、导出视频。姿势/动作绑定具体物体,入口在右键模型的菜单里;
- * 物体的属性设置在各自面板(见 docs/superpowers/specs/2026-09-12-asset-library-split-design.md)。
+ * 顶栏工具条:三组连体按钮,组间留空——
+ *   [选择|移动|旋转|缩放] 变换模式(互斥单选,和 W/G/R/S 快捷键、对象
+ *     右键菜单共用 useGizmoMode 的 state;选择模式下只点选不挂手柄;
+ *     无选中对象时也可先设好模式)
+ *   [添加模型|添加路径|添加相机|添加锚点] 各弹各的框体
+ *   [画中画|导出视频] 输出
+ * 姿势/动作绑定具体物体,入口在右键模型的菜单里;物体的属性设置在各自
+ * 面板(见 docs/superpowers/specs/2026-09-12-asset-library-split-design.md)。
  *
  * 外观 = studio 原生工具条:连体容器(ToolbarSwitchSelectContainer)+
  * 图标按钮(ToolbarIconButton),图标+hover tooltip。chordial 挂在 studio
  * 的 shadow DOM 里(这里用不了),tooltip 是自实现的,样式照抄 BasicTooltip。
+ * 图标全部来自 @phosphor-icons/react(studio 图标包本来就是 phosphor
+ * 手移植,这里直接用库,风格天然一致)。
  * --theatre-* 令牌定义在 studio 的 :host(shadow DOM),主文档不可见,
  * 一律带同值兜底——令牌将来全局化时自动接管。
  */
 import React, {useCallback, useRef} from 'react'
 import styled from 'styled-components'
+import {
+  ArrowClockwise,
+  ArrowsOut,
+  ArrowsOutCardinal,
+  Camera,
+  Crosshair,
+  Cube,
+  Cursor,
+  Export,
+  Path,
+  PictureInPicture,
+  Stop,
+} from '@phosphor-icons/react'
 import ToolbarIconButton from '@dreamerbird/studio/uiComponents/toolbar/ToolbarIconButton'
 import ToolbarSwitchSelectContainer from '@dreamerbird/studio/uiComponents/toolbar/ToolbarSwitchSelectContainer'
-import Cube from '@dreamerbird/studio/uiComponents/icons/Cube'
-import Camera from '@dreamerbird/studio/uiComponents/icons/Camera'
 import useMenu from '@dreamerbird/studio/uiComponents/simpleContextMenu/useMenu'
 import {useT} from '@dreamerbird/studio/i18n'
 import {buildExportMenuItems} from './menuModel'
 import type {ExportSink} from './videoExport/sinks'
-
-// ---------------------------------------------------------------------------
-// studio 图标包里没有的三个:路径 / 画中画 / 导出 / 停止。16×16、
-// currentColor,风格对齐 studio 图标
-
-const PathIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-    <path
-      d="M2.5 12.5C5 4.5 11 4.5 13.5 12.5"
-      stroke="currentColor"
-      strokeWidth="1.4"
-      strokeLinecap="round"
-    />
-    <circle cx="2.5" cy="12.5" r="1.6" fill="currentColor" />
-    <circle cx="13.5" cy="12.5" r="1.6" fill="currentColor" />
-    <circle cx="8" cy="6.5" r="1.3" fill="currentColor" />
-  </svg>
-)
-
-const PipIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-    <rect
-      x="1.5"
-      y="3"
-      width="13"
-      height="10"
-      rx="1.5"
-      stroke="currentColor"
-      strokeWidth="1.3"
-    />
-    <rect x="8.5" y="8" width="4.5" height="3.5" rx="0.8" fill="currentColor" />
-  </svg>
-)
-
-const ExportIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-    <path
-      d="M8 2.5v6.5M4.8 6.6L8 9.8l3.2-3.2"
-      stroke="currentColor"
-      strokeWidth="1.4"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M2.5 11.5v1a1 1 0 001 1h9a1 1 0 001-1v-1"
-      stroke="currentColor"
-      strokeWidth="1.4"
-      strokeLinecap="round"
-    />
-  </svg>
-)
-
-const StopIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-    <rect x="4" y="4" width="8" height="8" rx="1.2" fill="currentColor" />
-  </svg>
-)
-
-const AnchorIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-    <circle cx="8" cy="8" r="3.2" stroke="currentColor" strokeWidth="1.3" />
-    <path
-      d="M8 1.5v3M8 11.5v3M1.5 8h3M11.5 8h3"
-      stroke="currentColor"
-      strokeWidth="1.3"
-      strokeLinecap="round"
-    />
-    <circle cx="8" cy="8" r="0.9" fill="currentColor" />
-  </svg>
-)
+import type {GizmoMode} from './PlacementManager'
 
 // ---------------------------------------------------------------------------
 
@@ -98,6 +47,9 @@ const Positioning = styled.div`
   left: 50%;
   transform: translateX(-50%);
   z-index: 10;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
 `
 
 /** 原生 ToolbarIconButton + 本页需要的两个变体:禁用置灰、导出中转红 */
@@ -111,11 +63,6 @@ const Btn = styled(ToolbarIconButton)`
   }
   &.danger {
     color: #ff7a7a;
-  }
-  /* 画中画开启态:沿用原生 selected 高亮,颜色对齐小窗边框 */
-  &.selected {
-    color: #6fb7ff;
-    border-bottom-color: #6fb7ff;
   }
 
   /* tooltip:样式照抄 studio BasicTooltip;按钮 relative,气泡钉在正下方 */
@@ -154,6 +101,14 @@ const Btn = styled(ToolbarIconButton)`
   }
 `
 
+/** 画中画开启态:沿用原生 selected 高亮,颜色对齐小窗边框 */
+const PipBtn = styled(Btn)`
+  &.selected {
+    color: #6fb7ff;
+    border-bottom-color: #6fb7ff;
+  }
+`
+
 function ToolbarBtn({
   tip,
   hint,
@@ -177,7 +132,41 @@ function ToolbarBtn({
   )
 }
 
+const GIZMO_MODES: ReadonlyArray<{
+  mode: GizmoMode
+  tipKey: string
+  hintKey: string
+  Icon: typeof ArrowsOutCardinal
+}> = [
+  {
+    mode: 'select',
+    tipKey: 'pg.gizmo.select',
+    hintKey: 'pg.gizmo.select.hint',
+    Icon: Cursor,
+  },
+  {
+    mode: 'translate',
+    tipKey: 'pg.gizmo.translate',
+    hintKey: 'pg.gizmo.translate.hint',
+    Icon: ArrowsOutCardinal,
+  },
+  {
+    mode: 'rotate',
+    tipKey: 'pg.gizmo.rotate',
+    hintKey: 'pg.gizmo.rotate.hint',
+    Icon: ArrowClockwise,
+  },
+  {
+    mode: 'scale',
+    tipKey: 'pg.gizmo.scale',
+    hintKey: 'pg.gizmo.scale.hint',
+    Icon: ArrowsOut,
+  },
+]
+
 export function TopToolbar({
+  gizmoMode,
+  onSelectGizmoMode,
   onToggleModelLibrary,
   onTogglePathLibrary,
   onAddCamera,
@@ -192,6 +181,9 @@ export function TopToolbar({
   pipDisabled = false,
   libraryDisabled = false,
 }: {
+  /** 变换模式组的当前模式,与 G/R/S 快捷键、对象右键菜单同源 */
+  gizmoMode: GizmoMode
+  onSelectGizmoMode: (mode: GizmoMode) => void
   onToggleModelLibrary: () => void
   onTogglePathLibrary: () => void
   onAddCamera: () => void
@@ -220,6 +212,19 @@ export function TopToolbar({
   return (
     <Positioning>
       <ToolbarSwitchSelectContainer>
+        {GIZMO_MODES.map(({mode, tipKey, hintKey, Icon}) => (
+          <ToolbarBtn
+            key={mode}
+            className={gizmoMode === mode ? 'selected' : undefined}
+            onClick={() => onSelectGizmoMode(mode)}
+            tip={t(tipKey)}
+            hint={t(hintKey)}
+          >
+            <Icon size={16} />
+          </ToolbarBtn>
+        ))}
+      </ToolbarSwitchSelectContainer>
+      <ToolbarSwitchSelectContainer>
         <ToolbarBtn
           disabled={libraryDisabled}
           onClick={onToggleModelLibrary}
@@ -230,7 +235,7 @@ export function TopToolbar({
               : t('pg.toolbar.addModel.hint')
           }
         >
-          <Cube />
+          <Cube size={16} />
         </ToolbarBtn>
         <ToolbarBtn
           disabled={libraryDisabled}
@@ -242,23 +247,26 @@ export function TopToolbar({
               : t('pg.toolbar.addPath.hint')
           }
         >
-          <PathIcon />
+          <Path size={16} />
         </ToolbarBtn>
         <ToolbarBtn
           onClick={onAddCamera}
           tip={t('pg.toolbar.addCamera')}
           hint={t('pg.toolbar.addCamera.hint')}
         >
-          <Camera />
+          <Camera size={16} />
         </ToolbarBtn>
         <ToolbarBtn
           onClick={onAddAnchor}
           tip={t('pg.toolbar.addAnchor')}
           hint={t('pg.toolbar.addAnchor.hint')}
         >
-          <AnchorIcon />
+          <Crosshair size={16} />
         </ToolbarBtn>
+      </ToolbarSwitchSelectContainer>
+      <ToolbarSwitchSelectContainer>
         <ToolbarBtn
+          as={PipBtn}
           onClick={onTogglePip}
           disabled={pipDisabled}
           className={pipVisible && !pipDisabled ? 'selected' : undefined}
@@ -271,7 +279,7 @@ export function TopToolbar({
                 : t('pg.toolbar.pip.show')
           }
         >
-          <PipIcon />
+          <PictureInPicture size={16} />
         </ToolbarBtn>
         <ToolbarBtn
           ref={exportButtonRef}
@@ -296,7 +304,7 @@ export function TopToolbar({
                 : t('pg.toolbar.export.hint')
           }
         >
-          {exporting ? <StopIcon /> : <ExportIcon />}
+          {exporting ? <Stop size={16} /> : <Export size={16} />}
         </ToolbarBtn>
       </ToolbarSwitchSelectContainer>
       {exportMenuNode}
