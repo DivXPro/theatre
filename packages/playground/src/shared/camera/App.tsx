@@ -169,6 +169,8 @@ function Model({url, selectLocked}: {url: string; selectLocked?: boolean}) {
     // 放置模式下点击是确认落点:不选中,也不拦截事件,让它落到
     // PlacementRig 的地面网格上完成确认;点 gizmo 箭头穿透过来的误点也吞掉
     if (selectLocked || isSelectSuppressed()) return
+    // 姿势会话中点击其他对象不响应(规格:不抢选中)——被摆模型的选中不动
+    if (getPoseSession()) return
     event.stopPropagation()
     const studio = getStudioSync()
     if (studio && thingyObjRef.current) {
