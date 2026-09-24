@@ -13,6 +13,9 @@ import {
   poseHitTest,
   markPoseDirty,
   isPoseDirty,
+  getPoseManipulatorMode,
+  setPoseManipulatorMode,
+  onPoseManipulatorModeChange,
 } from './poseSession'
 
 beforeEach(() => {
@@ -142,4 +145,38 @@ test('requestPoseExit:监听抛异常也兜底清会话(异常照常上抛)', ()
   expect(() => requestPoseExit()).toThrow('listener boom')
   expect(getPoseSession()).toBeNull() // 不卡死
   off()
+})
+
+// —— 操纵器模式(浮动小条与 W/E 键共用)——
+
+test('操纵器模式默认 move', () => {
+  expect(getPoseManipulatorMode()).toBe('move')
+})
+
+test('setPoseManipulatorMode 切换并通知订阅;重复设同值不重复通知', () => {
+  const seen: string[] = []
+  const off = onPoseManipulatorModeChange((m) => seen.push(m))
+  setPoseManipulatorMode('rotate')
+  expect(getPoseManipulatorMode()).toBe('rotate')
+  setPoseManipulatorMode('rotate') // 同值去重
+  setPoseManipulatorMode('move')
+  expect(seen).toEqual(['rotate', 'move'])
+  off()
+})
+
+test('操纵器模式记住偏好:清会话/退出都不重置', () => {
+  setPoseManipulatorMode('rotate')
+  enterPoseSession('k')
+  clearPoseSession()
+  expect(getPoseManipulatorMode()).toBe('rotate') // 下次进入沿用上次的
+  setPoseManipulatorMode('move') // 复原,免得影响后面的用例
+})
+
+test('onPoseManipulatorModeChange 退订后不再收到', () => {
+  const seen: string[] = []
+  const off = onPoseManipulatorModeChange((m) => seen.push(m))
+  off()
+  setPoseManipulatorMode('rotate')
+  expect(seen).toEqual([])
+  setPoseManipulatorMode('move')
 })

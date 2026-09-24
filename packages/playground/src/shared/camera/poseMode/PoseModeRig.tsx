@@ -26,10 +26,13 @@ import {stringifyPoseOverride} from './poseOverride'
 import {
   clearPoseSession,
   clearPoseSessionIfCurrent,
+  getPoseManipulatorMode,
   isPoseDirty,
   markPoseDirty,
   onPoseExitRequested,
+  onPoseManipulatorModeChange,
   setPoseHitTester,
+  setPoseManipulatorMode,
 } from './poseSession'
 
 export function PoseModeRig({
@@ -99,7 +102,8 @@ export function PoseModeRig({
     })
     ctlRef.current = ctl
 
-    // threeIK 0.0.1 无内置热键:自监听 W/E 切操纵器模式(仿 useGizmoMode 风格)。
+    // threeIK 0.0.1 无内置热键:自监听 W/E 经 poseSession 共享状态切操纵器
+    // 模式(浮动小条按钮同一入口,UI 高亮因此永远同步;直接调 ctl 会让小条瞎)。
     // Esc 未被监听,天然留给 App 退出会话。
     const onKey = (ev: KeyboardEvent) => {
       if (ev.repeat) return
@@ -111,12 +115,19 @@ export function PoseModeRig({
           target.isContentEditable)
       )
         return
-      if (ev.code === 'KeyW') ctl.setManipulatorMode('move')
-      else if (ev.code === 'KeyE') ctl.setManipulatorMode('rotate')
+      if (ev.code === 'KeyW') setPoseManipulatorMode('move')
+      else if (ev.code === 'KeyE') setPoseManipulatorMode('rotate')
       else return
       invalidate() // demand 帧循环:无指针按下时补帧,环/箭头立刻可见
     }
     window.addEventListener('keydown', onKey)
+
+    // 共享状态 → threeIK:小条按钮切换时转发;进会话用记住的偏好初始化
+    ctl.setManipulatorMode(getPoseManipulatorMode())
+    const offMode = onPoseManipulatorModeChange((m) => {
+      ctl.setManipulatorMode(m)
+      invalidate()
+    })
 
     // 双击空白退出的命中测试:点在被摆模型或控制球上不算空白
     const raycaster = new Raycaster()
@@ -157,6 +168,7 @@ export function PoseModeRig({
     invalidate() // 进姿势模式首帧:控制球立刻可见
     return () => {
       offExit()
+      offMode()
       setPoseHitTester(null)
       window.removeEventListener('keydown', onKey)
       ctl.dispose()

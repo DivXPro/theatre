@@ -64,6 +64,11 @@ export const en: Messages = {
   'pg.gizmo.rotate.hint': 'Shortcut: R',
   'pg.gizmo.scale.hint': 'Shortcut: S',
 
+  'pg.posebar.posing': 'Posing',
+  'pg.posebar.esc': 'Esc to finish',
+  'pg.posebar.move.hint': 'Shortcut: W',
+  'pg.posebar.rotate.hint': 'Shortcut: E',
+
   'pg.props.aimTarget': 'Aim target',
   'pg.props.aimNone': 'None',
   'pg.props.anchorParent': 'Parent',
@@ -171,6 +176,11 @@ export const zhCN: Messages = {
   'pg.gizmo.translate.hint': '快捷键 G',
   'pg.gizmo.rotate.hint': '快捷键 R',
   'pg.gizmo.scale.hint': '快捷键 S',
+
+  'pg.posebar.posing': '正在摆姿势',
+  'pg.posebar.esc': 'Esc 完成',
+  'pg.posebar.move.hint': '快捷键 W',
+  'pg.posebar.rotate.hint': '快捷键 E',
 
   'pg.props.aimTarget': '瞄准目标',
   'pg.props.aimNone': '无',

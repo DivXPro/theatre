@@ -43,6 +43,7 @@ import {disposeObjectTree} from './assetLibrary/dispose'
 import {applyPose, captureBindPose} from './assetLibrary/pose'
 import {effectivePoseBones} from './poseMode/poseOverride'
 import {PoseModeRig} from './poseMode/PoseModeRig'
+import {PoseModeBar} from './poseMode/PoseModeBar'
 import {
   enterPoseSession,
   getPoseSession,
@@ -1375,12 +1376,16 @@ function PlacedModelCore({
     >
       <primitive object={instance} position={[0, lift, 0]} />
       {sheetObject && poseSessionKey === entry.key && (
-        <PoseModeRig
-          instance={instance}
-          sheetObject={sheetObject}
-          placementKey={entry.key}
-          sheet={sheet}
-        />
+        <>
+          <PoseModeRig
+            instance={instance}
+            sheetObject={sheetObject}
+            placementKey={entry.key}
+            sheet={sheet}
+          />
+          {/* 浮动小条跟模型走(挂头骨锚点):移动/旋转互斥切换,与 W/E 键同一状态源 */}
+          <PoseModeBar instance={instance} />
+        </>
       )}
     </e.group>
   )

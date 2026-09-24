@@ -94,6 +94,34 @@ export function clearPoseSession(): void {
   emitChange()
 }
 
+// —— 操纵器模式(姿势会话内 W/E 键 / 浮动小条按钮共用)——
+
+export type PoseManipulatorMode = 'move' | 'rotate'
+
+/** 记住偏好:不随 clearPoseSession 清零,下次进入沿用上次的(Maya 习惯) */
+let manipulatorMode: PoseManipulatorMode = 'move'
+const modeListeners = new Set<(m: PoseManipulatorMode) => void>()
+
+export function getPoseManipulatorMode(): PoseManipulatorMode {
+  return manipulatorMode
+}
+
+export function setPoseManipulatorMode(m: PoseManipulatorMode): void {
+  if (m === manipulatorMode) return
+  manipulatorMode = m
+  for (const cb of modeListeners) cb(m)
+}
+
+/** PoseModeRig 订阅(转发 threeIK)与浮动小条订阅(高亮当前模式) */
+export function onPoseManipulatorModeChange(
+  cb: (m: PoseManipulatorMode) => void,
+): () => void {
+  modeListeners.add(cb)
+  return () => {
+    modeListeners.delete(cb)
+  }
+}
+
 /** React 订阅hook:会话命中的 placementKey,无会话为 null */
 export function usePoseSessionKey(): string | null {
   const [key, setKey] = useState<string | null>(getPoseSession()?.key ?? null)

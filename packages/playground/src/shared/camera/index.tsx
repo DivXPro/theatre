@@ -12,7 +12,11 @@ import {I18nProvider} from '@dreamerbird/studio/i18n'
 // packages/sync-server) — no app needed in the self-hosted minimal loop
 // 不注册 @dreamerbird/r3f 扩展:它的 Create Snapshot 面板/Editor 配置节点
 // 在本场景无人消费
-void theatre.init({studio: true, serverUrl: 'ws://localhost:3000'})
+// ?sync=ws://host:port 覆盖 sync-server 地址:浏览器实测隔离用(默认 3000
+// 是用户的服,共享工作区的 8082/8083 两个 vite 都会吃到本文件,测试连错服
+// 会把用户页面拉进测试场景)。缺省走默认路径,不影响日常使用。
+const syncParam = new URLSearchParams(window.location.search).get('sync')
+void theatre.init({studio: true, serverUrl: syncParam ?? 'ws://localhost:3000'})
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <I18nProvider>
