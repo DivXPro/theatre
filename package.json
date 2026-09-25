@@ -11,6 +11,7 @@
     "cli": "tsx devEnv/cli.ts",
     "playground": "yarn workspace playground run serve",
     "benchmarks": "yarn workspace benchmarks run serve",
+    "sync-server": "yarn workspace @dreamerbird/sync-server run cli dev start",
     "test:e2e": "yarn workspace playground run test",
     "test:e2e:ci": "yarn workspace playground run test:ci",
     "typecheck": "yarn run build:ts",
