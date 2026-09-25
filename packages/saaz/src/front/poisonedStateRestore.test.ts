@@ -90,6 +90,33 @@ function poisonStoredUpdates(stored: unknown, invokations: unknown): unknown {
   return s
 }
 
+/**
+ * 把存档里所有 session 的 optimistic update 队列整体替换为指定事务,
+ * 并把 lastIncorporatedPeerClock 复位为 -1,让新 front 在接管 closed session
+ * 时真实地重放这些 update(否则会被 peerClock 过滤掉)。
+ */
+function replaceStoredUpdates(
+  stored: unknown,
+  transactions: $IntentionalAny[],
+): unknown {
+  const s = JSON.parse(JSON.stringify(stored)) as $IntentionalAny
+  for (const session of Object.values<$IntentionalAny>(s.sessions)) {
+    if (session?.keyval?.sessionState) {
+      session.keyval.sessionState = {
+        ...session.keyval.sessionState,
+        lastIncorporatedPeerClock: -1,
+      }
+    }
+    if (session?.lists) {
+      session.lists.optimisticUpdates = transactions.map((t, i) => ({
+        id: '#' + (i + 1),
+        transaction: {...t, peerClock: i + 1},
+      }))
+    }
+  }
+  return s
+}
+
 // 每个测试都必须 teardown(即使是断言失败):navigator.locks mock 是全局的,
 // 不释放会让后续测试静默跳过 closed session 接管,毒化根本不会被加载。
 describe('restoring from incompatible persisted state', () => {
@@ -267,6 +294,74 @@ describe('restoring from incompatible persisted state', () => {
       // 状态来自已同步的 snapshot(42),坏 update 不参与
       expect(front.state.op.opCount).toBe(42)
       // 坏 update 被跳过时必须告警,而不是静默丢数据
+      expect(
+        warnSpy.mock.calls.some(
+          (args) =>
+            typeof args[0] === 'string' &&
+            args[0].includes('skipping a persisted update'),
+        ),
+      ).toBe(true)
+      front.tx((e) => e.setCount({to: 5}), undefined)
+      expect(front.state.op.opCount).toBe(5)
+    } finally {
+      front.teardown()
+      warnSpy.mockRestore()
+    }
+  })
+
+  test('follower update whose ops cross a skipped update’s nodes is skipped wholesale; front stays usable', async () => {
+    // 2026-09-25 用户实测崩溃的完整机制:
+    // txA(旧开发版本留下,editor 已不存在)回放失败被整体跳过——它本该创建
+    // historic 节点;txB 的 draftOps 穿过这个缺失节点时,setDeep 自动补出
+    // 没有 $type 的裸中间节点混进 mapProps,之后第一个读 draft 的事务抛
+    // "mapProps[historic] is not an ahistoric cell"
+    // (initialiseProjectState → setProjectState → _ensureAll)。
+    // 修复后:txB 这种"路径穿过缺失节点"的 update 必须被整体跳过,
+    // 状态不毒化,写事务正常工作。
+    const stored = replaceStoredUpdates(await seedStorageWithSyncedState(), [
+      {
+        invokations: [['removedEditor', {to: 1}]],
+        generatorRecordings: {},
+        draftOps: [
+          {
+            type: 'ChangeType',
+            path: [['base', 'historic']],
+            value: ['map', 'base'],
+          },
+        ],
+      },
+      {
+        invokations: [['setCount', {to: 99}]],
+        generatorRecordings: {},
+        draftOps: [
+          {
+            type: 'ChangeType',
+            path: [
+              ['base', 'historic'],
+              ['base', 'panels'],
+            ],
+            value: ['map', 'base'],
+          },
+        ],
+      },
+    ])
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
+    const front = new SaazFront({
+      schema,
+      dbName: 'd',
+      storageAdapter: new FrontMemoryAdapter(stored),
+      backend: freshBack(),
+    })
+    try {
+      await front.ready
+      // 两条坏 update 都被跳过:状态来自已同步的 snapshot(42)
+      expect(front.state.op.opCount).toBe(42)
+      // 崩溃路径原样复现:读 draft.historic + 写入,不得抛
+      // "mapProps[historic] is not an ahistoric cell"
+      front.tx(undefined, (cellDraft) => {
+        void (cellDraft as $IntentionalAny).historic
+        ;(cellDraft as $IntentionalAny).foo = 'bar'
+      })
       expect(
         warnSpy.mock.calls.some(
           (args) =>

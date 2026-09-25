@@ -219,13 +219,25 @@ export default class SaazBack implements SaazBackInterface {
       }
 
       const snapshotBefore = snapshotSoFar
-      const [opSnapshotAfter] = applyOptimisticUpdateToState(
-        update,
-        snapshotBefore,
-        this._schema,
-        true,
-      )
-      snapshotSoFar = opSnapshotAfter
+      try {
+        const [opSnapshotAfter] = applyOptimisticUpdateToState(
+          update,
+          snapshotBefore,
+          this._schema,
+          true,
+        )
+        snapshotSoFar = opSnapshotAfter
+      } catch (error) {
+        // 无法回放的 update(旧开发版本/不兼容数据):跳过并照常确认。
+        // 不确认的话它会永远卡在客户端队列里,每次同步都重试(且旧实现是
+        // 整批抛错——同批后续好更新也永远落不了库)。跳过的数据丢失用
+        // 告警显式记录,与前端 _applyPersistedTransaction 的跳过策略一致。
+        console.warn(
+          '[saaz-back] skipping an update that fails to replay ' +
+            '(it may come from an older, incompatible version):',
+          error,
+        )
+      }
       lastAcknowledgedClock = update.peerClock
       backendClock++
     }
