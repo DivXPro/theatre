@@ -39,8 +39,9 @@ function isEditableTarget(target: EventTarget | null): boolean {
  * studio UI 挂在 shadow DOM;事件 composedPath 含其宿主即视为 studio 内部。
  * 根标识实证:packages/studio/src/UI/UINonSSRBits.ts:17 设
  * `containerEl.id = 'theatrejs-studio-root'`(playground pipLayout.ts 同 id)。
+ * 导出复用:姿势退出 Enter 守卫(F3)同样跳过 studio 内部按键。
  */
-function isInsideStudioUi(ev: KeyboardEvent): boolean {
+export function isInsideStudioUi(ev: KeyboardEvent): boolean {
   const path = ev.composedPath() as HTMLElement[]
   return path.some(
     (el) =>

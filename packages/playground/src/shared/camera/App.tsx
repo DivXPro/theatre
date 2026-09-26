@@ -73,7 +73,7 @@ import {
 } from './anchorsRegistry'
 import {PipCameraSelector} from './PipCameraSelector'
 import {usePipBottom} from './pipLayout'
-import {bindUndoShortcuts} from './undoShortcuts'
+import {bindUndoShortcuts, isInsideStudioUi} from './undoShortcuts'
 import {AssetLibraryPanel} from './assetLibrary/AssetLibraryPanel'
 import {getLibrary, useLibraryEntries} from './assetLibrary/library'
 import {ShotCamera} from './ShotCamera'
@@ -149,6 +149,7 @@ import {
   writePoseKeyframe,
 } from './poseMode/poseTrack'
 import {parsePoseValue, serializeLibPose} from './poseMode/poseValue'
+import {isPoseExitGuardedTarget} from './poseMode/poseExitGuard'
 import {poseStatusText} from './poseStatusText'
 
 document.body.style.backgroundColor = '#171717'
@@ -1375,17 +1376,14 @@ function App({
     if (!poseSessionKey || shotView || exporting) return
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape' && e.key !== 'Enter') return
-      // Enter 在输入框/可编辑区域里是提交文本,不能误触退出
-      // (守卫写法照 PoseModeRig 的 W/E 监听;Esc 无文本副作用,不用守)
+      // Enter 在交互元素(输入框/按钮/链接等)里是控件自身语义——按钮
+      // Enter=click,会在保存帧之后误触按钮处理器(打帧/清除把刚存的帧
+      // 覆盖或删轨);studio UI 内的事件也不触发(shadow DOM retarget,
+      // e.target 失真,交给 studio 自己处理)。Esc 无文本副作用,不用守
+      // (spec §8.1 终审 F3)
       if (e.key === 'Enter') {
-        const target = e.target as HTMLElement | null
-        if (
-          target &&
-          (target.tagName === 'INPUT' ||
-            target.tagName === 'TEXTAREA' ||
-            target.isContentEditable)
-        )
-          return
+        if (isPoseExitGuardedTarget(e.target)) return
+        if (isInsideStudioUi(e)) return
       }
       requestPoseExit()
     }

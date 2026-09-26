@@ -65,6 +65,11 @@ export function PoseModeRig({
   const controlNamesRef = useRef<string[]>([])
 
   useEffect(() => {
+    // 播放中进会话:先暂停(spec §8.1.1)——否则播放头锁与播放钟打架,
+    // Rig 的 useFrame 播放时早退 IK 永不求解;脏 Esc 还会把 mixer 帧
+    // 烤进姿势关键帧。必须在 determinePoseFrameMode 读 position 之前,
+    // 保证读到的播放头稳定
+    if (val(sheet.sequence.pointer.playing)) sheet.sequence.pause()
     const rootBone = findRootBone(instance)
     const spec = resolveControlSpec(instance)
     if (!rootBone || !spec) {
