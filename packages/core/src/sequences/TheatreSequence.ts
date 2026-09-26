@@ -74,6 +74,11 @@ export default class TheatreSequence implements ISequence {
     privateAPI(this).pause()
   }
 
+  /** 把位置吸附到序列网格(theatre 写帧也贴同一网格) */
+  closestGridPosition(posInUnitSpace: number): number {
+    return privateAPI(this).closestGridPosition(posInUnitSpace)
+  }
+
   get position() {
     return privateAPI(this).position
   }

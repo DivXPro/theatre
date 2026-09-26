@@ -154,17 +154,10 @@ export function PoseModeRig({
 
     // 帧模式判定(spec §8.1):贴网格后帧上=编辑、帧间=新建;底姿由
     // 既有应用 effect 保证(非播放时画面恒为播放头求值,所见即所编)
-    // ISequence 公开类型未声明 closestGridPosition(实现里有,studio 内部直接用)
-    const snapToGrid = (t: number) =>
-      (
-        sheet.sequence as unknown as {
-          closestGridPosition(posInUnitSpace: number): number
-        }
-      ).closestGridPosition(t)
     const frame = determinePoseFrameMode(
       getPoseKeyframePositions(sheetObject),
       sheet.sequence.position,
-      snapToGrid,
+      (t) => sheet.sequence.closestGridPosition(t),
     )
     sheet.sequence.position = frame.position
     setPoseSessionFrame(placementKey, frame)

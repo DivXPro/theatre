@@ -583,6 +583,26 @@ export interface ISequence {
   pause(): void
 
   /**
+   * Snaps a position (in unit space) to the sequence's grid.
+   *
+   * @remarks
+   * The grid's unit length is `1 / subUnitsPerUnit`, so with the default
+   * 30 sub-units per unit the grid positions are multiples of `1/30`.
+   * Theatre's own keyframe writes snap to this same grid, so values
+   * returned by this method land exactly on positions where keyframes
+   * can be written.
+   *
+   * @example
+   * Usage:
+   * ```ts
+   * // let's assume `sheet` is a sheet with the default 30 sub-units per unit
+   * const snapped = sheet.sequence.closestGridPosition(2.001)
+   * console.log(snapped) // 2
+   * ```
+   */
+  closestGridPosition(posInUnitSpace: number): number
+
+  /**
    * The current position of the playhead.
    * In a time-based sequence, this represents the current time in seconds.
    */
