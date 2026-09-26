@@ -142,6 +142,8 @@ import {
   requestPoseExit,
   usePoseSessionKey,
 } from './poseMode/poseSession'
+import {setPoseValue} from './poseMode/poseTrack'
+import {serializeLibPose} from './poseMode/poseValue'
 
 document.body.style.backgroundColor = '#171717'
 
@@ -1428,15 +1430,11 @@ function App({
 
   const applyPose = useCallback(
     (poseEntry: PoseEntry) => {
-      const studio = getStudioSync()
-      if (!studio || !selectedPlacement) return
-      const scrub = studio.scrub()
-      scrub.capture(({set}) => {
-        set(selectedPlacement.props.pose, poseEntry.id)
-        // 应用库姿势 = 明确覆盖手工摆的,清掉内联 override
-        set(selectedPlacement.props.poseOverride as any, '')
-      })
-      scrub.commit()
+      if (!selectedPlacement) return
+      // 库姿势应用(spec §6.2/§7.3):写 lib 引用。有轨道时在播放头写
+      // 关键帧(引用入帧);无轨道时写静态值,不建轨道——固定姿势不
+      // 意外多出轨道。旧「顺手清 poseOverride」随两字段合并消失。
+      setPoseValue(selectedPlacement, serializeLibPose(poseEntry.id))
     },
     [selectedPlacement],
   )
