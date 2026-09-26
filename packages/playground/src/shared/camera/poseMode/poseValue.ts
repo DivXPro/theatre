@@ -65,15 +65,25 @@ export function parsePoseValue(json: string): PosePropValue | null {
   return {kind: 'custom', bones: parsed as PoseBones}
 }
 
-/** 是否已是新格式(带合法 kind 的 JSON)——迁移只搬旧格式,见 poseMigration */
+/** 是否已是新格式(带合法 kind 与完整负载的 JSON)——与 parsePoseValue 同严格度,缺 id/bones 不算迁移完成 */
 export function isMigratedPoseValue(json: string): boolean {
   const trimmed = (json ?? '').trim()
   if (!trimmed.startsWith('{')) return false
   try {
     const parsed: unknown = JSON.parse(trimmed)
-    if (!parsed || typeof parsed !== 'object') return false
-    const kind = (parsed as {kind?: unknown}).kind
-    return kind === 'lib' || kind === 'custom'
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return false
+    }
+    const rec = parsed as Record<string, unknown>
+    if (rec.kind === 'lib') return typeof rec.id === 'string' && !!rec.id
+    if (rec.kind === 'custom') {
+      return (
+        !!rec.bones &&
+        typeof rec.bones === 'object' &&
+        !Array.isArray(rec.bones)
+      )
+    }
+    return false
   } catch {
     return false
   }

@@ -57,6 +57,7 @@ import {
 import {resolveControlSpec} from './poseMode/controlSpec'
 import {prefetchLibPoses, resolvePoseBones} from './poseMode/poseLibResolve'
 import {collectLibPoseIds, getPoseTrackId} from './poseMode/poseTrack'
+import {computeLegacyPoseMigration} from './poseMode/poseMigration'
 import {parsePoseValue} from './poseMode/poseValue'
 import type {ModelEntry, PoseEntry} from './assetLibrary/types'
 
@@ -1229,6 +1230,24 @@ function PlacedModelCore({
   }, [animationId])
 
   const [libResolveTick, setLibResolveTick] = useState(0)
+  // 旧两字段 → 新 pose 值迁移(spec §9):一个事务(可撤销、经 saaz 同步),
+  // 幂等——新值已存在或旧值双空即不触发;迁移后旧 override unset 即天然标记
+  useEffect(() => {
+    if (!sheetObject) return
+    const legacyPose = (val(sheetObject.props.pose) as string) ?? ''
+    const legacyOverride = (val(sheetObject.props.poseOverride) as string) ?? ''
+    const migrated = computeLegacyPoseMigration({
+      pose: legacyPose,
+      poseOverride: legacyOverride,
+    })
+    if (migrated === null && !legacyOverride.trim()) return
+    const studio = getStudioSync()
+    if (!studio) return
+    studio.transaction(({set, unset}) => {
+      if (migrated !== null) set(sheetObject.props.pose, migrated)
+      if (legacyOverride.trim()) unset(sheetObject.props.poseOverride)
+    })
+  }, [sheetObject])
   const poseBones = useMemo(
     () => resolvePoseBones(parsePoseValue(poseJson)),
     // libResolveTick:库引用异步解析到手后 onReady 自增,静止态下逼 memo 重算

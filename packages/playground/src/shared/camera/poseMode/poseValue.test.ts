@@ -72,5 +72,7 @@ describe('serializePoseValue / isMigratedPoseValue', () => {
     expect(isMigratedPoseValue(JSON.stringify(bones))).toBe(false)
     expect(isMigratedPoseValue('')).toBe(false)
     expect(isMigratedPoseValue('{oops')).toBe(false)
+    expect(isMigratedPoseValue('{"kind":"lib"}')).toBe(false) // 缺 id
+    expect(isMigratedPoseValue('{"kind":"custom"}')).toBe(false) // 缺 bones
   })
 })
