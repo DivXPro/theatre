@@ -41,7 +41,7 @@ import {
 import {useModalGrab} from './modalGrab'
 import {disposeObjectTree} from './assetLibrary/dispose'
 import {applyPose, captureBindPose} from './assetLibrary/pose'
-import {effectivePoseBones} from './poseMode/poseOverride'
+import {isPoseEntryUsed, posePropConfigShape} from './placementPoseProps'
 import {PoseModeRig} from './poseMode/PoseModeRig'
 import {PoseModeBar} from './poseMode/PoseModeBar'
 import {
@@ -51,6 +51,9 @@ import {
   usePoseSessionKey,
 } from './poseMode/poseSession'
 import {resolveControlSpec} from './poseMode/controlSpec'
+import {prefetchLibPoses, resolvePoseBones} from './poseMode/poseLibResolve'
+import {collectLibPoseIds} from './poseMode/poseTrack'
+import {parsePoseValue} from './poseMode/poseValue'
 import type {ModelEntry, PoseEntry} from './assetLibrary/types'
 
 /**
@@ -135,10 +138,7 @@ const fileConfigCache = new Map<string, ReturnType<typeof t.file>>()
  */
 const literalConfigCache = new Map<string, ReturnType<typeof t.stringLiteral>>()
 
-function literalConfigFor(
-  kind: 'animation' | 'pose',
-  modelEntryId: string | undefined,
-) {
+function literalConfigFor(kind: 'animation', modelEntryId: string | undefined) {
   const cacheKey = `${kind}:${modelEntryId ?? ''}`
   let config = literalConfigCache.get(cacheKey)
   if (!config) {
@@ -148,10 +148,7 @@ function literalConfigFor(
       // label 用函数形式:studio 每次渲染现调(resolvePropLabel),
       // 语言切换热改;箭头在缓存首次创建时定义,引用稳定
       {
-        label: () =>
-          translate(
-            kind === 'animation' ? 'pg.props.animation' : 'pg.props.pose',
-          ),
+        label: () => translate('pg.props.animation'),
         as: 'menu',
       },
     )
@@ -187,7 +184,7 @@ export function countLibraryEntryUsage(entryId: string): number {
   for (const [obj, {entry}] of placementObjects.entries()) {
     if (entry.libraryEntryId === entryId) n++
     if (val(obj.props.animation) === entryId) n++
-    if (val(obj.props.pose) === entryId) n++
+    if (isPoseEntryUsed((val(obj.props.pose) as string) ?? '', entryId)) n++
   }
   return n
 }
@@ -1080,10 +1077,13 @@ function PlacedModelCore({
       sourceType === 'library' ? entry.libraryEntryId : undefined
     const props: Record<string, any> = {
       animation: literalConfigFor('animation', modelEntryId),
-      pose: literalConfigFor('pose', modelEntryId),
-      // 摆姿势的内联产物(JSON 字符串);label 函数形式,i18n 热切换对齐既有写法
+      // 姿势 = 时间轴单属性(spec §6.1):值 JSON(lib 引用|custom 快照),
+      // 面板 hidden(JSON 不可读),自定义插值器让它可打帧且平滑混合
+      pose: t.string('', posePropConfigShape().opts),
+      // 迁移过渡(spec §9):读取/清理旧值用,面板隐藏;下个大版本删 key
       poseOverride: t.string('', {
         label: () => translate('pg.props.poseOverride'),
+        hidden: true,
       }),
     }
     if (sourceType === 'local' && entry.assetId) {
@@ -1170,11 +1170,9 @@ function PlacedModelCore({
     bindPoseRef.current = captureBindPose(instance)
   }, [instance])
   const animationId = useVal(sheetObject?.props.animation) ?? ''
-  const poseId = useVal(sheetObject?.props.pose) ?? ''
-  const poseOverrideJson = useVal(sheetObject?.props.poseOverride) ?? ''
+  const poseJson = (useVal(sheetObject?.props.pose) as string | undefined) ?? ''
   const poseSessionKey = usePoseSessionKey()
   const [clip, setClip] = useState<AnimationClip | null>(null)
-  const [poseBones, setPoseBones] = useState<PoseEntry['bones'] | null>(null)
   const currentActionRef = useRef<AnimationAction | null>(null)
   const pendingUncachesRef = useRef<Array<ReturnType<typeof setTimeout>>>([])
 
@@ -1226,27 +1224,24 @@ function PlacedModelCore({
     }
   }, [animationId])
 
-  // pose 属性变化时加载库姿势(内联 JSON,无 blob 加载)
+  const poseBones = useMemo(
+    () => resolvePoseBones(parsePoseValue(poseJson)),
+    [poseJson],
+  )
+  // 库姿势引用预取(spec §5):当前值与轨道全部帧值里的 lib id 异步进缓存,
+  // 到手 invalidate 触发重求值,阶跃变平滑
   useEffect(() => {
-    if (!poseId) {
-      setPoseBones(null)
-      return
-    }
+    if (!sheetObject) return
+    const ids = collectLibPoseIds(sheetObject)
+    if (ids.length === 0) return
     let cancelled = false
-    const load = async () => {
-      const poseEntry = await getLibrary().backend.getEntry(poseId)
-      if (!cancelled) {
-        setPoseBones(poseEntry?.kind === 'pose' ? poseEntry.bones : null)
-      }
-    }
-    load().catch((err) => {
-      console.warn('[placement] 姿势加载失败', err)
-      if (!cancelled) setPoseBones(null)
+    prefetchLibPoses(ids, () => {
+      if (!cancelled) invalidate()
     })
     return () => {
       cancelled = true
     }
-  }, [poseId])
+  }, [sheetObject, poseJson, invalidate])
 
   // 动画片段切换:0.2s 淡入淡出
   useEffect(() => {
@@ -1308,23 +1303,17 @@ function PlacedModelCore({
       if (playing) {
         invalidate()
       } else {
-        applyPose(
-          instance,
-          effectivePoseBones(poseOverrideJson, poseBones, bindPoseRef.current),
-        )
+        applyPose(instance, poseBones ?? bindPoseRef.current)
         invalidate()
       }
     })
-  }, [sheet, invalidate, instance, poseBones, poseOverrideJson])
-  // pose 数据变化且当前未播放时立即应用,覆盖 poseId 切换与撤销/重做路径
+  }, [sheet, invalidate, instance, poseBones])
+  // pose 数据变化且当前未播放时立即应用,覆盖 pose 值切换与撤销/重做路径
   useEffect(() => {
     if (val(sheet.sequence.pointer.playing)) return
-    applyPose(
-      instance,
-      effectivePoseBones(poseOverrideJson, poseBones, bindPoseRef.current),
-    )
+    applyPose(instance, poseBones ?? bindPoseRef.current)
     invalidate()
-  }, [instance, poseBones, poseOverrideJson, invalidate, sheet])
+  }, [instance, poseBones, invalidate, sheet])
   useFrame((_, delta) => {
     if (!val(sheet.sequence.pointer.playing)) return
     mixer.update(delta)
