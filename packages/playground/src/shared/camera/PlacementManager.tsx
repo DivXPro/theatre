@@ -1224,9 +1224,12 @@ function PlacedModelCore({
     }
   }, [animationId])
 
+  const [libResolveTick, setLibResolveTick] = useState(0)
   const poseBones = useMemo(
     () => resolvePoseBones(parsePoseValue(poseJson)),
-    [poseJson],
+    // libResolveTick:库引用异步解析到手后 onReady 自增,静止态下逼 memo 重算
+    // (r3f invalidate 只排帧不重渲染 React,spec §5 的「重求值」需要这一跳)
+    [poseJson, libResolveTick],
   )
   // 库姿势引用预取(spec §5):当前值与轨道全部帧值里的 lib id 异步进缓存,
   // 到手 invalidate 触发重求值,阶跃变平滑
@@ -1236,7 +1239,9 @@ function PlacedModelCore({
     if (ids.length === 0) return
     let cancelled = false
     prefetchLibPoses(ids, () => {
-      if (!cancelled) invalidate()
+      if (cancelled) return
+      setLibResolveTick((t) => t + 1)
+      invalidate()
     })
     return () => {
       cancelled = true
