@@ -17,6 +17,7 @@ import type {
   ITransactionAPI,
   PaneInstance,
   ProjectId,
+  SerializablePrimitive,
 } from '@dreamerbird/core/types/public'
 import {
   disablePlayPauseKeyboardShortcut,
@@ -165,12 +166,34 @@ export default class TheatreStudio implements IStudio {
         )
       }
 
+      const unsequenceProp = <V>(prop: Pointer<V>) => {
+        const {path, root} = getPointerParts(prop)
+
+        if (!isSheetObject(root)) {
+          throw new Error(
+            'Argument prop must be a pointer to a SheetObject property',
+          )
+        }
+
+        stateEditors.coreByProject.historic.sheetsById.sequence.setPrimitivePropAsStatic(
+          {
+            ...root.address,
+            pathToProp: path,
+            // V 无约束(接口签名如此),getValueByPointer 要求 SerializableValue
+            value: root.getValueByPointer(
+              prop as Pointer<$IntentionalAny>,
+            ) as SerializablePrimitive,
+          },
+        )
+      }
+
       return fn({
         set,
         unset,
         forgetObject,
         forgetSheet,
         sequenceProp,
+        unsequenceProp,
       })
     })
   }
@@ -246,6 +269,14 @@ export default class TheatreStudio implements IStudio {
 
   scrub(): IScrub {
     return getStudio().scrub()
+  }
+
+  undo(): void {
+    getStudio().undo()
+  }
+
+  redo(): void {
+    getStudio().redo()
   }
 
   getStudioProject() {

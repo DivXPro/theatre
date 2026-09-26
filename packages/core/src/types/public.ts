@@ -1070,6 +1070,13 @@ export interface ITransactionAPI {
    * Sequences a track for the
    */
   sequenceProp<V>(pointer: Pointer<V>): void
+
+  /**
+   * Removes the sequence track of the given prop and keeps its current
+   * evaluated value as a static override (画面不跳)。再配 unset() 即回到默认值。
+   * 与 sequenceProp 互逆。
+   */
+  unsequenceProp<V>(pointer: Pointer<V>): void
 }
 /**
  *
@@ -1398,6 +1405,15 @@ export interface IStudio {
    * ```
    */
   scrub(): IScrub
+
+  /**
+   * Undoes the last committed transaction or scrub, if any.
+   * 与 studio UI 的撤销菜单/快捷键同一历史栈。
+   */
+  undo(): void
+
+  /** Re-applies the last undone transaction or scrub, if any. */
+  redo(): void
 
   /**
    * Creates a debounced scrub, which is just like a normal scrub, but
