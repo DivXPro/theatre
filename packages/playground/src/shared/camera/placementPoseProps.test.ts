@@ -4,7 +4,11 @@
  * - countLibraryEntryUsage 的姿势计数对旧裸 id 与新 {kind:'lib'} 都算使用
  * - 注册形态:pose = hidden + 自定义插值器;poseOverride 保留但 hidden(迁移过渡)
  */
-import {isPoseEntryUsed, posePropConfigShape} from './placementPoseProps'
+import {
+  isPoseEntryUsed,
+  posePropConfigShape,
+  shouldApplyPoseDuringPlayback,
+} from './placementPoseProps'
 import {poseInterpolate} from './poseMode/poseInterpolate'
 
 test('isPoseEntryUsed:旧裸 id 与新格式 lib 引用都算使用;custom 不算', () => {
@@ -20,4 +24,9 @@ test('posePropConfigShape:hidden + poseInterpolate + 空默认', () => {
   expect(shape.opts.hidden).toBe(true)
   expect(shape.opts.interpolate).toBe(poseInterpolate)
   expect(typeof shape.opts.label).toBe('function')
+})
+
+test('播放中只在有姿势轨道时逐帧应用姿势(spec §7.1)', () => {
+  expect(shouldApplyPoseDuringPlayback(true)).toBe(true)
+  expect(shouldApplyPoseDuringPlayback(false)).toBe(false)
 })

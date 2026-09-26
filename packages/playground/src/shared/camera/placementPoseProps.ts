@@ -30,3 +30,11 @@ export function posePropConfigShape(): {
     },
   }
 }
+
+/**
+ * 播放中是否逐帧应用求值姿势(spec §7.1):有轨道才应用——姿势对快照内含的
+ * 骨骼逐骨压过动作片段;无轨道保持现状(mixer 独占,停止时一次性回放)。
+ */
+export function shouldApplyPoseDuringPlayback(hasPoseTrack: boolean): boolean {
+  return hasPoseTrack
+}

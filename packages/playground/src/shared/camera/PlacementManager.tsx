@@ -41,7 +41,11 @@ import {
 import {useModalGrab} from './modalGrab'
 import {disposeObjectTree} from './assetLibrary/dispose'
 import {applyPose, captureBindPose} from './assetLibrary/pose'
-import {isPoseEntryUsed, posePropConfigShape} from './placementPoseProps'
+import {
+  isPoseEntryUsed,
+  posePropConfigShape,
+  shouldApplyPoseDuringPlayback,
+} from './placementPoseProps'
 import {PoseModeRig} from './poseMode/PoseModeRig'
 import {PoseModeBar} from './poseMode/PoseModeBar'
 import {
@@ -52,7 +56,7 @@ import {
 } from './poseMode/poseSession'
 import {resolveControlSpec} from './poseMode/controlSpec'
 import {prefetchLibPoses, resolvePoseBones} from './poseMode/poseLibResolve'
-import {collectLibPoseIds} from './poseMode/poseTrack'
+import {collectLibPoseIds, getPoseTrackId} from './poseMode/poseTrack'
 import {parsePoseValue} from './poseMode/poseValue'
 import type {ModelEntry, PoseEntry} from './assetLibrary/types'
 
@@ -1319,9 +1323,28 @@ function PlacedModelCore({
     applyPose(instance, poseBones ?? bindPoseRef.current)
     invalidate()
   }, [instance, poseBones, invalidate, sheet])
+  const [hasPoseTrack, setHasPoseTrack] = useState(false)
+  useEffect(() => {
+    if (!sheetObject) return
+    const update = () =>
+      setHasPoseTrack(getPoseTrackId(sheetObject) !== undefined)
+    update()
+    // 值变化(写帧/撤销/清除)时轨道有无可能翻转,随 poseJson 重查即可;
+    // 轨道建立本身不改变值,但建轨必然伴随随后的写帧,一个 tick 内跟上
+  }, [sheetObject, poseJson])
   useFrame((_, delta) => {
     if (!val(sheet.sequence.pointer.playing)) return
+    if (!sheetObject) return
     mixer.update(delta)
+    // 有姿势轨道:求值姿势逐骨压过动作片段(spec §7.1);
+    // 每帧重读求值值(拖针/播放求值产物),resolvePoseBones 有 LRU/缓存兜底
+    if (shouldApplyPoseDuringPlayback(hasPoseTrack)) {
+      const evaluated = (val(sheetObject.props.pose) as string) ?? ''
+      applyPose(
+        instance,
+        resolvePoseBones(parsePoseValue(evaluated)) ?? bindPoseRef.current,
+      )
+    }
     invalidate()
   })
 
