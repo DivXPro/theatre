@@ -126,8 +126,9 @@ pose: t.string('', {
 ```
 
 - 数据来自求值后的当前值 + 轨道关键帧计数(轨道数据经 sheet 对象读取)。
-- 「清除姿势」:一个事务内 `setPrimitivePropAsStatic`(删轨道)+ unset 静态覆盖,单步撤销。
-- 库姿势选择 UI 也移到这里(列出库姿势条目,点击 = 经 §7 写值/写帧通道写 `{kind:'lib', id}`)。
+- 「清除姿势」:一个事务内 `setPrimitivePropAsStatic`(删轨道)+ unset 静态覆盖,单步撤销。公共事务 API 需补一个 `unsequenceProp` 透传(现只有 `sequenceProp`,实现时与 §8.3 的 undo/redo 透传同一批加)。
+- 「打帧」按钮:把当前求值值在播放头写成关键帧,无轨道则先建轨道(经 §7.2 通道)——**引导用户上时间轴的入口**。
+- 库姿势选择 UI 也移到这里(列出库姿势条目)。**点击应用 = 经 §7.3 通道写 `{kind:'lib', id}`:有轨道时在播放头写关键帧(库引用入帧),无轨道时写静态值(不建轨道)**——固定姿势不会意外多出一条轨道;库引用进时间轴先经「打帧」或摆姿势建轨。
 
 ### 6.3 时间轴上的呈现
 
@@ -159,9 +160,14 @@ function writePoseKeyframe(studio, sheetObject, poseValueJson): void
    - 有轨道:单个 scrub `set(...)` —— 播放头恰在已有帧上 = **覆盖该帧**(同 position 写值即覆盖);在两帧之间 = **新建帧**。一步撤销。
 2. 写帧前调用方负责把 `sheet.sequence.position` 设到目标时刻并贴网格(`closestGridPosition`,set 内部也会贴)。
 
-### 7.3 静态写值(无时间轴参与)
+### 7.3 静态写值(不建轨道的 track-aware 通道)
 
-无轨道时经 scrub `set()` 写的是静态覆盖(theatre 原生行为)——「我就想要个固定姿势不上时间轴」的路径保留,且随时可经「姿势面板 → 添加关键帧」升级成轨道。
+```ts
+function setPoseValue(sheetObject, poseValueJson): void
+// 单个 scrub set(props.pose, json):有轨道 → 播放头写关键帧;无轨道 → 静态覆盖
+```
+
+无轨道时经 scrub `set()` 写的是静态覆盖(theatre 原生行为)——「我就想要个固定姿势不上时间轴」的路径保留,且随时可经「打帧」按钮或摆姿势保存升级成轨道。**适用**:姿势面板的库姿势应用;**不适用**:摆姿势保存与「打帧」按钮(那两个走 §7.2,需要轨道语义)。
 
 ## 8. 摆姿势模式改造
 
