@@ -71,6 +71,12 @@ export const en: Messages = {
 
   'pg.pose.editFrame': 'editing keyframe',
   'pg.pose.newFrame': 'new keyframe',
+  'pg.pose.statusBind': 'Bind pose',
+  'pg.pose.statusCustom': 'Custom pose',
+  'pg.pose.statusLibPrefix': 'Library: ',
+  'pg.pose.keyframesUnit': 'keyframes',
+  'pg.pose.addKeyframe': 'Add keyframe',
+  'pg.pose.clear': 'Clear pose',
 
   'pg.props.aimTarget': 'Aim target',
   'pg.props.aimNone': 'None',
@@ -187,6 +193,12 @@ export const zhCN: Messages = {
 
   'pg.pose.editFrame': '编辑关键帧',
   'pg.pose.newFrame': '新建关键帧',
+  'pg.pose.statusBind': '绑定姿势',
+  'pg.pose.statusCustom': '自定义姿势',
+  'pg.pose.statusLibPrefix': '库:',
+  'pg.pose.keyframesUnit': '个关键帧',
+  'pg.pose.addKeyframe': '打帧',
+  'pg.pose.clear': '清除姿势',
 
   'pg.props.aimTarget': '瞄准目标',
   'pg.props.aimNone': '无',

@@ -8,7 +8,7 @@ import {
 import {getProject, getStudioSync, onChange, val} from '@dreamerbird/core'
 import {privateAPI} from '@dreamerbird/core/privateAPIs'
 import getDeep from '@dreamerbird/utils/getDeep'
-import {usePrism} from '@dreamerbird/react'
+import {usePrism, useVal} from '@dreamerbird/react'
 import type {IScrub, ISheet, ISheetObject} from '@dreamerbird/core'
 import React, {
   Suspense,
@@ -75,7 +75,7 @@ import {PipCameraSelector} from './PipCameraSelector'
 import {usePipBottom} from './pipLayout'
 import {bindUndoShortcuts} from './undoShortcuts'
 import {AssetLibraryPanel} from './assetLibrary/AssetLibraryPanel'
-import {getLibrary} from './assetLibrary/library'
+import {getLibrary, useLibraryEntries} from './assetLibrary/library'
 import {ShotCamera} from './ShotCamera'
 import {
   addCameraToRegistry,
@@ -143,8 +143,13 @@ import {
   requestPoseExit,
   usePoseSessionKey,
 } from './poseMode/poseSession'
-import {setPoseValue} from './poseMode/poseTrack'
-import {serializeLibPose} from './poseMode/poseValue'
+import {
+  getPoseKeyframeCount,
+  setPoseValue,
+  writePoseKeyframe,
+} from './poseMode/poseTrack'
+import {parsePoseValue, serializeLibPose} from './poseMode/poseValue'
+import {poseStatusText} from './poseStatusText'
 
 document.body.style.backgroundColor = '#171717'
 
@@ -1521,6 +1526,38 @@ function App({
     selectedPlacementInstance !== undefined &&
     rigIdOf(selectedPlacementInstance) !== 'static'
 
+  // 姿势状态行(spec §6.2):来源文案 + 帧数 + 打帧/清除姿势。
+  // poseKeyframeCount 是命令式读取(非响应式),App 已随 selectedPoseJson
+  // (useVal)与选中变化重渲,覆盖写帧/撤销/切换对象的刷新路径;轨道刚建立
+  // 的那一瞬由随后的写帧值变化带动,一个渲染周期内跟上。
+  const poseEntries = useLibraryEntries('pose') as PoseEntry[]
+  const selectedPoseJson =
+    (useVal(selectedPlacement?.props.pose) as string | undefined) ?? ''
+  const poseKeyframeCount = selectedPlacement
+    ? getPoseKeyframeCount(selectedPlacement)
+    : 0
+  // libName 反查:状态行显示库条目名,条目缺失回退 id(告警与回退由
+  // resolve 层负责,这里只做文案)
+  const parsedPose = parsePoseValue(selectedPoseJson)
+  const poseLibName =
+    parsedPose?.kind === 'lib'
+      ? poseEntries.find((e) => e.id === parsedPose.id)?.name ?? null
+      : null
+  const poseStatus = poseStatusText(selectedPoseJson, poseLibName, t)
+  const onWritePoseKeyframe = useCallback(() => {
+    if (selectedPlacement)
+      writePoseKeyframe(selectedPlacement, selectedPoseJson)
+  }, [selectedPlacement, selectedPoseJson])
+  const onClearPose = useCallback(() => {
+    const studio = getStudioSync()
+    if (!studio || !selectedPlacement) return
+    // 单事务(spec §6.2):删轨道(当前值落静态)+ 清静态 → 回默认绑定,一步撤销
+    studio.transaction(({unsequenceProp, unset}) => {
+      unsequenceProp(selectedPlacement.props.pose)
+      unset(selectedPlacement.props.pose)
+    })
+  }, [selectedPlacement])
+
   // ── 宿主能力句柄(规格:host-picker-integration)────────────
   // 纯转发既有函数;宿主注入自己的选择框后,经 onFlows 拿到句柄,
   // 在选择框里调 startPlacingModel(点选)/ placeModelAt + dropPointFromClient(拖拽)。
@@ -1672,6 +1709,10 @@ function App({
           applyDisabled={!canApplyPose}
           disabled={rigLoading}
           filterRig={selectedRig}
+          poseStatus={poseStatus}
+          poseKeyframeCount={poseKeyframeCount}
+          onWritePoseKeyframe={onWritePoseKeyframe}
+          onClearPose={onClearPose}
           onClose={() => closeFrame('pose')}
         />
       )}

@@ -146,6 +146,24 @@ const ToolRow = styled.div`
   }
 `
 
+/** 姿势状态行(spec §6.2):来源 + 帧数居左,打帧/清除靠右 */
+const StatusRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--theatre-panel-border, #1f1f1f);
+  font-size: 11px;
+  color: var(--theatre-text-secondary, #cccccc);
+`
+
+const StatusText = styled.span`
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`
+
 const Grid = styled.div`
   flex: 1;
   overflow-y: auto;
@@ -372,6 +390,10 @@ export function AssetLibraryPanel({
   canSavePose,
   applyDisabled,
   disabled,
+  poseStatus,
+  poseKeyframeCount,
+  onWritePoseKeyframe,
+  onClearPose,
 }: {
   kind: AssetKind
   onPlaceModel?: (entry: ModelEntry) => void
@@ -386,6 +408,12 @@ export function AssetLibraryPanel({
   canSavePose?: boolean
   applyDisabled?: boolean
   disabled?: boolean
+  /** 姿势状态行(spec §6.2):来源文案,由 App 用 poseStatusText 算好传入 */
+  poseStatus?: string
+  /** 姿势轨道关键帧数(命令式读取,随 App 重渲刷新) */
+  poseKeyframeCount?: number
+  onWritePoseKeyframe?: () => void
+  onClearPose?: () => void
 }) {
   const models = useLibraryEntries('model') as ModelEntry[]
   const poses = useLibraryEntries('pose') as PoseEntry[]
@@ -676,6 +704,27 @@ export function AssetLibraryPanel({
             {t('pg.lib.savePose')}
           </DetailPanelButton>
         </ToolRow>
+      )}
+
+      {/* 姿势状态行(spec §6.2):来源 + 帧数 + 打帧/清除姿势 */}
+      {kind === 'pose' && poseStatus !== undefined && (
+        <StatusRow>
+          <StatusText>
+            {poseStatus}
+            {typeof poseKeyframeCount === 'number' &&
+              ` · ${poseKeyframeCount} ${t('pg.pose.keyframesUnit')}`}
+          </StatusText>
+          {onWritePoseKeyframe && (
+            <GhostButton onClick={onWritePoseKeyframe}>
+              {t('pg.pose.addKeyframe')}
+            </GhostButton>
+          )}
+          {onClearPose && (
+            <GhostButton onClick={onClearPose}>
+              {t('pg.pose.clear')}
+            </GhostButton>
+          )}
+        </StatusRow>
       )}
 
       {/* 卡片网格 */}
