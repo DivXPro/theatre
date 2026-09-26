@@ -2,7 +2,9 @@
 /**
  * 摆姿势浮动小条:挂在被摆模型头顶(Head 骨骼世界位置 + 等比偏移),
  * 跟着模型/相机走(drei Html 把 DOM 钉到 3D 位置,屏幕恒定大小)。
- * 内容:「正在摆姿势 · [移动|旋转] · Esc 完成」。
+ * 内容:「正在摆姿势 · [编辑关键帧|新建关键帧] · [移动|旋转] · Esc 完成」。
+ * 帧模式文案来自 poseSession 的 usePoseFrameMode:进会话时 PoseModeRig
+ * 判定(播放头贴网格后落在帧上=编辑该帧,否则=新建帧)并写入。
  *
  * 移动/旋转与 W/E 键共用 poseSession 的 manipulatorMode(单一状态源):
  * 按钮 setPoseManipulatorMode → 本组件订阅刷新高亮;PoseModeRig 同一
@@ -27,6 +29,7 @@ import {
   getPoseManipulatorMode,
   onPoseManipulatorModeChange,
   setPoseManipulatorMode,
+  usePoseFrameMode,
 } from './poseSession'
 
 /** 头骨上方偏移(乘骨架等比倍率):头顶再留一截,不压模型 */
@@ -54,6 +57,10 @@ const Bar = styled.div`
 
 const BarLabel = styled.span`
   color: var(--theatre-text-primary, #ffffff);
+`
+
+const BarFrame = styled.span`
+  color: var(--theatre-text-secondary, #cccccc);
 `
 
 const BarEsc = styled.span`
@@ -134,6 +141,9 @@ export function PoseModeBar({
   const [mode, setMode] = useState(getPoseManipulatorMode())
   useEffect(() => onPoseManipulatorModeChange(setMode), [])
 
+  // 帧模式(编辑关键帧/新建关键帧):PoseModeRig 进会话时判定写入
+  const frameMode = usePoseFrameMode()
+
   // 语言热切换:Canvas 是 r3f 独立渲染根,context 不桥接,useT 拿不到
   // DOM 树的 I18nProvider;translate 是模块级函数、调用时读当前语言,
   // 再订阅语言变化触发重渲染即可
@@ -162,6 +172,15 @@ export function PoseModeBar({
       <Html center zIndexRange={[15, 0]} wrapperClass="pose-bar-wrapper">
         <Bar>
           <BarLabel>{translate('pg.posebar.posing')}</BarLabel>
+          {frameMode && (
+            <BarFrame>
+              {translate(
+                frameMode.mode === 'edit'
+                  ? 'pg.pose.editFrame'
+                  : 'pg.pose.newFrame',
+              )}
+            </BarFrame>
+          )}
           <ToolbarSwitchSelectContainer>
             {MODES.map(({mode: m, icon: Icon, labelKey, hintKey}) => (
               <ModeBtn

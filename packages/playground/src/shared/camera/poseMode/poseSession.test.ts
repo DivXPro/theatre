@@ -16,6 +16,8 @@ import {
   getPoseManipulatorMode,
   setPoseManipulatorMode,
   onPoseManipulatorModeChange,
+  setPoseSessionFrame,
+  getPoseSessionFrame,
 } from './poseSession'
 
 beforeEach(() => {
@@ -179,4 +181,21 @@ test('onPoseManipulatorModeChange 退订后不再收到', () => {
   setPoseManipulatorMode('rotate')
   expect(seen).toEqual([])
   setPoseManipulatorMode('move')
+})
+
+// —— 会话帧信息(帧模式:帧上=编辑/帧间=新建,随会话生灭)——
+
+test('会话帧信息随会话生灭:set/get/clear', () => {
+  enterPoseSession('k1')
+  setPoseSessionFrame('k1', {mode: 'edit', position: 2})
+  expect(getPoseSessionFrame()).toEqual({mode: 'edit', position: 2})
+  clearPoseSession()
+  expect(getPoseSessionFrame()).toBe(null)
+})
+
+test('非当前会话 key 写入帧信息被忽略(A→B 切换防护)', () => {
+  enterPoseSession('kB')
+  setPoseSessionFrame('kA', {mode: 'edit', position: 2})
+  expect(getPoseSessionFrame()).toBe(null)
+  clearPoseSession()
 })

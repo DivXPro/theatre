@@ -7,9 +7,14 @@
  */
 import {useEffect, useState} from 'react'
 
+export type {PoseFrameMode} from './poseFrame'
+import type {PoseFrameMode} from './poseFrame'
+
 export type PoseSession = {key: string}
 
 let session: PoseSession | null = null
+// 会话的帧信息(帧模式判定结果):进会话时由 PoseModeRig 写入,随会话生灭
+let sessionFrame: PoseFrameMode | null = null
 const changeListeners = new Set<(s: PoseSession | null) => void>()
 const exitListeners = new Set<(key: string) => void>()
 
@@ -56,6 +61,7 @@ export function enterPoseSession(key: string): void {
   if (session?.key === key) return
   if (session) requestPoseExit()
   session = {key}
+  sessionFrame = null // 帧信息由新会话的 Rig 挂载后写入
   emitChange()
 }
 
@@ -90,8 +96,34 @@ export function clearPoseSessionIfCurrent(key: string): void {
 export function clearPoseSession(): void {
   if (!session) return
   session = null
+  sessionFrame = null
   poseDirty = false
   emitChange()
+}
+
+// —— 会话帧信息(帧上=编辑该帧/帧间=新建帧,spec §8.1)——
+
+/** 记录当前会话的帧信息;非当前会话 key 忽略(A→B 切换防护,同 clearPoseSessionIfCurrent) */
+export function setPoseSessionFrame(key: string, frame: PoseFrameMode): void {
+  if (!session || session.key !== key) return
+  sessionFrame = frame
+  emitChange()
+}
+
+export function getPoseSessionFrame(): PoseFrameMode | null {
+  return session ? sessionFrame : null
+}
+
+/** React 订阅hook:会话的帧模式,无会话为 null(与 usePoseSessionKey 同构) */
+export function usePoseFrameMode(): PoseFrameMode | null {
+  const [frame, setFrame] = useState<PoseFrameMode | null>(
+    getPoseSessionFrame(),
+  )
+  useEffect(
+    () => onPoseSessionChange(() => setFrame(getPoseSessionFrame())),
+    [],
+  )
+  return frame
 }
 
 // —— 操纵器模式(姿势会话内 W/E 键 / 浮动小条按钮共用)——

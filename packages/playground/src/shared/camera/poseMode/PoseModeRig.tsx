@@ -9,7 +9,7 @@
  */
 import {useEffect, useRef} from 'react'
 import {useFrame, useThree} from '@react-three/fiber'
-import {getStudioSync, val} from '@dreamerbird/core'
+import {getStudioSync, onChange, val} from '@dreamerbird/core'
 import type {ISheet, ISheetObject} from '@dreamerbird/core'
 import {Raycaster, Vector2} from 'three'
 import type {Group} from 'three'
@@ -22,17 +22,21 @@ import {
   findRootBone,
 } from './controlSpec'
 import {anyControlDragging} from './dragState'
-import {stringifyPoseOverride} from './poseOverride'
+import {determinePoseFrameMode} from './poseFrame'
+import {getPoseKeyframePositions, writePoseKeyframe} from './poseTrack'
+import {serializeCustomPose} from './poseValue'
 import {
   clearPoseSession,
   clearPoseSessionIfCurrent,
   getPoseManipulatorMode,
+  getPoseSessionFrame,
   isPoseDirty,
   markPoseDirty,
   onPoseExitRequested,
   onPoseManipulatorModeChange,
   setPoseHitTester,
   setPoseManipulatorMode,
+  setPoseSessionFrame,
 } from './poseSession'
 
 export function PoseModeRig({
@@ -143,7 +147,31 @@ export function PoseModeRig({
       return raycaster.intersectObjects([instance, ...balls], true).length > 0
     })
 
-    // 退出提交:捕获实时骨骼 → 一步 theatre 历史写 poseOverride(可撤销)
+    // 帧模式判定(spec §8.1):贴网格后帧上=编辑、帧间=新建;底姿由
+    // 既有应用 effect 保证(非播放时画面恒为播放头求值,所见即所编)
+    // ISequence 公开类型未声明 closestGridPosition(实现里有,studio 内部直接用)
+    const snapToGrid = (t: number) =>
+      (
+        sheet.sequence as unknown as {
+          closestGridPosition(posInUnitSpace: number): number
+        }
+      ).closestGridPosition(t)
+    const frame = determinePoseFrameMode(
+      getPoseKeyframePositions(sheetObject),
+      sheet.sequence.position,
+      snapToGrid,
+    )
+    sheet.sequence.position = frame.position
+    setPoseSessionFrame(placementKey, frame)
+
+    // 锁播放头(spec §8.1.4):会话期间 position 被挪动即拉回会话时刻
+    const offPosition = onChange(sheet.sequence.pointer.position, (pos) => {
+      if (Math.abs((pos as number) - frame.position) > 1e-6) {
+        sheet.sequence.position = frame.position
+      }
+    })
+
+    // 退出提交:捕获实时骨骼 → 写姿势轨关键帧(可撤销,经 writePoseKeyframe)
     const offExit = onPoseExitRequested((key) => {
       if (key !== placementKey) return
       const studio = getStudioSync()
@@ -153,14 +181,11 @@ export function PoseModeRig({
       // isPoseDirty 由 pointerdown 事件记(同帧间隙的按下-拖-松,轮询漏检)
       if (studio && (dirtyRef.current || isPoseDirty())) {
         const bones = capturePose(instance)
-        const scrub = studio.scrub()
-        scrub.capture(({set}) => {
-          set(
-            sheetObject.props.poseOverride as any,
-            stringifyPoseOverride(bones),
-          )
-        })
-        scrub.commit()
+        // 写帧(spec §7.2):帧上=覆盖、帧间=新建、无轨=建轨+首帧;
+        // 先把播放头钉回会话时刻(锁定期间理论不动,双保险)
+        const frame = getPoseSessionFrame()
+        if (frame) sheet.sequence.position = frame.position
+        writePoseKeyframe(sheetObject, serializeCustomPose(bones))
       }
       clearPoseSession()
     })
@@ -169,6 +194,7 @@ export function PoseModeRig({
     return () => {
       offExit()
       offMode()
+      offPosition()
       setPoseHitTester(null)
       window.removeEventListener('keydown', onKey)
       ctl.dispose()

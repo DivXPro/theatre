@@ -69,6 +69,9 @@ export const en: Messages = {
   'pg.posebar.move.hint': 'Shortcut: W',
   'pg.posebar.rotate.hint': 'Shortcut: E',
 
+  'pg.pose.editFrame': 'editing keyframe',
+  'pg.pose.newFrame': 'new keyframe',
+
   'pg.props.aimTarget': 'Aim target',
   'pg.props.aimNone': 'None',
   'pg.props.anchorParent': 'Parent',
@@ -181,6 +184,9 @@ export const zhCN: Messages = {
   'pg.posebar.esc': 'Esc 完成',
   'pg.posebar.move.hint': '快捷键 W',
   'pg.posebar.rotate.hint': '快捷键 E',
+
+  'pg.pose.editFrame': '编辑关键帧',
+  'pg.pose.newFrame': '新建关键帧',
 
   'pg.props.aimTarget': '瞄准目标',
   'pg.props.aimNone': '无',

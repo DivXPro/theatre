@@ -1365,11 +1365,24 @@ function App({
     )
   }, [])
 
-  // 姿势模式下 Esc 退出(提交);导出中/镜头视角的 Esc 语义优先,不抢
+  // 姿势模式下 Esc/Enter 退出(提交);导出中/镜头视角的 Esc 语义优先,不抢
   useEffect(() => {
     if (!poseSessionKey || shotView || exporting) return
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') requestPoseExit()
+      if (e.key !== 'Escape' && e.key !== 'Enter') return
+      // Enter 在输入框/可编辑区域里是提交文本,不能误触退出
+      // (守卫写法照 PoseModeRig 的 W/E 监听;Esc 无文本副作用,不用守)
+      if (e.key === 'Enter') {
+        const target = e.target as HTMLElement | null
+        if (
+          target &&
+          (target.tagName === 'INPUT' ||
+            target.tagName === 'TEXTAREA' ||
+            target.isContentEditable)
+        )
+          return
+      }
+      requestPoseExit()
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
