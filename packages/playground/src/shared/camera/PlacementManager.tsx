@@ -1240,12 +1240,17 @@ function PlacedModelCore({
       pose: legacyPose,
       poseOverride: legacyOverride,
     })
-    if (migrated === null && !legacyOverride.trim()) return
+    // 至多一次(spec §9.2):override 空=天然标记;裸 id 迁移靠「结果与现值相同」
+    // 判定——已迁移过的对象两个开关都假,不再开事务(否则每次挂载重复同值写,
+    // 空撤销步/saaz 噪音)
+    const needsSet = migrated !== null && migrated !== legacyPose
+    const needsUnset = !!legacyOverride.trim()
+    if (!needsSet && !needsUnset) return
     const studio = getStudioSync()
     if (!studio) return
     studio.transaction(({set, unset}) => {
-      if (migrated !== null) set(sheetObject.props.pose, migrated)
-      if (legacyOverride.trim()) unset(sheetObject.props.poseOverride)
+      if (needsSet && migrated !== null) set(sheetObject.props.pose, migrated)
+      if (needsUnset) unset(sheetObject.props.poseOverride)
     })
   }, [sheetObject])
   const poseBones = useMemo(
