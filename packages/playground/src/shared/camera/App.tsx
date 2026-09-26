@@ -73,6 +73,7 @@ import {
 } from './anchorsRegistry'
 import {PipCameraSelector} from './PipCameraSelector'
 import {usePipBottom} from './pipLayout'
+import {bindUndoShortcuts} from './undoShortcuts'
 import {AssetLibraryPanel} from './assetLibrary/AssetLibraryPanel'
 import {getLibrary} from './assetLibrary/library'
 import {ShotCamera} from './ShotCamera'
@@ -1353,6 +1354,16 @@ function App({
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [shotView, exporting])
+
+  // 窗口级撤销/重做(spec §8.3):画布焦点下 Ctrl+Z 也能撤,直达 studio 历史
+  useEffect(() => {
+    const studio = getStudioSync()
+    if (!studio) return
+    return bindUndoShortcuts(
+      () => studio.undo(),
+      () => studio.redo(),
+    )
+  }, [])
 
   // 姿势模式下 Esc 退出(提交);导出中/镜头视角的 Esc 语义优先,不抢
   useEffect(() => {
