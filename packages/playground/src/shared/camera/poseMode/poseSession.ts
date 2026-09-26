@@ -119,10 +119,14 @@ export function usePoseFrameMode(): PoseFrameMode | null {
   const [frame, setFrame] = useState<PoseFrameMode | null>(
     getPoseSessionFrame(),
   )
-  useEffect(
-    () => onPoseSessionChange(() => setFrame(getPoseSessionFrame())),
-    [],
-  )
+  useEffect(() => {
+    // 先回读再订阅:帧信息由 Rig 的挂载 effect 写入,订阅者(浮动小条)
+    // 与 Rig 同渲染批时,Rig 的通知先于本订阅注册——不回读就永远停在
+    // 初值 null(浮条帧文案缺失)。usePoseSessionKey 无此问题:会话本身
+    // 在触发渲染的事件里就已建立,useState 初值即正确。
+    setFrame(getPoseSessionFrame())
+    return onPoseSessionChange(() => setFrame(getPoseSessionFrame()))
+  }, [])
   return frame
 }
 
