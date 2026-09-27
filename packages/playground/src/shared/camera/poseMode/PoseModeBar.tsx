@@ -30,6 +30,7 @@ import {
   onPoseManipulatorModeChange,
   setPoseManipulatorMode,
   usePoseFrameMode,
+  usePoseSelectionModes,
 } from './poseSession'
 
 /** 头骨上方偏移(乘骨架等比倍率):头顶再留一截,不压模型 */
@@ -141,6 +142,9 @@ export function PoseModeBar({
   const [mode, setMode] = useState(getPoseManipulatorMode())
   useEffect(() => onPoseManipulatorModeChange(setMode), [])
 
+  // 选中目标的模式支持集:单模式点(纯旋转环/纯移动球)禁用不可用按钮
+  const selModes = usePoseSelectionModes()
+
   // 帧模式(编辑关键帧/新建关键帧):PoseModeRig 进会话时判定写入
   const frameMode = usePoseFrameMode()
 
@@ -186,6 +190,7 @@ export function PoseModeBar({
               <ModeBtn
                 key={m}
                 className={mode === m ? 'selected' : ''}
+                disabled={!selModes[m]}
                 onClick={() => setPoseManipulatorMode(m)}
               >
                 <Icon size={16} />

@@ -26,9 +26,14 @@ import {determinePoseFrameMode} from './poseFrame'
 import {getPoseKeyframePositions, writePoseKeyframe} from './poseTrack'
 import {serializeCustomPose} from './poseValue'
 import {
+  supportedModesForSelection,
+  resolvePoseModeSwitch,
+} from './selectionModes'
+import {
   clearPoseSession,
   clearPoseSessionIfCurrent,
   getPoseManipulatorMode,
+  getPoseSelectionModes,
   getPoseSessionFrame,
   isPoseDirty,
   markPoseDirty,
@@ -36,6 +41,7 @@ import {
   onPoseManipulatorModeChange,
   setPoseHitTester,
   setPoseManipulatorMode,
+  setPoseSelectionModes,
   setPoseSessionFrame,
 } from './poseSession'
 
@@ -63,6 +69,9 @@ export function PoseModeRig({
   const pressingRef = useRef(false)
   const dirtyRef = useRef(false)
   const controlNamesRef = useRef<string[]>([])
+  // 装配表/选中名:useFrame 轮询选中态用(支持集推导 + 单模式点自动切换)
+  const specRef = useRef<ReturnType<typeof resolveControlSpec>>(null)
+  const lastSelectedRef = useRef<string | null>(null)
 
   useEffect(() => {
     // 播放中进会话:先暂停(spec §8.1.1)——否则播放头锁与播放钟打架,
@@ -79,6 +88,8 @@ export function PoseModeRig({
     }
     const rig = new SkeletonRig(rootBone)
     rigRef.current = rig
+    specRef.current = spec
+    lastSelectedRef.current = null
     rig.on('warning', (payload) =>
       console.warn('[poseMode]', (payload as {message?: string})?.message),
     )
@@ -108,6 +119,10 @@ export function PoseModeRig({
           if (orbitControls) orbitControls.enabled = true
         },
       },
+      // 0.1.0 起装配器内置 Maya 热键(W/E/Escape)默认绑 window:W/E 与我们
+      // 自监听(经 poseSession 共享状态、浮条高亮同源)双触发,Escape 会抢
+      // 退出会话。全关,自绑路径不变
+      hotkeys: false,
     })
     ctlRef.current = ctl
 
@@ -124,9 +139,15 @@ export function PoseModeRig({
           target.isContentEditable)
       )
         return
-      if (ev.code === 'KeyW') setPoseManipulatorMode('move')
-      else if (ev.code === 'KeyE') setPoseManipulatorMode('rotate')
-      else return
+      // 单模式点门禁:与浮条按钮禁用同一数据源,快捷键也不许切到不可用模式
+      const support = getPoseSelectionModes()
+      if (ev.code === 'KeyW') {
+        if (!support.move) return
+        setPoseManipulatorMode('move')
+      } else if (ev.code === 'KeyE') {
+        if (!support.rotate) return
+        setPoseManipulatorMode('rotate')
+      } else return
       invalidate() // demand 帧循环:无指针按下时补帧,环/箭头立刻可见
     }
     window.addEventListener('keydown', onKey)
@@ -198,6 +219,8 @@ export function PoseModeRig({
       ctl.dispose()
       ctlRef.current = null
       rigRef.current = null
+      specRef.current = null
+      lastSelectedRef.current = null
       // 会话外因素卸载(模型被删等):实例已毁,跳过提交只清会话态。
       // 按键清:A→B 直接切换时 session 已是 B,不能把它抹掉(切换坍塌)
       clearPoseSessionIfCurrent(placementKey)
@@ -256,6 +279,16 @@ export function PoseModeRig({
     if (val(sheet.sequence.pointer.playing)) return // 播放时 mixer 写骨骼,不抢
     rig.update(delta)
     ctl.update()
+    // 选中态轮询:threeIK 无选中事件,getSelected() 是便宜字段读。
+    // 变化时刷新支持集(浮条禁用)并自动切到可用模式(单模式点)
+    const sel = ctl.getSelected()
+    if (sel !== lastSelectedRef.current) {
+      lastSelectedRef.current = sel
+      const support = supportedModesForSelection(specRef.current ?? [], sel)
+      setPoseSelectionModes(support)
+      const next = resolvePoseModeSwitch(support, getPoseManipulatorMode())
+      if (next) setPoseManipulatorMode(next)
+    }
     if (!dirtyRef.current && anyControlDragging(ctl, controlNamesRef.current)) {
       dirtyRef.current = true
     }

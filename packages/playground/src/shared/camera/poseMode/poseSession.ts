@@ -62,6 +62,7 @@ export function enterPoseSession(key: string): void {
   if (session) requestPoseExit()
   session = {key}
   sessionFrame = null // 帧信息由新会话的 Rig 挂载后写入
+  selectionModes = BOTH_MODES // 选中支持集同理(新会话从无限制造起)
   emitChange()
 }
 
@@ -97,6 +98,7 @@ export function clearPoseSession(): void {
   if (!session) return
   session = null
   sessionFrame = null
+  selectionModes = BOTH_MODES
   poseDirty = false
   emitChange()
 }
@@ -156,6 +158,39 @@ export function onPoseManipulatorModeChange(
   return () => {
     modeListeners.delete(cb)
   }
+}
+
+// —— 选中目标的模式支持集(单模式点:按钮禁用 + 自动切换)——
+
+export type PoseModeSupport = {move: boolean; rotate: boolean}
+
+const BOTH_MODES: PoseModeSupport = {move: true, rotate: true}
+
+/** 当前选中目标支持的模式;无选中/双通道=BOTH。随会话生灭(enter/clear 复位) */
+let selectionModes: PoseModeSupport = BOTH_MODES
+
+/** PoseModeRig 轮询 threeIK 选中态后写入;值没变不发通知(轮询每帧跑) */
+export function setPoseSelectionModes(m: PoseModeSupport): void {
+  if (m.move === selectionModes.move && m.rotate === selectionModes.rotate)
+    return
+  selectionModes = m
+  emitChange()
+}
+
+export function getPoseSelectionModes(): PoseModeSupport {
+  return selectionModes
+}
+
+/** React 订阅hook:选中目标的模式支持集(订阅先回读,同 usePoseFrameMode) */
+export function usePoseSelectionModes(): PoseModeSupport {
+  const [modes, setModes] = useState<PoseModeSupport>(() =>
+    getPoseSelectionModes(),
+  )
+  useEffect(() => {
+    setModes(getPoseSelectionModes())
+    return onPoseSessionChange(() => setModes(getPoseSelectionModes()))
+  }, [])
+  return modes
 }
 
 /** React 订阅hook:会话命中的 placementKey,无会话为 null */
