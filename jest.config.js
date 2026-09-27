@@ -53,7 +53,9 @@ module.exports = {
     '^.+\\.mjs$': './devEnv/jestMjsTransformer.js',
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(property-graph|@gltf-transform|@dreamerbird/threeik)/)',
+    // three/examples/jsm:threeik 0.1.0 操纵器换芯 TransformControls 后
+    // 依赖链上的纯 ESM(three 主包走 require 条件是 CJS,无需例外)
+    'node_modules/(?!(property-graph|@gltf-transform|@dreamerbird/threeik|three/examples)/)',
   ],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'mjs', 'json', 'node'],
 }
