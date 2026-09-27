@@ -98,7 +98,10 @@ export function PoseModeRig({
     controlNamesRef.current = spec.map((c) => c.name)
     dirtyRef.current = false
     const sizeScale = measureSkeletonScale(instance)
-    // threeIK 默认尺寸按 ~1.7 单位人形标定;球/环/注视随骨架世界高度等比,才看得见点得中
+    // 尺寸语义随 0.1.0 换芯拆分:ringRadius/ballRadius 已变成操纵器屏尺寸倍率
+    // (÷类默认后传给 TransformControls.size,gizmo 屏幕恒定大小)——乘 sizeScale
+    // 会把 gizmo 放大成 sizeScale 倍屏尺寸(0.0.1 的世界尺寸语义已作废),保持默认;
+    // rootRadius(重心活动球域)与 lookAtRadius(注视球恒距)仍是世界单位语义,随骨架等比
     const ctl = createSkeletonControls({
       rig,
       scene,
@@ -106,9 +109,7 @@ export function PoseModeRig({
       dom: gl.domElement,
       controls: spec,
       defaults: {
-        ballRadius: 0.0225 * sizeScale,
         rootRadius: 0.4 * sizeScale,
-        ringRadius: 0.16 * sizeScale,
         lookAtRadius: 0.35 * sizeScale,
       },
       dragControl: {
@@ -125,6 +126,12 @@ export function PoseModeRig({
       hotkeys: false,
     })
     ctlRef.current = ctl
+    // 视觉球网格随骨架等比放大(ballRadius 保持类默认 → manipulatorSize 恒 1,
+    // gizmo 标准屏尺寸);DragTarget 只在射线检测读 ball.scale,从不覆写,外部设置安全
+    for (const t of ctl.targets) t.ball.scale.setScalar(sizeScale)
+    // 调试/自动化验证挂钩(同 __cameraShot):浏览器冒烟直接读选中态
+    // (getSelected)与各控制球世界坐标,免去按像素猜点
+    ;(window as any).__poseDebug = {ctl, camera}
 
     // threeIK 0.0.1 无内置热键:自监听 W/E 经 poseSession 共享状态切操纵器
     // 模式(浮动小条按钮同一入口,UI 高亮因此永远同步;直接调 ctl 会让小条瞎)。
@@ -221,6 +228,7 @@ export function PoseModeRig({
       rigRef.current = null
       specRef.current = null
       lastSelectedRef.current = null
+      delete (window as any).__poseDebug
       // 会话外因素卸载(模型被删等):实例已毁,跳过提交只清会话态。
       // 按键清:A→B 直接切换时 session 已是 B,不能把它抹掉(切换坍塌)
       clearPoseSessionIfCurrent(placementKey)
