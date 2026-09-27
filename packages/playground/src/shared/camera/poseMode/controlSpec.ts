@@ -118,6 +118,9 @@ export function resolveControlSpec(
             name: 'head',
             rootBone: neck,
             endBone: bone('Head'),
+            // 0.1.0 头环带脖子:E 出头骨旋转环,颈先分摊 40%、头补足,
+            // 松手注视球绕颈根按拖拽增量重坐(朝向不跳)
+            rotateShare: 0.4,
           } as ControlPointSpec,
         ]
       : []),
