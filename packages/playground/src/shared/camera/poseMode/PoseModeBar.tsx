@@ -2,15 +2,14 @@
 /**
  * 摆姿势浮动小条:挂在被摆模型头顶(Head 骨骼世界位置 + 等比偏移),
  * 跟着模型/相机走(drei Html 把 DOM 钉到 3D 位置,屏幕恒定大小)。
- * 内容:「正在摆姿势 · [编辑关键帧|新建关键帧] · [移动|旋转] · Esc 完成」。
- * 帧模式文案来自 poseSession 的 usePoseFrameMode:进会话时 PoseModeRig
- * 判定(播放头贴网格后落在帧上=编辑该帧,否则=新建帧)并写入。
+ * 内容只有 [移动|旋转] 两个按钮(悬停提示保留);帧模式判定仍在
+ * PoseModeRig 照常进行,只是不再显示在条上。
  *
  * 移动/旋转与 W/E 键共用 poseSession 的 manipulatorMode(单一状态源):
  * 按钮 setPoseManipulatorMode → 本组件订阅刷新高亮;PoseModeRig 同一
  * 订阅转发 threeIK——两条路径永远一致,不存在"按钮瞎"或"环不跟着切"。
  *
- * Esc 只是提示文字:退出手势(快捷键/双击空白)在 App 与 PoseModeRig。
+ * 退出手势(快捷键/双击空白)在 App 与 PoseModeRig。
  */
 import React, {useEffect, useMemo, useRef, useState} from 'react'
 import styled from 'styled-components'
@@ -29,7 +28,6 @@ import {
   getPoseManipulatorMode,
   onPoseManipulatorModeChange,
   setPoseManipulatorMode,
-  usePoseFrameMode,
   usePoseSelectionModes,
 } from './poseSession'
 
@@ -54,18 +52,6 @@ const Bar = styled.div`
   white-space: nowrap;
   /* 拖过小条文字区域不触发画布 orbit(按钮区域本就截获事件) */
   user-select: none;
-`
-
-const BarLabel = styled.span`
-  color: var(--theatre-text-primary, #ffffff);
-`
-
-const BarFrame = styled.span`
-  color: var(--theatre-text-secondary, #cccccc);
-`
-
-const BarEsc = styled.span`
-  color: var(--theatre-text-secondary, #cccccc);
 `
 
 /** 原生 ToolbarIconButton + tooltip(样式照抄 TopToolbar 的 Btn,保持观感一致) */
@@ -145,9 +131,6 @@ export function PoseModeBar({
   // 选中目标的模式支持集:单模式点(纯旋转环/纯移动球)禁用不可用按钮
   const selModes = usePoseSelectionModes()
 
-  // 帧模式(编辑关键帧/新建关键帧):PoseModeRig 进会话时判定写入
-  const frameMode = usePoseFrameMode()
-
   // 语言热切换:Canvas 是 r3f 独立渲染根,context 不桥接,useT 拿不到
   // DOM 树的 I18nProvider;translate 是模块级函数、调用时读当前语言,
   // 再订阅语言变化触发重渲染即可
@@ -175,16 +158,6 @@ export function PoseModeBar({
           不做遮挡剔除——可读性优先,被模型挡住也比找不到强 */}
       <Html center zIndexRange={[15, 0]} wrapperClass="pose-bar-wrapper">
         <Bar>
-          <BarLabel>{translate('pg.posebar.posing')}</BarLabel>
-          {frameMode && (
-            <BarFrame>
-              {translate(
-                frameMode.mode === 'edit'
-                  ? 'pg.pose.editFrame'
-                  : 'pg.pose.newFrame',
-              )}
-            </BarFrame>
-          )}
           <ToolbarSwitchSelectContainer>
             {MODES.map(({mode: m, icon: Icon, labelKey, hintKey}) => (
               <ModeBtn
@@ -201,7 +174,6 @@ export function PoseModeBar({
               </ModeBtn>
             ))}
           </ToolbarSwitchSelectContainer>
-          <BarEsc>{translate('pg.posebar.esc')}</BarEsc>
         </Bar>
       </Html>
     </group>
