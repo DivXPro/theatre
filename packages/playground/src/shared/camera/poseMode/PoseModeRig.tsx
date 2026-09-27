@@ -15,6 +15,7 @@ import {Raycaster, Vector2} from 'three'
 import type {Group} from 'three'
 import {SkeletonRig} from '@dreamerbird/threeik'
 import {createSkeletonControls} from '@dreamerbird/threeik/controls'
+import type {LimbControlHandle} from '@dreamerbird/threeik/controls'
 import {capturePose} from '../assetLibrary/pose'
 import {
   measureSkeletonScale,
@@ -127,8 +128,17 @@ export function PoseModeRig({
     })
     ctlRef.current = ctl
     // 视觉球网格随骨架等比放大(ballRadius 保持类默认 → manipulatorSize 恒 1,
-    // gizmo 标准屏尺寸);DragTarget 只在射线检测读 ball.scale,从不覆写,外部设置安全
-    for (const t of ctl.targets) t.ball.scale.setScalar(sizeScale)
+    // gizmo 标准屏尺寸)。multiplyScalar 而非 setScalar:标记球(胸口/肩髋)自带
+    // 0.7 身份缩放(MARKER_SCALE),要保住相对大小;DragTarget 只在射线检测读
+    // ball.scale,从不覆写,外部设置安全
+    for (const t of ctl.targets) t.ball.scale.multiplyScalar(sizeScale)
+    // 四肢 pole(PoleOrbit)不是 DragTarget、不在 ctl.targets,按 spec 的 limb 名
+    // 从句柄取出补同样的等比;其射线容差随相机距离走(cameraDist×0.011,远大于
+    // 球径),网格等比后点按区域不受影响
+    for (const c of spec) {
+      if (c.kind !== 'limb') continue
+      ctl.get<LimbControlHandle>(c.name)?.pole.ball.scale.multiplyScalar(sizeScale)
+    }
     // 调试/自动化验证挂钩(同 __cameraShot):浏览器冒烟直接读选中态
     // (getSelected)与各控制球世界坐标,免去按像素猜点
     ;(window as any).__poseDebug = {ctl, camera}
