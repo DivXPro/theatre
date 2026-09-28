@@ -51,11 +51,11 @@ export default class Scrub implements IScrub {
     }
   }
 
-  commit(): void {
+  commit(undoable: boolean = true): void {
     const {_state: state} = this
 
     if (state.type === 'Captured') {
-      state.transaction.commit()
+      state.transaction.commit(undoable)
       state.flagsTransaction.discard()
       this._state = {type: 'Committed'}
     } else if (state.type === 'Ready') {

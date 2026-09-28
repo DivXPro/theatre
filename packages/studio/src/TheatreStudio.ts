@@ -223,6 +223,8 @@ export default class TheatreStudio implements IStudio {
       .filter((s) => isSheetObjectPublicAPI(s) || isSheetPublicAPI(s))
       .map((s) => getStudio().corePrivateAPI!(s))
 
+    // 选中是界面态不是创作内容:不可撤销(否则撤销栈顶被无视觉效果的
+    // selection 条目霸占,连按 Ctrl+Z 多次都弹不到真改动)
     getStudio().transaction(({stateEditors}) => {
       const newSelectionState: OutlineSelectionState[] = []
 
@@ -254,7 +256,7 @@ export default class TheatreStudio implements IStudio {
       stateEditors.studio.historic.panels.outline.selection.set(
         newSelectionState,
       )
-    })
+    }, false)
   }
 
   onSelectionChange(fn: (s: (ISheetObject | ISheet)[]) => void): VoidFn {

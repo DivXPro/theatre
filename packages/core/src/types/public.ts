@@ -1661,8 +1661,12 @@ export interface IScrub {
   reset(): void
   /**
    * Commits the scrub and creates a single undo level.
+   *
+   * @param undoable - Pass `false` to apply the changes without creating an
+   * undo level. Use this for view-state writes (e.g. persisting the editor
+   * camera position) that should be persisted and synced, but never undone.
    */
-  commit(): void
+  commit(undoable?: boolean): void
   /**
    * Captures operations for the scrub.
    *

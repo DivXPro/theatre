@@ -240,12 +240,14 @@ export default class StudioStore {
 
     const revision = generateDiskStateRevision()
 
+    // 读存档的副作用:不可撤销——否则每次导出/读取都往撤销栈顶压一条
+    // 无视觉效果的 revisionHistory 条目,把真改动埋在下面
     this.tempTransaction(({stateEditors}) => {
       stateEditors.coreByProject.historic.revisionHistory.add({
         projectId,
         revision,
       })
-    }).commit()
+    }).commit(false)
 
     return {
       ...projectState,

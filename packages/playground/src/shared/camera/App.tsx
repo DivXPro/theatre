@@ -304,7 +304,8 @@ function MainOrbitControls({
       const s = scrub
       scrub = undefined
       try {
-        s?.commit()
+        // 编辑器视角是视图态不是场景内容:持久化+同步,但不进撤销历史
+        s?.commit(false)
       } catch (err) {
         // scrub 已失效时 commit 会抛错,不能让它阻止引用清理
         console.warn('[camera] 相机 scrub 提交失败', err)
@@ -498,7 +499,8 @@ function GizmoNav({
       const s = scrubRef.current
       scrubRef.current = undefined
       try {
-        s?.commit()
+        // 导航轴吸附同属编辑器视角:持久化,但不进撤销历史
+        s?.commit(false)
       } catch (err) {
         // scrub 已失效时 commit 会抛错,不能让它阻止引用清理
         console.warn('[camera] gizmo scrub 提交失败', err)
