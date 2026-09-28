@@ -31,28 +31,11 @@ import {
   usePoseSelectionModes,
 } from './poseSession'
 
-/** 头骨上方偏移(乘骨架等比倍率):头顶再留一截,不压模型 */
-const HEAD_OFFSET = 0.35
+/** 头骨上方偏移(乘骨架等比倍率):离头顶远一截,编辑头颈时不挡视线 */
+const HEAD_OFFSET = 0.6
 
 /** 每帧复用的临时向量(避免逐帧分配) */
 const tmpVec = new Vector3()
-
-const Bar = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 10px;
-  border-radius: 6px;
-  background: var(--theatre-panel-bg-80, rgba(40, 43, 47, 0.8));
-  backdrop-filter: blur(14px);
-  border: 0.5px solid rgb(86 100 110 / 46%);
-  box-shadow: rgb(0 0 0 / 25%) 0px 2px 4px;
-  font-size: 12px;
-  line-height: 1;
-  white-space: nowrap;
-  /* 拖过小条文字区域不触发画布 orbit(按钮区域本就截获事件) */
-  user-select: none;
-`
 
 /** 原生 ToolbarIconButton + tooltip(样式照抄 TopToolbar 的 Btn,保持观感一致) */
 const ModeBtn = styled(ToolbarIconButton)`
@@ -157,24 +140,23 @@ export function PoseModeBar({
       {/* zIndexRange 压在顶栏(10)量级:高于画布、低于 studio 菜单/面板;
           不做遮挡剔除——可读性优先,被模型挡住也比找不到强 */}
       <Html center zIndexRange={[15, 0]} wrapperClass="pose-bar-wrapper">
-        <Bar>
-          <ToolbarSwitchSelectContainer>
-            {MODES.map(({mode: m, icon: Icon, labelKey, hintKey}) => (
-              <ModeBtn
-                key={m}
-                className={mode === m ? 'selected' : ''}
-                disabled={!selModes[m]}
-                onClick={() => setPoseManipulatorMode(m)}
-              >
-                <Icon size={16} />
-                <span className="tip">
-                  {translate(labelKey)}
-                  <span className="hint">{translate(hintKey)}</span>
-                </span>
-              </ModeBtn>
-            ))}
-          </ToolbarSwitchSelectContainer>
-        </Bar>
+        {/* 不再外包盒子:裸分段控件(与顶栏 W/G/R/S 组同款观感) */}
+        <ToolbarSwitchSelectContainer>
+          {MODES.map(({mode: m, icon: Icon, labelKey, hintKey}) => (
+            <ModeBtn
+              key={m}
+              className={mode === m ? 'selected' : ''}
+              disabled={!selModes[m]}
+              onClick={() => setPoseManipulatorMode(m)}
+            >
+              <Icon size={16} />
+              <span className="tip">
+                {translate(labelKey)}
+                <span className="hint">{translate(hintKey)}</span>
+              </span>
+            </ModeBtn>
+          ))}
+        </ToolbarSwitchSelectContainer>
       </Html>
     </group>
   )
