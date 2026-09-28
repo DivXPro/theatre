@@ -52,6 +52,36 @@ export function measureSkeletonScale(root: Object3D): number {
   return Math.min(Math.max(height / REFERENCE_HUMANOID_HEIGHT, 0.25), 8)
 }
 
+/**
+ * 人形解剖学朝向(世界坐标):脊柱向上 × (右髋−左髋) = 面朝方向。
+ * 「模型局部前方是哪根轴」各家约定不同(Mixamo +Z、FBX 转出的可能有 -90°X 骨架节点)、
+ * 放置组还会任意旋转——靠髋/脊柱骨的世界位置反推,与命名约定、局部轴向、放置旋转全无关。
+ * 注视球生在脸前还是脑后、肘/膝 pole 朝哪边,全看这个朝向;测不出(非人形/退化)→ null,
+ * 调用方回退库默认 (0,0,-1)。
+ */
+export function deriveHumanoidFacing(root: Object3D): Vector3 | null {
+  const names = collectBoneNames(root)
+  if (names.length === 0) return null
+  const {map, coverage} = suggestBoneMap(names)
+  if (coverage < 1) return null
+  root.updateWorldMatrix(true, true)
+  const worldPosOf = (profile: string): Vector3 | null => {
+    const name = map.findModelBone(profile)
+    const obj = name ? root.getObjectByName(name) : null
+    return obj ? obj.getWorldPosition(new Vector3()) : null
+  }
+  const hips = worldPosOf('Hips')
+  const upper = worldPosOf('Neck') ?? worldPosOf('Head')
+  const upLegL = worldPosOf('LeftUpperLeg')
+  const upLegR = worldPosOf('RightUpperLeg')
+  if (!hips || !upper || !upLegL || !upLegR) return null
+  const spineUp = upper.sub(hips)
+  const leftToRight = upLegR.sub(upLegL)
+  if (spineUp.lengthSq() < 1e-10 || leftToRight.lengthSq() < 1e-10) return null
+  const forward = spineUp.normalize().cross(leftToRight.normalize())
+  return forward.lengthSq() < 1e-10 ? null : forward.normalize()
+}
+
 export function resolveControlSpec(
   root: Object3D,
   facing: Vector3 = new Vector3(0, 0, -1),

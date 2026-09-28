@@ -11,13 +11,14 @@ import {useEffect, useRef} from 'react'
 import {useFrame, useThree} from '@react-three/fiber'
 import {getStudioSync, onChange, val} from '@dreamerbird/core'
 import type {ISheet, ISheetObject} from '@dreamerbird/core'
-import {Raycaster, Vector2} from 'three'
+import {Raycaster, Vector2, Vector3} from 'three'
 import type {Group} from 'three'
 import {SkeletonRig} from '@dreamerbird/threeik'
 import {createSkeletonControls} from '@dreamerbird/threeik/controls'
 import type {LimbControlHandle} from '@dreamerbird/threeik/controls'
 import {capturePose} from '../assetLibrary/pose'
 import {
+  deriveHumanoidFacing,
   measureSkeletonScale,
   resolveControlSpec,
   findRootBone,
@@ -81,7 +82,10 @@ export function PoseModeRig({
     // 保证读到的播放头稳定
     if (val(sheet.sequence.pointer.playing)) sheet.sequence.pause()
     const rootBone = findRootBone(instance)
-    const spec = resolveControlSpec(instance)
+    // 解剖学朝向(髋×脊柱反推,与模型局部轴向约定/放置旋转无关):
+    // 不传则库默认 (0,0,-1)——Y Bot 这类面朝 +Z 的模型注视球会生在脑后、拖球镜像
+    const facing = deriveHumanoidFacing(instance) ?? new Vector3(0, 0, -1)
+    const spec = resolveControlSpec(instance, facing)
     if (!rootBone || !spec) {
       // 入口已拦(菜单置灰/双击静默),这里是防御:直接清会话不挂载
       clearPoseSession()
@@ -109,6 +113,7 @@ export function PoseModeRig({
       camera,
       dom: gl.domElement,
       controls: spec,
+      facing,
       defaults: {
         rootRadius: 0.4 * sizeScale,
         lookAtRadius: 0.35 * sizeScale,
@@ -137,7 +142,9 @@ export function PoseModeRig({
     // 球径),网格等比后点按区域不受影响
     for (const c of spec) {
       if (c.kind !== 'limb') continue
-      ctl.get<LimbControlHandle>(c.name)?.pole.ball.scale.multiplyScalar(sizeScale)
+      ctl
+        .get<LimbControlHandle>(c.name)
+        ?.pole.ball.scale.multiplyScalar(sizeScale)
     }
     // 调试/自动化验证挂钩(同 __cameraShot):浏览器冒烟直接读选中态
     // (getSelected)与各控制球世界坐标,免去按像素猜点

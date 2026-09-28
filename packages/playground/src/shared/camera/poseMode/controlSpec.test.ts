@@ -1,6 +1,7 @@
 // packages/playground/src/shared/camera/poseMode/controlSpec.test.ts
-import {Bone, Group} from 'three'
+import {Bone, Group, Vector3} from 'three'
 import {
+  deriveHumanoidFacing,
   findRootBone,
   measureSkeletonScale,
   resolveControlSpec,
@@ -142,4 +143,73 @@ test('measureSkeletonScale: 缺关键骨 → 1;全骨同高(测不出高度)→ 
   for (const n of MIXAMO_REQUIRED) pos[n] = 0
   pos['mixamorig:Head'] = 100
   expect(measureSkeletonScale(positionedSkeleton(pos))).toBe(8)
+})
+
+// —— deriveHumanoidFacing ——
+/**
+ * 有层级、有位置的 T 型骨架:面朝 +Z(左髋 +X、脊柱 +Y);
+ * 其余关键骨平铺兜底(coverage 只看骨名),facing 只读 髋/颈(或头)/左右大腿根
+ */
+function humanoidRig(rotateY = 0): Group {
+  const root = new Group()
+  const hips = new Bone()
+  hips.name = 'mixamorig:Hips'
+  hips.position.set(0, 1, 0)
+  const spine = new Bone()
+  spine.name = 'mixamorig:Spine'
+  spine.position.set(0, 0.15, 0)
+  hips.add(spine)
+  const neck = new Bone()
+  neck.name = 'mixamorig:Neck'
+  neck.position.set(0, 0.35, 0)
+  spine.add(neck)
+  const head = new Bone()
+  head.name = 'mixamorig:Head'
+  head.position.set(0, 0.15, 0)
+  neck.add(head)
+  const upLegL = new Bone()
+  upLegL.name = 'mixamorig:LeftUpLeg'
+  upLegL.position.set(0.1, -0.05, 0) // 面朝 +Z 时角色的左侧在 +X
+  hips.add(upLegL)
+  const upLegR = new Bone()
+  upLegR.name = 'mixamorig:RightUpLeg'
+  upLegR.position.set(-0.1, -0.05, 0)
+  hips.add(upLegR)
+  root.add(hips)
+  for (const n of MIXAMO_REQUIRED) {
+    if (root.getObjectByName(n)) continue
+    const b = new Bone()
+    b.name = n
+    root.add(b)
+  }
+  root.rotation.y = rotateY
+  root.updateMatrixWorld(true)
+  return root
+}
+
+test('deriveHumanoidFacing: 面朝 +Z 的 T 型 → (0,0,1)', () => {
+  const f = deriveHumanoidFacing(humanoidRig())
+  expect(f).not.toBeNull()
+  expect(f!.angleTo(new Vector3(0, 0, 1))).toBeLessThan(1e-6)
+})
+
+test('deriveHumanoidFacing: 放置旋转 90° → 朝向跟着转(+1,0,0)', () => {
+  const f = deriveHumanoidFacing(humanoidRig(Math.PI / 2))!
+  expect(f.angleTo(new Vector3(1, 0, 0))).toBeLessThan(1e-6)
+})
+
+test('deriveHumanoidFacing: 非人形/退化 → null', () => {
+  expect(deriveHumanoidFacing(new Group())).toBeNull()
+  const flat = skeletonWith(MIXAMO_REQUIRED) // 全骨原点,脊柱/髋轴退化
+  expect(deriveHumanoidFacing(flat)).toBeNull()
+})
+
+test('朝向决定肘/膝 pole 方位:面朝 +Z 时肘在后(-Z)、膝在前(+Z)', () => {
+  const spec = resolveControlSpec(humanoidRig(), new Vector3(0, 0, 1))!
+  const byName = new Map(spec.map((c) => [c.name, c]))
+  const poleZ = (n: string) => (byName.get(n) as any).pole.position.z as number
+  expect(poleZ('armL')).toBeLessThan(0) // 肘朝后
+  expect(poleZ('armR')).toBeLessThan(0)
+  expect(poleZ('legL')).toBeGreaterThan(0) // 膝朝前
+  expect(poleZ('legR')).toBeGreaterThan(0)
 })
