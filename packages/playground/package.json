@@ -51,7 +51,7 @@
   },
   "private": true,
   "dependencies": {
-    "@dreamerbird/threeik": "0.1.2",
+    "@dreamerbird/threeik": "0.2.0",
     "@phosphor-icons/react": "^2.1.10"
   }
 }

@@ -5526,12 +5526,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@dreamerbird/threeik@npm:0.1.2":
-  version: 0.1.2
-  resolution: "@dreamerbird/threeik@npm:0.1.2"
+"@dreamerbird/threeik@npm:0.2.0":
+  version: 0.2.0
+  resolution: "@dreamerbird/threeik@npm:0.2.0"
   peerDependencies:
     three: ">=0.160.0"
-  checksum: 7936f8767cc1be9a3fe01bb00310a842400580f0fc1c90164519a5266f98259d9941aed9a025337ceb7b69dc169414e15a14e84d7c87f83a98a1d9f642ca19c5
+  checksum: 2b4ed2f096360afb2d638cbb1c5757d2511002f424faec7b5c4c93369e6387dd9a4ba297cc9ccccf763b43696816677c07255bff8ea3e4152a6a265d50edcd9e
   languageName: node
   linkType: hard
 
@@ -29875,7 +29875,7 @@ fsevents@^1.2.7:
     "@dreamerbird/react": "workspace:*"
     "@dreamerbird/studio": "workspace:*"
     "@dreamerbird/theatric": "workspace:*"
-    "@dreamerbird/threeik": 0.1.2
+    "@dreamerbird/threeik": 0.2.0
     "@gltf-transform/core": ^4.0.0
     "@gltf-transform/extensions": ^4.0.0
     "@gltf-transform/functions": ^4.0.0
