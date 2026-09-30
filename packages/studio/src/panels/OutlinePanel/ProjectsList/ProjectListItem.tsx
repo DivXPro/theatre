@@ -1,14 +1,14 @@
-import type Project from '@theatre/core/projects/Project'
+import type Project from '@dreamerbird/core/projects/Project'
 import React, {useCallback} from 'react'
-import BaseItem from '@theatre/studio/panels/OutlinePanel/BaseItem'
-import SheetsList from '@theatre/studio/panels/OutlinePanel/SheetsList/SheetsList'
-import getStudio from '@theatre/studio/getStudio'
-import {usePrism, useVal} from '@theatre/react'
-import {outlineSelection} from '@theatre/studio/selectors'
-import {val} from '@theatre/dataverse'
+import BaseItem from '@dreamerbird/studio/panels/OutlinePanel/BaseItem'
+import SheetsList from '@dreamerbird/studio/panels/OutlinePanel/SheetsList/SheetsList'
+import getStudio from '@dreamerbird/studio/getStudio'
+import {usePrism, useVal} from '@dreamerbird/react'
+import {outlineSelection} from '@dreamerbird/studio/selectors'
+import {val} from '@dreamerbird/dataverse'
 import styled from 'styled-components'
-import {useCollapseStateInOutlinePanel} from '@theatre/studio/panels/OutlinePanel/outlinePanelUtils'
-import useChordial from '@theatre/studio/uiComponents/chordial/useChodrial'
+import {useCollapseStateInOutlinePanel} from '@dreamerbird/studio/panels/OutlinePanel/outlinePanelUtils'
+import useChordial from '@dreamerbird/studio/uiComponents/chordial/useChodrial'
 
 const ConflictNotice = styled.div`
   color: #ff6363;

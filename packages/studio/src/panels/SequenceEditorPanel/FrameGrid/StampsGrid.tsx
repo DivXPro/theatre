@@ -1,12 +1,12 @@
-import type {ISequencePositionFormatter} from '@theatre/core/sequences/Sequence'
-import type {SequenceEditorPanelLayout} from '@theatre/studio/panels/SequenceEditorPanel/layout/layout'
-import type {Pointer} from '@theatre/dataverse'
-import {prism, val} from '@theatre/dataverse'
+import type {ISequencePositionFormatter} from '@dreamerbird/core/sequences/Sequence'
+import type {SequenceEditorPanelLayout} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/layout'
+import type {Pointer} from '@dreamerbird/dataverse'
+import {prism, val} from '@dreamerbird/dataverse'
 import {darken} from 'polished'
 import React, {useLayoutEffect, useRef, useState} from 'react'
 import styled from 'styled-components'
 import createGrid from './createGrid'
-import getStudio from '@theatre/studio/getStudio'
+import getStudio from '@dreamerbird/studio/getStudio'
 
 const Container = styled.div`
   position: absolute;

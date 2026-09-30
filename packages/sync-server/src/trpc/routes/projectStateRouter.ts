@@ -1,11 +1,13 @@
 import {z} from 'zod'
 import {createRouter, procedure} from '..'
-import {getSaazBack} from 'src/saaz'
+import {getSaazBack} from '../../saaz'
 import {observable} from '@trpc/server/observable'
 
-const studioAuth = z.object({
-  accessToken: z.string(),
-})
+// In the self-hosted minimal loop (AUTH_DISABLED=true) the direct-ws client
+// sends no token at all, so studioAuth is optional. requireValidSession
+// handles the missing token (lets it through when auth is disabled, rejects
+// otherwise). The app-backed (auth-on) client always supplies it.
+const studioAuth = z.object({accessToken: z.string()}).optional()
 
 // type Session = {
 //   _accessToken: string

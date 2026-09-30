@@ -1,11 +1,11 @@
-import {useVal} from '@theatre/react'
-import type {Pointer} from '@theatre/dataverse'
+import {useVal} from '@dreamerbird/react'
+import type {Pointer} from '@dreamerbird/dataverse'
 import React from 'react'
 import styled from 'styled-components'
-import type {SequenceEditorPanelLayout} from '@theatre/studio/panels/SequenceEditorPanel/layout/layout'
-import StampsGrid from '@theatre/studio/panels/SequenceEditorPanel/FrameGrid/StampsGrid'
-import {includeLockFrameStampAttrs} from '@theatre/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
-import {pointerEventsAutoInNormalMode} from '@theatre/studio/css'
+import type {SequenceEditorPanelLayout} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/layout'
+import StampsGrid from '@dreamerbird/studio/panels/SequenceEditorPanel/FrameGrid/StampsGrid'
+import {includeLockFrameStampAttrs} from '@dreamerbird/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
+import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
 import FocusRangeZone from './FocusRangeZone/FocusRangeZone'
 
 export const topStripHeight = 18

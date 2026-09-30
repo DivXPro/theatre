@@ -1,11 +1,9 @@
-import type {IScrub} from '@theatre/core'
+import type {IScrub} from '@dreamerbird/core'
 import React, {useLayoutEffect, useMemo, useState} from 'react'
-import type {ISheet, ISheetObject, IProject} from '@theatre/core'
+import type {ISheet, ISheetObject, IProject} from '@dreamerbird/core'
 import type {UseDragOpts} from './useDrag'
 import useDrag from './useDrag'
-import theatre from '@theatre/core'
-
-void theatre.init({studio: true})
+import theatre from '@dreamerbird/core'
 
 const boxObjectConfig = {
   x: 0,
@@ -106,7 +104,7 @@ export const Scene: React.FC<{project: IProject}> = ({project}) => {
         ),
       )
     })
-  })
+  }, [])
 
   return (
     <div

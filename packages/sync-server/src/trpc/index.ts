@@ -5,8 +5,9 @@ import type {NodeHTTPCreateContextFnOptions} from '@trpc/server/adapters/node-ht
 import superjson from 'superjson'
 import type ws from 'ws'
 import {ZodError} from 'zod'
-import type {Session} from 'src/utils/authUtils'
-import {verifyAccessTokenOrThrow} from 'src/utils/authUtils'
+import {isAuthDisabled} from '../authConfig'
+import type {Session} from '../utils/authUtils'
+import {verifyAccessTokenOrThrow} from '../utils/authUtils'
 
 const t = initTRPC.context<ServerContext>().create({
   /**
@@ -53,7 +54,7 @@ export const mergeRouters = t.mergeRouters
 
 type SyncServerTrpcContext = {
   requireValidSession: (opts: {
-    input: {studioAuth: {accessToken: string}}
+    input: {studioAuth?: {accessToken: string}}
   }) => Promise<Session>
 }
 /**
@@ -68,6 +69,13 @@ export const createContext = async (
 
   return {
     async requireValidSession(opts): Promise<Session> {
+      // AUTH_DISABLED=true = self-hosted minimal loop: let everything through,
+      // never touch the token verifier (which would fetch the app's jwt key).
+      if (isAuthDisabled()) {
+        return {
+          _accessToken: opts.input.studioAuth?.accessToken ?? '',
+        } as Session
+      }
       if (cashedResult) return cashedResult
       cashedResult = verifyAccessTokenOrThrow(opts)
       return cashedResult

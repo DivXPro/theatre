@@ -1,15 +1,15 @@
-import {privateAPI, setPrivateAPI} from '@theatre/core/privateAPIs'
-import {compound} from '@theatre/core/propTypes'
-import type Sheet from '@theatre/core/sheets/Sheet'
-import type {SheetAddress} from '@theatre/core/types/public'
-import {InvalidArgumentError} from '@theatre/utils/errors'
-import {validateAndSanitiseSlashedPathOrThrow} from '@theatre/utils/slashedPaths'
-import type {$FixMe, $IntentionalAny} from '@theatre/core/types/public'
-import userReadableTypeOfValue from '@theatre/utils/userReadableTypeOfValue'
+import {privateAPI, setPrivateAPI} from '@dreamerbird/core/privateAPIs'
+import {compound} from '@dreamerbird/core/propTypes'
+import type Sheet from '@dreamerbird/core/sheets/Sheet'
+import type {SheetAddress} from '@dreamerbird/core/types/public'
+import {InvalidArgumentError} from '@dreamerbird/utils/errors'
+import {validateAndSanitiseSlashedPathOrThrow} from '@dreamerbird/utils/slashedPaths'
+import type {$FixMe, $IntentionalAny} from '@dreamerbird/core/types/public'
+import userReadableTypeOfValue from '@dreamerbird/utils/userReadableTypeOfValue'
 import deepEqual from 'fast-deep-equal'
-import type SheetObject from '@theatre/core/sheetObjects/SheetObject'
-import type {ObjectAddressKey} from '@theatre/core/types/public'
-import {notify} from '@theatre/core/utils/notify'
+import type SheetObject from '@dreamerbird/core/sheetObjects/SheetObject'
+import type {ObjectAddressKey} from '@dreamerbird/core/types/public'
+import {notify} from '@dreamerbird/core/utils/notify'
 import type {
   IProject,
   ISheet,
@@ -17,7 +17,7 @@ import type {
   ISheetObject,
   ISequence,
   UnknownShorthandCompoundProps,
-} from '@theatre/core/types/public'
+} from '@dreamerbird/core/types/public'
 
 const weakMapOfUnsanitizedProps = new WeakMap<
   SheetObject,
@@ -40,6 +40,8 @@ export default class TheatreSheet implements ISheet {
     config: Props,
     opts?: {
       reconfigure?: boolean
+      /** See {@link ISheet.object}'s `hideFromOutline` option. */
+      hideFromOutline?: boolean
       __actions__THIS_API_IS_UNSTABLE_AND_WILL_CHANGE_IN_THE_NEXT_VERSION?: SheetObjectActionsConfig
     },
   ): ISheetObject<Props> {
@@ -89,6 +91,9 @@ export default class TheatreSheet implements ISheet {
       if (actions) {
         existingObject.template._temp_setActions(actions)
       }
+      if (opts?.hideFromOutline) {
+        existingObject.template.hideFromOutline = true
+      }
 
       return existingObject.publicApi as $IntentionalAny
     } else {
@@ -99,6 +104,9 @@ export default class TheatreSheet implements ISheet {
         sanitizedConfig,
         actions,
       )
+      if (opts?.hideFromOutline) {
+        object.template.hideFromOutline = true
+      }
       if (process.env.NODE_ENV !== 'production') {
         weakMapOfUnsanitizedProps.set(object as $FixMe, config)
       }

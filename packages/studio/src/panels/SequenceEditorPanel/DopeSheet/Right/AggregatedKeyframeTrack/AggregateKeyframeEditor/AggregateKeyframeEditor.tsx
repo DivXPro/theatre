@@ -1,21 +1,21 @@
-import type {BasicKeyframe} from '@theatre/core/types/public'
+import type {BasicKeyframe} from '@dreamerbird/core/types/public'
 import type {
   DopeSheetSelection,
   SequenceEditorPanelLayout,
-} from '@theatre/studio/panels/SequenceEditorPanel/layout/layout'
+} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/layout'
 import type {
   SequenceEditorTree_PropWithChildren,
   SequenceEditorTree_Sheet,
   SequenceEditorTree_SheetObject,
-} from '@theatre/studio/panels/SequenceEditorPanel/layout/tree'
-import type {Pointer} from '@theatre/dataverse'
-import {val} from '@theatre/dataverse'
+} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/tree'
+import type {Pointer} from '@dreamerbird/dataverse'
+import {val} from '@dreamerbird/dataverse'
 import React from 'react'
 import styled from 'styled-components'
-import type {SequenceTrackId} from '@theatre/core/types/public'
-import type {AggregateKeyframePositionIsSelected} from '@theatre/studio/panels/SequenceEditorPanel/DopeSheet/Right/AggregatedKeyframeTrack/AggregatedKeyframeTrack'
-import type {KeyframeWithTrack} from '@theatre/studio/panels/SequenceEditorPanel/DopeSheet/Right/collectAggregateKeyframes'
-import type {SheetObjectAddress} from '@theatre/core/types/public'
+import type {SequenceTrackId} from '@dreamerbird/core/types/public'
+import type {AggregateKeyframePositionIsSelected} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/Right/AggregatedKeyframeTrack/AggregatedKeyframeTrack'
+import type {KeyframeWithTrack} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/Right/collectAggregateKeyframes'
+import type {SheetObjectAddress} from '@dreamerbird/core/types/public'
 import {AggregateKeyframeConnector} from './AggregateKeyframeConnector'
 import {useAggregateKeyframeEditorUtils} from './useAggregateKeyframeEditorUtils'
 import {AggregateKeyframeDot} from './AggregateKeyframeDot'
@@ -62,7 +62,7 @@ export type IAggregateKeyframeEditorProps = {
  * is open. This would require having some kind of stable identity for each aggregate row.
  * Let's defer that work until other interactive keyframe editing PRs are merged in.
  */
-const AggregateKeyframeEditor: React.VFC<IAggregateKeyframeEditorProps> =
+const AggregateKeyframeEditor: React.FC<IAggregateKeyframeEditorProps> =
   React.memo((props) => {
     const utils = useAggregateKeyframeEditorUtils(props)
     return (

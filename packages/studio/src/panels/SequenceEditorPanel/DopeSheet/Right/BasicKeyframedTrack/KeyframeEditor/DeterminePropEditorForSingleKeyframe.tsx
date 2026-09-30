@@ -1,16 +1,17 @@
 import React from 'react'
 import styled from 'styled-components'
 
-import type {PropTypeConfig_AllSimples} from '@theatre/core/types/public'
-import type {ISimplePropEditorReactProps} from '@theatre/studio/propEditors/simpleEditors/ISimplePropEditorReactProps'
-import {simplePropEditorByPropType} from '@theatre/studio/propEditors/simpleEditors/simplePropEditorByPropType'
+import type {PropTypeConfig_AllSimples} from '@dreamerbird/core/types/public'
+import type {ISimplePropEditorReactProps} from '@dreamerbird/studio/propEditors/simpleEditors/ISimplePropEditorReactProps'
+import {simplePropEditorByPropType} from '@dreamerbird/studio/propEditors/simpleEditors/simplePropEditorByPropType'
 import type {
   EditingOptionsTree,
   PrimitivePropEditingOptions,
 } from './useSingleKeyframeInlineEditorPopover'
 import last from 'lodash-es/last'
 import {useTempTransactionEditingTools} from './useTempTransactionEditingTools'
-import {__private} from '@theatre/core'
+import {__private} from '@dreamerbird/core'
+import {usePropLabel} from '@dreamerbird/studio/i18n'
 const {valueInProp} = __private.propTypeUtils
 
 const SingleKeyframePropEditorContainer = styled.div`
@@ -71,7 +72,7 @@ export function DeterminePropEditorForKeyframeTree(
       </>
     )
   } else if (p.type === 'propWithChildren') {
-    const label = p.propConfig.label ?? last(p.pathToProp)
+    const label = usePropLabel(p.propConfig.label) ?? last(p.pathToProp)
     return (
       <>
         <SingleKeyframePropLabel
@@ -109,7 +110,7 @@ const SingleKeyframeSimplePropEditorContainer = styled.div`
 function PrimitivePropEditor(
   p: PrimitivePropEditingOptions & {autoFocusInput?: boolean; indent: number},
 ) {
-  const label = p.propConfig.label ?? last(p.pathToProp)
+  const label = usePropLabel(p.propConfig.label) ?? last(p.pathToProp)
   const editingTools = useEditingToolsForKeyframeEditorPopover(p)
 
   if (p.propConfig.type === 'enum') {
@@ -118,7 +119,7 @@ function PrimitivePropEditor(
   } else {
     const PropEditor = simplePropEditorByPropType[
       p.propConfig.type
-    ] as React.VFC<ISimplePropEditorReactProps<PropTypeConfig_AllSimples>>
+    ] as React.FC<ISimplePropEditorReactProps<PropTypeConfig_AllSimples>>
     return (
       <SingleKeyframePropEditorContainer>
         <SingleKeyframePropLabel>

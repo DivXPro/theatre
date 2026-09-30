@@ -4,6 +4,7 @@
     "types": ["vite/client"],
     "moduleResolution": "NodeNext",
     "module": "NodeNext",
-    "target": "ESNext"
+    "target": "ESNext",
+    "skipLibCheck": true
   }
 }

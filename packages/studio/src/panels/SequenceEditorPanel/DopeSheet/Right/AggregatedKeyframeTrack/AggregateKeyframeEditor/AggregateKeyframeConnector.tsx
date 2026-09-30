@@ -1,27 +1,27 @@
-import {val} from '@theatre/dataverse'
+import {val} from '@dreamerbird/dataverse'
 import React, {useMemo, useRef} from 'react'
-import {ConnectorLine} from '@theatre/studio/panels/SequenceEditorPanel/DopeSheet/Right/keyframeRowUI/ConnectorLine'
-import {AggregateKeyframePositionIsSelected} from '@theatre/studio/panels/SequenceEditorPanel/DopeSheet/Right/AggregatedKeyframeTrack/AggregatedKeyframeTrack'
-import usePopover from '@theatre/studio/uiComponents/Popover/usePopover'
-import useRefAndState from '@theatre/studio/utils/useRefAndState'
-import type {DragOpts} from '@theatre/studio/uiComponents/useDrag'
-import type {CommitOrDiscardOrRecapture} from '@theatre/studio/StudioStore/StudioStore'
-import getStudio from '@theatre/studio/getStudio'
-import useDrag from '@theatre/studio/uiComponents/useDrag'
+import {ConnectorLine} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/Right/keyframeRowUI/ConnectorLine'
+import {AggregateKeyframePositionIsSelected} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/Right/AggregatedKeyframeTrack/AggregatedKeyframeTrack'
+import usePopover from '@dreamerbird/studio/uiComponents/Popover/usePopover'
+import useRefAndState from '@dreamerbird/studio/utils/useRefAndState'
+import type {DragOpts} from '@dreamerbird/studio/uiComponents/useDrag'
+import type {CommitOrDiscardOrRecapture} from '@dreamerbird/studio/StudioStore/StudioStore'
+import getStudio from '@dreamerbird/studio/getStudio'
+import useDrag from '@dreamerbird/studio/uiComponents/useDrag'
 import type {IAggregateKeyframeEditorUtils} from './useAggregateKeyframeEditorUtils'
-import CurveEditorPopover from '@theatre/studio/panels/SequenceEditorPanel/DopeSheet/Right/BasicKeyframedTrack/KeyframeEditor/CurveEditorPopover/CurveEditorPopover'
+import CurveEditorPopover from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/Right/BasicKeyframedTrack/KeyframeEditor/CurveEditorPopover/CurveEditorPopover'
 import {useAggregateKeyframeEditorUtils} from './useAggregateKeyframeEditorUtils'
 import type {IAggregateKeyframeEditorProps} from './AggregateKeyframeEditor'
 import styled from 'styled-components'
-import BasicPopover from '@theatre/studio/uiComponents/Popover/BasicPopover'
+import BasicPopover from '@dreamerbird/studio/uiComponents/Popover/BasicPopover'
 import {
   copyableKeyframesFromSelection,
   keyframesWithPaths,
-} from '@theatre/studio/panels/SequenceEditorPanel/DopeSheet/selections'
-import useContextMenu from '@theatre/studio/uiComponents/simpleContextMenu/useContextMenu'
-import {commonRootOfPathsToProps} from '@theatre/utils/pathToProp'
-import type {KeyframeWithPathToPropFromCommonRoot} from '@theatre/core/types/private'
-import {__private} from '@theatre/core'
+} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/selections'
+import useContextMenu from '@dreamerbird/studio/uiComponents/simpleContextMenu/useContextMenu'
+import {commonRootOfPathsToProps} from '@dreamerbird/utils/pathToProp'
+import type {KeyframeWithPathToPropFromCommonRoot} from '@dreamerbird/core/types/private'
+import {__private} from '@dreamerbird/core'
 
 const {keyframeUtils} = __private
 
@@ -50,7 +50,7 @@ export const AggregateCurveEditorPopover: React.FC<
   )
 })
 
-export const AggregateKeyframeConnector: React.VFC<
+export const AggregateKeyframeConnector: React.FC<
   IAggregateKeyframeConnectorProps
 > = (props) => {
   const [nodeRef, node] = useRefAndState<HTMLDivElement | null>(null)

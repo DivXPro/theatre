@@ -18,6 +18,11 @@ export class FrontStorage {
       return await fn(t)
     })
   }
+
+  /** Closes the underlying adapter connection (see `FrontStorageAdapter.close`). */
+  closeAdapter(): Promise<void> {
+    return this._adapter.close()
+  }
 }
 
 class FrontStorageTransactionImpl {
@@ -44,7 +49,9 @@ class FrontStorageTransactionImpl {
     SessionState<unknown> | undefined
   > {
     const allSessionStates =
-      this._adapterTransaction.getAll<SessionState<unknown>>('sessionState')
+      await this._adapterTransaction.getAll<SessionState<unknown>>(
+        'sessionState',
+      )
     let latest: SessionState<unknown> | undefined
     for (const [peerId, sessionState] of Object.entries(allSessionStates)) {
       if (
@@ -78,7 +85,7 @@ class FrontStorageTransactionImpl {
   }
 
   async getAllExistingSessionIds(): Promise<string[]> {
-    const all = await this._adapterTransaction.getAll('session')
+    const all = await this._adapterTransaction.getAll('sessionState')
     return Object.keys(all)
   }
 

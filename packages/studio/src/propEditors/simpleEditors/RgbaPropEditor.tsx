@@ -1,12 +1,16 @@
-import type {PropTypeConfig_Rgba, Rgba} from '@theatre/core/types/public'
-import {validHexRegExp} from '@theatre/utils/color'
-import {decorateRgba, rgba2hex, parseRgbaFromHex} from '@theatre/utils/color'
+import type {PropTypeConfig_Rgba, Rgba} from '@dreamerbird/core/types/public'
+import {validHexRegExp} from '@dreamerbird/utils/color'
+import {
+  decorateRgba,
+  rgba2hex,
+  parseRgbaFromHex,
+} from '@dreamerbird/utils/color'
 import React, {useCallback, useRef} from 'react'
-import {RgbaColorPicker} from '@theatre/studio/uiComponents/colorPicker'
+import {RgbaColorPicker} from '@dreamerbird/studio/uiComponents/colorPicker'
 import styled from 'styled-components'
-import usePopover from '@theatre/studio/uiComponents/Popover/usePopover'
-import BasicStringInput from '@theatre/studio/uiComponents/form/BasicStringInput'
-import {popoverBackgroundColor} from '@theatre/studio/uiComponents/Popover/BasicPopover'
+import usePopover from '@dreamerbird/studio/uiComponents/Popover/usePopover'
+import BasicStringInput from '@dreamerbird/studio/uiComponents/form/BasicStringInput'
+import {popoverBackgroundColor} from '@dreamerbird/studio/uiComponents/Popover/BasicPopover'
 import type {ISimplePropEditorReactProps} from './ISimplePropEditorReactProps'
 
 const RowContainer = styled.div`
@@ -17,14 +21,14 @@ const RowContainer = styled.div`
 `
 
 interface ColorPreviewPuckProps {
-  rgbaColor: Rgba
+  $rgbaColor: Rgba
 }
 
 const ColorPreviewPuck = styled.div.attrs<ColorPreviewPuckProps>((props) => ({
   style: {
     // weirdly, rgba2hex is needed to ensure initial render was correct background?
     // huge head scratcher.
-    background: rgba2hex(props.rgbaColor),
+    background: rgba2hex(props.$rgbaColor),
   },
 }))<ColorPreviewPuckProps>`
   height: 18px;
@@ -41,7 +45,7 @@ const noop = () => {}
 const RgbaPopover = styled.div`
   position: absolute;
   background-color: ${popoverBackgroundColor};
-  color: white;
+  color: var(--theatre-text-primary);
   margin: 0;
   cursor: default;
   border-radius: 3px;
@@ -96,7 +100,7 @@ function RgbaPropEditor({
     <>
       <RowContainer>
         <ColorPreviewPuck
-          rgbaColor={value}
+          $rgbaColor={value}
           ref={containerRef}
           onClick={(e) => {
             popover.toggle(e, containerRef.current)

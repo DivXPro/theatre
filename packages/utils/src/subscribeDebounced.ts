@@ -1,5 +1,5 @@
-import type {Pointer, Prism} from '@theatre/dataverse'
-import {isPointer, prism, val} from '@theatre/dataverse'
+import type {Pointer, Prism} from '@dreamerbird/dataverse'
+import {isPointer, prism, val} from '@dreamerbird/dataverse'
 import type {$IntentionalAny} from './types'
 
 /**

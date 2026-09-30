@@ -4,6 +4,7 @@ import {FrontMemoryAdapter} from './front/FrontMemoryAdapter'
 import {SaazFront} from './front/SaazFront'
 import type {Root} from './rogue'
 import {change, fromOps, jsonFromCell} from './rogue'
+import type {Ops} from './rogue'
 import type {Schema} from './types'
 
 const ahistoricSnapshot: Root = {
@@ -288,5 +289,89 @@ describe(`Rogue`, () => {
 
       saaz.teardown()
     })
+  })
+})
+
+describe(`fromOps replay path guard`, () => {
+  // 一条 update 回放失败被整体跳过后,后续 update 的 op 路径会穿过"本该由它
+  // 创建"的缺失节点。此时 setDeep 会自动补出没有 $type 的裸 plain object 充当
+  // mapProps 条目——状态被毒化,下一个读写 draft 的事务就抛
+  // "mapProps[x] is not an ahistoric cell"(2026-09-25 用户实测崩溃)。
+  // 回放必须拒绝这种 op,让调用方整体跳过该 update,而不是造出畸形状态。
+  test('ChangeType crossing a missing intermediate node throws instead of auto-vivifying bare nodes', () => {
+    const ops: Ops = [
+      {
+        type: 'ChangeType',
+        path: [
+          ['base', 'historic'],
+          ['base', 'panels'],
+        ],
+        value: ['map', 'base'],
+      },
+    ]
+    expect(() => fromOps({}, ops)).toThrow(/missing node/)
+  })
+
+  test('SetBoxedValue landing on a missing node throws (it would create a bare node)', () => {
+    const ops: Ops = [
+      {
+        type: 'SetBoxedValue',
+        path: [['base', 'historic']],
+        branchName: 'base',
+        value: 1,
+      },
+    ]
+    expect(() => fromOps({}, ops)).toThrow(/missing node/)
+  })
+
+  test('ChangeType creating a node under an existing parent stays legal', () => {
+    const ops: Ops = [
+      {
+        type: 'ChangeType',
+        path: [['base', 'historic']],
+        value: ['map', 'base'],
+      },
+    ]
+    const [rep] = fromOps({}, ops)
+    expect(jsonFromCell(rep)).toEqual({historic: {}})
+  })
+
+  test('ops building a subtree parent-first within one update stay legal', () => {
+    const ops: Ops = [
+      {
+        type: 'ChangeType',
+        path: [['base', 'historic']],
+        value: ['map', 'base'],
+      },
+      {
+        type: 'ChangeType',
+        path: [
+          ['base', 'historic'],
+          ['base', 'panels'],
+        ],
+        value: ['map', 'base'],
+      },
+      {
+        type: 'ChangeType',
+        path: [
+          ['base', 'historic'],
+          ['base', 'panels'],
+          ['base', 'count'],
+        ],
+        value: ['boxed', 'base'],
+      },
+      {
+        type: 'SetBoxedValue',
+        path: [
+          ['base', 'historic'],
+          ['base', 'panels'],
+          ['base', 'count'],
+        ],
+        branchName: 'base',
+        value: 3,
+      },
+    ]
+    const [rep] = fromOps({}, ops)
+    expect(jsonFromCell(rep)).toEqual({historic: {panels: {count: 3}}})
   })
 })

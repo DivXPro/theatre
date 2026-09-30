@@ -1,6 +1,6 @@
-import {editable as e, RefreshSnapshot, SheetProvider} from '@theatre/r3f'
+import {editable as e, RefreshSnapshot, SheetProvider} from '@dreamerbird/r3f'
 import {Stars} from '@react-three/drei'
-import {getProject} from '@theatre/core'
+import {getProject} from '@dreamerbird/core'
 import React, {Suspense, useState} from 'react'
 import {Canvas} from '@react-three/fiber'
 import {useGLTF, PerspectiveCamera} from '@react-three/drei'

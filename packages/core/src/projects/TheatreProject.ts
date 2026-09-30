@@ -1,15 +1,19 @@
-import {privateAPI, setPrivateAPI} from '@theatre/core/privateAPIs'
-import Project from '@theatre/core/projects/Project'
-import type {Asset, ProjectAddress} from '@theatre/core/types/public'
+import {privateAPI, setPrivateAPI} from '@dreamerbird/core/privateAPIs'
+import Project from '@dreamerbird/core/projects/Project'
+import type {Asset, ProjectAddress} from '@dreamerbird/core/types/public'
 import type {
   ProjectId,
   SheetId,
   SheetInstanceId,
-} from '@theatre/core/types/public'
-import {validateInstanceId} from '@theatre/utils/sanitizers'
-import {validateAndSanitiseSlashedPathOrThrow} from '@theatre/utils/slashedPaths'
-import type {IProject, IProjectConfig, ISheet} from '@theatre/core/types/public'
-import {notify} from '@theatre/core/coreExports'
+} from '@dreamerbird/core/types/public'
+import {validateInstanceId} from '@dreamerbird/utils/sanitizers'
+import {validateAndSanitiseSlashedPathOrThrow} from '@dreamerbird/utils/slashedPaths'
+import type {
+  IProject,
+  IProjectConfig,
+  ISheet,
+} from '@dreamerbird/core/types/public'
+import {notify} from '@dreamerbird/core/coreExports'
 
 // export type IProjectConfigExperiments = {
 //   /**

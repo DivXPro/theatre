@@ -3,19 +3,19 @@ import React, {useLayoutEffect, useMemo, useRef, useState} from 'react'
 import type {Editable} from '../../main/store'
 import {createPortal, invalidate} from '@react-three/fiber'
 import EditableProxy from './EditableProxy'
-import type {OrbitControls} from 'three-stdlib'
+import type {OrbitControlsImpl} from './OrbitControls'
 import TransformControls from './TransformControls'
 import shallow from 'zustand/shallow'
 import type {Material, Mesh, Object3D} from 'three'
 import {MeshBasicMaterial, MeshPhongMaterial} from 'three'
-import {getStudioSync, type IScrub} from '@theatre/core'
+import {getStudioSync, type IScrub} from '@dreamerbird/core'
 import {useSelected} from './useSelected'
-import {useVal} from '@theatre/react'
+import {useVal} from '@dreamerbird/react'
 import {getEditorSheetObject} from '../editorStuff'
 import useExtensionStore from '../useExtensionStore'
 
 export interface ProxyManagerProps {
-  orbitControlsRef: React.MutableRefObject<OrbitControls | null>
+  orbitControlsRef: React.MutableRefObject<OrbitControlsImpl | null>
 }
 
 type IEditableProxy<T> = {

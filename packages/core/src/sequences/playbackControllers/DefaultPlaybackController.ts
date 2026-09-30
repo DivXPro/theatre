@@ -1,11 +1,11 @@
-import {defer} from '@theatre/utils/defer'
-import noop from '@theatre/utils/noop'
-import type {Prism, Pointer, Ticker} from '@theatre/dataverse'
-import {Atom} from '@theatre/dataverse'
+import {defer} from '@dreamerbird/utils/defer'
+import noop from '@dreamerbird/utils/noop'
+import type {Prism, Pointer, Ticker} from '@dreamerbird/dataverse'
+import {Atom} from '@dreamerbird/dataverse'
 import type {
   IPlaybackDirection,
   IPlaybackRange,
-} from '@theatre/core/types/public'
+} from '@dreamerbird/core/types/public'
 
 export interface IPlaybackState {
   position: number

@@ -1,28 +1,28 @@
-import getStudio from '@theatre/studio/getStudio'
-import type {CommitOrDiscardOrRecapture} from '@theatre/studio/StudioStore/StudioStore'
-import useContextMenu from '@theatre/studio/uiComponents/simpleContextMenu/useContextMenu'
-import useDrag from '@theatre/studio/uiComponents/useDrag'
-import useRefAndState from '@theatre/studio/utils/useRefAndState'
-import {val} from '@theatre/dataverse'
+import getStudio from '@dreamerbird/studio/getStudio'
+import type {CommitOrDiscardOrRecapture} from '@dreamerbird/studio/StudioStore/StudioStore'
+import useContextMenu from '@dreamerbird/studio/uiComponents/simpleContextMenu/useContextMenu'
+import useDrag from '@dreamerbird/studio/uiComponents/useDrag'
+import useRefAndState from '@dreamerbird/studio/utils/useRefAndState'
+import {val} from '@dreamerbird/dataverse'
 import React from 'react'
 import {useMemo, useRef} from 'react'
-import usePopover from '@theatre/studio/uiComponents/Popover/usePopover'
-import BasicPopover from '@theatre/studio/uiComponents/Popover/BasicPopover'
+import usePopover from '@dreamerbird/studio/uiComponents/Popover/usePopover'
+import BasicPopover from '@dreamerbird/studio/uiComponents/Popover/BasicPopover'
 import CurveEditorPopover, {
   isConnectionEditingInCurvePopover,
 } from './CurveEditorPopover/CurveEditorPopover'
 import type {ISingleKeyframeEditorProps} from './SingleKeyframeEditor'
-import type {IConnectorThemeValues} from '@theatre/studio/panels/SequenceEditorPanel/DopeSheet/Right/keyframeRowUI/ConnectorLine'
-import {ConnectorLine} from '@theatre/studio/panels/SequenceEditorPanel/DopeSheet/Right/keyframeRowUI/ConnectorLine'
+import type {IConnectorThemeValues} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/Right/keyframeRowUI/ConnectorLine'
+import {ConnectorLine} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/Right/keyframeRowUI/ConnectorLine'
 import {COLOR_POPOVER_BACK} from './CurveEditorPopover/colors'
-import {usePrism} from '@theatre/react'
-import type {KeyframeConnectionWithAddress} from '@theatre/studio/panels/SequenceEditorPanel/DopeSheet/selections'
-import {copyableKeyframesFromSelection} from '@theatre/studio/panels/SequenceEditorPanel/DopeSheet/selections'
-import {selectedKeyframeConnections} from '@theatre/studio/panels/SequenceEditorPanel/DopeSheet/selections'
+import {usePrism} from '@dreamerbird/react'
+import type {KeyframeConnectionWithAddress} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/selections'
+import {copyableKeyframesFromSelection} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/selections'
+import {selectedKeyframeConnections} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/selections'
 
 import styled from 'styled-components'
-import type {BasicKeyframe} from '@theatre/core'
-import {__private} from '@theatre/core'
+import type {BasicKeyframe} from '@dreamerbird/core'
+import {__private} from '@dreamerbird/core'
 
 const {keyframeUtils} = __private
 
@@ -37,7 +37,7 @@ const EasingPopover = styled(BasicPopover)`
 
 type IBasicKeyframeConnectorProps = ISingleKeyframeEditorProps
 
-const BasicKeyframeConnector: React.VFC<IBasicKeyframeConnectorProps> = (
+const BasicKeyframeConnector: React.FC<IBasicKeyframeConnectorProps> = (
   props,
 ) => {
   const {index, track} = props

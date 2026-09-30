@@ -1,12 +1,12 @@
-import type {VoidFn} from '@theatre/core/types/public'
-import {pointerEventsAutoInNormalMode} from '@theatre/studio/css'
+import type {VoidFn} from '@dreamerbird/core/types/public'
+import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
 import {transparentize} from 'polished'
 import React from 'react'
 import styled, {css} from 'styled-components'
-import {PresenceFlag} from '@theatre/studio/uiComponents/usePresence'
-import usePresence from '@theatre/studio/uiComponents/usePresence'
-import type {StudioSheetItemKey} from '@theatre/core/types/private'
-import type {BasicKeyframe} from '@theatre/core'
+import {PresenceFlag} from '@dreamerbird/studio/uiComponents/usePresence'
+import usePresence from '@dreamerbird/studio/uiComponents/usePresence'
+import type {StudioSheetItemKey} from '@dreamerbird/core/types/private'
+import type {BasicKeyframe} from '@dreamerbird/core'
 
 export type NearbyKeyframesControls = {
   prev?: Pick<BasicKeyframe, 'position'> & {
@@ -82,17 +82,17 @@ export const nextPrevCursorsTheme = {
 }
 
 const CurButton = styled(Button)<{
-  isOn: boolean
-  presence: PresenceFlag | undefined
+  $isOn: boolean
+  $presence: PresenceFlag | undefined
 }>`
   &:hover {
     color: #e0c917;
   }
 
   color: ${(props) =>
-    props.presence === PresenceFlag.Primary
+    props.$presence === PresenceFlag.Primary
       ? 'white'
-      : props.isOn
+      : props.$isOn
         ? nextPrevCursorsTheme.onColor
         : nextPrevCursorsTheme.offColor};
 `
@@ -102,23 +102,23 @@ const pointerEventsNone = css`
 `
 
 const PrevOrNextButton = styled(Button)<{
-  available: boolean
-  flag: PresenceFlag | undefined
+  $available: boolean
+  $flag: PresenceFlag | undefined
 }>`
   color: ${(props) =>
-    props.flag === PresenceFlag.Primary
+    props.$flag === PresenceFlag.Primary
       ? 'white'
-      : props.available
+      : props.$available
         ? nextPrevCursorsTheme.onColor
         : nextPrevCursorsTheme.offColor};
 
   ${(props) =>
-    props.available ? pointerEventsAutoInNormalMode : pointerEventsNone};
+    props.$available ? pointerEventsAutoInNormalMode : pointerEventsNone};
 `
 
 const Prev = styled(PrevOrNextButton)<{
-  available: boolean
-  flag: PresenceFlag | undefined
+  $available: boolean
+  $flag: PresenceFlag | undefined
 }>`
   transform: translateX(2px);
   ${Container}:hover & {
@@ -126,8 +126,8 @@ const Prev = styled(PrevOrNextButton)<{
   }
 `
 const Next = styled(PrevOrNextButton)<{
-  available: boolean
-  flag: PresenceFlag | undefined
+  $available: boolean
+  $flag: PresenceFlag | undefined
 }>`
   transform: translateX(-2px);
   ${Container}:hover & {
@@ -194,7 +194,7 @@ namespace Icons {
   )
 }
 
-const NextPrevKeyframeCursors: React.VFC<NearbyKeyframesControls> = (props) => {
+const NextPrevKeyframeCursors: React.FC<NearbyKeyframesControls> = (props) => {
   const prevPresence = usePresence(props.prev?.itemKey)
   const curPresence = usePresence(
     props.cur?.type === 'on' ? props.cur.itemKey : undefined,
@@ -204,25 +204,25 @@ const NextPrevKeyframeCursors: React.VFC<NearbyKeyframesControls> = (props) => {
   return (
     <Container>
       <Prev
-        available={!!props.prev}
+        $available={!!props.prev}
         onClick={props.prev?.jump}
-        flag={prevPresence.flag}
+        $flag={prevPresence.flag}
         {...prevPresence.attrs}
       >
         <Icons.Prev />
       </Prev>
       <CurButton
-        isOn={props.cur.type === 'on'}
+        $isOn={props.cur.type === 'on'}
         onClick={props.cur.toggle}
-        presence={curPresence.flag}
+        $presence={curPresence.flag}
         {...curPresence.attrs}
       >
         <Icons.Cur />
       </CurButton>
       <Next
-        available={!!props.next}
+        $available={!!props.next}
         onClick={props.next?.jump}
-        flag={nextPresence.flag}
+        $flag={nextPresence.flag}
         {...nextPresence.attrs}
       >
         <Icons.Next />

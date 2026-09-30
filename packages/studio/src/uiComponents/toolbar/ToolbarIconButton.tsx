@@ -1,10 +1,10 @@
 import styled from 'styled-components'
-import {pointerEventsAutoInNormalMode} from '@theatre/studio/css'
+import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
 import React from 'react'
-import type {$FixMe, $IntentionalAny} from '@theatre/core/types/public'
+import type {$FixMe, $IntentionalAny} from '@dreamerbird/core/types/public'
 import {mergeRefs} from 'react-merge-refs'
 import ToolbarSwitchSelectContainer from './ToolbarSwitchSelectContainer'
-import useChordial from '@theatre/studio/uiComponents/chordial/useChodrial'
+import useChordial from '@dreamerbird/studio/uiComponents/chordial/useChodrial'
 
 export const Container = styled.button`
   ${pointerEventsAutoInNormalMode};
@@ -20,7 +20,7 @@ export const Container = styled.button`
 
   color: #a8a8a9;
 
-  background: rgba(40, 43, 47, 0.8);
+  background: var(--theatre-panel-bg-80);
   backdrop-filter: blur(14px);
   border: none;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
@@ -62,7 +62,7 @@ export const Container = styled.button`
   }
 
   @supports not (backdrop-filter: blur()) {
-    background: rgba(40, 43, 47, 0.95);
+    background: var(--theatre-panel-bg-95);
   }
 `
 

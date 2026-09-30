@@ -1,17 +1,17 @@
-import {defer} from '@theatre/utils/defer'
-import {InvalidArgumentError} from '@theatre/utils/errors'
-import noop from '@theatre/utils/noop'
-import type {Prism, Pointer, Ticker} from '@theatre/dataverse'
-import {Atom} from '@theatre/dataverse'
+import {defer} from '@dreamerbird/utils/defer'
+import {InvalidArgumentError} from '@dreamerbird/utils/errors'
+import noop from '@dreamerbird/utils/noop'
+import type {Prism, Pointer, Ticker} from '@dreamerbird/dataverse'
+import {Atom} from '@dreamerbird/dataverse'
 import type {
   IPlaybackController,
   IPlaybackState,
 } from './DefaultPlaybackController'
-import {notify} from '@theatre/core/utils/notify'
+import {notify} from '@dreamerbird/core/utils/notify'
 import type {
   IPlaybackDirection,
   IPlaybackRange,
-} from '@theatre/core/types/public'
+} from '@dreamerbird/core/types/public'
 
 export default class AudioPlaybackController implements IPlaybackController {
   _mainGain: GainNode

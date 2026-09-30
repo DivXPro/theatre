@@ -1,14 +1,14 @@
-import type {Pointer} from '@theatre/dataverse'
+import type {Pointer} from '@dreamerbird/dataverse'
 import React, {useLayoutEffect, useMemo, useRef} from 'react'
 import styled from 'styled-components'
-import type {SequenceEditorPanelLayout} from '@theatre/studio/panels/SequenceEditorPanel/layout/layout'
-import {useVal} from '@theatre/react'
-import getStudio from '@theatre/studio/getStudio'
-import type {BasicNumberInputNudgeFn} from '@theatre/studio/uiComponents/form/BasicNumberInput'
-import type {CommitOrDiscardOrRecapture} from '@theatre/studio/StudioStore/StudioStore'
-import {propNameTextCSS} from '@theatre/studio/propEditors/utils/propNameTextCSS'
-import type {StudioHistoricStateSequenceEditorMarker} from '@theatre/core/types/private'
-import BasicStringInput from '@theatre/studio/uiComponents/form/BasicStringInput'
+import type {SequenceEditorPanelLayout} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/layout'
+import {useVal} from '@dreamerbird/react'
+import getStudio from '@dreamerbird/studio/getStudio'
+import type {BasicNumberInputNudgeFn} from '@dreamerbird/studio/uiComponents/form/BasicNumberInput'
+import type {CommitOrDiscardOrRecapture} from '@dreamerbird/studio/StudioStore/StudioStore'
+import {propNameTextCSS} from '@dreamerbird/studio/propEditors/utils/propNameTextCSS'
+import type {StudioHistoricStateSequenceEditorMarker} from '@dreamerbird/core/types/private'
+import BasicStringInput from '@dreamerbird/studio/uiComponents/form/BasicStringInput'
 
 const Container = styled.div`
   display: flex;

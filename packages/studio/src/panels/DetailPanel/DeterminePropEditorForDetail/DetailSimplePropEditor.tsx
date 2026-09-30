@@ -1,15 +1,15 @@
 import type {
   IBasePropType,
   PropTypeConfig_AllSimples,
-} from '@theatre/core/types/public'
+} from '@dreamerbird/core/types/public'
 import React, {useMemo} from 'react'
-import {useEditingToolsForSimplePropInDetailsPanel} from '@theatre/studio/propEditors/useEditingToolsForSimpleProp'
-import {SingleRowPropEditor} from '@theatre/studio/panels/DetailPanel/DeterminePropEditorForDetail/SingleRowPropEditor'
-import type {Pointer} from '@theatre/dataverse'
-import {getPointerParts} from '@theatre/dataverse'
-import type SheetObject from '@theatre/core/sheetObjects/SheetObject'
-import type {ISimplePropEditorReactProps} from '@theatre/studio/propEditors/simpleEditors/ISimplePropEditorReactProps'
-import {whatPropIsHighlighted} from '@theatre/studio/panels/SequenceEditorPanel/whatPropIsHighlighted'
+import {useEditingToolsForSimplePropInDetailsPanel} from '@dreamerbird/studio/propEditors/useEditingToolsForSimpleProp'
+import {SingleRowPropEditor} from '@dreamerbird/studio/panels/DetailPanel/DeterminePropEditorForDetail/SingleRowPropEditor'
+import type {Pointer} from '@dreamerbird/dataverse'
+import {getPointerParts} from '@dreamerbird/dataverse'
+import type SheetObject from '@dreamerbird/core/sheetObjects/SheetObject'
+import type {ISimplePropEditorReactProps} from '@dreamerbird/studio/propEditors/simpleEditors/ISimplePropEditorReactProps'
+import {whatPropIsHighlighted} from '@dreamerbird/studio/panels/SequenceEditorPanel/whatPropIsHighlighted'
 
 export type IDetailSimplePropEditorProps<
   TPropTypeConfig extends IBasePropType<string, any>,
@@ -18,7 +18,7 @@ export type IDetailSimplePropEditorProps<
   pointerToProp: Pointer<TPropTypeConfig['valueType']>
   obj: SheetObject
   visualIndentation: number
-  SimpleEditorComponent: React.VFC<ISimplePropEditorReactProps<TPropTypeConfig>>
+  SimpleEditorComponent: React.FC<ISimplePropEditorReactProps<TPropTypeConfig>>
 }
 
 /**

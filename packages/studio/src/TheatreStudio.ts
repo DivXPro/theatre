@@ -1,35 +1,46 @@
-import type {ISheet, ISheetObject} from '@theatre/core'
-import type {Prism, Pointer} from '@theatre/dataverse'
-import {getPointerParts, prism} from '@theatre/dataverse'
-import SimpleCache from '@theatre/utils/SimpleCache'
-import type {$IntentionalAny, VoidFn} from '@theatre/core/types/public'
-import type {IScrub} from '@theatre/core/types/public'
-import type {Studio} from '@theatre/studio/Studio'
+import type {ISheet, ISheetObject} from '@dreamerbird/core'
+import type {Prism, Pointer} from '@dreamerbird/dataverse'
+import {getPointerParts, prism} from '@dreamerbird/dataverse'
+import SimpleCache from '@dreamerbird/utils/SimpleCache'
+import type {$IntentionalAny, VoidFn} from '@dreamerbird/core/types/public'
+import type {OnDiskState} from '@dreamerbird/core'
+import type {IScrub} from '@dreamerbird/core/types/public'
+import type {Studio} from '@dreamerbird/studio/Studio'
 import {outlineSelection} from './selectors'
-import type SheetObject from '@theatre/core/sheetObjects/SheetObject'
+import type SheetObject from '@dreamerbird/core/sheetObjects/SheetObject'
 import getStudio from './getStudio'
 import {debounce, uniq} from 'lodash-es'
-import type Sheet from '@theatre/core/sheets/Sheet'
+import type Sheet from '@dreamerbird/core/sheets/Sheet'
 import type {
   IExtension,
   IStudio,
   ITransactionAPI,
   PaneInstance,
   ProjectId,
-} from '@theatre/core/types/public'
+  SerializablePrimitive,
+} from '@dreamerbird/core/types/public'
 import {
-  __experimental_disablePlayPauseKeyboardShortcut,
-  __experimental_enablePlayPauseKeyboardShortcut,
+  disablePlayPauseKeyboardShortcut,
+  enablePlayPauseKeyboardShortcut,
 } from './UIRoot/useKeyboardShortcuts'
-import type TheatreSheetObject from '@theatre/core/sheetObjects/TheatreSheetObject'
-import type TheatreSheet from '@theatre/core/sheets/TheatreSheet'
-import type {__UNSTABLE_Project_OnDiskState} from '@theatre/core'
-import type {OutlineSelectionState} from '@theatre/core/types/private/studio'
-import type Project from '@theatre/core/projects/Project'
-import type SheetTemplate from '@theatre/core/sheets/SheetTemplate'
-import type SheetObjectTemplate from '@theatre/core/sheetObjects/SheetObjectTemplate'
-import type {PaneInstanceId} from '@theatre/core/types/public'
-import {__private} from '@theatre/core'
+import type TheatreSheetObject from '@dreamerbird/core/sheetObjects/TheatreSheetObject'
+import type TheatreSheet from '@dreamerbird/core/sheets/TheatreSheet'
+import type {OutlineSelectionState} from '@dreamerbird/core/types/private/studio'
+import type Project from '@dreamerbird/core/projects/Project'
+import type SheetTemplate from '@dreamerbird/core/sheets/SheetTemplate'
+import type SheetObjectTemplate from '@dreamerbird/core/sheetObjects/SheetObjectTemplate'
+import type {PaneInstanceId} from '@dreamerbird/core/types/public'
+import {__private} from '@dreamerbird/core'
+import {
+  getLanguage,
+  getRegisteredLanguages,
+  languageDisplayName,
+  onLanguageChange,
+  registerFallback,
+  registerMessages,
+  setLanguage,
+  translate,
+} from './i18n'
 const {
   isSheet,
   isProject,
@@ -59,29 +70,49 @@ export default class TheatreStudio implements IStudio {
     },
   }
 
+  /** i18n:取词条/切语言/注入词典(详见 IStudioI18nAPI) */
+  readonly i18n = {
+    t(key: string, vars?: Record<string, string | number>): string {
+      return translate(key, vars)
+    },
+    getLanguage(): string {
+      return getLanguage()
+    },
+    setLanguage(lang: string): void {
+      setLanguage(lang)
+    },
+    registerMessages(lang: string, messages: Record<string, string>): void {
+      registerMessages(lang, messages)
+    },
+    registerFallback(from: string, to: string): void {
+      registerFallback(from, to)
+    },
+    onLanguageChange(fn: () => void): () => void {
+      return onLanguageChange(fn)
+    },
+    getRegisteredLanguages(): string[] {
+      return getRegisteredLanguages()
+    },
+    languageDisplayName(code: string, inLanguage?: string): string {
+      return languageDisplayName(code, inLanguage)
+    },
+  }
+
   private readonly _cache = new SimpleCache()
 
-  __experimental = {
-    __experimental_disablePlayPauseKeyboardShortcut(): void {
-      // This is an experimental API to respond to this issue: https://discord.com/channels/870988717190426644/870988717190426647/1067906775602430062
-      // Ideally we need a coherent way for the user to control keyboard inputs, so we will remove this method in the future.
-      // Here is the procedure for removing it:
-      // 1. Replace this code with a `throw new Error("This is experimental method is now deprecated, and here is how to migrate: ...")`
-      // 2. Then keep it for a few months, and then remove it.
-      __experimental_disablePlayPauseKeyboardShortcut()
-    },
-    __experimental_enablePlayPauseKeyboardShortcut(): void {
-      // see __experimental_disablePlayPauseKeyboardShortcut()
-      __experimental_enablePlayPauseKeyboardShortcut()
-    },
-    __experimental_clearPersistentStorage(persistenceKey?: string): void {
-      return getStudio().clearPersistentStorage(persistenceKey)
-    },
-    __experimental_createContentOfSaveFileTyped(
-      projectId: string,
-    ): __UNSTABLE_Project_OnDiskState {
-      return getStudio().createContentOfSaveFile(projectId) as $IntentionalAny
-    },
+  disablePlayPauseKeyboardShortcut(): void {
+    // This API was originally introduced to respond to this issue: https://discord.com/channels/870988717190426644/870988717190426647/1067906775602430062
+    // Ideally we need a coherent way for the user to control keyboard inputs, so we might revisit this in the future.
+    disablePlayPauseKeyboardShortcut()
+  }
+
+  enablePlayPauseKeyboardShortcut(): void {
+    // see disablePlayPauseKeyboardShortcut()
+    enablePlayPauseKeyboardShortcut()
+  }
+
+  clearPersistentStorage(persistenceKey?: string): void {
+    return getStudio().clearPersistentStorage(persistenceKey)
   }
 
   /**
@@ -89,19 +120,16 @@ export default class TheatreStudio implements IStudio {
    */
   constructor(internals: Studio) {}
 
-  extend(
-    extension: IExtension,
-    opts?: {__experimental_reconfigure?: boolean},
-  ): void {
+  extend(extension: IExtension, opts?: {reconfigure?: boolean}): void {
     getStudio().extend(extension, opts)
   }
 
   transaction(fn: (api: ITransactionAPI) => void) {
     getStudio().transaction(({set, unset, stateEditors}) => {
-      const __experimental_forgetObject = (object: TheatreSheetObject) => {
+      const forgetObject = (object: TheatreSheetObject) => {
         if (!isSheetObjectPublicAPI(object)) {
           throw new Error(
-            `object in transactionApi.__experimental_forgetObject(object) must be the return type of sheet.object(...)`,
+            `object in transactionApi.forgetObject(object) must be the return type of sheet.object(...)`,
           )
         }
 
@@ -110,10 +138,10 @@ export default class TheatreStudio implements IStudio {
         )
       }
 
-      const __experimental_forgetSheet = (sheet: TheatreSheet) => {
+      const forgetSheet = (sheet: TheatreSheet) => {
         if (!isSheetPublicAPI(sheet)) {
           throw new Error(
-            `sheet in transactionApi.__experimental_forgetSheet(sheet) must be the return type of project.sheet()`,
+            `sheet in transactionApi.forgetSheet(sheet) must be the return type of project.sheet()`,
           )
         }
 
@@ -122,7 +150,7 @@ export default class TheatreStudio implements IStudio {
         )
       }
 
-      const __experimental_sequenceProp = <V>(prop: Pointer<V>) => {
+      const sequenceProp = <V>(prop: Pointer<V>) => {
         const {path, root} = getPointerParts(prop)
 
         if (!isSheetObject(root)) {
@@ -138,12 +166,34 @@ export default class TheatreStudio implements IStudio {
         )
       }
 
+      const unsequenceProp = <V>(prop: Pointer<V>) => {
+        const {path, root} = getPointerParts(prop)
+
+        if (!isSheetObject(root)) {
+          throw new Error(
+            'Argument prop must be a pointer to a SheetObject property',
+          )
+        }
+
+        stateEditors.coreByProject.historic.sheetsById.sequence.setPrimitivePropAsStatic(
+          {
+            ...root.address,
+            pathToProp: path,
+            // V 无约束(接口签名如此),getValueByPointer 要求 SerializableValue
+            value: root.getValueByPointer(
+              prop as Pointer<$IntentionalAny>,
+            ) as SerializablePrimitive,
+          },
+        )
+      }
+
       return fn({
         set,
         unset,
-        __experimental_forgetObject,
-        __experimental_forgetSheet,
-        __experimental_sequenceProp,
+        forgetObject,
+        forgetSheet,
+        sequenceProp,
+        unsequenceProp,
       })
     })
   }
@@ -173,6 +223,8 @@ export default class TheatreStudio implements IStudio {
       .filter((s) => isSheetObjectPublicAPI(s) || isSheetPublicAPI(s))
       .map((s) => getStudio().corePrivateAPI!(s))
 
+    // 选中是界面态不是创作内容:不可撤销(否则撤销栈顶被无视觉效果的
+    // selection 条目霸占,连按 Ctrl+Z 多次都弹不到真改动)
     getStudio().transaction(({stateEditors}) => {
       const newSelectionState: OutlineSelectionState[] = []
 
@@ -204,7 +256,7 @@ export default class TheatreStudio implements IStudio {
       stateEditors.studio.historic.panels.outline.selection.set(
         newSelectionState,
       )
-    })
+    }, false)
   }
 
   onSelectionChange(fn: (s: (ISheetObject | ISheet)[]) => void): VoidFn {
@@ -221,12 +273,20 @@ export default class TheatreStudio implements IStudio {
     return getStudio().scrub()
   }
 
+  undo(): void {
+    getStudio().undo()
+  }
+
+  redo(): void {
+    getStudio().redo()
+  }
+
   getStudioProject() {
     const core = getStudio().core
     if (!core) {
-      throw new Error(`You're calling studio.getStudioProject() before \`@theatre/core\` is loaded. To fix this:
-1. Check if \`@theatre/core\` is import/required in your bundle.
-2. Check the stack trace of this error and make sure the funciton that calls getStudioProject() is run after \`@theatre/core\` is loaded.`)
+      throw new Error(`You're calling studio.getStudioProject() before \`@dreamerbird/core\` is loaded. To fix this:
+1. Check if \`@dreamerbird/core\` is import/required in your bundle.
+2. Check the stack trace of this error and make sure the funciton that calls getStudioProject() is run after \`@dreamerbird/core\` is loaded.`)
     }
     return getStudio().getStudioProject(core)
   }
@@ -272,9 +332,7 @@ export default class TheatreStudio implements IStudio {
     return getStudio().paneManager.destroyPane(paneId as PaneInstanceId)
   }
 
-  createContentOfSaveFile(projectId: string): Record<string, unknown> {
-    return getStudio().createContentOfSaveFile(
-      projectId as ProjectId,
-    ) as $IntentionalAny
+  createContentOfSaveFile(projectId: string): OnDiskState {
+    return getStudio().createContentOfSaveFile(projectId as ProjectId)
   }
 }

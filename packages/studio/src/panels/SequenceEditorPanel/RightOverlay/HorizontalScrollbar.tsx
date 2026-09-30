@@ -1,15 +1,15 @@
-import type {SequenceEditorPanelLayout} from '@theatre/studio/panels/SequenceEditorPanel/layout/layout'
-import {useVal} from '@theatre/react'
-import type {IRange} from '@theatre/core/types/public'
-import type {Pointer} from '@theatre/dataverse'
-import {prism, val} from '@theatre/dataverse'
+import type {SequenceEditorPanelLayout} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/layout'
+import {useVal} from '@dreamerbird/react'
+import type {IRange} from '@dreamerbird/core/types/public'
+import type {Pointer} from '@dreamerbird/dataverse'
+import {prism, val} from '@dreamerbird/dataverse'
 import {position} from 'polished'
 import React, {useCallback, useMemo, useState} from 'react'
 import styled from 'styled-components'
-import {zIndexes} from '@theatre/studio/panels/SequenceEditorPanel/SequenceEditorPanel'
-import {includeLockFrameStampAttrs} from '@theatre/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
-import {pointerEventsAutoInNormalMode} from '@theatre/studio/css'
-import useDrag from '@theatre/studio/uiComponents/useDrag'
+import {zIndexes} from '@dreamerbird/studio/panels/SequenceEditorPanel/SequenceEditorPanel'
+import {includeLockFrameStampAttrs} from '@dreamerbird/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
+import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
+import useDrag from '@dreamerbird/studio/uiComponents/useDrag'
 
 const Container = styled.div`
   --threadHeight: 6px;
@@ -92,8 +92,8 @@ const RangeEndHandle = styled(RangeHandle)`
   left: 0px;
 `
 
-const Tooltip = styled.div<{active: boolean}>`
-  display: ${(props) => (props.active ? 'block' : 'none')};
+const Tooltip = styled.div<{$active: boolean}>`
+  display: ${(props) => (props.$active ? 'block' : 'none')};
   position: absolute;
   top: -20px;
   left: 4px;
@@ -101,7 +101,7 @@ const Tooltip = styled.div<{active: boolean}>`
   transform: translateX(-50%);
   background: #131d1f;
   border-radius: 4px;
-  color: #fff;
+  color: var(--theatre-text-primary);
   font-size: 10px;
   line-height: 18px;
   text-align: center;
@@ -296,7 +296,9 @@ const HorizontalScrollbar: React.FC<{
           ref={setRangeStartDragNode}
           style={{transform: `translate3d(${rangeStartX}px, 0, 0)`}}
         >
-          <Tooltip active={beingDragged === 'both' || beingDragged === 'start'}>
+          <Tooltip
+            $active={beingDragged === 'both' || beingDragged === 'start'}
+          >
             {unitPosToHumanReadablePos(clippedSpaceRange[0])}
           </Tooltip>
         </RangeStartHandle>
@@ -304,7 +306,7 @@ const HorizontalScrollbar: React.FC<{
           ref={setRangeEndDragNode}
           style={{transform: `translate3d(${rangeEndX}px, 0, 0)`}}
         >
-          <Tooltip active={beingDragged === 'both' || beingDragged === 'end'}>
+          <Tooltip $active={beingDragged === 'both' || beingDragged === 'end'}>
             {unitPosToHumanReadablePos(clippedSpaceRange[1])}
           </Tooltip>
         </RangeEndHandle>

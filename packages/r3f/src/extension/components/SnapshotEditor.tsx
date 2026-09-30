@@ -3,13 +3,13 @@ import React from 'react'
 import {Canvas, useThree} from '@react-three/fiber'
 import type {BaseSheetObjectType} from '../../main/store'
 // eslint-disable-next-line import/no-extraneous-dependencies
-import {__private_allRegisteredObjects as allRegisteredObjects} from '@theatre/r3f'
+import {__private_allRegisteredObjects as allRegisteredObjects} from '@dreamerbird/r3f'
 import shallow from 'zustand/shallow'
 import root from 'react-shadow/styled-components'
 import ProxyManager from './ProxyManager'
-import {useVal} from '@theatre/react'
+import {useVal} from '@dreamerbird/react'
 import styled, {createGlobalStyle, StyleSheetManager} from 'styled-components'
-import {getStudioSync, type ISheet} from '@theatre/core'
+import {getStudioSync, type ISheet} from '@dreamerbird/core'
 import useSnapshotEditorCamera from './useSnapshotEditorCamera'
 import {getEditorSheet, getEditorSheetObject} from '../editorStuff'
 import type {$IntentionalAny} from '../../types'
@@ -115,7 +115,7 @@ const ReferenceWindowContainer = styled.div`
   justify-content: center;
 `
 
-const WaitForSceneInitMessage = styled.div<{active?: boolean}>`
+const WaitForSceneInitMessage = styled.div<{$active?: boolean}>`
   position: absolute;
   margin: auto;
   left: 0;
@@ -182,7 +182,7 @@ const SnapshotEditor: React.FC<{paneId: string}> = (props) => {
 
   return (
     <root.div style={{overflow: 'hidden'}}>
-      <StyleSheetManager disableVendorPrefixes>
+      <StyleSheetManager>
         <>
           <GlobalStyle />
           <Wrapper>

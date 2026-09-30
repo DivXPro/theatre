@@ -1,16 +1,16 @@
-import type {SequenceEditorPanelLayout} from '@theatre/studio/panels/SequenceEditorPanel/layout/layout'
-import {usePrism, useVal} from '@theatre/react'
-import type {Pointer} from '@theatre/dataverse'
-import {val} from '@theatre/dataverse'
+import type {SequenceEditorPanelLayout} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/layout'
+import {usePrism, useVal} from '@dreamerbird/react'
+import type {Pointer} from '@dreamerbird/dataverse'
+import {val} from '@dreamerbird/dataverse'
 import React from 'react'
 import styled from 'styled-components'
-import {stampsGridTheme} from '@theatre/studio/panels/SequenceEditorPanel/FrameGrid/StampsGrid'
-import {zIndexes} from '@theatre/studio/panels/SequenceEditorPanel/SequenceEditorPanel'
+import {stampsGridTheme} from '@dreamerbird/studio/panels/SequenceEditorPanel/FrameGrid/StampsGrid'
+import {zIndexes} from '@dreamerbird/studio/panels/SequenceEditorPanel/SequenceEditorPanel'
 import {topStripTheme} from './TopStrip'
 import {
   FrameStampPositionType,
   useFrameStampPositionD,
-} from '@theatre/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
+} from '@dreamerbird/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
 
 const Container = styled.div`
   position: absolute;
@@ -33,7 +33,7 @@ const Label = styled.div`
   z-index: ${() => zIndexes.currentFrameStamp};
 `
 
-const Line = styled.div<{posType: FrameStampPositionType}>`
+const Line = styled.div<{$posType: FrameStampPositionType}>`
   position: absolute;
   top: 5px;
   left: -0px;
@@ -80,7 +80,7 @@ const FrameStamp: React.FC<{
           {formatter.formatForPlayhead(snappedPosInUnitSpace)}
         </Label>
         <Line
-          posType={posType}
+          $posType={posType}
           style={{
             opacity: isVisible ? 1 : 0,
             transform: `translate3d(${posInClippedSpace}px, 0, 0)`,

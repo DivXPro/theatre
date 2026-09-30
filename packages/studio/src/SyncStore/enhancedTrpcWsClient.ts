@@ -7,7 +7,6 @@ export default function enhancedTrpcWsClient<
 ): EnhancedTrpcWsClient<Client, ReturnType<GetOpts>> {
   const handlers = {
     get: (target: any, prop: string): any => {
-      console.log(`prop`, prop)
       if (prop === 'query' || prop === 'mutation' || prop === 'subscription') {
         return proxyProcedure(target, prop)
       } else if (target[prop] && typeof target[prop] === 'object') {
@@ -23,7 +22,6 @@ export default function enhancedTrpcWsClient<
       apply: (_target: any, thisArg: any, argArray: any) => {
         const [originalOpts, ...restArgs] = argArray
         const opts = {...getOpts(), ...originalOpts}
-        console.log(`prx`, target)
         return target[prop](opts, ...restArgs)
       },
       ...handlers,

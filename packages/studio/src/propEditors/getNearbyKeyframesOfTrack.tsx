@@ -1,11 +1,11 @@
-import type {TrackData} from '@theatre/core/types/private/core'
-import type SheetObject from '@theatre/core/sheetObjects/SheetObject'
-import {createStudioSheetItemKey} from '@theatre/studio/utils/createStudioSheetItemKey'
+import type {TrackData} from '@dreamerbird/core/types/private/core'
+import type SheetObject from '@dreamerbird/core/sheetObjects/SheetObject'
+import {createStudioSheetItemKey} from '@dreamerbird/studio/utils/createStudioSheetItemKey'
 import type {
   KeyframeWithTrack,
   TrackWithId,
-} from '@theatre/studio/panels/SequenceEditorPanel/DopeSheet/Right/collectAggregateKeyframes'
-import {__private} from '@theatre/core'
+} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/Right/collectAggregateKeyframes'
+import {__private} from '@dreamerbird/core'
 
 const {keyframeUtils} = __private
 

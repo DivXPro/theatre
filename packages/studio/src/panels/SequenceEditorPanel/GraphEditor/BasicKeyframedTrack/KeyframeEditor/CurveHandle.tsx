@@ -1,16 +1,16 @@
-import getStudio from '@theatre/studio/getStudio'
-import type {CommitOrDiscardOrRecapture} from '@theatre/studio/StudioStore/StudioStore'
-import useContextMenu from '@theatre/studio/uiComponents/simpleContextMenu/useContextMenu'
-import useDrag from '@theatre/studio/uiComponents/useDrag'
-import useRefAndState from '@theatre/studio/utils/useRefAndState'
-import {val} from '@theatre/dataverse'
+import getStudio from '@dreamerbird/studio/getStudio'
+import type {CommitOrDiscardOrRecapture} from '@dreamerbird/studio/StudioStore/StudioStore'
+import useContextMenu from '@dreamerbird/studio/uiComponents/simpleContextMenu/useContextMenu'
+import useDrag from '@dreamerbird/studio/uiComponents/useDrag'
+import useRefAndState from '@dreamerbird/studio/utils/useRefAndState'
+import {val} from '@dreamerbird/dataverse'
 import {clamp} from 'lodash-es'
 import React, {useMemo, useRef} from 'react'
 import styled from 'styled-components'
 import {transformBox} from './Curve'
 import type KeyframeEditor from './KeyframeEditor'
-import {pointerEventsAutoInNormalMode} from '@theatre/studio/css'
-import {__private} from '@theatre/core'
+import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
+import {__private} from '@dreamerbird/core'
 
 const {keyframeUtils} = __private
 
@@ -50,7 +50,7 @@ type Which = 'left' | 'right'
 
 type IProps = Parameters<typeof KeyframeEditor>[0] & {which: Which}
 
-const CurveHandle: React.VFC<IProps> = (props) => {
+const CurveHandle: React.FC<IProps> = (props) => {
   const [ref, node] = useRefAndState<SVGCircleElement | null>(null)
 
   const {index, trackData} = props

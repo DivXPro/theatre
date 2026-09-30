@@ -1,12 +1,12 @@
-import type {$FixMe} from '@theatre/core/types/public'
+import type {$FixMe} from '@dreamerbird/core/types/public'
 import type {
   PropTypeConfig,
   PropTypeConfig_Compound,
   PropTypeConfig_Enum,
   SerializableMap,
   SerializableValue,
-} from '@theatre/core/types/public'
-import type {SheetObjectPropTypeConfig} from '@theatre/core/types/public'
+} from '@dreamerbird/core/types/public'
+import type {SheetObjectPropTypeConfig} from '@dreamerbird/core/types/public'
 
 const cachedDefaults = new WeakMap<PropTypeConfig, SerializableValue>()
 

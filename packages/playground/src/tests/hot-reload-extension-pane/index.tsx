@@ -1,10 +1,11 @@
-import type {IExtension} from '@theatre/core'
-import theatre from '@theatre/core'
-import '@theatre/core'
+import type {IExtension} from '@dreamerbird/core'
+import theatre from '@dreamerbird/core'
+import '@dreamerbird/studio'
+import '@dreamerbird/core'
 import {extensionButton} from '../../shared/utils/useExtensionButton'
 
 const ext1: IExtension = {
-  id: '@theatre/hello-world-extension',
+  id: '@dreamerbird/hello-world-extension',
   toolbars: {},
   panes: [],
 }
@@ -46,7 +47,7 @@ const steps = [
         ],
       },
 
-      {__experimental_reconfigure: true},
+      {reconfigure: true},
     )
     studio.createPane('pane1')
   },
@@ -71,7 +72,7 @@ const steps = [
         ],
       },
 
-      {__experimental_reconfigure: true},
+      {reconfigure: true},
     )
   },
   function step2() {
@@ -82,7 +83,7 @@ const steps = [
         panes: [],
       },
 
-      {__experimental_reconfigure: true},
+      {reconfigure: true},
     )
   },
   function step3() {

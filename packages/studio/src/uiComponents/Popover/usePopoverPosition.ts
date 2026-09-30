@@ -1,8 +1,8 @@
 import type React from 'react'
 import {useLayoutEffect, useState} from 'react'
 import useWindowSize from 'react-use/esm/useWindowSize'
-import useBoundingClientRect from '@theatre/studio/uiComponents/useBoundingClientRect'
-import useRefAndState from '@theatre/studio/utils/useRefAndState'
+import useBoundingClientRect from '@dreamerbird/studio/uiComponents/useBoundingClientRect'
+import useRefAndState from '@dreamerbird/studio/utils/useRefAndState'
 import {clamp} from 'lodash-es'
 
 const minimumDistanceOfArrowToEdgeOfPopover = 8

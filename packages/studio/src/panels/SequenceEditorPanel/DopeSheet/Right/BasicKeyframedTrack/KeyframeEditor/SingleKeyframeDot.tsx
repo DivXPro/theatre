@@ -1,33 +1,33 @@
 import React, {useMemo, useRef} from 'react'
 import styled from 'styled-components'
 
-import getStudio from '@theatre/studio/getStudio'
-import type {CommitOrDiscardOrRecapture} from '@theatre/studio/StudioStore/StudioStore'
-import useContextMenu from '@theatre/studio/uiComponents/simpleContextMenu/useContextMenu'
-import type {DragOpts} from '@theatre/studio/uiComponents/useDrag'
-import useDrag from '@theatre/studio/uiComponents/useDrag'
-import useRefAndState from '@theatre/studio/utils/useRefAndState'
-import {val} from '@theatre/dataverse'
-import {useLockFrameStampPosition} from '@theatre/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
-import {useCssCursorLock} from '@theatre/studio/uiComponents/PointerEventsHandler'
-import DopeSnap from '@theatre/studio/panels/SequenceEditorPanel/RightOverlay/DopeSnap'
+import getStudio from '@dreamerbird/studio/getStudio'
+import type {CommitOrDiscardOrRecapture} from '@dreamerbird/studio/StudioStore/StudioStore'
+import useContextMenu from '@dreamerbird/studio/uiComponents/simpleContextMenu/useContextMenu'
+import type {DragOpts} from '@dreamerbird/studio/uiComponents/useDrag'
+import useDrag from '@dreamerbird/studio/uiComponents/useDrag'
+import useRefAndState from '@dreamerbird/studio/utils/useRefAndState'
+import {val} from '@dreamerbird/dataverse'
+import {useLockFrameStampPosition} from '@dreamerbird/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
+import {useCssCursorLock} from '@dreamerbird/studio/uiComponents/PointerEventsHandler'
+import DopeSnap from '@dreamerbird/studio/panels/SequenceEditorPanel/RightOverlay/DopeSnap'
 
 import type {ISingleKeyframeEditorProps} from './SingleKeyframeEditor'
-import {absoluteDims} from '@theatre/studio/utils/absoluteDims'
-import {useLogger} from '@theatre/studio/uiComponents/useLogger'
-import type {ILogger} from '@theatre/utils/logger'
-import {copyableKeyframesFromSelection} from '@theatre/studio/panels/SequenceEditorPanel/DopeSheet/selections'
-import {pointerEventsAutoInNormalMode} from '@theatre/studio/css'
+import {absoluteDims} from '@dreamerbird/studio/utils/absoluteDims'
+import {useLogger} from '@dreamerbird/studio/uiComponents/useLogger'
+import type {ILogger} from '@dreamerbird/utils/logger'
+import {copyableKeyframesFromSelection} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/selections'
+import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
 import {
   collectKeyframeSnapPositions,
   snapToNone,
   snapToSome,
-} from '@theatre/studio/panels/SequenceEditorPanel/DopeSheet/Right/KeyframeSnapTarget'
+} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/Right/KeyframeSnapTarget'
 import {useKeyframeInlineEditorPopover} from './useSingleKeyframeInlineEditorPopover'
 import usePresence, {
   PresenceFlag,
-} from '@theatre/studio/uiComponents/usePresence'
-import {__private} from '@theatre/core'
+} from '@dreamerbird/studio/uiComponents/usePresence'
+import {__private} from '@dreamerbird/core'
 
 const {keyframeUtils} = __private
 
@@ -42,8 +42,8 @@ const dotTheme = {
 }
 
 const selectBackgroundForDiamond = ({
-  isSelected,
-  isInlineEditorPopoverOpen,
+  $isSelected: isSelected,
+  $isInlineEditorPopoverOpen: isInlineEditorPopoverOpen,
 }: IDiamond) => {
   if (isSelected && isInlineEditorPopoverOpen) {
     return dotTheme.inlineEditorOpenColor
@@ -57,9 +57,9 @@ const selectBackgroundForDiamond = ({
 }
 
 type IDiamond = {
-  isSelected: boolean
-  isInlineEditorPopoverOpen: boolean
-  flag: PresenceFlag | undefined
+  $isSelected: boolean
+  $isInlineEditorPopoverOpen: boolean
+  $flag: PresenceFlag | undefined
 }
 
 /** The keyframe diamond ◆ */
@@ -71,7 +71,7 @@ const Diamond = styled.div<IDiamond>`
   transform: rotateZ(45deg);
 
   ${(props) =>
-    props.flag === PresenceFlag.Primary ? 'outline: 2px solid white;' : ''};
+    props.$flag === PresenceFlag.Primary ? 'outline: 2px solid white;' : ''};
 
   z-index: 1;
   pointer-events: none;
@@ -84,13 +84,13 @@ const Square = styled.div<IDiamond>`
   background: ${(props) => selectBackgroundForDiamond(props)};
 
   ${(props) =>
-    props.flag === PresenceFlag.Primary ? 'outline: 2px solid white;' : ''};
+    props.$flag === PresenceFlag.Primary ? 'outline: 2px solid white;' : ''};
 
   z-index: 1;
   pointer-events: none;
 `
 
-const HitZone = styled.div<{isInlineEditorPopoverOpen: boolean}>`
+const HitZone = styled.div<{$isInlineEditorPopoverOpen: boolean}>`
   z-index: 1;
   cursor: ew-resize;
 
@@ -100,7 +100,7 @@ const HitZone = styled.div<{isInlineEditorPopoverOpen: boolean}>`
 
   & + ${Diamond} {
     ${(props) =>
-      props.isInlineEditorPopoverOpen ? absoluteDims(DOT_HOVER_SIZE_PX) : ''}
+      props.$isInlineEditorPopoverOpen ? absoluteDims(DOT_HOVER_SIZE_PX) : ''}
   }
 
   &:hover + ${Diamond} {
@@ -111,7 +111,7 @@ const HitZone = styled.div<{isInlineEditorPopoverOpen: boolean}>`
 type ISingleKeyframeDotProps = ISingleKeyframeEditorProps
 
 /** The ◆ you can grab onto in "keyframe editor" (aka "dope sheet" in other programs) */
-const SingleKeyframeDot: React.VFC<ISingleKeyframeDotProps> = (props) => {
+const SingleKeyframeDot: React.FC<ISingleKeyframeDotProps> = (props) => {
   const logger = useLogger('SingleKeyframeDot', props.keyframe.id)
   const presence = usePresence(props.itemKey)
   const [ref, node] = useRefAndState<HTMLDivElement | null>(null)
@@ -143,20 +143,20 @@ const SingleKeyframeDot: React.VFC<ISingleKeyframeDotProps> = (props) => {
     <>
       <HitZone
         ref={ref}
-        isInlineEditorPopoverOpen={isInlineEditorPopoverOpen}
+        $isInlineEditorPopoverOpen={isInlineEditorPopoverOpen}
         {...presence.attrs}
       />
       {showDiamond ? (
         <Diamond
-          isSelected={!!props.selection}
-          isInlineEditorPopoverOpen={isInlineEditorPopoverOpen}
-          flag={presence.flag}
+          $isSelected={!!props.selection}
+          $isInlineEditorPopoverOpen={isInlineEditorPopoverOpen}
+          $flag={presence.flag}
         />
       ) : (
         <Square
-          isSelected={!!props.selection}
-          isInlineEditorPopoverOpen={isInlineEditorPopoverOpen}
-          flag={presence.flag}
+          $isSelected={!!props.selection}
+          $isInlineEditorPopoverOpen={isInlineEditorPopoverOpen}
+          $flag={presence.flag}
         />
       )}
       {inlineEditorPopover}

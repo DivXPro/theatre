@@ -1,9 +1,9 @@
-import {Atom} from '@theatre/dataverse'
-import {useVal} from '@theatre/react'
+import {Atom} from '@dreamerbird/dataverse'
+import {useVal} from '@dreamerbird/react'
 /* eslint-disable import/no-extraneous-dependencies */
-import type {IExtension} from '@theatre/core/types/public'
-import getStudio from '@theatre/studio/getStudio'
-import type {ToolsetConfig} from '@theatre/core/types/public'
+import type {IExtension} from '@dreamerbird/core/types/public'
+import getStudio from '@dreamerbird/studio/getStudio'
+import type {ToolsetConfig} from '@dreamerbird/core/types/public'
 import React, {useLayoutEffect, useMemo} from 'react'
 
 import styled from 'styled-components'

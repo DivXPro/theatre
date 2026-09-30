@@ -1,4 +1,4 @@
-import * as core from '@theatre/core'
+import * as core from '@dreamerbird/core'
 
 // @ts-ignore
 window.Theatre = core

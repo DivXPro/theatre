@@ -4,10 +4,10 @@ import type {Interaction} from './Interactive'
 import {Interactive} from './Interactive'
 import {Pointer} from './Pointer'
 
-import {hsvaToHslaString} from '@theatre/studio/uiComponents/colorPicker/utils/convert'
-import {clamp} from '@theatre/studio/uiComponents/colorPicker/utils/clamp'
-import {round} from '@theatre/studio/uiComponents/colorPicker/utils/round'
-import type {HsvaColor} from '@theatre/studio/uiComponents/colorPicker/types'
+import {hsvaToHslaString} from '@dreamerbird/studio/uiComponents/colorPicker/utils/convert'
+import {clamp} from '@dreamerbird/studio/uiComponents/colorPicker/utils/clamp'
+import {round} from '@dreamerbird/studio/uiComponents/colorPicker/utils/round'
+import type {HsvaColor} from '@dreamerbird/studio/uiComponents/colorPicker/types'
 import styled from 'styled-components'
 
 const Container = styled.div`
@@ -15,7 +15,7 @@ const Container = styled.div`
   height: 16px;
   border-radius: 2px;
   // Checkerboard
-  background-color: #fff;
+  background-color: var(--theatre-text-primary);
   background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill-opacity=".05"><rect x="8" width="8" height="8"/><rect y="8" width="8" height="8"/></svg>');
 `
 
@@ -44,7 +44,7 @@ const Gradient = styled.div.attrs<GradientProps>(({colorFrom, colorTo}) => ({
 
 const StyledPointer = styled(Pointer)`
   // Checkerboard
-  background-color: #fff;
+  background-color: var(--theatre-text-primary);
   background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill-opacity=".05"><rect x="8" width="8" height="8"/><rect y="8" width="8" height="8"/></svg>');
 `
 
@@ -54,7 +54,11 @@ interface Props {
   onChange: (newAlpha: {a: number}) => void
 }
 
-export const Alpha = ({className, hsva, onChange}: Props): JSX.Element => {
+export const Alpha = ({
+  className,
+  hsva,
+  onChange,
+}: Props): React.JSX.Element => {
   const handleMove = (interaction: Interaction) => {
     onChange({a: interaction.left})
   }

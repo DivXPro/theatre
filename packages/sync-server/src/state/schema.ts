@@ -5,7 +5,7 @@ import type {
   StudioSheetItemKey,
   UIPanelId,
   GraphEditorColors,
-} from '@theatre/core/types/private'
+} from '@dreamerbird/core/types/private'
 
 import type {
   ProjectAddress,
@@ -23,15 +23,18 @@ import type {
   SerializablePrimitive,
   SerializableValue,
   IRange,
-} from '@theatre/core/types/public'
+  ProjectId,
+  SheetId,
+  SheetInstanceId,
+} from '@dreamerbird/core/types/public'
 
 import {
   encodePathToProp,
   commonRootOfPathsToProps,
-} from '@theatre/utils/pathToProp'
-import removePathFromObject from '@theatre/utils/removePathFromObject'
-import {transformNumber} from '@theatre/utils/transformNumber'
-import type {$IntentionalAny} from '@theatre/utils/types'
+} from '@dreamerbird/utils/pathToProp'
+import removePathFromObject from '@dreamerbird/utils/removePathFromObject'
+import {transformNumber} from '@dreamerbird/utils/transformNumber'
+import type {$IntentionalAny} from '@dreamerbird/utils/types'
 import findLastIndex from 'lodash-es/findLastIndex'
 import keyBy from 'lodash-es/keyBy'
 import pullFromArray from 'lodash-es/pull'
@@ -39,23 +42,24 @@ import set from 'lodash-es/set'
 import type {
   KeyframeWithPathToPropFromCommonRoot,
   OutlineSelectionState,
+  OutlineCollectionState,
   PaneInstanceDescriptor,
   PanelPosition,
   StudioAhistoricState,
   StudioHistoricStateSequenceEditorMarker,
   StudioState,
-} from '@theatre/core/types/private/studio'
+} from '@dreamerbird/core/types/private/studio'
 import {clamp, cloneDeep} from 'lodash-es'
-import {pointableSetUtil} from '@theatre/utils/PointableSet'
-import type {ProjectState_Historic} from '@theatre/core/types/private/core'
-import {current} from '@theatre/saaz'
+import {pointableSetUtil} from '@dreamerbird/utils/PointableSet'
+import type {ProjectState_Historic} from '@dreamerbird/core/types/private/core'
+import {current} from '@dreamerbird/saaz'
 import type {Draft as _Draft} from 'immer'
 import type {
   EditorDefinitionToEditorInvocable,
   Schema,
-} from '@theatre/saaz/src/types'
+} from '@dreamerbird/saaz/src/types'
 import {nanoid as generateNonSecure} from 'nanoid/non-secure'
-import {__private} from '@theatre/core'
+import {__private} from '@dreamerbird/core'
 
 const {keyframeUtils} = __private
 
@@ -299,7 +303,9 @@ export namespace stateEditors {
                     ? possibleColors.values().next().value
                     : Object.keys(graphEditorColors)[0]
 
-                selectedProps[path] = color
+                selectedProps[path] = color as
+                  | keyof GraphEditorColors
+                  | undefined
               }
 
               export function removePropFromGraphEditor(
@@ -444,6 +450,154 @@ export namespace stateEditors {
                 )
                 const marker = currentMarkerSet.byId[options.markerId]
                 if (marker !== undefined) marker.label = options.label
+              }
+            }
+          }
+
+          export namespace outline {
+            function _ensureProject(
+              draft: Draft,
+              api: API,
+              p: {projectId: ProjectId},
+            ) {
+              return stateEditors.studio.historic.projects.stateByProjectId._ensure(
+                draft,
+                api,
+                p,
+              )
+            }
+
+            export function setObjectDisplayName(
+              draft: Draft,
+              api: API,
+              p: {projectId: ProjectId; addressKey: string; name: string},
+            ) {
+              const project = _ensureProject(draft, api, p)
+              project.outlineNamesByObjectAddress ??= {}
+              if (p.name.trim() === '') {
+                delete project.outlineNamesByObjectAddress[p.addressKey]
+              } else {
+                project.outlineNamesByObjectAddress[p.addressKey] = p.name
+              }
+            }
+
+            function _ensureCollections(
+              draft: Draft,
+              api: API,
+              p: {projectId: ProjectId},
+            ): OutlineCollectionState[] {
+              const project = _ensureProject(draft, api, p)
+              project.outlineCollections ??= []
+              return project.outlineCollections
+            }
+
+            export function addCollection(
+              draft: Draft,
+              api: API,
+              p: {
+                projectId: ProjectId
+                sheetId: SheetId
+                sheetInstanceId: SheetInstanceId
+                id: string
+                name: string
+              },
+            ) {
+              _ensureCollections(draft, api, p).push({
+                id: p.id,
+                name: p.name,
+                sheetId: p.sheetId,
+                sheetInstanceId: p.sheetInstanceId,
+                members: [],
+              })
+            }
+
+            export function renameCollection(
+              draft: Draft,
+              api: API,
+              p: {projectId: ProjectId; id: string; name: string},
+            ) {
+              const collection = _ensureCollections(draft, api, p).find(
+                (c) => c.id === p.id,
+              )
+              if (collection) collection.name = p.name
+            }
+
+            export function deleteCollection(
+              draft: Draft,
+              api: API,
+              p: {projectId: ProjectId; id: string},
+            ) {
+              const project = _ensureProject(draft, api, p)
+              if (!project.outlineCollections) return
+              project.outlineCollections = project.outlineCollections.filter(
+                (c) => c.id !== p.id,
+              )
+            }
+
+            export function addCollectionMember(
+              draft: Draft,
+              api: API,
+              p: {
+                projectId: ProjectId
+                sheetId: SheetId
+                sheetInstanceId: SheetInstanceId
+                collectionId: string
+                objectKey: string
+              },
+            ) {
+              const collections = _ensureCollections(draft, api, p)
+              // 单归属:先从同 sheet 的旧集合移出(spec §4,驱逐不跨 sheet)
+              for (const c of collections) {
+                if (
+                  c.sheetId !== p.sheetId ||
+                  c.sheetInstanceId !== p.sheetInstanceId
+                )
+                  continue
+                c.members = c.members.filter((m) => m !== p.objectKey)
+              }
+              const target = collections.find((c) => c.id === p.collectionId)
+              if (target && !target.members.includes(p.objectKey)) {
+                target.members.push(p.objectKey)
+              }
+            }
+
+            export function removeCollectionMember(
+              draft: Draft,
+              api: API,
+              p: {
+                projectId: ProjectId
+                collectionId: string
+                objectKey: string
+              },
+            ) {
+              const target = _ensureCollections(draft, api, p).find(
+                (c) => c.id === p.collectionId,
+              )
+              if (target) {
+                target.members = target.members.filter((m) => m !== p.objectKey)
+              }
+            }
+
+            export function removeObjectFromAllCollections(
+              draft: Draft,
+              api: API,
+              p: {
+                projectId: ProjectId
+                sheetId: SheetId
+                sheetInstanceId: SheetInstanceId
+                objectKey: string
+              },
+            ) {
+              const project = _ensureProject(draft, api, p)
+              if (!project.outlineCollections) return
+              for (const c of project.outlineCollections) {
+                // 只清同 sheet 的名单(spec §4,不误清其它 sheet 同名对象)
+                if (
+                  c.sheetId !== p.sheetId ||
+                  c.sheetInstanceId !== p.sheetInstanceId
+                )
+                  continue
+                c.members = c.members.filter((m) => m !== p.objectKey)
               }
             }
           }
@@ -809,11 +963,18 @@ export namespace stateEditors {
               p.sheetId
             ]
           if (!sheetState) return
-          delete sheetState.staticOverrides.byObject[p.objectKey]
+          // saaz 的 deleteProperty 陷阱对不存在的 map 项返回 false
+          // (delete 抛 TypeError 并中止整个事务)——"忘了它"是幂等语义,
+          // 没有就当已经忘了;照 setPrimitivePropAsStatic 先查后删的先例
+          if (sheetState.staticOverrides.byObject[p.objectKey] !== undefined) {
+            delete sheetState.staticOverrides.byObject[p.objectKey]
+          }
 
           const sequence = sheetState.sequence
           if (!sequence) return
-          delete sequence.tracksByObject[p.objectKey]
+          if (sequence.tracksByObject[p.objectKey] !== undefined) {
+            delete sequence.tracksByObject[p.objectKey]
+          }
         }
 
         export function forgetSheet(

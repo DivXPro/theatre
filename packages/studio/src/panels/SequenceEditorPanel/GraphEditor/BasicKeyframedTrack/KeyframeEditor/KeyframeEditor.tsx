@@ -1,23 +1,26 @@
-import type {TrackData} from '@theatre/core/types/private/core'
-import type SheetObject from '@theatre/core/sheetObjects/SheetObject'
-import type {SequenceEditorPanelLayout} from '@theatre/studio/panels/SequenceEditorPanel/layout/layout'
-import type {BasicKeyframe, SequenceTrackId} from '@theatre/core/types/public'
-import type {Pointer} from '@theatre/dataverse'
+import type {TrackData} from '@dreamerbird/core/types/private/core'
+import type SheetObject from '@dreamerbird/core/sheetObjects/SheetObject'
+import type {SequenceEditorPanelLayout} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/layout'
+import type {
+  BasicKeyframe,
+  SequenceTrackId,
+} from '@dreamerbird/core/types/public'
+import type {Pointer} from '@dreamerbird/dataverse'
 import React from 'react'
 import styled from 'styled-components'
-import type {ExtremumSpace} from '@theatre/studio/panels/SequenceEditorPanel/GraphEditor/BasicKeyframedTrack/BasicKeyframedTrack'
+import type {ExtremumSpace} from '@dreamerbird/studio/panels/SequenceEditorPanel/GraphEditor/BasicKeyframedTrack/BasicKeyframedTrack'
 import Curve from './Curve'
 import CurveHandle from './CurveHandle'
 import GraphEditorDotScalar from './GraphEditorDotScalar'
 import GraphEditorDotNonScalar from './GraphEditorDotNonScalar'
 import GraphEditorNonScalarDash from './GraphEditorNonScalarDash'
-import type {PropTypeConfig_AllSimples} from '@theatre/core/types/public'
-import type {PathToProp} from '@theatre/utils/pathToProp'
+import type {PropTypeConfig_AllSimples} from '@dreamerbird/core/types/public'
+import type {PathToProp} from '@dreamerbird/utils/pathToProp'
 import type {
   GraphEditorColors,
   StudioSheetItemKey,
-} from '@theatre/core/types/private'
-import {__private} from '@theatre/core'
+} from '@dreamerbird/core/types/private'
+import {__private} from '@dreamerbird/core'
 
 const {keyframeUtils} = __private
 
@@ -42,7 +45,7 @@ type IKeyframeEditorProps = {
   propConfig: PropTypeConfig_AllSimples
 }
 
-const KeyframeEditor: React.VFC<IKeyframeEditorProps> = (props) => {
+const KeyframeEditor: React.FC<IKeyframeEditorProps> = (props) => {
   const {index, trackData, isScalar} = props
   const sortedKeyframes = keyframeUtils.getSortedKeyframesCached(
     trackData.keyframes,

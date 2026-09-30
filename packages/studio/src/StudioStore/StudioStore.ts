@@ -3,24 +3,31 @@ import type {
   StudioEphemeralState,
   StudioHistoricState,
   StudioState,
-} from '@theatre/core/types/private'
-import type {$FixMe, $IntentionalAny, VoidFn} from '@theatre/core/types/public'
-import {Atom} from '@theatre/dataverse'
-import type {Pointer} from '@theatre/dataverse'
+} from '@dreamerbird/core/types/private'
+import type {
+  $FixMe,
+  $IntentionalAny,
+  VoidFn,
+} from '@dreamerbird/core/types/public'
+import {Atom} from '@dreamerbird/dataverse'
+import type {Pointer} from '@dreamerbird/dataverse'
 import type {Draft} from 'immer'
-import type {OnDiskState} from '@theatre/core/types/private'
-import * as Saaz from '@theatre/saaz'
-import type {ProjectId} from '@theatre/core/types/public'
-import {schema} from '@theatre/sync-server/state/schema'
+import type {OnDiskState} from '@dreamerbird/core/types/private'
+import * as Saaz from '@dreamerbird/saaz'
+import type {ProjectId} from '@dreamerbird/core/types/public'
+import {schema} from '@dreamerbird/sync-server/state/schema'
 import type {
   IInvokableDraftEditors,
   IStateEditors,
   StateEditorsAPI,
-} from '@theatre/sync-server/state/schema'
+} from '@dreamerbird/sync-server/state/schema'
 import createTransactionPrivateApi from './createTransactionPrivateApi'
-import {SaazBack} from '@theatre/saaz'
-import type {Studio} from '@theatre/studio/Studio'
-import getStudio from '@theatre/studio/getStudio'
+import {generateDiskStateRevision} from './generateDiskStateRevision'
+import {deriveSaazNames} from './saazNames'
+import {clearPersistentStorageFor} from './clearPersistentStorage'
+import {SaazBack} from '@dreamerbird/saaz'
+import type {Studio} from '@dreamerbird/studio/Studio'
+import getStudio from '@dreamerbird/studio/getStudio'
 
 export type Drafts = {
   historic: Draft<StudioHistoricState>
@@ -52,26 +59,52 @@ export default class StudioStore {
     StudioState
   >
 
-  constructor(readonly studio: Studio) {
-    const backend =
+  constructor(
+    readonly studio: Studio,
+    opts?: {
+      /**
+       * Called when persistence fails (e.g. IndexedDB is unavailable). The
+       * studio degrades to in-memory-only and surfaces this to the user.
+       */
+      onPersistenceStatusChange?: (status: 'ok' | 'degraded') => void
+    },
+  ) {
+    const optsPromise = this.studio._optsPromise
+
+    const backend: Saaz.SaazBackInterface =
       typeof window === 'undefined'
         ? new SaazBack({
             storageAdapter: new Saaz.BackMemoryAdapter(),
             dbName: 'test',
             schema,
           })
-        : createTrpcBackend(
-            this.studio._optsPromise.then((opts) => opts.persistenceKey),
+        : Saaz.createDeferredBackend(
+            optsPromise.then((opts) =>
+              opts.serverUrl === undefined
+                ? new SaazBack({
+                    dbName: opts.persistenceKey,
+                    storageAdapter: new Saaz.BackIDBAdapter(
+                      deriveSaazNames(opts.persistenceKey).backDbName,
+                    ),
+                    schema,
+                  })
+                : createTrpcBackend(Promise.resolve(opts.persistenceKey)),
+            ),
           )
 
     const saaz = new Saaz.SaazFront({
       schema,
-      dbName: 'test',
+      dbName: 'studio',
       storageAdapter:
-        typeof window === 'undefined' || process.env.NODE_ENV === 'test' || true
+        typeof window === 'undefined' || process.env.NODE_ENV === 'test'
           ? new Saaz.FrontMemoryAdapter()
-          : new Saaz.FrontIDBAdapter('blah', 'test'),
+          : new Saaz.FrontIDBAdapter(
+              optsPromise.then(
+                (o) => deriveSaazNames(o.persistenceKey).frontDbName,
+              ),
+            ),
       backend,
+      onStorageFailure: () => opts?.onPersistenceStatusChange?.('degraded'),
     })
     this._saaz = saaz as $IntentionalAny
 
@@ -84,29 +117,25 @@ export default class StudioStore {
     this.atomP = this._atom.pointer
   }
 
+  /**
+   * Resolves when the saaz front has finished restoring any persisted state
+   * (from IndexedDB or the memory adapter). `Studio._init` awaits this before
+   * marking the studio initialized, so that a project attached right after
+   * `studio.initialized` resolves reads the restored snapshot instead of an
+   * empty one (which would clobber the persisted project back to empty).
+   */
+  get ready(): Promise<unknown> {
+    return this._saaz.ready
+  }
+
   getState(): StudioState {
     return this._atom.get()
     // return this._reduxStore.getState()
   }
 
-  __experimental_clearPersistentStorage(persistenceKey: string): StudioState {
-    throw new Error(`Implement me?`)
-    // __experimental_clearPersistentStorage(this._reduxStore, persistenceKey)
+  clearPersistentStorage(persistenceKey: string): StudioState {
+    void clearPersistentStorageFor(persistenceKey)
     return this.getState()
-  }
-
-  /**
-   * This method causes the store to start the history from scratch. This is useful
-   * for testing and development where you want to explicitly provide a state to the
-   * store.
-   */
-  __dev_startHistoryFromScratch(newHistoricPart: StudioHistoricState) {
-    throw new Error(`Implement me?`)
-    // this._reduxStore.dispatch(
-    //   studioActions.historic.startHistoryFromScratch(
-    //     studioActions.reduceParts((s) => ({...s, historic: newHistoricPart})),
-    //   ),
-    // )
   }
 
   transaction(
@@ -201,35 +230,29 @@ export default class StudioStore {
   }
 
   createContentOfSaveFile(projectId: ProjectId): OnDiskState {
-    throw new Error(`Implement me`)
-    // const projectState =
-    //   this._reduxStore.getState().$persistent.historic.innerState.coreByProject[
-    //     projectId
-    //   ]
+    // `historic` may be missing if the saaz front has not finished restoring
+    // persisted state yet (`_atom` is seeded with `{}` in the constructor).
+    const projectState = this._atom.get().historic?.coreByProject[projectId]
 
-    // if (!projectState) {
-    //   throw new Error(`Project ${projectId} has not been initialized.`)
-    // }
+    if (!projectState) {
+      throw new Error(`Project ${projectId} has not been initialized.`)
+    }
 
-    // const revision = generateDiskStateRevision()
+    const revision = generateDiskStateRevision()
 
-    // this.tempTransaction(({stateEditors}) => {
-    //   stateEditors.coreByProject.historic.revisionHistory.add({
-    //     projectId,
-    //     revision,
-    //   })
-    // }).commit()
+    // 读存档的副作用:不可撤销——否则每次导出/读取都往撤销栈顶压一条
+    // 无视觉效果的 revisionHistory 条目,把真改动埋在下面
+    this.tempTransaction(({stateEditors}) => {
+      stateEditors.coreByProject.historic.revisionHistory.add({
+        projectId,
+        revision,
+      })
+    }).commit(false)
 
-    // const projectHistoricState =
-    //   this._reduxStore.getState().$persistent.historic.innerState.coreByProject[
-    //     projectId
-    //   ]
-
-    // const generatedOnDiskState: OnDiskState = {
-    //   ...projectHistoricState,
-    // }
-
-    // return generatedOnDiskState
+    return {
+      ...projectState,
+      revisionHistory: [revision, ...projectState.revisionHistory],
+    }
   }
 
   // get appApi(): TrpcClientWrapped<AppLink['api']> {
@@ -244,8 +267,20 @@ export default class StudioStore {
 function createTrpcBackend(
   dbNamePromise: Promise<string>,
 ): Saaz.SaazBackInterface {
+  // This backend is only selected when a `serverUrl` is configured, in which
+  // case the studio constructs `authedLinks`. Guard anyway so a programming
+  // error fails loudly instead of with an obscure undefined access.
+  const getSyncServerApi = () => {
+    const links = getStudio().authedLinks
+    if (!links) {
+      throw new Error(
+        'The sync-server backend requires studio.authedLinks, which only exist when a `serverUrl` is provided.',
+      )
+    }
+    return links.syncServer
+  }
   const applyUpdates: Saaz.SaazBackInterface['applyUpdates'] = async (opts) => {
-    const syncServerApi = getStudio().authedLinks.syncServer
+    const syncServerApi = getSyncServerApi()
     const dbName = await dbNamePromise
     return await syncServerApi.projectState.saaz_applyUpdates.mutate({
       dbName,
@@ -257,7 +292,7 @@ function createTrpcBackend(
     opts,
   ) => {
     const dbName = await dbNamePromise
-    const syncServerApi = getStudio().authedLinks.syncServer
+    const syncServerApi = getSyncServerApi()
 
     return await syncServerApi.projectState.saaz_updatePresence.mutate({
       dbName,
@@ -268,7 +303,7 @@ function createTrpcBackend(
   const getUpdatesSinceClock: Saaz.SaazBackInterface['getUpdatesSinceClock'] =
     async (opts) => {
       const dbName = await dbNamePromise
-      const syncServerApi = getStudio().authedLinks.syncServer
+      const syncServerApi = getSyncServerApi()
 
       return await syncServerApi.projectState.saaz_getUpdatesSinceClock.query({
         dbName,
@@ -279,7 +314,7 @@ function createTrpcBackend(
   const getLastIncorporatedPeerClock: Saaz.SaazBackInterface['getLastIncorporatedPeerClock'] =
     async (opts) => {
       const dbName = await dbNamePromise
-      const syncServerApi = getStudio().authedLinks.syncServer
+      const syncServerApi = getSyncServerApi()
 
       return await syncServerApi.projectState.saaz_getLastIncorporatedPeerClock.query(
         {
@@ -291,7 +326,7 @@ function createTrpcBackend(
 
   const closePeer: Saaz.SaazBackInterface['closePeer'] = async (opts) => {
     const dbName = await dbNamePromise
-    const syncServerApi = getStudio().authedLinks.syncServer
+    const syncServerApi = getSyncServerApi()
 
     return await syncServerApi.projectState.saaz_closePeer.mutate({
       dbName,
@@ -304,7 +339,7 @@ function createTrpcBackend(
     onUpdate,
   ) => {
     const dbName = await dbNamePromise
-    const syncServerApi = getStudio().authedLinks.syncServer
+    const syncServerApi = getSyncServerApi()
 
     const subscription = syncServerApi.projectState.saaz_subscribe.subscribe(
       {

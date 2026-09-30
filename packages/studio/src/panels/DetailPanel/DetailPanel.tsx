@@ -1,5 +1,6 @@
-import {outlineSelection} from '@theatre/studio/selectors'
-import {usePrism, useVal} from '@theatre/react'
+import {outlineSelection} from '@dreamerbird/studio/selectors'
+import {objectDisplayNameOf} from '@dreamerbird/studio/panels/OutlinePanel/outlineOps/displayName'
+import {usePrism, useVal} from '@dreamerbird/react'
 import React, {
   createContext,
   useContext,
@@ -12,24 +13,23 @@ import {
   panelZIndexes,
   TitleBar_Piece,
   TitleBar_Punctuation,
-} from '@theatre/studio/panels/BasePanel/common'
-import {pointerEventsAutoInNormalMode} from '@theatre/studio/css'
+} from '@dreamerbird/studio/panels/BasePanel/common'
+import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
 import ObjectDetails from './ObjectDetails'
 import ProjectDetails from './ProjectDetails'
-import getStudio from '@theatre/studio/getStudio'
-import useHotspot from '@theatre/studio/uiComponents/useHotspot'
-import {Atom, prism, val} from '@theatre/dataverse'
-import EmptyState from './EmptyState'
-import useLockSet from '@theatre/studio/uiComponents/useLockSet'
-import {usePresenceListenersOnRootElement} from '@theatre/studio/uiComponents/usePresence'
-import {__private} from '@theatre/core'
+import getStudio from '@dreamerbird/studio/getStudio'
+import useHotspot from '@dreamerbird/studio/uiComponents/useHotspot'
+import {Atom, prism, val} from '@dreamerbird/dataverse'
+import useLockSet from '@dreamerbird/studio/uiComponents/useLockSet'
+import {usePresenceListenersOnRootElement} from '@dreamerbird/studio/uiComponents/usePresence'
+import {__private} from '@dreamerbird/core'
 const {isProject, isSheetObject} = __private.instanceTypes
 
 const headerHeight = `32px`
 
-const Container = styled.div<{pin: boolean}>`
+const Container = styled.div<{$pin: boolean}>`
   ${pointerEventsAutoInNormalMode};
-  background-color: rgba(40, 43, 47, 0.8);
+  background-color: var(--theatre-panel-bg-80);
   position: fixed;
   right: 8px;
   top: 50px;
@@ -39,19 +39,19 @@ const Container = styled.div<{pin: boolean}>`
   z-index: ${panelZIndexes.propsPanel};
 
   box-shadow:
-    0 1px 1px rgba(0, 0, 0, 0.25),
+    0 1px 1px var(--theatre-shadow-color),
     0 2px 6px rgba(0, 0, 0, 0.15);
   backdrop-filter: blur(14px);
   border-radius: 2px;
 
-  display: ${({pin}) => (pin ? 'block' : 'none')};
+  display: ${({$pin}) => ($pin ? 'block' : 'none')};
 
   &:hover {
     display: block;
   }
 
   @supports not (backdrop-filter: blur()) {
-    background: rgba(40, 43, 47, 0.95);
+    background: var(--theatre-panel-bg-95);
   }
 `
 
@@ -123,10 +123,17 @@ const DetailPanel: React.FC<{}> = (props) => {
     const obj = selection.find(isSheetObject)
 
     if (obj) {
+      // 显示名与大纲行同一来源(覆盖名 ?? objectKey),保证两处一致
+      const address = obj.address
+      const namesByAddress = val(
+        getStudio().atomP.historic.projects.stateByProjectId[address.projectId]
+          .outlineNamesByObjectAddress,
+      )
+      const shownName = objectDisplayNameOf(namesByAddress, address)
       return (
         <Container
           data-testid="DetailPanel-Object"
-          pin={showDetailsPanel}
+          $pin={showDetailsPanel}
           ref={setContainerElt}
           onMouseEnter={() => {
             isDetailPanelHoveredB.set(true)
@@ -137,7 +144,7 @@ const DetailPanel: React.FC<{}> = (props) => {
         >
           <Header>
             <Title
-              title={`${obj.sheet.address.sheetId}: ${obj.sheet.address.sheetInstanceId} > ${obj.address.objectKey}`}
+              title={`${obj.sheet.address.sheetId}: ${obj.sheet.address.sheetInstanceId} > ${shownName}`}
             >
               <TitleBar_Piece>{obj.sheet.address.sheetId} </TitleBar_Piece>
 
@@ -147,7 +154,7 @@ const DetailPanel: React.FC<{}> = (props) => {
               </TitleBar_Piece>
 
               <TitleBar_Punctuation>&nbsp;&rarr;&nbsp;</TitleBar_Punctuation>
-              <TitleBar_Piece>{obj.address.objectKey}</TitleBar_Piece>
+              <TitleBar_Piece>{shownName}</TitleBar_Piece>
             </Title>
           </Header>
           <Body>
@@ -159,7 +166,7 @@ const DetailPanel: React.FC<{}> = (props) => {
     const project = selection.find(isProject)
     if (project) {
       return (
-        <Container pin={showDetailsPanel}>
+        <Container $pin={showDetailsPanel}>
           <Header>
             <Title title={`${project.address.projectId}`}>
               <TitleBar_Piece>{project.address.projectId} </TitleBar_Piece>
@@ -172,19 +179,8 @@ const DetailPanel: React.FC<{}> = (props) => {
       )
     }
 
-    return (
-      <Container
-        pin={showDetailsPanel}
-        onMouseEnter={() => {
-          isDetailPanelHoveredB.set(true)
-        }}
-        onMouseLeave={() => {
-          isDetailPanelHoveredB.set(false)
-        }}
-      >
-        <EmptyState />
-      </Container>
-    )
+    // 无选中时不显示空态提示块,整个面板隐藏
+    return null
   }, [showDetailsPanel])
 }
 

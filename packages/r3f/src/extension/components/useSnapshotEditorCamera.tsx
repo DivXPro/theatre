@@ -5,36 +5,69 @@ import type {MutableRefObject} from 'react'
 import {useLayoutEffect, useRef} from 'react'
 import React from 'react'
 import useRefAndState from './useRefAndState'
-import type {IScrub} from '@theatre/core'
+import type {IScrub} from '@dreamerbird/core'
 import type {PerspectiveCamera as PerspectiveCameraImpl} from 'three'
-import type {ISheet} from '@theatre/core'
-import {getStudioSync, types} from '@theatre/core'
-import type {ISheetObject} from '@theatre/core'
+import type {ISheet} from '@dreamerbird/core'
+import {getStudioSync, types} from '@dreamerbird/core'
+import type {ISheetObject} from '@dreamerbird/core'
 import {useThree} from '@react-three/fiber'
 import type {$IntentionalAny} from '../../types'
+import {translate} from '@dreamerbird/studio/i18n'
+import '../i18n'
+
+/** label 函数:面板每次渲染现调,语言切换热改(模块级配置,引用稳定) */
+const camLabel =
+  (key: string): (() => string) =>
+  () =>
+    translate(key)
 
 const camConf = {
-  transform: {
-    position: {
-      x: types.number(10),
-      y: types.number(10),
-      z: types.number(0),
+  transform: types.compound(
+    {
+      position: types.compound(
+        {x: types.number(10), y: types.number(10), z: types.number(0)},
+        {label: camLabel('r3f.props.position')},
+      ),
+      target: types.compound(
+        {x: types.number(0), y: types.number(0), z: types.number(0)},
+        {label: camLabel('r3f.props.target')},
+      ),
     },
-    target: {
-      x: types.number(0),
-      y: types.number(0),
-      z: types.number(0),
+    {label: camLabel('r3f.props.transform')},
+  ),
+  lens: types.compound(
+    {
+      zoom: types.number(1, {
+        range: [0.0001, 10],
+        label: camLabel('r3f.props.zoom'),
+      }),
+      fov: types.number(50, {
+        range: [1, 1000],
+        label: camLabel('r3f.props.fov'),
+      }),
+      near: types.number(0.1, {
+        range: [0, Infinity],
+        label: camLabel('r3f.props.near'),
+      }),
+      far: types.number(2000, {
+        range: [0, Infinity],
+        label: camLabel('r3f.props.far'),
+      }),
+      focus: types.number(10, {
+        range: [0, Infinity],
+        label: camLabel('r3f.props.focus'),
+      }),
+      filmGauge: types.number(35, {
+        range: [0, Infinity],
+        label: camLabel('r3f.props.filmGauge'),
+      }),
+      filmOffset: types.number(0, {
+        range: [0, Infinity],
+        label: camLabel('r3f.props.filmOffset'),
+      }),
     },
-  },
-  lens: {
-    zoom: types.number(1, {range: [0.0001, 10]}),
-    fov: types.number(50, {range: [1, 1000]}),
-    near: types.number(0.1, {range: [0, Infinity]}),
-    far: types.number(2000, {range: [0, Infinity]}),
-    focus: types.number(10, {range: [0, Infinity]}),
-    filmGauge: types.number(35, {range: [0, Infinity]}),
-    filmOffset: types.number(0, {range: [0, Infinity]}),
-  },
+    {label: camLabel('r3f.props.lens')},
+  ),
 }
 
 export default function useSnapshotEditorCamera(
@@ -49,9 +82,7 @@ export default function useSnapshotEditorCamera(
   const [orbitControlsRef, orbitControls] =
     useRefAndState<OrbitControlsImpl | null>(null)
 
-  const [camRef, cam] = useRefAndState<PerspectiveCameraImpl | undefined>(
-    undefined,
-  )
+  const [camRef, cam] = useRefAndState<PerspectiveCameraImpl | null>(null)
 
   const objRef = useRef<ISheetObject<typeof camConf> | null>(null)
 
@@ -73,7 +104,7 @@ export default function useSnapshotEditorCamera(
       <OrbitControls
         makeDefault
         ref={orbitControlsRef}
-        camera={cam}
+        camera={cam ?? undefined}
         enableDamping={false}
       />
     </>
@@ -97,7 +128,7 @@ export default function useSnapshotEditorCamera(
 const COMMIT_DEBOUNCE_MS = 200
 
 function usePassValuesFromOrbitControlsToTheatre(
-  cam: PerspectiveCameraImpl | undefined,
+  cam: PerspectiveCameraImpl | null,
   orbitControls: OrbitControlsImpl | null,
   objRef: MutableRefObject<ISheetObject<typeof camConf> | null>,
 ) {
@@ -186,7 +217,7 @@ function usePassValuesFromOrbitControlsToTheatre(
 }
 
 function usePassValuesFromTheatreToCamera(
-  cam: PerspectiveCameraImpl | undefined,
+  cam: PerspectiveCameraImpl | null,
   orbitControls: OrbitControlsImpl | null,
   objRef: MutableRefObject<ISheetObject<typeof camConf> | null>,
 ) {

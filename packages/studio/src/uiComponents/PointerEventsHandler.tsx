@@ -1,4 +1,4 @@
-import type {$IntentionalAny} from '@theatre/core/types/public'
+import type {$IntentionalAny} from '@dreamerbird/core/types/public'
 import React, {
   createContext,
   forwardRef,

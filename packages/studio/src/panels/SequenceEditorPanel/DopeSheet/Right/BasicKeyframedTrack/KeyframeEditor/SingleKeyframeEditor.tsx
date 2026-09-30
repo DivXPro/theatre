@@ -1,18 +1,18 @@
 import type {
   DopeSheetSelection,
   SequenceEditorPanelLayout,
-} from '@theatre/studio/panels/SequenceEditorPanel/layout/layout'
-import type {SequenceEditorTree_PrimitiveProp} from '@theatre/studio/panels/SequenceEditorPanel/layout/tree'
-import type {Pointer} from '@theatre/dataverse'
-import {val} from '@theatre/dataverse'
+} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/layout'
+import type {SequenceEditorTree_PrimitiveProp} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/tree'
+import type {Pointer} from '@dreamerbird/dataverse'
+import {val} from '@dreamerbird/dataverse'
 import React from 'react'
 import styled from 'styled-components'
 import SingleKeyframeConnector from './BasicKeyframeConnector'
 import SingleKeyframeDot from './SingleKeyframeDot'
-import type {TrackWithId} from '@theatre/studio/panels/SequenceEditorPanel/DopeSheet/Right/collectAggregateKeyframes'
-import type {StudioSheetItemKey} from '@theatre/core/types/private'
-import type {BasicKeyframe} from '@theatre/core'
-import {__private} from '@theatre/core'
+import type {TrackWithId} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/Right/collectAggregateKeyframes'
+import type {StudioSheetItemKey} from '@dreamerbird/core/types/private'
+import type {BasicKeyframe} from '@dreamerbird/core'
+import {__private} from '@dreamerbird/core'
 
 const {keyframeUtils} = __private
 
@@ -32,7 +32,7 @@ export type ISingleKeyframeEditorProps = {
   selection: undefined | DopeSheetSelection
 }
 
-const SingleKeyframeEditor: React.VFC<ISingleKeyframeEditorProps> = React.memo(
+const SingleKeyframeEditor: React.FC<ISingleKeyframeEditorProps> = React.memo(
   (props) => {
     const {
       index,

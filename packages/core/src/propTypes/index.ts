@@ -1,5 +1,5 @@
-import type {$FixMe, $IntentionalAny} from '@theatre/core/types/public'
-import userReadableTypeOfValue from '@theatre/utils/userReadableTypeOfValue'
+import type {$FixMe, $IntentionalAny} from '@dreamerbird/core/types/public'
+import userReadableTypeOfValue from '@dreamerbird/utils/userReadableTypeOfValue'
 
 import {
   decorateRgba,
@@ -7,10 +7,16 @@ import {
   oklabToLinearSrgb,
   srgbToLinearSrgb,
   linearSrgbToSrgb,
-} from '@theatre/utils/color'
+} from '@dreamerbird/utils/color'
 import {clamp, mapValues} from 'lodash-es'
-import {propTypeSymbol, type NumberNudgeFn} from '@theatre/core/types/public'
+import {
+  propTypeSymbol,
+  type NumberNudgeFn,
+  type PropLabel,
+} from '@dreamerbird/core/types/public'
 import {sanitizeCompoundProps} from './internals'
+
+export type {PropLabel} from '@dreamerbird/core/types/public'
 
 import type {
   Interpolator,
@@ -27,7 +33,7 @@ import type {
   Rgba,
   File,
   Asset,
-} from '@theatre/core/types/public'
+} from '@dreamerbird/core/types/public'
 
 // Notes on naming:
 // As of now, prop types are either `simple` or `composite`.
@@ -51,21 +57,35 @@ const validateCommonOpts = (fnCallSignature: string, opts?: CommonOpts) => {
     }
     if (Object.prototype.hasOwnProperty.call(opts, 'label')) {
       const {label} = opts
-      if (typeof label !== 'string') {
+      // 函数形式(动态显示名,如 i18n 热切换)只校验类型;字符串的
+      // 空白/空串约束对函数不适用(结果运行时才可知)
+      if (typeof label !== 'string' && typeof label !== 'function') {
         throw new Error(
-          `opts.label in ${fnCallSignature} should be a string. ${userReadableTypeOfValue(
+          `opts.label in ${fnCallSignature} should be a string or a function returning a string. ${userReadableTypeOfValue(
             label,
           )} given.`,
         )
       }
-      if (label.trim().length !== label.length) {
-        throw new Error(
-          `opts.label in ${fnCallSignature} should not start/end with whitespace. "${label}" given.`,
-        )
+      if (typeof label === 'string') {
+        if (label.trim().length !== label.length) {
+          throw new Error(
+            `opts.label in ${fnCallSignature} should not start/end with whitespace. "${label}" given.`,
+          )
+        }
+        if (label.length === 0) {
+          throw new Error(
+            `opts.label in ${fnCallSignature} should not be an empty string. If you wish to have no label, remove opts.label from opts.`,
+          )
+        }
       }
-      if (label.length === 0) {
+    }
+    if (Object.prototype.hasOwnProperty.call(opts, 'hidden')) {
+      const {hidden} = opts
+      if (typeof hidden !== 'boolean') {
         throw new Error(
-          `opts.label in ${fnCallSignature} should not be an empty string. If you wish to have no label, remove opts.label from opts.`,
+          `opts.hidden in ${fnCallSignature} should be a boolean. ${userReadableTypeOfValue(
+            hidden,
+          )} given.`,
         )
       }
     }
@@ -115,6 +135,7 @@ export const compound = <Props extends UnknownShorthandCompoundProps>(
     valueType: null as $IntentionalAny,
     [propTypeSymbol]: 'TheatrePropType',
     label: opts.label,
+    hidden: opts.hidden,
     default: mapValues(sanitizedProps, (p) => p.default) as $IntentionalAny,
     deserializeAndSanitize: (json: unknown) => {
       if (typeof json !== 'object' || !json) return undefined
@@ -169,7 +190,8 @@ export const file = (
   // The defaultValue parameter is a string for convenience, but it will be converted to an Asset object
   defaultValue: File['id'],
   opts: {
-    label?: string
+    label?: PropLabel
+    hidden?: boolean
     interpolate?: Interpolator<File['id']>
   } = {},
 ): PropTypeConfig_File => {
@@ -192,6 +214,7 @@ export const file = (
     valueType: null as $IntentionalAny,
     [propTypeSymbol]: 'TheatrePropType',
     label: opts.label,
+    hidden: opts.hidden,
     interpolate,
     deserializeAndSanitize: _ensureFile,
   }
@@ -237,7 +260,8 @@ export const image = (
   // The defaultValue parameter is a string for convenience, but it will be converted to an Asset object
   defaultValue: Asset['id'],
   opts: {
-    label?: string
+    label?: PropLabel
+    hidden?: boolean
     interpolate?: Interpolator<Asset['id']>
   } = {},
 ): PropTypeConfig_Image => {
@@ -260,6 +284,7 @@ export const image = (
     valueType: null as $IntentionalAny,
     [propTypeSymbol]: 'TheatrePropType',
     label: opts.label,
+    hidden: opts.hidden,
     interpolate,
     deserializeAndSanitize: _ensureImage,
   }
@@ -331,7 +356,8 @@ export const number = (
     nudgeFn?: PropTypeConfig_Number['nudgeFn']
     range?: PropTypeConfig_Number['range']
     nudgeMultiplier?: number
-    label?: string
+    label?: PropLabel
+    hidden?: boolean
   } = {},
 ): PropTypeConfig_Number => {
   if (process.env.NODE_ENV !== 'production') {
@@ -401,6 +427,7 @@ export const number = (
     [propTypeSymbol]: 'TheatrePropType',
     ...(opts ? opts : {}),
     label: opts.label,
+    hidden: opts.hidden,
     nudgeFn: opts.nudgeFn ?? defaultNumberNudgeFn,
     nudgeMultiplier:
       typeof opts.nudgeMultiplier === 'number'
@@ -474,6 +501,7 @@ export const rgba = (
     default: decorateRgba(sanitized as Rgba),
     [propTypeSymbol]: 'TheatrePropType',
     label: opts.label,
+    hidden: opts.hidden,
     interpolate: _interpolateRgba,
     deserializeAndSanitize: _sanitizeRgba,
   }
@@ -548,7 +576,8 @@ const _interpolateRgba = (
 export const boolean = (
   defaultValue: boolean,
   opts: {
-    label?: string
+    label?: PropLabel
+    hidden?: boolean
     interpolate?: Interpolator<boolean>
   } = {},
 ): PropTypeConfig_Boolean => {
@@ -569,6 +598,7 @@ export const boolean = (
     valueType: null as $IntentionalAny,
     [propTypeSymbol]: 'TheatrePropType',
     label: opts.label,
+    hidden: opts.hidden,
     interpolate: opts.interpolate ?? leftInterpolate,
     deserializeAndSanitize: _ensureBoolean,
   }
@@ -606,7 +636,8 @@ function leftInterpolate<T>(left: T): T {
 export const string = (
   defaultValue: string,
   opts: {
-    label?: string
+    label?: PropLabel
+    hidden?: boolean
     interpolate?: Interpolator<string>
   } = {},
 ): PropTypeConfig_String => {
@@ -626,6 +657,7 @@ export const string = (
     valueType: null as $IntentionalAny,
     [propTypeSymbol]: 'TheatrePropType',
     label: opts.label,
+    hidden: opts.hidden,
     interpolate: opts.interpolate ?? leftInterpolate,
     deserializeAndSanitize: _ensureString,
   }
@@ -666,31 +698,45 @@ export function stringLiteral<
    * The options. Use the `"value": "Label"` format.
    *
    * An object like `{[value]: Label}`. Example: `{r: "Red", "g": "Green"}`
+   *
+   * Also accepts a function returning such an object, which is resolved on
+   * every read (validation and editor render) — useful for options that
+   * change over time. If the stored value is not among the resolved
+   * options, the prop falls back to `defaultValue`.
    */
-  valuesAndLabels: ValuesAndLabels,
+  valuesAndLabels: ValuesAndLabels | (() => ValuesAndLabels),
   /**
    * opts.as Determines if editor is shown as a menu or a switch. Either 'menu' or 'switch'.  Default: 'menu'
    */
   opts: {
     as?: 'menu' | 'switch'
-    label?: string
+    label?: PropLabel
+    hidden?: boolean
     interpolate?: Interpolator<Extract<keyof ValuesAndLabels, string>>
   } = {},
 ): PropTypeConfig_StringLiteral<Extract<keyof ValuesAndLabels, string>> {
+  const isDynamic = typeof valuesAndLabels === 'function'
   return {
     type: 'stringLiteral',
     default: defaultValue,
-    valuesAndLabels: {...valuesAndLabels},
+    // 动态选项存原样(函数),读取时才解析;静态对象照旧拷一份防止外部改动
+    valuesAndLabels: isDynamic
+      ? (valuesAndLabels as $IntentionalAny)
+      : {...(valuesAndLabels as ValuesAndLabels)},
     [propTypeSymbol]: 'TheatrePropType',
     valueType: null as $IntentionalAny,
     as: opts.as ?? 'menu',
     label: opts.label,
+    hidden: opts.hidden,
     interpolate: opts.interpolate ?? leftInterpolate,
     deserializeAndSanitize(
       json: unknown,
     ): undefined | Extract<keyof ValuesAndLabels, string> {
       if (typeof json !== 'string') return undefined
-      if (Object.prototype.hasOwnProperty.call(valuesAndLabels, json)) {
+      const resolved = isDynamic
+        ? (valuesAndLabels as () => ValuesAndLabels)()
+        : (valuesAndLabels as ValuesAndLabels)
+      if (Object.prototype.hasOwnProperty.call(resolved, json)) {
         return json as $IntentionalAny
       } else {
         return undefined
@@ -729,6 +775,11 @@ const defaultNumberNudgeFn: NumberNudgeFn = ({
   return deltaX * magnitude * (config.nudgeMultiplier ?? 1)
 }
 
+/** 读取属性显示名:函数则调用,字符串原样返回 */
+export const resolvePropLabel = (
+  label: PropLabel | undefined,
+): string | undefined => (typeof label === 'function' ? label() : label)
+
 type CommonOpts = {
   /**
    * Each prop type may be given a custom label instead of the name of the sub-prop
@@ -742,5 +793,10 @@ type CommonOpts = {
    * }
    * ```
    */
-  label?: string
+  label?: PropLabel
+  /**
+   * Hide this prop from the studio's details/properties panel
+   * (see {@link IBasePropType.hidden}). Data behavior is unaffected.
+   */
+  hidden?: boolean
 }

@@ -1,13 +1,13 @@
-import useRefAndState from '@theatre/studio/utils/useRefAndState'
+import useRefAndState from '@dreamerbird/studio/utils/useRefAndState'
 import type {MutableRefObject} from 'react'
 import {useContext} from 'react'
 import React from 'react'
 import PopoverPositioner from './PopoverPositioner'
 import {createPortal} from 'react-dom'
 import {PortalContext} from 'reakit'
-import noop from '@theatre/utils/noop'
-import type {$IntentionalAny} from '@theatre/core/types/public'
-import {Atom} from '@theatre/dataverse'
+import noop from '@dreamerbird/utils/noop'
+import type {$IntentionalAny} from '@dreamerbird/core/types/public'
+import {Atom} from '@dreamerbird/dataverse'
 import {useCallback, useEffect, useMemo} from 'react'
 
 /**

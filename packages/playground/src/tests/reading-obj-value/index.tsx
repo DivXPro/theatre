@@ -1,5 +1,6 @@
-import theatre from '@theatre/core'
-import {getProject, types} from '@theatre/core'
+import theatre from '@dreamerbird/core'
+import '@dreamerbird/studio'
+import {getProject, types} from '@dreamerbird/core'
 import state from './reading obj value.theatre-project-state.json'
 
 void theatre.init({studio: true, usePersistentStorage: false})

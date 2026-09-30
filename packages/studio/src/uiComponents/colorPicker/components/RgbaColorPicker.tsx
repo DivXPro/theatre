@@ -6,12 +6,12 @@ import type {
   ColorPickerBaseProps,
   HsvaColor,
   RgbaColor,
-} from '@theatre/studio/uiComponents/colorPicker/types'
-import {equalColorObjects} from '@theatre/studio/uiComponents/colorPicker/utils/compare'
+} from '@dreamerbird/studio/uiComponents/colorPicker/types'
+import {equalColorObjects} from '@dreamerbird/studio/uiComponents/colorPicker/utils/compare'
 import {
   rgbaToHsva,
   hsvaToRgba,
-} from '@theatre/studio/uiComponents/colorPicker/utils/convert'
+} from '@dreamerbird/studio/uiComponents/colorPicker/utils/convert'
 import {EditingProvider} from './EditingProvider'
 
 const normalizeRgba = (rgba: RgbaColor) => {
@@ -41,7 +41,7 @@ const colorModel: ColorModel<RgbaColor> = {
 
 export const RgbaColorPicker = (
   props: ColorPickerBaseProps<RgbaColor>,
-): JSX.Element => (
+): React.JSX.Element => (
   <EditingProvider>
     <AlphaColorPicker
       {...props}

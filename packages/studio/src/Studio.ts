@@ -1,8 +1,7 @@
-import Scrub from '@theatre/studio/Scrub'
-import type {StudioHistoricState} from '@theatre/core/types/private/studio'
-import UI from '@theatre/studio/UI/UI'
-import type {Pointer, Ticker} from '@theatre/dataverse'
-import {Atom, PointerProxy, pointerToPrism} from '@theatre/dataverse'
+import Scrub from '@dreamerbird/studio/Scrub'
+import UI from '@dreamerbird/studio/UI/UI'
+import type {Pointer, Ticker} from '@dreamerbird/dataverse'
+import {Atom, PointerProxy, pointerToPrism} from '@dreamerbird/dataverse'
 import type {
   CommitOrDiscardOrRecapture,
   ITransactionPrivateApi,
@@ -11,66 +10,67 @@ import StudioStore from './StudioStore/StudioStore'
 import type {
   IExtension,
   IStudio,
+  IWorkspaceButtonConfig,
   PaneClassDefinition,
   InitOpts,
-} from '@theatre/core/types/public'
+} from '@dreamerbird/core/types/public'
 import TheatreStudio from './TheatreStudio'
 import {nanoid} from 'nanoid/non-secure'
-import type Project from '@theatre/core/projects/Project'
-import type {CoreBits} from '@theatre/core/CoreBundle'
-import SimpleCache from '@theatre/utils/SimpleCache'
-import type {IProject, ISheet, ProjectId} from '@theatre/core'
+import type Project from '@dreamerbird/core/projects/Project'
+import type {CoreBits} from '@dreamerbird/core/CoreBundle'
+import SimpleCache from '@dreamerbird/utils/SimpleCache'
+import type {IProject, ISheet, ProjectId} from '@dreamerbird/core'
 import PaneManager from './PaneManager'
-import type * as _coreExports from '@theatre/core/coreExports'
+import type * as _coreExports from '@dreamerbird/core/coreExports'
 import type {
   OnDiskState,
   ProjectEphemeralState,
-} from '@theatre/core/types/private/core'
-import type {Deferred} from '@theatre/utils/defer'
-import {defer} from '@theatre/utils/defer'
-import checkForUpdates from './checkForUpdates'
+} from '@dreamerbird/core/types/private/core'
+import type {Deferred} from '@dreamerbird/utils/defer'
+import {defer} from '@dreamerbird/utils/defer'
+import {DEFAULT_PERSISTENCE_KEY, sanitizeOpts} from './sanitizeOpts'
 import shallowEqual from 'shallowequal'
+import {registerFallback, registerMessages, setLanguage} from './i18n'
 import {createStore} from './IDBStorage'
-import {getAllPossibleAssetIDs} from '@theatre/studio/utils/assets'
+import {getAllPossibleAssetIDs} from '@dreamerbird/studio/utils/assets'
 import {notify} from './notify'
-import type {RafDriverPrivateAPI} from '@theatre/core/rafDrivers'
-import {persistAtom} from '@theatre/utils/persistAtom'
+import type {RafDriverPrivateAPI} from '@dreamerbird/core/rafDrivers'
+import {persistAtom} from '@dreamerbird/utils/persistAtom'
 import produce from 'immer'
 import Storno from './Storno/Storno'
 import Auth from './Auth'
-import type {$IntentionalAny} from '@theatre/core/types/public'
+import type {$IntentionalAny} from '@dreamerbird/core/types/public'
 import AppLink from './SyncStore/AppLink'
 import SyncServerLink from './SyncStore/SyncServerLink'
+import {wireDirectSyncServerLink} from './SyncStore/wireDirectSyncServerLink'
+import {isDirectSyncServerUrl} from './SyncStore/syncServerUrl'
 import type {TrpcClientWrapped} from './SyncStore/utils'
 import {wrapTrpcClientWithAuth} from './SyncStore/utils'
-import {env} from './env'
-
-const DEFAULT_PERSISTENCE_KEY = 'theatre-0.4'
 
 export type CoreExports = typeof _coreExports
 
-const STUDIO_NOT_INITIALIZED_MESSAGE = `You seem to have imported '@theatre/studio' but haven't initialized it. You can initialize the studio by:
+const STUDIO_NOT_INITIALIZED_MESSAGE = `You seem to have imported '@dreamerbird/studio' but haven't initialized it. You can initialize the studio by:
 \`\`\`
-import theatre from '@theatre/core'
+import theatre from '@dreamerbird/core'
 theatre.init({studio: true})
 \`\`\`
 
-* If you didn't mean to import '@theatre/studio', this means that your bundler is not tree-shaking it. This is most likely a bundler misconfiguration.
+* If you didn't mean to import '@dreamerbird/studio', this means that your bundler is not tree-shaking it. This is most likely a bundler misconfiguration.
 
-* If you meant to import '@theatre/studio' without showing its UI, you can do that by running:
+* If you meant to import '@dreamerbird/studio' without showing its UI, you can do that by running:
 
 \`\`\`
-import theatre from '@theatre/core'
+import theatre from '@dreamerbird/core'
 theatre.init({studio: true})
 studio.ui.hide()
 \`\`\`
 `
 
-const STUDIO_INITIALIZED_LATE_MSG = `You seem to have imported '@theatre/studio' but called \`studio.initialize()\` after some delay.
+const STUDIO_INITIALIZED_LATE_MSG = `You seem to have imported '@dreamerbird/studio' but called \`studio.initialize()\` after some delay.
 Theatre.js projects remain in pending mode (won't play their sequences) until the studio is initialized, so you should place the \`studio.initialize()\` line right after the import line:
 
 \`\`\`
-import theatre from '@theatre/core'
+import theatre from '@dreamerbird/core'
 // ... and other imports
 
 studio.initialize()
@@ -78,15 +78,17 @@ studio.initialize()
 `
 
 export type StudioOpts = {
-  serverUrl: string
+  /**
+   * The url of the cloud backend (app + sync server). When `undefined` (the
+   * default), the studio runs fully offline: no AppLink/SyncServerLink/Auth
+   * is constructed and no network requests are made.
+   */
+  serverUrl?: string
   persistenceKey: string
   usePersistentStorage: boolean
   rafDriver: RafDriverPrivateAPI
+  workspaceButton?: IWorkspaceButtonConfig
 }
-
-export type UpdateCheckerResponse =
-  | {hasUpdates: true; newVersion: string; releasePage: string}
-  | {hasUpdates: false}
 
 export class Studio {
   readonly ui: UI
@@ -101,7 +103,11 @@ export class Studio {
     this._projectsProxy.pointer
 
   readonly _store: StudioStore
-  readonly auth!: Auth
+  /**
+   * Only set when a `serverUrl` is provided (i.e. cloud sync is enabled).
+   * `undefined` in the default offline mode.
+   */
+  auth: Auth | undefined
   private readonly _storno = new Storno()
 
   private _corePrivateApi: CoreBits['privateAPI'] | undefined
@@ -110,13 +116,22 @@ export class Studio {
   readonly paneManager: PaneManager
 
   /**
-   * An atom holding the exports of '\@theatre/core'. Will be undefined if '\@theatre/core' is never imported
+   * An atom holding the exports of '\@dreamerbird/core'. Will be undefined if '\@dreamerbird/core' is never imported
    */
   private _coreAtom = new Atom<{core?: CoreExports}>({})
 
   readonly ephemeralAtom = new Atom<{
     // reflects the value of _initializedDeferred.promise. Since it's in an atom, it can be accessed via a pointer
     initialized: boolean
+    // internal signal: set to 'degraded' when persistence (IndexedDB) is
+    // unavailable and the studio falls back to in-memory-only editing
+    persistenceStatus: 'ok' | 'degraded'
+    // internal signal: connection state of the direct-ws sync link. Only set in
+    // direct self-host mode; always 'connected' otherwise (local/offline).
+    connectionStatus: 'connected' | 'reconnecting'
+    // UI config for the global toolbar's workspace button, sanitized from
+    // InitOpts.workspaceButton at initialize() time. Undefined = default look.
+    workspaceButton?: IWorkspaceButtonConfig
     coreByProject: {[projectId in string]: ProjectEphemeralState}
     extensions: {
       byId: {[extensionId in string]?: IExtension}
@@ -129,6 +144,8 @@ export class Studio {
     }
   }>({
     initialized: false,
+    persistenceStatus: 'ok',
+    connectionStatus: 'connected',
     coreByProject: {},
     extensions: {
       byId: {},
@@ -136,13 +153,7 @@ export class Studio {
     },
   })
 
-  readonly ahistoricAtom = new Atom<{
-    updateChecker?: {
-      // timestamp of the last time we checked for updates
-      lastChecked: number
-      result: UpdateCheckerResponse | 'error'
-    }
-  }>({})
+  readonly ahistoricAtom = new Atom<{}>({})
   /**
    * Tracks whether studio.initialize() is called.
    */
@@ -153,7 +164,7 @@ export class Studio {
   private _didWarnAboutNotInitializing = false
 
   /**
-   * This will be set as soon as `@theatre/core` registers itself on `@theatre/studio`
+   * This will be set as soon as `@dreamerbird/core` registers itself on `@dreamerbird/studio`
    */
   private _coreBits: CoreBits | undefined
 
@@ -162,14 +173,27 @@ export class Studio {
   private readonly _initializedPromise: Promise<void>
 
   readonly _rawLinks: {
-    app: Promise<AppLink>
-    syncServer: Promise<SyncServerLink>
+    app: Promise<AppLink | null>
+    syncServer: Promise<SyncServerLink | null>
   }
 
-  readonly authedLinks!: {
-    app: TrpcClientWrapped<AppLink['api']>
-    syncServer: TrpcClientWrapped<SyncServerLink['api']>
-  }
+  /**
+   * Only set when a `serverUrl` is provided (i.e. cloud sync is enabled).
+   * `undefined` in the default offline mode.
+   */
+  authedLinks:
+    | {
+        app: TrpcClientWrapped<AppLink['api']>
+        syncServer: TrpcClientWrapped<SyncServerLink['api']>
+      }
+    | undefined
+
+  /**
+   * Teardown for the direct-ws connection-state subscription, set when a
+   * `ws://`/`wss://` serverUrl is wired (see the constructor). Kept instead of
+   * discarded so the 1s poll in SyncServerLink can be stopped on teardown.
+   */
+  private _disconnectDirectSyncServerLink: (() => void) | undefined
 
   get ticker(): Ticker {
     if (!this._rafDriver) {
@@ -194,59 +218,95 @@ export class Studio {
     this.address = {studioId: nanoid(10)}
     this._optsDeferred = defer()
 
-    const syncServerLinkDeferred = defer<SyncServerLink>()
+    const syncServerLinkDeferred = defer<SyncServerLink | null>()
     const syncServerLink = syncServerLinkDeferred.promise
-    const appLink = this._optsPromise.then(
-      ({serverUrl}): AppLink =>
-        typeof window === 'undefined'
-          ? (null as $IntentionalAny)
-          : new AppLink(serverUrl),
+    // Direct-ws mode (`ws://`/`wss://` serverUrl) never needs the app: the
+    // serverUrl IS the sync-server address. AppLink is only built for the
+    // app-backed path.
+    const appLink = this._optsPromise.then(({serverUrl}): AppLink | null =>
+      typeof window === 'undefined' ||
+      serverUrl === undefined ||
+      isDirectSyncServerUrl(serverUrl)
+        ? null
+        : new AppLink(serverUrl),
     )
 
     if (typeof window !== 'undefined') {
-      void appLink
-        .then((appLink) => {
-          return appLink.api.syncServerUrl.query().then((url) => {
-            syncServerLinkDeferred.resolve(new SyncServerLink(url))
+      void this._optsPromise.then(({serverUrl}) => {
+        if (serverUrl === undefined) {
+          syncServerLinkDeferred.resolve(null)
+          return
+        }
+        if (isDirectSyncServerUrl(serverUrl)) {
+          syncServerLinkDeferred.resolve(new SyncServerLink(serverUrl))
+          return
+        }
+        // app-backed: the app resolves the sync-server ws url. appLink is
+        // non-null here (serverUrl is defined and not a ws url).
+        void appLink
+          .then((link) => {
+            return link!.api.syncServerUrl.query().then((url) => {
+              syncServerLinkDeferred.resolve(new SyncServerLink(url))
+            })
           })
-        })
-        .catch((err) => {
-          syncServerLinkDeferred.reject(err)
-          console.error(err)
-        })
+          .catch((err) => {
+            syncServerLinkDeferred.reject(err)
+            console.error(err)
+          })
+      })
     } else {
-      syncServerLinkDeferred.resolve(null as $IntentionalAny)
+      syncServerLinkDeferred.resolve(null)
     }
 
     this._rawLinks = {app: appLink, syncServer: syncServerLink}
 
     if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'test') {
-      this.auth = new Auth(this)
-      this.authedLinks = {
-        syncServer: wrapTrpcClientWithAuth(
-          this._rawLinks.syncServer.then((s) => s.api),
-          (fn: any, args: any[], path): any => {
-            return this.auth.wrapTrpcProcedureWithAuth(
-              fn,
-              args as $IntentionalAny,
-              path,
+      // Auth and the authed tRPC links only make sense when a cloud backend is
+      // configured. In the default offline mode (`serverUrl === undefined`) we
+      // skip constructing them entirely, so no network activity can occur.
+      void this._optsPromise.then((opts) => {
+        if (opts.serverUrl === undefined) return
+        if (isDirectSyncServerUrl(opts.serverUrl)) {
+          // Direct-ws self-host: no Auth, no auth wrapper. The server runs with
+          // AUTH_DISABLED and ignores tokens, so authedLinks.syncServer is the
+          // bare sync-server client. `app` is meaningless here.
+          void this._rawLinks.syncServer.then((link) => {
+            if (!link) return
+            this._disconnectDirectSyncServerLink = wireDirectSyncServerLink(
+              this,
+              link,
             )
-          },
-        ),
+          })
+          return
+        }
+        const auth = new Auth(this)
+        this.auth = auth
+        this.authedLinks = {
+          syncServer: wrapTrpcClientWithAuth(
+            this._rawLinks.syncServer.then((s) => s!.api),
+            (fn: any, args: any[], path): any => {
+              return auth.wrapTrpcProcedureWithAuth(
+                fn,
+                args as $IntentionalAny,
+                path,
+              )
+            },
+          ),
 
-        app: wrapTrpcClientWithAuth(
-          this._rawLinks.app.then((s) => s.api),
-          (fn: any, args: any[], path): any =>
-            this.auth.wrapTrpcProcedureWithAuth(
-              fn,
-              args as $IntentionalAny,
-              path,
-            ),
-        ),
-      }
+          app: wrapTrpcClientWithAuth(
+            this._rawLinks.app.then((s) => s!.api),
+            (fn: any, args: any[], path): any =>
+              auth.wrapTrpcProcedureWithAuth(fn, args as $IntentionalAny, path),
+          ),
+        }
+      })
     }
 
-    this._store = new StudioStore(this)
+    this._store = new StudioStore(this, {
+      onPersistenceStatusChange: (status) => {
+        this.ephemeralAtom.setByPointer((p) => p.persistenceStatus, status)
+      },
+    })
     this.publicApi = new TheatreStudio(this)
 
     this.ui = new UI(this)
@@ -296,22 +356,26 @@ export class Studio {
     }
 
     await ahistoricAtomInitializedD.promise
+
+    // Wait for the saaz front to finish restoring persisted state before the
+    // studio is considered initialized. Otherwise a project attached right
+    // after `studio.initialized` resolves (Project.attachToStudio →
+    // initialiseProjectState, which reads the store after a single `delay(0)`)
+    // could read the pre-restore empty snapshot and clobber the restored
+    // project back to empty.
+    await this._store.ready
+
     this.ephemeralAtom.setByPointer((p) => p.initialized, true)
 
     if (process.env.NODE_ENV !== 'test') {
       this.ui.render()
-      if (navigator.onLine) {
-        checkForUpdates().catch((err) => {
-          console.error(err)
-        })
-      }
     }
   }
 
   async initialize(opts?: InitOpts) {
     if (!this._coreBits) {
       throw new Error(
-        `You seem to have imported \`@theatre/studio\` without importing \`@theatre/core\`. Make sure to include an import of \`@theatre/core\` before calling \`studio.initializer()\`.`,
+        `You seem to have imported \`@dreamerbird/studio\` without importing \`@dreamerbird/core\`. Make sure to include an import of \`@dreamerbird/core\` before calling \`studio.initializer()\`.`,
       )
     }
 
@@ -325,7 +389,13 @@ export class Studio {
     }
 
     if (this._optsDeferred.status === 'pending') {
-      this._optsDeferred.resolve(sanitizeOpts(opts, this._coreBits))
+      const sanitizedOpts = sanitizeOpts(opts, this._coreBits)
+      this._optsDeferred.resolve(sanitizedOpts)
+      // workspaceButton 配置同步进 ephemeralAtom,UI 组件用 useVal 订阅
+      this.ephemeralAtom.setByPointer(
+        (p) => p.workspaceButton,
+        sanitizedOpts.workspaceButton,
+      )
     }
 
     return this._initializedPromise
@@ -384,10 +454,6 @@ export class Studio {
     return this._store.transaction(fn, undoable)
   }
 
-  __dev_startHistoryFromScratch(newHistoricPart: StudioHistoricState) {
-    return this._store.__dev_startHistoryFromScratch(newHistoricPart)
-  }
-
   get corePrivateAPI() {
     return this._corePrivateApi
   }
@@ -400,7 +466,7 @@ export class Studio {
     return this._coreAtom.pointer.core
   }
 
-  extend(extension: IExtension, opts?: {__experimental_reconfigure?: boolean}) {
+  extend(extension: IExtension, opts?: {reconfigure?: boolean}) {
     if (!extension || typeof extension !== 'object') {
       throw new Error(`Extensions must be JS objects`)
     }
@@ -409,9 +475,22 @@ export class Studio {
       throw new Error(`extension.id must be a string`)
     }
 
-    const reconfigure = opts?.__experimental_reconfigure === true
+    const reconfigure = opts?.reconfigure === true
 
     const extensionId = extension.id
+
+    // i18n 扩展:注册词条/回退链先行于语言指定(语言匹配依赖词典);
+    // 显式 language 是最高优先级,但不写用户持久化偏好
+    if (extension.i18n) {
+      const {messages, language, fallbacks} = extension.i18n
+      for (const [lang, dict] of Object.entries(messages ?? {})) {
+        registerMessages(lang, dict)
+      }
+      for (const [from, to] of Object.entries(fallbacks ?? {})) {
+        registerFallback(from, to)
+      }
+      if (language) setLanguage(language, {explicit: true})
+    }
 
     const prevExtension = this.ephemeralAtom.get().extensions.byId[extensionId]
     if (prevExtension) {
@@ -426,7 +505,7 @@ export class Studio {
           return
         }
         throw new Error(
-          `Extension id "${extension.id}" is already defined. If you mean to re-configure the extension, do it like this: studio.extend(extension, {__experimental_reconfigure: true})})`,
+          `Extension id "${extension.id}" is already defined. If you mean to re-configure the extension, do it like this: studio.extend(extension, {reconfigure: true})})`,
         )
       }
     }
@@ -680,62 +759,6 @@ export class Studio {
   }
 
   clearPersistentStorage(persistenceKey = DEFAULT_PERSISTENCE_KEY) {
-    this._store.__experimental_clearPersistentStorage(persistenceKey)
+    this._store.clearPersistentStorage(persistenceKey)
   }
-}
-
-function sanitizeOpts(
-  opts: InitOpts | undefined,
-  coreBits: CoreBits,
-): StudioOpts {
-  const storeOpts: StudioOpts = {
-    persistenceKey: DEFAULT_PERSISTENCE_KEY,
-    usePersistentStorage: true,
-    serverUrl: env.BACKEND_URL ?? 'https://app.theatrejs.com',
-    rafDriver: coreBits.getCoreRafDriver(),
-  }
-
-  if (typeof opts?.serverUrl == 'string') {
-    if (
-      // a fully formed url
-      opts.serverUrl.match(/^(https?:)?\/\//) &&
-      // not ending with a slash
-      !opts.serverUrl.endsWith('/')
-    ) {
-      storeOpts.serverUrl = opts.serverUrl
-    } else {
-      throw new Error(
-        'parameter `serverUrl` in `theatre.init({studio: true, serverUrl})` must be either undefined or a fully formed url (e.g. `https://app.theatrejs.com`)',
-      )
-    }
-  }
-
-  if (typeof opts?.persistenceKey === 'string') {
-    storeOpts.persistenceKey = opts.persistenceKey
-  }
-
-  if (opts?.usePersistentStorage === false || typeof window === 'undefined') {
-    storeOpts.usePersistentStorage = false
-  }
-
-  if (opts?.__experimental_rafDriver) {
-    if (opts?.__experimental_rafDriver.type !== 'Theatre_RafDriver_PublicAPI') {
-      throw new Error(
-        'parameter `rafDriver` in `theatre.init({studio: true, __experimental_rafDriver})` must be either be undefined, or the return type of core.createRafDriver()',
-      )
-    }
-
-    const rafDriverPrivateApi = coreBits.privateAPI(
-      opts.__experimental_rafDriver,
-    )
-    if (!rafDriverPrivateApi) {
-      // TODO - need to educate the user about this edge case
-      throw new Error(
-        'parameter `rafDriver` in `theatre.init({studio: true, __experimental_rafDriver})` seems to come from a different version of `@theatre/core` than the version that is attached to `@theatre/studio`',
-      )
-    }
-    storeOpts.rafDriver = rafDriverPrivateApi
-  }
-
-  return storeOpts
 }

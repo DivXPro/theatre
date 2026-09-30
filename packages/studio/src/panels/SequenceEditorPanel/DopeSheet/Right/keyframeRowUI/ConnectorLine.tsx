@@ -1,7 +1,7 @@
 import {lighten, saturate} from 'polished'
 import React from 'react'
 import styled from 'styled-components'
-import {DOT_SIZE_PX} from '@theatre/studio/panels/SequenceEditorPanel/DopeSheet/Right/BasicKeyframedTrack/KeyframeEditor/SingleKeyframeDot'
+import {DOT_SIZE_PX} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/Right/BasicKeyframedTrack/KeyframeEditor/SingleKeyframeDot'
 
 const CONNECTOR_HEIGHT = DOT_SIZE_PX / 2 + 1
 const CONNECTOR_WIDTH_UNSCALED = 1000
@@ -30,9 +30,16 @@ export const CONNECTOR_THEME = {
   },
 }
 
-const Container = styled.div<IConnectorThemeValues>`
+const Container = styled.div<{
+  $isPopoverOpen: boolean
+  $isSelected: boolean
+}>`
   position: absolute;
-  background: ${CONNECTOR_THEME.barColor};
+  background: ${(props) =>
+    CONNECTOR_THEME.barColor({
+      isPopoverOpen: props.$isPopoverOpen,
+      isSelected: props.$isSelected,
+    })};
   height: ${CONNECTOR_HEIGHT}px;
   width: ${CONNECTOR_WIDTH_UNSCALED}px;
 
@@ -53,7 +60,11 @@ const Container = styled.div<IConnectorThemeValues>`
   }
 
   &:hover {
-    background: ${CONNECTOR_THEME.hoverColor};
+    background: ${(props) =>
+      CONNECTOR_THEME.hoverColor({
+        isPopoverOpen: props.$isPopoverOpen,
+        isSelected: props.$isSelected,
+      })};
   }
 `
 
@@ -68,14 +79,10 @@ export const ConnectorLine = React.forwardRef<
   HTMLDivElement,
   IConnectorLineProps
 >((props, ref) => {
-  const themeValues: IConnectorThemeValues = {
-    isPopoverOpen: props.isPopoverOpen,
-    isSelected: props.isSelected,
-  }
-
   return (
     <Container
-      {...themeValues}
+      $isPopoverOpen={props.isPopoverOpen}
+      $isSelected={props.isSelected}
       ref={ref}
       style={{
         // Previously we used scale3d, which had weird fuzzy rendering look in both FF & Chrome

@@ -1,11 +1,11 @@
 import React from 'react'
-import type {$IntentionalAny} from '@theatre/core/types/public'
-import {val} from '@theatre/dataverse'
-import {usePrism, useVal} from '@theatre/react'
+import type {$IntentionalAny} from '@dreamerbird/core/types/public'
+import {val} from '@dreamerbird/dataverse'
+import {usePrism, useVal} from '@dreamerbird/react'
 import styled from 'styled-components'
-import usePopoverPosition from '@theatre/studio/uiComponents/Popover/usePopoverPosition'
+import usePopoverPosition from '@dreamerbird/studio/uiComponents/Popover/usePopoverPosition'
 import {useTransition, animated, easings} from '@react-spring/web'
-import {pointerEventsAutoInNormalMode} from '@theatre/studio/css'
+import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
 import {tooltipTarget} from './tooltipActor'
 
 export const TooltipOverlay: React.FC<{}> = () => {
@@ -123,7 +123,7 @@ const Container = styled(animated.div)`
   cursor: default;
   ${pointerEventsAutoInNormalMode};
 
-  color: white;
+  color: var(--theatre-text-primary);
   box-sizing: border-box;
 
   border-radius: 4px;
@@ -154,7 +154,7 @@ const IconContainer = styled.div`
   background: #59595938;
   border-radius: 4px;
   border: 0.5px solid #ffffff1a;
-  color: white;
+  color: var(--theatre-text-primary);
   padding: 4px;
   font-size: 10px;
   /* margin: 0; */

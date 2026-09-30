@@ -1,5 +1,5 @@
-import {editable as e, SheetProvider} from '@theatre/r3f'
-import {getProject} from '@theatre/core'
+import {editable as e, SheetProvider} from '@dreamerbird/r3f'
+import {getProject} from '@dreamerbird/core'
 import React from 'react'
 import {Canvas} from '@react-three/fiber'
 

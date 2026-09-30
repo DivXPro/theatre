@@ -1,20 +1,21 @@
-import type {SequenceEditorTree_PrimitiveProp} from '@theatre/studio/panels/SequenceEditorPanel/layout/tree'
-import getStudio from '@theatre/studio/getStudio'
-import {encodePathToProp} from '@theatre/utils/pathToProp'
-import pointerDeep from '@theatre/utils/pointerDeep'
-import {usePrism} from '@theatre/react'
-import type {$IntentionalAny} from '@theatre/core/types/public'
-import type {Pointer} from '@theatre/dataverse'
-import {val} from '@theatre/dataverse'
+import type {SequenceEditorTree_PrimitiveProp} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/tree'
+import getStudio from '@dreamerbird/studio/getStudio'
+import {encodePathToProp} from '@dreamerbird/utils/pathToProp'
+import pointerDeep from '@dreamerbird/utils/pointerDeep'
+import {usePrism} from '@dreamerbird/react'
+import type {$IntentionalAny} from '@dreamerbird/core/types/public'
+import {usePropLabel} from '@dreamerbird/studio/i18n'
+import type {Pointer} from '@dreamerbird/dataverse'
+import {val} from '@dreamerbird/dataverse'
 import React, {useCallback, useRef} from 'react'
 import styled from 'styled-components'
-import {useEditingToolsForSimplePropInDetailsPanel} from '@theatre/studio/propEditors/useEditingToolsForSimpleProp'
-import {nextPrevCursorsTheme} from '@theatre/studio/propEditors/NextPrevKeyframeCursors'
+import {useEditingToolsForSimplePropInDetailsPanel} from '@dreamerbird/studio/propEditors/useEditingToolsForSimpleProp'
+import {nextPrevCursorsTheme} from '@dreamerbird/studio/propEditors/NextPrevKeyframeCursors'
 import {BaseHeader, LeftRowContainer as BaseContainer} from './AnyCompositeRow'
-import {propNameTextCSS} from '@theatre/studio/propEditors/utils/propNameTextCSS'
+import {propNameTextCSS} from '@dreamerbird/studio/propEditors/utils/propNameTextCSS'
 import {usePropHighlightMouseEnter} from './usePropHighlightMouseEnter'
-import type {GraphEditorColors} from '@theatre/core/types/private'
-import {graphEditorColors} from '@theatre/sync-server/state/schema'
+import type {GraphEditorColors} from '@dreamerbird/core/types/private'
+import {graphEditorColors} from '@dreamerbird/sync-server/state/schema'
 
 const theme = {
   label: {
@@ -25,8 +26,8 @@ const theme = {
 const PrimitivePropRowContainer = styled(BaseContainer)<{}>``
 
 const PrimitivePropRowHead = styled(BaseHeader)<{
-  isSelected: boolean
-  isEven: boolean
+  $isSelected: boolean
+  $isEven: boolean
 }>`
   display: flex;
   color: ${theme.label.color};
@@ -37,8 +38,8 @@ const PrimitivePropRowHead = styled(BaseHeader)<{
 `
 
 const PrimitivePropRowIconContainer = styled.button<{
-  isSelected: boolean
-  graphEditorColor: keyof GraphEditorColors
+  $isSelected: boolean
+  $graphEditorColor: keyof GraphEditorColors
 }>`
   background: none;
   border: none;
@@ -50,12 +51,12 @@ const PrimitivePropRowIconContainer = styled.button<{
   height: 100%;
   margin-left: 12px;
   color: ${(props) =>
-    props.isSelected
-      ? graphEditorColors[props.graphEditorColor].iconColor
+    props.$isSelected
+      ? graphEditorColors[props.$graphEditorColor].iconColor
       : nextPrevCursorsTheme.offColor};
 
   &:not([disabled]):hover {
-    color: white;
+    color: var(--theatre-text-primary);
   }
 `
 
@@ -80,7 +81,7 @@ const PrimitivePropRowHead_Label = styled.span`
   ${propNameTextCSS};
 
   ${PrimitivePropRowHead}:hover & {
-    color: #ccc;
+    color: var(--theatre-text-secondary);
   }
 `
 
@@ -135,7 +136,8 @@ const PrimitivePropRow: React.FC<{
   }, [leaf])
 
   const label =
-    leaf.propConf.label ?? leaf.pathToProp[leaf.pathToProp.length - 1]
+    usePropLabel(leaf.propConf.label) ??
+    leaf.pathToProp[leaf.pathToProp.length - 1]
   const isSelectable = true
 
   const headRef = useRef<HTMLDivElement | null>(null)
@@ -143,21 +145,21 @@ const PrimitivePropRow: React.FC<{
   usePropHighlightMouseEnter(headRef.current, leaf)
 
   return (
-    <PrimitivePropRowContainer depth={leaf.depth}>
+    <PrimitivePropRowContainer $depth={leaf.depth}>
       <PrimitivePropRowHead
         ref={headRef}
-        isEven={leaf.n % 2 === 0}
+        $isEven={leaf.n % 2 === 0}
         style={{
           height: leaf.nodeHeight + 'px',
         }}
-        isSelected={isSelected === true}
+        $isSelected={isSelected === true}
       >
         <PrimitivePropRowHead_Label>{label}</PrimitivePropRowHead_Label>
         {controlIndicators}
         <PrimitivePropRowIconContainer
           onClick={toggleSelect}
-          isSelected={isSelected === true}
-          graphEditorColor={possibleColor ?? '1'}
+          $isSelected={isSelected === true}
+          $graphEditorColor={possibleColor ?? '1'}
           style={{opacity: isSelectable ? 1 : 0.25}}
           disabled={!isSelectable}
         >

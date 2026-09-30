@@ -1,4 +1,7 @@
-import type {Pointer} from '@theatre/dataverse'
+import type {Pointer} from '@dreamerbird/dataverse'
+import type CoreBundle from '@dreamerbird/core/CoreBundle'
+import type {OnDiskState} from './private/core'
+import type {ReactNode} from 'react'
 
 /** For `any`s that aren't meant to stay `any`*/
 export type $FixMe = any
@@ -128,15 +131,16 @@ export type PaneInstanceId = Nominal<'PaneInstanceId'>
 export type SequenceMarkerId = Nominal<'SequenceMarkerId'>
 
 /**
- * NOTE: **INTERNAL and UNSTABLE** - This _WILL_ break between minor versions.
+ * The shape of a project's on-disk state — what `studio.createContentOfSaveFile()`
+ * returns and what `getProject(id, {state})` accepts for re-import. It carries a
+ * project's sheets, their keyframes, and the `revisionHistory` used to reconcile
+ * concurrent saves.
  *
- * This type represents the object returned by `studio.createContnentOfSaveFile()`. It's
- * meant for advanced users who want to interact with the state of projects. In the vast
- * majority of cases, you __should not__ use this type. Either an API for your use-case
- * already exists, or you should open an issue on GitHub: https://github.com/theatre-js/theatre/issues
- *
+ * Meant for advanced users who want to interact with the state of projects. In the
+ * vast majority of cases, either an API for your use-case already exists, or you
+ * should open an issue on GitHub: https://github.com/theatre-js/theatre/issues
  */
-export type __UNSTABLE_Project_OnDiskState = unknown
+export type {OnDiskState}
 
 /**
  * Addresses are used to identify projects, sheets, objects, and other things.
@@ -247,10 +251,10 @@ export type IProjectConfig = {
 export interface IProject {
   readonly type: 'Theatre_Project_PublicAPI'
   /**
-   * If `@theatre/studio` is used, this promise would resolve when studio has loaded
+   * If `@dreamerbird/studio` is used, this promise would resolve when studio has loaded
    * the state of the project into memory.
    *
-   * If `@theatre/studio` is not used, this promise is already resolved.
+   * If `@dreamerbird/studio` is not used, this promise is already resolved.
    */
   readonly ready: Promise<void>
   /**
@@ -354,6 +358,10 @@ export interface ISheet {
     props: Props,
     options?: {
       reconfigure?: boolean
+      /** Keep the object out of the studio outline (Tree) and the sequence
+       * editor (timeline). Data, syncing and undo/redo are unaffected; the
+       * object just isn't listed or selectable there. */
+      hideFromOutline?: boolean
       __actions__THIS_API_IS_UNSTABLE_AND_WILL_CHANGE_IN_THE_NEXT_VERSION?: SheetObjectActionsConfig
     },
   ): ISheetObject<Props>
@@ -575,6 +583,26 @@ export interface ISequence {
   pause(): void
 
   /**
+   * Snaps a position (in unit space) to the sequence's grid.
+   *
+   * @remarks
+   * The grid's unit length is `1 / subUnitsPerUnit`, so with the default
+   * 30 sub-units per unit the grid positions are multiples of `1/30`.
+   * Theatre's own keyframe writes snap to this same grid, so values
+   * returned by this method land exactly on positions where keyframes
+   * can be written.
+   *
+   * @example
+   * Usage:
+   * ```ts
+   * // let's assume `sheet` is a sheet with the default 30 sub-units per unit
+   * const snapped = sheet.sequence.closestGridPosition(2.001)
+   * console.log(snapped) // 2
+   * ```
+   */
+  closestGridPosition(posInUnitSpace: number): number
+
+  /**
    * The current position of the playhead.
    * In a time-based sequence, this represents the current time in seconds.
    */
@@ -589,7 +617,7 @@ export interface ISequence {
    *
    * @example Usage
    * ```ts
-   * import {onChange, val} from '@theatre/core'
+   * import {onChange, val} from '@dreamerbird/core'
    *
    * // let's assume `sheet` is a sheet
    * const sequence = sheet.sequence
@@ -623,11 +651,11 @@ export interface ISequence {
    * Usage:
    * ```ts
    * // let's assume `sheet` is a sheet and obj is one of its objects
-   * const keyframes = sheet.sequence.__experimental_getKeyframes(obj.pointer.x)
+   * const keyframes = sheet.sequence.getKeyframes(obj.pointer.x)
    * console.log(keyframes) // an array of keyframes
    * ```
    */
-  __experimental_getKeyframes(prop: Pointer<{}>): BasicKeyframe[]
+  getKeyframes(prop: Pointer<{}>): BasicKeyframe[]
 
   /**
    * Attaches an audio source to the sequence. Playing the sequence automatically
@@ -767,6 +795,15 @@ export interface IRafDriver {
  */
 export type Interpolator<T> = (left: T, right: T, progression: number) => T
 
+/**
+ * 属性在编辑器里的显示名。可以是字符串,也可以是返回字符串的函数——
+ * 函数形式在编辑器每次渲染时现取(和 stringLiteral 动态选项同一套
+ * 语义),能跟随外部状态变化,典型场景:i18n 语言热切换。
+ * 注意:函数必须是稳定引用(sheet.object 要求重复调用的配置
+ * deep-equal,函数按引用比较),请在模块级定义、不要在 render 里新建。
+ */
+export type PropLabel = string | (() => string)
+
 export interface IBasePropType<
   LiteralIdentifier extends string,
   ValueType,
@@ -794,7 +831,14 @@ export interface IBasePropType<
    * }
    * ```
    */
-  label: string | undefined
+  label: PropLabel | undefined
+  /**
+   * If true, the studio's details/properties panel skips this prop entirely
+   * (the prop still exists: readable/writable via the API, persistable,
+   * sequenceable). For data-only "ledger" props that users should never
+   * hand-edit — e.g. a serialized list managed by viewport tools.
+   */
+  hidden?: boolean
   default: ValueType
   /**
    * Each prop config has a `deserializeAndSanitize()` function that deserializes and sanitizes
@@ -852,7 +896,14 @@ export interface PropTypeConfig_String
 
 export interface PropTypeConfig_StringLiteral<T extends string>
   extends ISimplePropType<'stringLiteral', T> {
-  valuesAndLabels: Record<T, string>
+  /**
+   * The options in `"value": "Label"` format. Either a static record, or a
+   * function returning one — the function form is resolved on every read
+   * (validation and editor render), so the options can change over time
+   * (e.g. entries of an asset library). If the stored value is no longer
+   * among the resolved options, the prop falls back to its default.
+   */
+  valuesAndLabels: Record<T, string> | (() => Record<T, string>)
   as: 'menu' | 'switch'
 }
 
@@ -1025,26 +1076,27 @@ export interface ITransactionAPI {
   unset<V>(pointer: Pointer<V>): void
 
   /**
-   * EXPERIMENTAL API - this api may be removed without notice.
-   *
    * Makes Theatre forget about this object. This means all the prop overrides and sequenced props
    * will be reset, and the object won't show up in the exported state.
    */
-  __experimental_forgetObject(object: ISheetObject): void
+  forgetObject(object: ISheetObject): void
 
   /**
-   * EXPERIMENTAL API - this api may be removed without notice.
-   *
    * Makes Theatre forget about this sheet.
    */
-  __experimental_forgetSheet(sheet: ISheet): void
+  forgetSheet(sheet: ISheet): void
 
   /**
-   * EXPERIMENTAL API - this api may be removed without notice.
-   *
    * Sequences a track for the
    */
-  __experimental_sequenceProp<V>(pointer: Pointer<V>): void
+  sequenceProp<V>(pointer: Pointer<V>): void
+
+  /**
+   * Removes the sequence track of the given prop and keeps its current
+   * evaluated value as a static override (画面不跳)。再配 unset() 即回到默认值。
+   * 与 sequenceProp 互逆。
+   */
+  unsequenceProp<V>(pointer: Pointer<V>): void
 }
 /**
  *
@@ -1119,12 +1171,61 @@ export type ToolsetConfig = Array<ToolConfig>
  * A Theatre.js Studio extension. You can define one either
  * in a separate package, or within your project.
  */
+/** i18n 词条:平铺点分键 → 文案;`{var}` 占位由 t() 插值 */
+export type I18nMessages = {[key: string]: string}
+export type I18nVars = Record<string, string | number>
+
+/** studio.i18n 命名空间:宿主命令式接入(非 React 环境也可直接用) */
+export interface IStudioI18nAPI {
+  /** 取词条:当前语言 → 回退链 → key 原文;查不到永不抛错 */
+  t(key: string, vars?: I18nVars): string
+  getLanguage(): string
+  /** 切换语言并记住(写入用户持久化偏好) */
+  setLanguage(lang: string): void
+  /** 注册(合并)词条;同 key 后注册覆盖先注册 */
+  registerMessages(lang: string, messages: I18nMessages): void
+  /** 语言回退链:from 查不到时沿 to 继续查 */
+  registerFallback(from: string, to: string): void
+  /** 语言变化通知,返回注销函数 */
+  onLanguageChange(fn: () => void): () => void
+  /** 已注册词条的语言列表(注册顺序)——语言选择菜单的数据源 */
+  getRegisteredLanguages(): string[]
+  /** 语言的本地显示名(如 zh-CN → "简体中文");给语言选择菜单用 */
+  languageDisplayName(code: string, inLanguage?: string): string
+}
+
+/** IExtension.i18n:随 studio.extend() 注入的 i18n 配置 */
+export interface IExtensionI18n {
+  /** 各语言词条;同 key 覆盖 studio 内置(品牌定制) */
+  messages?: {[lang: string]: I18nMessages}
+  /** 强制初始语言(最高优先级;不写用户持久化偏好) */
+  language?: string
+  /** 语言回退链 */
+  fallbacks?: {[from: string]: string}
+}
+
+export type OutlineMenuItem = {
+  type: 'normal'
+  label: string
+  onSelect: () => void
+  enabled?: boolean
+  /** role: 'delete' 表示该项接管 studio 内置删除（studio 不再显示默认删除项） */
+  role?: 'delete'
+}
+
+export type OutlineObjectMenuContribution = {items: OutlineMenuItem[]}
+
 export interface IExtension {
   /**
    * Pick a unique ID for your extension. Ideally the name would be unique if
    * the extension was to be published to the npm repository.
    */
   id: string
+  /**
+   * i18n 扩展:注入语言词条(可覆盖 studio 内置)、指定初始语言、
+   * 注册语言回退链。与 toolbars/panes 同级,随 extend() 生效。
+   */
+  i18n?: IExtensionI18n
   /**
    * Set this if you'd like to add a component to the global toolbar (on the top)
    *
@@ -1144,6 +1245,17 @@ export interface IExtension {
    * TODO
    */
   panes?: Array<PaneClassDefinition>
+
+  /**
+   * 大纲树对象行右键菜单扩展：按对象返回追加菜单项。
+   * studio 把各扩展（注册顺序）返回的 items 追加在内置项之后；
+   * 任一 item 带 role: 'delete' 时，该对象的内置删除项被隐藏
+   * （宿主接管删除，如注册表式对象需要"注册表移除 + 组件卸载 +
+   * forgetObject"三步真删的场景）。
+   */
+  outlineObjectMenu?: (
+    object: ISheetObject<UnknownShorthandCompoundProps>,
+  ) => OutlineObjectMenuContribution | undefined
 }
 
 export type PaneInstance<ClassName extends string> = {
@@ -1185,9 +1297,58 @@ export interface InitOpts {
    */
   usePersistentStorage?: boolean
 
-  __experimental_rafDriver?: IRafDriver | undefined
+  rafDriver?: IRafDriver | undefined
 
   serverUrl?: string | undefined
+
+  /**
+   * Customizes the workspace button at the left of the studio's global
+   * toolbar (the pill that by default reads "Team / Workspace").
+   *
+   * When omitted, the button keeps its default look and is not clickable.
+   *
+   * @example
+   * ```ts
+   * theatre.init({
+   *   studio: true,
+   *   workspaceButton: {
+   *     team: 'Camera',
+   *     name: 'Playground',
+   *     icon: <MyIcon />, // any React node: SVG JSX, component, or emoji string
+   *     menu: [{label: 'Settings', onClick: () => {}}],
+   *   },
+   * })
+   * ```
+   */
+  workspaceButton?: IWorkspaceButtonConfig
+}
+
+/**
+ * Configuration for the studio global toolbar's workspace button
+ * (see {@link InitOpts.workspaceButton}).
+ */
+export interface IWorkspaceButtonConfig {
+  /**
+   * Grey prefix shown before the name (like "Team" in "Team / Workspace").
+   */
+  team?: string
+  /**
+   * Main label of the button.
+   */
+  name?: string
+  /**
+   * Icon rendered before the label. Any React node is accepted: an SVG in
+   * JSX, a component, or a plain string such as an emoji.
+   */
+  icon?: ReactNode
+  /**
+   * When provided, clicking the button opens a dropdown menu with these
+   * items. When omitted, the button is not clickable.
+   */
+  menu?: Array<{
+    label: string
+    onClick: () => void
+  }>
 }
 
 /**
@@ -1196,7 +1357,7 @@ export interface InitOpts {
  * @example
  * Basic usage:
  * ```ts
- * import theatre from '@theatre/core'
+ * import theatre from '@dreamerbird/core'
  *
  * theatre.init({studio: true})
  * ```
@@ -1204,7 +1365,7 @@ export interface InitOpts {
  * @example
  * Usage with **tree-shaking**:
  * ```ts
- * import theatre from '@theatre/core'
+ * import theatre from '@dreamerbird/core'
  *
  * if (process.env.NODE_ENV !== 'production') {
  *   theatre.init({studio: true})
@@ -1213,6 +1374,12 @@ export interface InitOpts {
  */
 export interface IStudio {
   readonly ui: IStudioUI
+
+  /**
+   * i18n:取词条、切语言、注入词典。宿主应用可注册自己的语言/覆盖
+   * studio 内置词条(见 IExtension.i18n 扩展点)。
+   */
+  readonly i18n: IStudioI18nAPI
 
   /**
    * Runs an undo-able transaction. Creates a single undo level for all
@@ -1258,6 +1425,15 @@ export interface IStudio {
    * ```
    */
   scrub(): IScrub
+
+  /**
+   * Undoes the last committed transaction or scrub, if any.
+   * 与 studio UI 的撤销菜单/快捷键同一历史栈。
+   */
+  undo(): void
+
+  /** Re-applies the last undone transaction or scrub, if any. */
+  redo(): void
 
   /**
    * Creates a debounced scrub, which is just like a normal scrub, but
@@ -1351,7 +1527,7 @@ export interface IStudio {
        * We're not sure about whether this behavior makes sense or not. If not, let us know
        * in the discord server or open an issue on github.
        */
-      __experimental_reconfigure?: boolean
+      reconfigure?: boolean
     },
   ): void
 
@@ -1397,43 +1573,46 @@ export interface IStudio {
    * })
    * ```
    */
-  createContentOfSaveFile(projectId: string): Record<string, unknown>
+  createContentOfSaveFile(projectId: string): OnDiskState
 
-  __experimental: {
-    /**
-     * Warning: This is an experimental API and will change in the future.
-     *
-     * Disables the play/pause keyboard shortcut (spacebar)
-     * Also see `__experimental_enablePlayPauseKeyboardShortcut()` to re-enable it.
-     */
-    __experimental_disablePlayPauseKeyboardShortcut(): void
-    /**
-     * Warning: This is an experimental API and will change in the future.
-     *
-     * Disables the play/pause keyboard shortcut (spacebar)
-     */
-    __experimental_enablePlayPauseKeyboardShortcut(): void
-    /**
-     * Clears persistent storage and ensures that the current state will not be
-     * saved on window unload. Further changes to state will continue writing to
-     * persistent storage, if enabled during initialization.
-     *
-     * @param persistenceKey - same persistencyKey as in `studio.initialize(opts)`, if any
-     */
-    __experimental_clearPersistentStorage(persistenceKey?: string): void
+  /**
+   * Disables the play/pause keyboard shortcut (spacebar)
+   * Also see `enablePlayPauseKeyboardShortcut()` to re-enable it.
+   */
+  disablePlayPauseKeyboardShortcut(): void
+  /**
+   * Re-enables the play/pause keyboard shortcut (spacebar) after it was
+   * disabled with `disablePlayPauseKeyboardShortcut()`.
+   */
+  enablePlayPauseKeyboardShortcut(): void
+  /**
+   * Clears persistent storage and ensures that the current state will not be
+   * saved on window unload. Further changes to state will continue writing to
+   * persistent storage, if enabled during initialization.
+   *
+   * @param persistenceKey - same persistencyKey as in `studio.initialize(opts)`, if any
+   */
+  clearPersistentStorage(persistenceKey?: string): void
+}
 
-    /**
-     * Warning: This is an experimental API and will change in the future.
-     *
-     * This is functionally the same as `studio.createContentOfSaveFile()`, but
-     * returns a typed object instead of a JSON object.
-     *
-     * See {@link __UNSTABLE_Project_OnDiskState} for more information.
-     */
-    __experimental_createContentOfSaveFileTyped(
-      projectId: string,
-    ): __UNSTABLE_Project_OnDiskState
-  }
+/**
+ * The studio bundle object that `@dreamerbird/studio` registers on the shared
+ * global. Core discovers it during `registerCoreBundle()` and hands over its
+ * `CoreBundle` so the studio can pull core's bits.
+ */
+export interface IStudioBundle {
+  readonly type: 'Theatre_StudioBundle'
+  registerCoreBundle(coreBundle: CoreBundle): void
+}
+
+/**
+ * The studio instance core stores once the studio attaches. Core only touches
+ * `initialize()` (to pass `init()` opts) and `publicApi` (to resolve
+ * `getStudio()`); the concrete studio implements this structurally.
+ */
+export interface IStudioInternal {
+  initialize(opts?: InitOpts): Promise<void>
+  readonly publicApi: IStudio
 }
 
 /**
@@ -1482,8 +1661,12 @@ export interface IScrub {
   reset(): void
   /**
    * Commits the scrub and creates a single undo level.
+   *
+   * @param undoable - Pass `false` to apply the changes without creating an
+   * undo level. Use this for view-state writes (e.g. persisting the editor
+   * camera position) that should be persisted and synced, but never undone.
    */
-  commit(): void
+  commit(undoable?: boolean): void
   /**
    * Captures operations for the scrub.
    *

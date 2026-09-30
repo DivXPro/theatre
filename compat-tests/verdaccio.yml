@@ -1,6 +1,8 @@
 store:
   memory:
     limit: 10000
+# r3f's extension bundle makes its tarball ~9MB; the default body limit rejects it
+max_body_size: 100mb
 auth:
   auth-memory:
     users:
@@ -12,10 +14,10 @@ uplinks:
     url: https://registry.npmjs.org/
     cache: false
 packages:
-  '@theatre/*':
+  '@dreamerbird/*':
     access: $all
     publish: $all
-  'theatric':
+  '@dreamerbird/theatric':
     access: $all
     publish: $all
   '@*/*':

@@ -1,7 +1,7 @@
-import type Project from '@theatre/core/projects/Project'
+import type Project from '@dreamerbird/core/projects/Project'
 
-import {usePrism} from '@theatre/react'
-import {val} from '@theatre/dataverse'
+import {usePrism} from '@dreamerbird/react'
+import {val} from '@dreamerbird/dataverse'
 import React from 'react'
 import styled from 'styled-components'
 import {SheetInstanceItem} from './SheetInstanceItem'
@@ -10,8 +10,8 @@ const Head = styled.div`
   display: flex;
 `
 
-const Container = styled.li<{isSelected: boolean}>`
-  color: ${(props) => (props.isSelected ? 'white' : 'hsl(1, 1%, 80%)')};
+const Container = styled.li<{$isSelected: boolean}>`
+  color: ${(props) => (props.$isSelected ? 'white' : 'hsl(1, 1%, 80%)')};
 `
 
 const Body = styled.div``

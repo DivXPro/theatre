@@ -1,4 +1,4 @@
-import {Atom, prism} from '@theatre/dataverse'
+import {Atom, prism} from '@dreamerbird/dataverse'
 import type {KeyboardEvent} from 'react'
 import React, {
   useEffect,
@@ -9,8 +9,8 @@ import React, {
 } from 'react'
 import styled from 'styled-components'
 import fuzzy from 'fuzzy'
-import getStudio from '@theatre/studio/getStudio'
-import type {CommitOrDiscardOrRecapture} from '@theatre/studio/StudioStore/StudioStore'
+import getStudio from '@dreamerbird/studio/getStudio'
+import type {CommitOrDiscardOrRecapture} from '@dreamerbird/studio/StudioStore/StudioStore'
 import CurveSegmentEditor from './CurveSegmentEditor'
 import EasingOption from './EasingOption'
 import type {CSSCubicBezierArgsString, CubicBezierHandles} from './shared'
@@ -21,10 +21,10 @@ import {
   areEasingsSimilar,
 } from './shared'
 import {COLOR_BASE, COLOR_POPOVER_BACK} from './colors'
-import useRefAndState from '@theatre/studio/utils/useRefAndState'
+import useRefAndState from '@dreamerbird/studio/utils/useRefAndState'
 import {useUIOptionGrid, Outcome} from './useUIOptionGrid'
-import type {KeyframeConnectionWithAddress} from '@theatre/studio/panels/SequenceEditorPanel/DopeSheet/selections'
-import type {BasicKeyframe} from '@theatre/core/types/public'
+import type {KeyframeConnectionWithAddress} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/selections'
+import type {BasicKeyframe} from '@dreamerbird/core/types/public'
 
 const PRESET_COLUMNS = 3
 const PRESET_SIZE = 53
@@ -96,7 +96,7 @@ const CurveEditorContainer = styled.div`
 const NoResultsFoundContainer = styled.div`
   grid-column: 1 / 4;
   padding: 6px;
-  color: #888888;
+  color: var(--theatre-text-muted);
 `
 /**
  * Tracking for what kinds of events are allowed to change the input's value.
@@ -340,7 +340,7 @@ const CurveEditorPopover: React.FC<ICurveEditorPopoverProps> = (props) => {
         ref={optionsRef.current[preset.label]}
         onMouseOver={() => onEasingOptionMouseOver(preset)}
         onMouseOut={onEasingOptionMouseOut}
-        onClick={select}
+        onClick={(e) => select(e.nativeEvent)}
         tooltipPlacement={
           (optionsRef.current[preset.label].current?.offsetTop ?? 0) -
             (optionsScrollPosition ?? 0) <

@@ -1,12 +1,12 @@
-import type {SequenceEditorTree_Sheet} from '@theatre/studio/panels/SequenceEditorPanel/layout/tree'
-import {usePrism} from '@theatre/react'
+import type {SequenceEditorTree_Sheet} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/tree'
+import {usePrism} from '@dreamerbird/react'
 import React from 'react'
 import LeftSheetObjectRow from './SheetObjectRow'
 import AnyCompositeRow from './AnyCompositeRow'
-import {setCollapsedSheetItem} from '@theatre/studio/panels/SequenceEditorPanel/DopeSheet/setCollapsedSheetObjectOrCompoundProp'
-import uniqueKeyForAnyObject from '@theatre/utils/uniqueKeyForAnyObject'
+import {setCollapsedSheetItem} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/setCollapsedSheetObjectOrCompoundProp'
+import uniqueKeyForAnyObject from '@dreamerbird/utils/uniqueKeyForAnyObject'
 
-const SheetRow: React.VFC<{
+const SheetRow: React.FC<{
   leaf: SequenceEditorTree_Sheet
 }> = ({leaf}) => {
   return usePrism(() => {

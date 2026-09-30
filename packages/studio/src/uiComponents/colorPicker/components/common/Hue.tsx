@@ -4,9 +4,9 @@ import type {Interaction} from './Interactive'
 import {Interactive} from './Interactive'
 import {Pointer} from './Pointer'
 
-import {hsvaToHslString} from '@theatre/studio/uiComponents/colorPicker/utils/convert'
-import {clamp} from '@theatre/studio/uiComponents/colorPicker/utils/clamp'
-import {round} from '@theatre/studio/uiComponents/colorPicker/utils/round'
+import {hsvaToHslString} from '@dreamerbird/studio/uiComponents/colorPicker/utils/convert'
+import {clamp} from '@dreamerbird/studio/uiComponents/colorPicker/utils/clamp'
+import {round} from '@dreamerbird/studio/uiComponents/colorPicker/utils/round'
 import styled from 'styled-components'
 
 const Container = styled.div`

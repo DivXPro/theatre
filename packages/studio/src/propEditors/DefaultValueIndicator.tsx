@@ -1,12 +1,12 @@
 import {transparentize} from 'polished'
 import React from 'react'
 import styled from 'styled-components'
-import getStudio from '@theatre/studio/getStudio'
-import type {PathToProp} from '@theatre/utils/pathToProp'
-import type SheetObject from '@theatre/core/sheetObjects/SheetObject'
-import type {PropTypeConfig} from '@theatre/core/types/public'
+import getStudio from '@dreamerbird/studio/getStudio'
+import type {PathToProp} from '@dreamerbird/utils/pathToProp'
+import type SheetObject from '@dreamerbird/core/sheetObjects/SheetObject'
+import type {PropTypeConfig} from '@dreamerbird/core/types/public'
 import {nextPrevCursorsTheme} from './NextPrevKeyframeCursors'
-import {__private} from '@theatre/core'
+import {__private} from '@dreamerbird/core'
 const {isPropConfigComposite, iteratePropType} = __private.propTypeUtils
 
 const theme = {
@@ -21,7 +21,7 @@ const theme = {
 }
 
 const Container = styled.div<{
-  hasStaticOverride: boolean
+  $hasStaticOverride: boolean
 }>`
   width: 16px;
   margin: 0 0px 0 2px;
@@ -31,13 +31,13 @@ const Container = styled.div<{
   cursor: pointer;
 
   color: ${(props) =>
-    props.hasStaticOverride
+    props.$hasStaticOverride
       ? theme.withStaticOverride.color
       : theme.defaultState.color};
 
   &:hover {
     color: ${(props) =>
-      props.hasStaticOverride
+      props.$hasStaticOverride
         ? theme.withStaticOverride.hoverColor
         : theme.defaultState.hoverColor};
   }
@@ -81,7 +81,7 @@ const DefaultOrStaticValueIndicator: React.FC<{
   }
   return (
     <Container
-      hasStaticOverride={hasStaticOverride}
+      $hasStaticOverride={hasStaticOverride}
       onClick={sequenceCb}
       title="Sequence this prop"
     >

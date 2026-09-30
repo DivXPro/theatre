@@ -1,8 +1,16 @@
+import {fileURLToPath} from 'node:url'
 import sade from 'sade'
 import {path, $} from '@cspotcode/zx'
 import * as esbuild from 'esbuild'
 import {definedGlobals} from './definedGlobals'
-const packageRoot = path.join(__dirname, '..')
+// Under node >= 24 this file loads as ESM (where `__dirname` is absent); under
+// older node it loads as CJS. Support both.
+const packageRoot = path.join(
+  typeof __dirname !== 'undefined'
+    ? __dirname
+    : path.dirname(fileURLToPath(import.meta.url)),
+  '..',
+)
 
 const prog = sade('cli')
 
@@ -44,7 +52,7 @@ async function bundle(watch: boolean) {
       __IS_VISUAL_REGRESSION_TESTING: 'false',
       'process.env.NODE_ENV': '"production"',
     },
-    external: ['@theatre/dataverse'],
+    external: ['@dreamerbird/dataverse'],
     minifyIdentifiers: false,
     minifySyntax: true,
     minifyWhitespace: false,

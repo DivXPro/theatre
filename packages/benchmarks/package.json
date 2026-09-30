@@ -13,11 +13,11 @@
     "build": "tsc --build ./tsconfig.json"
   },
   "devDependencies": {
-    "@theatre/core": "workspace:*",
+    "@dreamerbird/core": "workspace:*",
+    "@dreamerbird/r3f": "workspace:*",
+    "@dreamerbird/studio": "workspace:*",
     "@theatre/core-0.5.0": "npm:@theatre/core@0.5.0",
     "@theatre/dataverse-0.5.0": "npm:@theatre/dataverse@0.5.0",
-    "@theatre/r3f": "workspace:*",
-    "@theatre/studio": "workspace:*",
     "@theatre/studio-0.5.0": "npm:@theatre/studio@0.5.0",
     "@types/jest": "^29.2.3",
     "@types/lodash-es": "^4.17.6",
@@ -25,6 +25,7 @@
     "@types/react": "^18.0.25",
     "esbuild": "^0.15.15",
     "tsx": "4.7.0",
-    "typescript": "5.1.6"
-  }
+    "typescript": "5.6.3"
+  },
+  "private": true
 }

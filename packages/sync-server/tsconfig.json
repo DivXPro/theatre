@@ -8,10 +8,10 @@
     "baseUrl": ".",
     "composite": true,
     "paths": {
-      "@theatre/utils/*": ["../utils/src/*"],
-      "@theatre/app/*": ["../app/src/*"],
-      "@theatre/core/*": ["../core/src/*"],
-      "@theatre/core": ["../core/src/index.ts"]
+      "@dreamerbird/utils/*": ["../utils/src/*"],
+      "@dreamerbird/app/*": ["../app/src/*"],
+      "@dreamerbird/core/*": ["../core/src/*"],
+      "@dreamerbird/core": ["../core/src/index.ts"]
     }
   },
   "references": [

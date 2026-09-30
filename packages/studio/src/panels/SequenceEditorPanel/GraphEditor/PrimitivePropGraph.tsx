@@ -1,14 +1,14 @@
-import type SheetObject from '@theatre/core/sheetObjects/SheetObject'
-import getStudio from '@theatre/studio/getStudio'
-import type {PathToProp} from '@theatre/utils/pathToProp'
-import type {SequenceTrackId} from '@theatre/core/types/public'
-import {usePrism} from '@theatre/react'
-import type {Pointer} from '@theatre/dataverse'
-import {val} from '@theatre/dataverse'
+import type SheetObject from '@dreamerbird/core/sheetObjects/SheetObject'
+import getStudio from '@dreamerbird/studio/getStudio'
+import type {PathToProp} from '@dreamerbird/utils/pathToProp'
+import type {SequenceTrackId} from '@dreamerbird/core/types/public'
+import {usePrism} from '@dreamerbird/react'
+import type {Pointer} from '@dreamerbird/dataverse'
+import {val} from '@dreamerbird/dataverse'
 import React from 'react'
-import type {SequenceEditorPanelLayout} from '@theatre/studio/panels/SequenceEditorPanel/layout/layout'
+import type {SequenceEditorPanelLayout} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/layout'
 import BasicKeyframedTrack from './BasicKeyframedTrack/BasicKeyframedTrack'
-import type {GraphEditorColors} from '@theatre/core/types/private'
+import type {GraphEditorColors} from '@dreamerbird/core/types/private'
 
 const PrimitivePropGraph: React.FC<{
   layoutP: Pointer<SequenceEditorPanelLayout>

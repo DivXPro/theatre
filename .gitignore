@@ -1,7 +1,10 @@
 **/node_modules
 **/xeno
+/dist/
 /packages/*/dist
 /examples/*/dist
+# api-extractor scratch (drift-comparison copy); the tracked report lives in etc/
+/packages/*/temp
 *.log
 *.temp
 /.vscode
@@ -25,3 +28,9 @@
 /compat-tests/*/.yarn
 /compat-tests/*/build
 /TODO.md
+
+# graft's local graph cache — regenerable, not committed (run `graft build`).
+graft/
+
+# Playwright MCP scratch output (screenshots, snapshots, logs)
+.playwright-mcp/

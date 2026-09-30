@@ -1,5 +1,5 @@
-import type {Prism} from '@theatre/dataverse'
-import {defer} from '@theatre/utils/defer'
+import type {Prism} from '@dreamerbird/dataverse'
+import {defer} from '@dreamerbird/utils/defer'
 
 /**
  * Returns a promise that resolved when the given prism's value satisfies the given condition.

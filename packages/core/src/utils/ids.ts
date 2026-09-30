@@ -1,4 +1,4 @@
-import type {KeyframeId, SequenceTrackId} from '@theatre/core/types/public'
+import type {KeyframeId, SequenceTrackId} from '@dreamerbird/core/types/public'
 
 export function asKeyframeId(s: string): KeyframeId {
   return s as KeyframeId

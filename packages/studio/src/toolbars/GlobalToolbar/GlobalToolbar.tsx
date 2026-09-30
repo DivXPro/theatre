@@ -1,17 +1,17 @@
-import {useVal} from '@theatre/react'
-import getStudio from '@theatre/studio/getStudio'
+import {useVal} from '@dreamerbird/react'
+import getStudio from '@dreamerbird/studio/getStudio'
 import React from 'react'
 import styled from 'styled-components'
-import ExtensionToolbar from '@theatre/studio/toolbars/ExtensionToolbar/ExtensionToolbar'
+import ExtensionToolbar from '@dreamerbird/studio/toolbars/ExtensionToolbar/ExtensionToolbar'
+import ConnectionStatusBadge from '@dreamerbird/studio/uiComponents/ConnectionStatusBadge'
 import {
   useNotifications,
   useEmptyNotificationsTooltip,
-} from '@theatre/studio/notify'
+} from '@dreamerbird/studio/notify'
 import {
-  uesConflicts,
+  useConflicts,
   useOutlineTriggerTooltip,
   useMoreMenu,
-  useShouldShowUpdatesBadge,
 } from './globalToolbarHooks'
 import LeftStrip from './LeftStrip/LeftStrip'
 import RightStrip from './RightStrip/RightStrip'
@@ -28,7 +28,7 @@ const Container = styled.div`
 `
 
 const NumberOfConflictsIndicator = styled.div`
-  color: white;
+  color: var(--theatre-text-primary);
   width: 14px;
   height: 14px;
   background: #d00;
@@ -49,9 +49,10 @@ const SubContainer = styled.div`
   gap: 8px;
 `
 
-const HasUpdatesBadge = styled.div<{type: 'info' | 'warning'}>`
+const HasUpdatesBadge = styled.div<{$type: 'info' | 'warning'}>`
   position: absolute;
-  background: ${({type}) => (type === 'info' ? '#40aaa4' : '#f59e0b')};
+  background: ${({$type}) =>
+    $type === 'info' ? 'var(--theatre-accent)' : '#f59e0b'};
   width: 6px;
   height: 6px;
   border-radius: 50%;
@@ -60,16 +61,16 @@ const HasUpdatesBadge = styled.div<{type: 'info' | 'warning'}>`
 `
 
 const GlobalToolbar: React.FC = () => {
-  const conflicts = uesConflicts()
+  const conflicts = useConflicts()
   const [outlineTriggerTooltip, outlineTriggerRef] =
     useOutlineTriggerTooltip(conflicts)
 
   const outlinePinned = useVal(getStudio().atomP.ahistoric.pinOutline) ?? true
   const detailsPinned = useVal(getStudio().atomP.ahistoric.pinDetails) ?? true
+  const connectionStatus =
+    useVal(getStudio().ephemeralAtom.pointer.connectionStatus) ?? 'connected'
 
   const {moreMenu, moreMenuTriggerRef} = useMoreMenu()
-
-  const showUpdatesBadge = useShouldShowUpdatesBadge()
 
   const {hasNotifications} = useNotifications()
 
@@ -103,6 +104,7 @@ const GlobalToolbar: React.FC = () => {
             {conflicts.length}
           </NumberOfConflictsIndicator>
         ) : null}
+        <ConnectionStatusBadge status={connectionStatus} />
         <ExtensionToolbar showLeftDivider toolbarId="global" />
       </SubContainer>
       <SubContainer>
@@ -124,7 +126,7 @@ const GlobalToolbar: React.FC = () => {
           unpinHintIcon={<Bell />}
           pinned={useVal(getStudio().atomP.ahistoric.pinNotifications) ?? false}
         >
-          {hasNotifications && <HasUpdatesBadge type="warning" />}
+          {hasNotifications && <HasUpdatesBadge $type="warning" />}
         </PinButton> */}
         {/* {moreMenu.node}
         <ToolbarIconButton
@@ -134,7 +136,7 @@ const GlobalToolbar: React.FC = () => {
           }}
         >
           <Ellipsis />
-          {showUpdatesBadge && <HasUpdatesBadge type="info" />}
+          {showUpdatesBadge && <HasUpdatesBadge $type="info" />}
         </ToolbarIconButton> */}
         {/* <PinButton
           ref={outlineTriggerRef as $IntentionalAny}

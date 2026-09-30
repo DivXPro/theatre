@@ -1,42 +1,42 @@
-import type {Pointer} from '@theatre/dataverse'
-import {prism, val} from '@theatre/dataverse'
-import {usePrism, useVal} from '@theatre/react'
-import type {$IntentionalAny, IRange} from '@theatre/core/types/public'
-import getStudio from '@theatre/studio/getStudio'
-import type {SequenceEditorPanelLayout} from '@theatre/studio/panels/SequenceEditorPanel/layout/layout'
+import type {Pointer} from '@dreamerbird/dataverse'
+import {prism, val} from '@dreamerbird/dataverse'
+import {usePrism, useVal} from '@dreamerbird/react'
+import type {$IntentionalAny, IRange} from '@dreamerbird/core/types/public'
+import getStudio from '@dreamerbird/studio/getStudio'
+import type {SequenceEditorPanelLayout} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/layout'
 import {
   topStripHeight,
   topStripTheme,
-} from '@theatre/studio/panels/SequenceEditorPanel/RightOverlay/TopStrip'
-import type {CommitOrDiscardOrRecapture} from '@theatre/studio/StudioStore/StudioStore'
+} from '@dreamerbird/studio/panels/SequenceEditorPanel/RightOverlay/TopStrip'
+import type {CommitOrDiscardOrRecapture} from '@dreamerbird/studio/StudioStore/StudioStore'
 import {
   lockedCursorCssVarName,
   useCssCursorLock,
-} from '@theatre/studio/uiComponents/PointerEventsHandler'
-import useDrag from '@theatre/studio/uiComponents/useDrag'
-import useRefAndState from '@theatre/studio/utils/useRefAndState'
+} from '@dreamerbird/studio/uiComponents/PointerEventsHandler'
+import useDrag from '@dreamerbird/studio/uiComponents/useDrag'
+import useRefAndState from '@dreamerbird/studio/utils/useRefAndState'
 import React, {useMemo} from 'react'
 import styled from 'styled-components'
 import {
   includeLockFrameStampAttrs,
   useLockFrameStampPosition,
-} from '@theatre/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
+} from '@dreamerbird/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
 import {focusRangeStripTheme, RangeStrip} from './FocusRangeStrip'
-import DopeSnap from '@theatre/studio/panels/SequenceEditorPanel/RightOverlay/DopeSnap'
+import DopeSnap from '@dreamerbird/studio/panels/SequenceEditorPanel/RightOverlay/DopeSnap'
 
-const TheDiv = styled.div<{enabled: boolean; type: ThumbType}>`
+const TheDiv = styled.div<{$enabled: boolean; $type: ThumbType}>`
   position: absolute;
   top: 0;
   // the right handle has to be pulled back by its width since its right side indicates its position, not its left side
   left: ${(props) =>
-    props.type === ThumbType.start ? 0 : -focusRangeStripTheme.thumbWidth}px;
+    props.$type === ThumbType.start ? 0 : -focusRangeStripTheme.thumbWidth}px;
   transform-origin: left top;
   width: ${focusRangeStripTheme.thumbWidth}px;
   height: ${() => topStripHeight - 1}px;
   z-index: 3;
 
-  --bg: ${({enabled}) =>
-    enabled
+  --bg: ${({$enabled}) =>
+    $enabled
       ? focusRangeStripTheme.enabled.backgroundColor
       : focusRangeStripTheme.disabled.backgroundColor};
 
@@ -44,7 +44,7 @@ const TheDiv = styled.div<{enabled: boolean; type: ThumbType}>`
   user-select: none;
 
   cursor: ${(props) =>
-    props.type === ThumbType.start ? 'w-resize' : 'e-resize'};
+    props.$type === ThumbType.start ? 'w-resize' : 'e-resize'};
 
   // no pointer events unless pointer-root is in normal mode _and_ the
   // focus range is enabled
@@ -82,7 +82,7 @@ const TheDiv = styled.div<{enabled: boolean; type: ThumbType}>`
 
   #pointer-root.draggingPositionInSequenceEditor &:hover {
     --bg: ${focusRangeStripTheme.dragging.backgroundColor};
-    stroke: #40aaa4;
+    stroke: var(--theatre-accent);
   }
 
   background-color: var(--bg);
@@ -100,21 +100,21 @@ const TheDiv = styled.div<{enabled: boolean; type: ThumbType}>`
  * This acts as a bit of a horizontal shadow that covers the frame numbers that show up
  * right next to the thumb, making the appearance of the focus range more tidy.
  */
-const ColoredMargin = styled.div<{type: ThumbType; enabled: boolean}>`
+const ColoredMargin = styled.div<{$type: ThumbType; $enabled: boolean}>`
   position: absolute;
   top: 0;
   bottom: 0;
   pointer-events: none;
 
   background: linear-gradient(
-    ${(props) => (props.type === ThumbType.start ? 90 : -90)}deg,
+    ${(props) => (props.$type === ThumbType.start ? 90 : -90)}deg,
     var(--bg) 0%,
     #ffffff00 100%
   );
 
   width: 12px;
   left: ${(props) =>
-    props.type === ThumbType.start
+    props.$type === ThumbType.start
       ? focusRangeStripTheme.thumbWidth
       : // pushing the right-side thumb's margin 1px to the right to make sure there is no space
         // between it and the thumb
@@ -122,7 +122,7 @@ const ColoredMargin = styled.div<{type: ThumbType; enabled: boolean}>`
 `
 
 const OuterColoredMargin = styled.div<{
-  type: ThumbType
+  $type: ThumbType
 }>`
   position: absolute;
   top: 0;
@@ -130,14 +130,14 @@ const OuterColoredMargin = styled.div<{
   pointer-events: none;
 
   background: linear-gradient(
-    ${(props) => (props.type === ThumbType.start ? -90 : 90)}deg,
+    ${(props) => (props.$type === ThumbType.start ? -90 : 90)}deg,
     ${() => topStripTheme.backgroundColor} 0%,
     #ffffff00 100%
   );
 
   width: 12px;
   left: ${(props) =>
-    props.type === ThumbType.start ? -12 : focusRangeStripTheme.thumbWidth}px;
+    props.$type === ThumbType.start ? -12 : focusRangeStripTheme.thumbWidth}px;
 `
 
 enum ThumbType {
@@ -284,14 +284,14 @@ const FocusRangeThumb: React.FC<{
         {...DopeSnap.includePositionSnapAttrs(position)}
         {...includeLockFrameStampAttrs(position)}
         className={`${isDragging && 'dragging'} ${enabled && 'enabled'}`}
-        enabled={enabled}
-        type={thumbType}
+        $enabled={enabled}
+        $type={thumbType}
         style={{
           transform: `translate3d(${posInClippedSpace}px, 0, 0)`,
         }}
       >
-        <ColoredMargin type={thumbType} enabled={enabled} />
-        <OuterColoredMargin type={thumbType} />
+        <ColoredMargin $type={thumbType} $enabled={enabled} />
+        <OuterColoredMargin $type={thumbType} />
         <svg viewBox="0 0 9 18" xmlns="http://www.w3.org/2000/svg">
           <line x1="4" y1="6" x2="4" y2="12" />
           <line x1="6" y1="6" x2="6" y2="12" />

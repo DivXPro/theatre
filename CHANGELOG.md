@@ -1,5 +1,21 @@
 # Theatre.js changelog
 
+## 1.0.0
+
+Theatre.js 1.0 将 npm scope 从 `@theatre/*` 迁至 `@dreamerbird/*`,定稿 `init()` 流程,并引入实验性的自托管协作。完整迁移步骤见 [MIGRATION.md](MIGRATION.md)。
+
+* Breaking
+  * npm scope 改名:`@theatre/*` → `@dreamerbird/*`。所有 install / import 都需更新,见 MIGRATION.md「scope 改名」。
+  * `init()` 流程定稿:调用 `getStudio()` 前必须先调用 `theatre.init()`。此前顺序相反的代码现在会抛错,见 MIGRATION.md「init() 流程」。
+  * `@dreamerbird/r3f` 升级到 `@react-three/fiber` 9:需要 react 19 + `@react-three/fiber@^9` + `@react-three/drei@^10`,仍在 react 18 的项目请留在旧版 r3f。fiber 9 移除了 `<line>` 元素,`<e.line>` 随之移除,见 MIGRATION.md「被删 / 改的 API」。
+* 协作(实验性)
+  * 自托管 sync-server minimal loop:`AUTH_DISABLED=true` 下无需 app / postgres 即可运行。
+  * studio 支持直连 ws serverUrl(`ws://` / `wss://`),无需经 app 中转。
+  * 断线时全局工具栏显示「Reconnecting…」徽标。
+* 内部
+  * 同步引擎改为 saaz 桥;StudioStore 后端按配置可选。
+  * `@dreamerbird/studio` 内置 UI 升级到 react 19 + styled-components 6(均打包进 dist;消费端项目用 react 16/17/18/19 均可,无感知)。
+
 ## 0.4.5
 
 * New features

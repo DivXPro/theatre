@@ -2,7 +2,7 @@ import React from 'react'
 import styled from 'styled-components'
 import type KeyframeEditor from './KeyframeEditor'
 import {transformBox} from './Curve'
-import {__private} from '@theatre/core'
+import {__private} from '@dreamerbird/core'
 
 const {keyframeUtils} = __private
 
@@ -19,7 +19,7 @@ const SVGPath = styled.path`
 
 type IProps = Parameters<typeof KeyframeEditor>[0]
 
-const GraphEditorNonScalarDash: React.VFC<IProps> = (props) => {
+const GraphEditorNonScalarDash: React.FC<IProps> = (props) => {
   const {index, trackData} = props
 
   const pathD = `M 0 0 L 1 1`

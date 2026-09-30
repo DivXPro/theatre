@@ -1,4 +1,4 @@
-import type {IDBPTransaction} from 'idb'
+import type {IDBPTransaction, IDBPDatabase} from 'idb'
 import {openDB} from 'idb'
 import type {
   FrontStorageAdapterTransaction,
@@ -20,15 +20,14 @@ type ListItem<V> = {
 }
 
 export class FrontIDBAdapter implements FrontStorageAdapter {
-  constructor(
-    private _idbName: string,
-    private _currentSessionName: string,
-  ) {}
+  constructor(private _idbName: string | Promise<string>) {}
 
   private _dbPromise = this._initializeDB()
+  private _db: IDBPDatabase | null = null
 
   async _initializeDB() {
-    return openDB(this._idbName, 1, {
+    const name = await this._idbName
+    return openDB(name, 1, {
       upgrade(db) {
         const singularValueStore = db.createObjectStore('singularValues', {
           keyPath: 'sessionAndKey',
@@ -43,7 +42,21 @@ export class FrontIDBAdapter implements FrontStorageAdapter {
         listsStore.createIndex('session', 'session')
         listsStore.createIndex('sessionAndKey', 'sessionAndKey')
       },
+    }).then((db) => {
+      this._db = db
+      return db
     })
+  }
+
+  /**
+   * Releases the database connection. Idempotent; a close() that lands before
+   * the connection has opened awaits the open first, so it still releases it.
+   * Reads/writes after close() reject (the connection is closed).
+   */
+  async close(): Promise<void> {
+    const db = this._db ?? (await this._dbPromise.catch(() => null))
+    this._db = null
+    db?.close()
   }
 
   get ready() {
@@ -181,7 +194,11 @@ class IDBTransaction implements FrontStorageAdapterTransaction {
       const item = await store.get(sessionAndKeyAndId)
       if (item) {
         results.push(item.value as T)
-        await store.delete(item)
+        // The `lists` object store's keyPath is `sessionAndKeyAndId`, so the
+        // record must be deleted by that key. Deleting by the whole record
+        // works in fake-indexeddb (which silently ignores an invalid key) but
+        // throws a `DataError` in a real browser's IndexedDB.
+        await store.delete(item.sessionAndKeyAndId)
       } else {
         results.push(undefined)
       }

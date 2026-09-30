@@ -2,10 +2,10 @@ import React from 'react'
 import type {Interaction} from './Interactive'
 import {Interactive} from './Interactive'
 import {Pointer} from './Pointer'
-import type {HsvaColor} from '@theatre/studio/uiComponents/colorPicker/types'
-import {hsvaToHslString} from '@theatre/studio/uiComponents/colorPicker/utils/convert'
-import {clamp} from '@theatre/studio/uiComponents/colorPicker/utils/clamp'
-import {round} from '@theatre/studio/uiComponents/colorPicker/utils/round'
+import type {HsvaColor} from '@dreamerbird/studio/uiComponents/colorPicker/types'
+import {hsvaToHslString} from '@dreamerbird/studio/uiComponents/colorPicker/utils/convert'
+import {clamp} from '@dreamerbird/studio/uiComponents/colorPicker/utils/clamp'
+import {round} from '@dreamerbird/studio/uiComponents/colorPicker/utils/round'
 import styled from 'styled-components'
 
 const Container = styled.div`
@@ -15,7 +15,11 @@ const Container = styled.div`
   border-bottom: 12px solid #000;
   border-radius: 2px;
   background-image: linear-gradient(to top, #000, rgba(0, 0, 0, 0)),
-    linear-gradient(to right, #fff, rgba(255, 255, 255, 0));
+    linear-gradient(
+      to right,
+      var(--theatre-text-primary),
+      rgba(255, 255, 255, 0)
+    );
 
   // Improve elements rendering on light backgrounds
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05);

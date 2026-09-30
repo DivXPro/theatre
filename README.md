@@ -14,7 +14,12 @@
  
 </p>
 
-> ✨ Update: Theatre.js 1.0 is around the corner. We have _temporarily_ moved development to a private repo so we can iterate faster. We'll push our work back to this public repo soon. Terms and license will remain OSS, as before. (Also, [we're hiring – join the core team!](https://www.theatrejs.com/join)).
+> **1.0**:本 fork 的 npm scope 为 `@dreamerbird/*`。从 0.7 升级见 [MIGRATION.md](MIGRATION.md)。
+
+> **This is a community fork** of [theatre-js/theatre](https://github.com/theatre-js/theatre),
+> which paused public development at 0.7.x. This fork continues toward a 1.0 release
+> published under the `@dreamerbird` npm scope. Apache-2.0 license and original
+> attribution are preserved. See `docs/superpowers/specs/2026-08-21-theatre-1.0-release-design.md`.
 
 Theatre.js is an animation library for high-fidelity motion graphics. It is
 designed to help you express detailed animation, enabling you to create
@@ -101,9 +106,9 @@ here :)
 
 Your use of Theatre.js is governed under the Apache License Version 2.0:
 
-- Theatre's core (`@theatre/core`) is released under the Apache License. Same
+- Theatre's core (`@dreamerbird/core`) is released under the Apache License. Same
   goes for most packages in this repository.
-- The studio (`@theatre/studio`) is released under the AGPL 3.0 License. This is
+- The studio (`@dreamerbird/studio`) is released under the AGPL 3.0 License. This is
   the package that you use to edit your animations, setup your scenes, etc. You
   only use the studio during design/development. Your project's final bundle
-  only includes `@theatre/core`, so only the Apache License applies.
+  only includes `@dreamerbird/core`, so only the Apache License applies.

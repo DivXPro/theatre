@@ -1,17 +1,17 @@
-import getStudio from '@theatre/studio/getStudio'
-import {decodePathToProp} from '@theatre/utils/pathToProp'
-import getDeep from '@theatre/utils/getDeep'
-import type {SequenceTrackId} from '@theatre/core/types/public'
-import {usePrism} from '@theatre/react'
-import type {Pointer} from '@theatre/dataverse'
-import {val} from '@theatre/dataverse'
+import getStudio from '@dreamerbird/studio/getStudio'
+import {decodePathToProp} from '@dreamerbird/utils/pathToProp'
+import getDeep from '@dreamerbird/utils/getDeep'
+import type {SequenceTrackId} from '@dreamerbird/core/types/public'
+import {usePrism} from '@dreamerbird/react'
+import type {Pointer} from '@dreamerbird/dataverse'
+import {val} from '@dreamerbird/dataverse'
 import React from 'react'
 import styled from 'styled-components'
-import type {SequenceEditorPanelLayout} from '@theatre/studio/panels/SequenceEditorPanel/layout/layout'
-import {contentWidth} from '@theatre/studio/panels/SequenceEditorPanel/DopeSheet/Right/Right'
-import HorizontallyScrollableArea from '@theatre/studio/panels/SequenceEditorPanel/DopeSheet/Right/HorizontallyScrollableArea'
+import type {SequenceEditorPanelLayout} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/layout'
+import {contentWidth} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/Right/Right'
+import HorizontallyScrollableArea from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/Right/HorizontallyScrollableArea'
 import PrimitivePropGraph from './PrimitivePropGraph'
-import FrameGrid from '@theatre/studio/panels/SequenceEditorPanel/FrameGrid/FrameGrid'
+import FrameGrid from '@dreamerbird/studio/panels/SequenceEditorPanel/FrameGrid/FrameGrid'
 import {transparentize} from 'polished'
 
 const Container = styled.div`
@@ -87,7 +87,6 @@ const GraphEditor: React.FC<{
         style={{
           width: width + 'px',
           height: height + 'px',
-          // @ts-expect-error
           '--unitSpaceToScaledSpaceMultiplier':
             unitSpaceToScaledSpaceMultiplier,
           '--graphEditorVerticalSpace': `${val(

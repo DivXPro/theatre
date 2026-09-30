@@ -1,3 +1,12 @@
 **/prisma/client-generated/**/*
 **/prisma/client-generated/*
 **/.next/**
+
+# Standalone CRA/Next fixture and example apps carry their own eslint
+# setups (e.g. eslintConfig "react-app", local .eslintrc.json) whose
+# plugins/configs are not installed at the monorepo root — root-level
+# linting of these dirs was never functional.
+compat-tests/fixtures/*/package/
+examples/dom-cra/
+examples/r3f-cra/
+packages/playground/src/public/draco/

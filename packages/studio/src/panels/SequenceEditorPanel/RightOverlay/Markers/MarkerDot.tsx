@@ -1,34 +1,34 @@
-import type {Pointer} from '@theatre/dataverse'
-import {val} from '@theatre/dataverse'
-import {useVal} from '@theatre/react'
-import getStudio from '@theatre/studio/getStudio'
+import type {Pointer} from '@dreamerbird/dataverse'
+import {val} from '@dreamerbird/dataverse'
+import {useVal} from '@dreamerbird/react'
+import getStudio from '@dreamerbird/studio/getStudio'
 import {
   lockedCursorCssVarName,
   useCssCursorLock,
-} from '@theatre/studio/uiComponents/PointerEventsHandler'
-import useContextMenu from '@theatre/studio/uiComponents/simpleContextMenu/useContextMenu'
-import useRefAndState from '@theatre/studio/utils/useRefAndState'
+} from '@dreamerbird/studio/uiComponents/PointerEventsHandler'
+import useContextMenu from '@dreamerbird/studio/uiComponents/simpleContextMenu/useContextMenu'
+import useRefAndState from '@dreamerbird/studio/utils/useRefAndState'
 import React, {useMemo, useRef} from 'react'
 import styled from 'styled-components'
-import {useLockFrameStampPosition} from '@theatre/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
-import type {SequenceEditorPanelLayout} from '@theatre/studio/panels/SequenceEditorPanel/layout/layout'
-import type {SheetAddress} from '@theatre/core/types/public'
-import useDrag from '@theatre/studio/uiComponents/useDrag'
-import type {DragOpts} from '@theatre/studio/uiComponents/useDrag'
-import type {CommitOrDiscardOrRecapture} from '@theatre/studio/StudioStore/StudioStore'
-import type {StudioHistoricStateSequenceEditorMarker} from '@theatre/core/types/private'
-import {zIndexes} from '@theatre/studio/panels/SequenceEditorPanel/SequenceEditorPanel'
-import DopeSnap from '@theatre/studio/panels/SequenceEditorPanel/RightOverlay/DopeSnap'
-import {absoluteDims} from '@theatre/studio/utils/absoluteDims'
-import {DopeSnapHitZoneUI} from '@theatre/studio/panels/SequenceEditorPanel/RightOverlay/DopeSnapHitZoneUI'
+import {useLockFrameStampPosition} from '@dreamerbird/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
+import type {SequenceEditorPanelLayout} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/layout'
+import type {SheetAddress} from '@dreamerbird/core/types/public'
+import useDrag from '@dreamerbird/studio/uiComponents/useDrag'
+import type {DragOpts} from '@dreamerbird/studio/uiComponents/useDrag'
+import type {CommitOrDiscardOrRecapture} from '@dreamerbird/studio/StudioStore/StudioStore'
+import type {StudioHistoricStateSequenceEditorMarker} from '@dreamerbird/core/types/private'
+import {zIndexes} from '@dreamerbird/studio/panels/SequenceEditorPanel/SequenceEditorPanel'
+import DopeSnap from '@dreamerbird/studio/panels/SequenceEditorPanel/RightOverlay/DopeSnap'
+import {absoluteDims} from '@dreamerbird/studio/utils/absoluteDims'
+import {DopeSnapHitZoneUI} from '@dreamerbird/studio/panels/SequenceEditorPanel/RightOverlay/DopeSnapHitZoneUI'
 import {
   snapToAll,
   snapToNone,
-} from '@theatre/studio/panels/SequenceEditorPanel/DopeSheet/Right/KeyframeSnapTarget'
-import usePopover from '@theatre/studio/uiComponents/Popover/usePopover'
-import BasicPopover from '@theatre/studio/uiComponents/Popover/BasicPopover'
+} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/Right/KeyframeSnapTarget'
+import usePopover from '@dreamerbird/studio/uiComponents/Popover/usePopover'
+import BasicPopover from '@dreamerbird/studio/uiComponents/Popover/BasicPopover'
 import MarkerEditorPopover from './MarkerEditorPopover'
-import type {SequenceMarkerId} from '@theatre/core/types/public'
+import type {SequenceMarkerId} from '@dreamerbird/core/types/public'
 
 const MARKER_SIZE_W_PX = 12
 const MARKER_SIZE_H_PX = 12
@@ -103,7 +103,7 @@ type IMarkerDotProps = {
   markerId: SequenceMarkerId
 }
 
-const MarkerDot: React.VFC<IMarkerDotProps> = ({layoutP, markerId}) => {
+const MarkerDot: React.FC<IMarkerDotProps> = ({layoutP, markerId}) => {
   const sheetAddress = useVal(layoutP.sheet.address)
   const marker = useVal(
     getStudio().atomP.historic.projects.stateByProjectId[sheetAddress.projectId]
@@ -149,7 +149,7 @@ type IMarkerDotVisibleProps = {
   marker: StudioHistoricStateSequenceEditorMarker
 }
 
-const MarkerDotVisible: React.VFC<IMarkerDotVisibleProps> = ({
+const MarkerDotVisible: React.FC<IMarkerDotVisibleProps> = ({
   layoutP,
   marker,
 }) => {

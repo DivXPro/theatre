@@ -1,4 +1,4 @@
-import {devStringify} from '@theatre/utils/devStringify'
+import {devStringify} from '@dreamerbird/utils/devStringify'
 
 type AllowedMessageTypes = string | number | object
 

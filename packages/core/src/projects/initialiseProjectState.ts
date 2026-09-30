@@ -1,10 +1,10 @@
-// import type {Studio} from '@theatre/studio/Studio'
-import delay from '@theatre/utils/delay'
+// import type {Studio} from '@dreamerbird/studio/Studio'
+import delay from '@dreamerbird/utils/delay'
 import type Project from './Project'
-import type {OnDiskState} from '@theatre/core/types/private/core'
-import {globals} from '@theatre/core/globals'
-import {val} from '@theatre/dataverse'
-import type {$____FixmeStudio} from '@theatre/core/types/public'
+import type {OnDiskState} from '@dreamerbird/core/types/private/core'
+import {globals} from '@dreamerbird/core/globals'
+import {val} from '@dreamerbird/dataverse'
+import type {$____FixmeStudio} from '@dreamerbird/core/types/public'
 
 type Studio = $____FixmeStudio
 

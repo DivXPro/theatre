@@ -1,5 +1,5 @@
-import type {PropTypeConfig_Number} from '@theatre/core/types/public'
-import BasicNumberInput from '@theatre/studio/uiComponents/form/BasicNumberInput'
+import type {PropTypeConfig_Number} from '@dreamerbird/core/types/public'
+import BasicNumberInput from '@dreamerbird/studio/uiComponents/form/BasicNumberInput'
 import React, {useCallback} from 'react'
 import type {ISimplePropEditorReactProps} from './ISimplePropEditorReactProps'
 

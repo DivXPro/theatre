@@ -1,9 +1,9 @@
-import type {Prism} from '@theatre/dataverse'
-import {Atom, prism, val} from '@theatre/dataverse'
+import type {Prism} from '@dreamerbird/dataverse'
+import {Atom, prism, val} from '@dreamerbird/dataverse'
 import {TRPCClientError} from '@trpc/client'
-import delay from '@theatre/utils/delay'
-import type {$FixMe, $IntentionalAny} from '@theatre/core/types/public'
-import {defer} from '@theatre/utils/defer'
+import delay from '@dreamerbird/utils/delay'
+import type {$FixMe, $IntentionalAny} from '@dreamerbird/core/types/public'
+import {defer} from '@dreamerbird/utils/defer'
 import {
   generateRandomCodeVerifier,
   calculatePKCECodeChallenge,
@@ -11,9 +11,9 @@ import {
 import type {Studio} from './Studio'
 import getStudio from './getStudio'
 import {decodeJwt} from 'jose'
-import type {studioAccessScopes, studioAuthTokens} from '@theatre/app/types'
-import type {AtomPersistor} from '@theatre/utils/persistAtom'
-import {persistAtom} from '@theatre/utils/persistAtom'
+import type {studioAccessScopes, studioAuthTokens} from '@dreamerbird/app/types'
+import type {AtomPersistor} from '@dreamerbird/utils/persistAtom'
+import {persistAtom} from '@dreamerbird/utils/persistAtom'
 
 type PersistentState =
   | {loggedIn: false}
@@ -407,6 +407,11 @@ namespace tokenProcedures {
     | {success: false; error: 'userDenied' | 'unknown'; msg?: string}
   > {
     const appLink = await getStudio()._rawLinks.app
+    if (!appLink) {
+      throw new Error(
+        'Auth procedures require a cloud backend, which only exists when a `serverUrl` is provided.',
+      )
+    }
 
     let outerTries = 0
     outer: while (outerTries < 2) {
@@ -508,6 +513,11 @@ namespace tokenProcedures {
     | {success: false; error: 'invalidIdToken' | 'unknown'; msg: string}
   > {
     const appLink = await getStudio()._rawLinks.app
+    if (!appLink) {
+      throw new Error(
+        'Auth procedures require a cloud backend, which only exists when a `serverUrl` is provided.',
+      )
+    }
     let tries = 0
     const MAX_TRIES = 8
     while (true) {
@@ -549,6 +559,11 @@ namespace tokenProcedures {
     | {success: false; error: 'invalidIdToken' | 'unknown'; msg: string}
   > {
     const appLink = await getStudio()._rawLinks.app
+    if (!appLink) {
+      throw new Error(
+        'Auth procedures require a cloud backend, which only exists when a `serverUrl` is provided.',
+      )
+    }
     const result = await appLink.api.studioAuth.destroyIdToken.mutate(
       {idToken: idToken},
       {signal: abortSignal},

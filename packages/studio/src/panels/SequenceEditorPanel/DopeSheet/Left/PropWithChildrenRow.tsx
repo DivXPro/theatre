@@ -1,11 +1,11 @@
 import type {
   SequenceEditorTree_PrimitiveProp,
   SequenceEditorTree_PropWithChildren,
-} from '@theatre/studio/panels/SequenceEditorPanel/layout/tree'
+} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/tree'
 import React from 'react'
 import AnyCompositeRow from './AnyCompositeRow'
 import PrimitivePropRow from './PrimitivePropRow'
-import {setCollapsedSheetItem} from '@theatre/studio/panels/SequenceEditorPanel/DopeSheet/setCollapsedSheetObjectOrCompoundProp'
+import {setCollapsedSheetItem} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/setCollapsedSheetObjectOrCompoundProp'
 
 export const decideRowByPropType = (
   leaf: SequenceEditorTree_PropWithChildren | SequenceEditorTree_PrimitiveProp,
@@ -22,7 +22,7 @@ export const decideRowByPropType = (
   )
 }
 
-const PropWithChildrenRow: React.VFC<{
+const PropWithChildrenRow: React.FC<{
   leaf: SequenceEditorTree_PropWithChildren
 }> = ({leaf}) => {
   return (

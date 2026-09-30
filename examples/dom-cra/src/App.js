@@ -1,8 +1,6 @@
-import studio from '@theatre/studio'
+import theatre from '@dreamerbird/core'
 import {useLayoutEffect, useMemo, useState} from 'react'
 import useDrag from './useDrag'
-
-studio.initialize()
 
 const boxObjectConfig = {
   x: 0,
@@ -32,13 +30,13 @@ const Box = ({id, sheet, selectedObject}) => {
     let firstOnDragCalled = false
     return {
       onDragStart() {
-        scrub = studio.scrub()
+        scrub = theatre.getStudioSync().scrub()
         initial = obj.value
         firstOnDragCalled = false
       },
       onDrag(x, y) {
         if (!firstOnDragCalled) {
-          studio.setSelection([obj])
+          theatre.getStudioSync().setSelection([obj])
           firstOnDragCalled = true
         }
         scrub.capture(({set}) => {
@@ -61,7 +59,7 @@ const Box = ({id, sheet, selectedObject}) => {
   return (
     <div
       onClick={() => {
-        studio.setSelection([obj])
+        theatre.getStudioSync().setSelection([obj])
       }}
       ref={setDivRef}
       style={{
@@ -88,7 +86,7 @@ const App = ({project}) => {
   const [selection, _setSelection] = useState([])
 
   useLayoutEffect(() => {
-    return studio.onSelectionChange((newSelection) => {
+    return theatre.getStudioSync().onSelectionChange((newSelection) => {
       _setSelection(newSelection)
     })
   })

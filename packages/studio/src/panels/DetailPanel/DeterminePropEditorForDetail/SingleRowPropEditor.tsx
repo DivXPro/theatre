@@ -1,21 +1,22 @@
-import type * as propTypes from '@theatre/core/types/public'
-import {getPointerParts} from '@theatre/dataverse'
-import type {Pointer, Prism} from '@theatre/dataverse'
+import type * as propTypes from '@dreamerbird/core/types/public'
+import {getPointerParts} from '@dreamerbird/dataverse'
+import type {Pointer, Prism} from '@dreamerbird/dataverse'
 import {last} from 'lodash-es'
 import React from 'react'
-import type {useEditingToolsForSimplePropInDetailsPanel} from '@theatre/studio/propEditors/useEditingToolsForSimpleProp'
+import type {useEditingToolsForSimplePropInDetailsPanel} from '@dreamerbird/studio/propEditors/useEditingToolsForSimpleProp'
 import styled from 'styled-components'
-import {pointerEventsAutoInNormalMode} from '@theatre/studio/css'
-import {propNameTextCSS} from '@theatre/studio/propEditors/utils/propNameTextCSS'
-import type {PropHighlighted} from '@theatre/studio/panels/SequenceEditorPanel/whatPropIsHighlighted'
+import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
+import {propNameTextCSS} from '@dreamerbird/studio/propEditors/utils/propNameTextCSS'
+import type {PropHighlighted} from '@dreamerbird/studio/panels/SequenceEditorPanel/whatPropIsHighlighted'
 import {rowIndentationFormulaCSS} from './rowIndentationFormulaCSS'
 import {getDetailRowHighlightBackground} from './getDetailRowHighlightBackground'
-import {useVal} from '@theatre/react'
-import useChordial from '@theatre/studio/uiComponents/chordial/useChodrial'
-import type {$FixMe} from '@theatre/core/types/public'
+import {useVal} from '@dreamerbird/react'
+import {usePropLabel} from '@dreamerbird/studio/i18n'
+import useChordial from '@dreamerbird/studio/uiComponents/chordial/useChodrial'
+import type {$FixMe} from '@dreamerbird/core/types/public'
 
 const Container = styled.div<{
-  isHighlighted: PropHighlighted
+  $isHighlighted: PropHighlighted
 }>`
   display: flex;
   height: 30px;
@@ -51,7 +52,7 @@ const Left = styled.div`
 `
 
 const PropNameContainer = styled.div<{
-  isHighlighted: PropHighlighted
+  $isHighlighted: PropHighlighted
 }>`
   text-align: left;
   flex: 1 0;
@@ -65,7 +66,7 @@ const PropNameContainer = styled.div<{
 
   ${propNameTextCSS};
   &:hover {
-    color: white;
+    color: var(--theatre-text-primary);
   }
 `
 
@@ -105,7 +106,8 @@ export function SingleRowPropEditor<T>({
   any,
   any
 > | null {
-  const label = propConfig.label ?? last(getPointerParts(pointerToProp).path)
+  const label =
+    usePropLabel(propConfig.label) ?? last(getPointerParts(pointerToProp).path)
 
   const title = ['obj', 'props', ...getPointerParts(pointerToProp).path].join(
     '.',
@@ -121,11 +123,11 @@ export function SingleRowPropEditor<T>({
   })
 
   return (
-    <Container isHighlighted={isHighlighted}>
+    <Container $isHighlighted={isHighlighted}>
       <Left>
         <ControlsContainer>{editingTools.controlIndicators}</ControlsContainer>
         <PropNameContainer
-          isHighlighted={isHighlighted}
+          $isHighlighted={isHighlighted}
           ref={targetRef as $FixMe}
         >
           {label}

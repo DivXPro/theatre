@@ -1,13 +1,13 @@
 import React from 'react'
-import type {Pointer} from '@theatre/dataverse'
+import type {Pointer} from '@dreamerbird/dataverse'
 import type {
   PropTypeConfig,
   PropTypeConfig_AllSimples,
-} from '@theatre/core/types/public'
-import type SheetObject from '@theatre/core/sheetObjects/SheetObject'
-import {simplePropEditorByPropType} from '@theatre/studio/propEditors/simpleEditors/simplePropEditorByPropType'
-import type {PropConfigForType} from '@theatre/studio/propEditors/utils/PropConfigForType'
-import type {ISimplePropEditorReactProps} from '@theatre/studio/propEditors/simpleEditors/ISimplePropEditorReactProps'
+} from '@dreamerbird/core/types/public'
+import type SheetObject from '@dreamerbird/core/sheetObjects/SheetObject'
+import {simplePropEditorByPropType} from '@dreamerbird/studio/propEditors/simpleEditors/simplePropEditorByPropType'
+import type {PropConfigForType} from '@dreamerbird/studio/propEditors/utils/PropConfigForType'
+import type {ISimplePropEditorReactProps} from '@dreamerbird/studio/propEditors/simpleEditors/ISimplePropEditorReactProps'
 import DetailCompoundPropEditor from './DeterminePropEditorForDetail/DetailCompoundPropEditor'
 import DetailSimplePropEditor from './DeterminePropEditorForDetail/DetailSimplePropEditor'
 
@@ -21,9 +21,12 @@ import DetailSimplePropEditor from './DeterminePropEditorForDetail/DetailSimpleP
  *
  * @param p - propConfig object for any type of prop.
  */
-const DeterminePropEditorForDetail: React.VFC<
+const DeterminePropEditorForDetail: React.FC<
   IDeterminePropEditorForDetailProps<PropTypeConfig['type']>
 > = ({propConfig, visualIndentation, pointerToProp, obj}) => {
+  // 配置为 hidden 的属性不在属性面板出现(纯数据底账,只走 API/视口工具,
+  // 比如运镜路径的控制点名单);时间轴等其他界面不受这个标记影响
+  if (propConfig.hidden) return <></>
   if (propConfig.type === 'compound') {
     return (
       <DetailCompoundPropEditor
@@ -42,7 +45,7 @@ const DeterminePropEditorForDetail: React.VFC<
     return (
       <DetailSimplePropEditor
         SimpleEditorComponent={
-          PropEditor as React.VFC<
+          PropEditor as React.FC<
             ISimplePropEditorReactProps<PropTypeConfig_AllSimples>
           >
         }

@@ -1,7 +1,7 @@
-import type {IScrub} from '@theatre/core'
-import studio from '@theatre/studio'
+import type {IScrub} from '@dreamerbird/core'
+import studio from '@dreamerbird/studio'
 import React, {useLayoutEffect, useMemo, useState} from 'react'
-import type {ISheet, ISheetObject, IProject} from '@theatre/core'
+import type {ISheet, ISheetObject, IProject} from '@dreamerbird/core'
 import type {UseDragOpts} from './useDrag'
 import useDrag from './useDrag'
 

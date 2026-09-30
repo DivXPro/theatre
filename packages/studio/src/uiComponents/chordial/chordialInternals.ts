@@ -1,9 +1,9 @@
-import {Atom} from '@theatre/dataverse'
-import type {$IntentionalAny} from '@theatre/core/types/public'
+import {Atom} from '@dreamerbird/dataverse'
+import type {$IntentionalAny} from '@dreamerbird/core/types/public'
 import {useEffect, type ElementType, type MutableRefObject} from 'react'
-import type {DragOpts} from '@theatre/studio/uiComponents/useDrag'
+import type {DragOpts} from '@dreamerbird/studio/uiComponents/useDrag'
 import type React from 'react'
-import type {AbsolutePlacementBoxConstraints} from '@theatre/studio/uiComponents/Popover/PopoverPositioner'
+import type {AbsolutePlacementBoxConstraints} from '@dreamerbird/studio/uiComponents/Popover/PopoverPositioner'
 
 export type InvokeTypePopover = {
   type: 'popover'

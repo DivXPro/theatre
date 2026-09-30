@@ -1,5 +1,5 @@
 import type {PathToProp} from './pathToProp'
-import type {$IntentionalAny} from '@theatre/utils/types'
+import type {$IntentionalAny} from '@dreamerbird/utils/types'
 import updateImmutable from './updateDeep'
 
 /**

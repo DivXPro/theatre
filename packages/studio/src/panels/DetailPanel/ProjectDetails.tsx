@@ -1,14 +1,15 @@
-import type Project from '@theatre/core/projects/Project'
-import getStudio from '@theatre/studio/getStudio'
-import BasicPopover from '@theatre/studio/uiComponents/Popover/BasicPopover'
-import usePopover from '@theatre/studio/uiComponents/Popover/usePopover'
+import type Project from '@dreamerbird/core/projects/Project'
+import getStudio from '@dreamerbird/studio/getStudio'
+import BasicPopover from '@dreamerbird/studio/uiComponents/Popover/BasicPopover'
+import usePopover from '@dreamerbird/studio/uiComponents/Popover/usePopover'
 import React, {useCallback, useState} from 'react'
 import styled from 'styled-components'
-import DetailPanelButton from '@theatre/studio/uiComponents/DetailPanelButton'
+import DetailPanelButton from '@dreamerbird/studio/uiComponents/DetailPanelButton'
 import StateConflictRow from './ProjectDetails/StateConflictRow'
+import {PersistenceStatusBanner} from '@dreamerbird/studio/uiComponents/PersistenceStatusBanner'
 import JSZip from 'jszip'
-import {notify} from '@theatre/studio/notify'
-import {getAllPossibleAssetIDs} from '@theatre/studio/utils/assets'
+import {notify} from '@dreamerbird/studio/notify'
+import {getAllPossibleAssetIDs} from '@dreamerbird/studio/utils/assets'
 
 const Container = styled.div``
 
@@ -145,6 +146,7 @@ const ProjectDetails: React.FC<{
       {exportTooltip.node}
       <Container>
         <StateConflictRow projectId={projectId} />
+        <PersistenceStatusBanner />
         <TheExportRow>
           <DetailPanelButton
             onMouseEnter={(e) =>

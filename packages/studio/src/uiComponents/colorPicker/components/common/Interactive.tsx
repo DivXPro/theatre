@@ -1,9 +1,9 @@
 import React, {useRef, useMemo, useEffect} from 'react'
 
-import {useEventCallback} from '@theatre/studio/uiComponents/colorPicker/hooks/useEventCallback'
-import {clamp} from '@theatre/studio/uiComponents/colorPicker/utils/clamp'
+import {useEventCallback} from '@dreamerbird/studio/uiComponents/colorPicker/hooks/useEventCallback'
+import {clamp} from '@dreamerbird/studio/uiComponents/colorPicker/utils/clamp'
 import styled from 'styled-components'
-import {useEditing} from '@theatre/studio/uiComponents/colorPicker/components/EditingProvider'
+import {useEditing} from '@dreamerbird/studio/uiComponents/colorPicker/components/EditingProvider'
 
 export interface Interaction {
   left: number

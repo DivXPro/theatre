@@ -4,7 +4,42 @@ import * as path from 'path'
 import * as dotenv from 'dotenv'
 import * as yaml from 'yaml'
 
-describe(`@theatre/sync-server env`, () => {
+describe(`@dreamerbird/sync-server env`, () => {
+  describe(`AUTH_DISABLED self-host env`, () => {
+    const base = {NODE_ENV: 'development', PORT: '3001', HOST: 'localhost'}
+
+    test(`AUTH_DISABLED=true validates without DATABASE_URL/APP_URL/DEV_DB_*`, () => {
+      const res = envSchema.devSchema.safeParse({
+        ...base,
+        AUTH_DISABLED: 'true',
+      })
+      expect(res.success).toBe(true)
+    })
+
+    test(`AUTH_DISABLED unset in development requires DATABASE_URL, APP_URL and DEV_DB_*`, () => {
+      expect(envSchema.devSchema.safeParse(base).success).toBe(false)
+      // DATABASE_URL + APP_URL alone is no longer enough in dev: DEV_DB_*
+      // compose the dev DATABASE_URL, so they're enforced too (mirrors the
+      // app's envSchema where they are mandatory).
+      expect(
+        envSchema.devSchema.safeParse({
+          ...base,
+          DATABASE_URL: 'postgresql://postgres:test@localhost:43943/postgres',
+          APP_URL: 'http://app',
+        }).success,
+      ).toBe(false)
+      expect(
+        envSchema.devSchema.safeParse({
+          ...base,
+          DATABASE_URL: 'postgresql://postgres:test@localhost:43943/postgres',
+          APP_URL: 'http://app',
+          DEV_DB_PORT: '43943',
+          DEV_DB_PASSWORD: 'test',
+        }).success,
+      ).toBe(true)
+    })
+  })
+
   describe(`.env files`, () => {
     test(`.env.example should be valid`, () => {
       const pathToEnvExample = path.join(__dirname, '../.env.example')
@@ -45,7 +80,7 @@ describe(`@theatre/sync-server env`, () => {
       // PORT is automatically added by render
       envVarKeys.push('PORT')
 
-      const requiredKeys = Object.keys(envSchema.productionSchema.shape)
+      const requiredKeys = Object.keys(envSchema.productionSchemaShape.shape)
 
       envVarKeys.sort()
       requiredKeys.sort()

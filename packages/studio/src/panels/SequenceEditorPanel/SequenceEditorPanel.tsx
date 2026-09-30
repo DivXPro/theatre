@@ -1,34 +1,32 @@
-import {outlineSelection} from '@theatre/studio/selectors'
-import {usePrism} from '@theatre/react'
-import {valToAtom} from '@theatre/utils/valToAtom'
-import type {Pointer} from '@theatre/dataverse'
-import {prism, val} from '@theatre/dataverse'
+import {outlineSelection} from '@dreamerbird/studio/selectors'
+import {usePrism} from '@dreamerbird/react'
+import {valToAtom} from '@dreamerbird/utils/valToAtom'
+import {prism, val} from '@dreamerbird/dataverse'
 import React, {useState} from 'react'
 import styled from 'styled-components'
 
 import DopeSheet from './DopeSheet/DopeSheet'
 import GraphEditor from './GraphEditor/GraphEditor'
-import type {PanelDims, SequenceEditorPanelLayout} from './layout/layout'
+import type {PanelDims} from './layout/layout'
 import {sequenceEditorPanelLayout} from './layout/layout'
 import RightOverlay from './RightOverlay/RightOverlay'
-import BasePanel, {usePanel} from '@theatre/studio/panels/BasePanel/BasePanel'
-import type {PanelPosition} from '@theatre/core/types/private'
-import PanelDragZone from '@theatre/studio/panels/BasePanel/PanelDragZone'
-import PanelWrapper from '@theatre/studio/panels/BasePanel/PanelWrapper'
+import BasePanel, {
+  usePanel,
+} from '@dreamerbird/studio/panels/BasePanel/BasePanel'
+import type {PanelPosition} from '@dreamerbird/core/types/private'
+import PanelWrapper from '@dreamerbird/studio/panels/BasePanel/PanelWrapper'
 import FrameStampPositionProvider from './FrameStampPositionProvider'
-import type SheetObject from '@theatre/core/sheetObjects/SheetObject'
-import type Sheet from '@theatre/core/sheets/Sheet'
+import TransportBar, {transportBarHeight} from './TransportBar'
+import type SheetObject from '@dreamerbird/core/sheetObjects/SheetObject'
+import type Sheet from '@dreamerbird/core/sheets/Sheet'
 import {uniq} from 'lodash-es'
 import GraphEditorToggle from './GraphEditorToggle'
-import {
-  panelZIndexes,
-  TitleBar,
-  TitleBar_Piece,
-  TitleBar_Punctuation,
-} from '@theatre/studio/panels/BasePanel/common'
-import {usePresenceListenersOnRootElement} from '@theatre/studio/uiComponents/usePresence'
-import type {UIPanelId} from '@theatre/core/types/private'
-import {__private} from '@theatre/core'
+import {panelZIndexes} from '@dreamerbird/studio/panels/BasePanel/common'
+import {usePresenceListenersOnRootElement} from '@dreamerbird/studio/uiComponents/usePresence'
+import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
+import getStudio from '@dreamerbird/studio/getStudio'
+import type {UIPanelId} from '@dreamerbird/core/types/private'
+import {__private} from '@dreamerbird/core'
 const {isSheet, isSheetObject} = __private.instanceTypes
 
 const Container = styled(PanelWrapper)`
@@ -37,13 +35,34 @@ const Container = styled(PanelWrapper)`
 `
 
 const LeftBackground = styled.div`
-  background-color: rgba(40, 43, 47, 0.99);
+  background-color: var(--theatre-panel-bg-99);
   position: absolute;
   left: 0;
   top: 0;
   bottom: 0;
   z-index: -1;
   pointer-events: none;
+`
+
+// 工具条之下是原布局的全部内容:内部组件都按绝对定位排,套一层偏移容器
+// 就不用动 tree/layout 里那套纵向坐标
+const ContentBody = styled.div`
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: ${transportBarHeight}px;
+`
+
+// 收拢后的停靠条:贴屏幕底边撑满,只剩一行工具条
+const CollapsedDock = styled.div`
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: ${panelZIndexes.sequenceEditorPanel};
+  background-color: #25272b;
+  ${pointerEventsAutoInNormalMode};
 `
 
 export const zIndexes = (() => {
@@ -69,37 +88,96 @@ export const zIndexes = (() => {
   return s
 })()
 
-const Header_Container = styled(PanelDragZone)`
-  position: absolute;
-  left: 0;
-  top: 0;
-  z-index: 1;
-`
-
 const defaultPosition: PanelPosition = {
   edges: {
-    left: {from: 'screenLeft', distance: 0.1},
-    right: {from: 'screenRight', distance: 0.2},
+    left: {from: 'screenLeft', distance: 0},
+    right: {from: 'screenRight', distance: 0},
     top: {from: 'screenBottom', distance: 0.4},
-    bottom: {from: 'screenBottom', distance: 0.01},
+    bottom: {from: 'screenBottom', distance: 0},
   },
 }
 
 const minDims = {width: 800, height: 200}
 
-const SequenceEditorPanel: React.VFC<{}> = (props) => {
+/** 时间轴要显示的 sheet:大纲选中项能定位到唯一 sheet 就用它,否则回退到
+ *  项目的第一个 sheet——面板始终显示,不随选中状态消失 */
+function useSelectedSheet(): Sheet | undefined {
+  return usePrism(() => {
+    const selectedSheets = uniq(
+      outlineSelection
+        .getValue()
+        .filter((s): s is SheetObject | Sheet => isSheet(s) || isSheetObject(s))
+        .map((s) => (isSheetObject(s) ? s.sheet : s)),
+    )
+    const selectedTemplates = uniq(selectedSheets.map((s) => s.template))
+    if (selectedTemplates.length === 1) return selectedSheets[0]
+
+    const projects = val(getStudio().projectsP)
+    const project = projects[Object.keys(projects)[0]]
+    if (!project) return undefined
+    const templates = val(project.sheetTemplatesP)
+    const template = templates[Object.keys(templates)[0]]
+    if (!template) return undefined
+    const instances = val(template.instancesP)
+    return instances[Object.keys(instances)[0]]
+  }, [])
+}
+
+/** 场景里是否已有任何关键帧轨道(与时间轴树的口径一致:不含 hideFromOutline
+ *  的纯数据对象)——一条都没有时,时间轴默认收拢成一行工具条 */
+function useHasAnyTracks(sheet: Sheet | undefined): boolean {
+  return usePrism(() => {
+    if (!sheet) return false
+    for (const obj of Object.values(val(sheet.objectsP))) {
+      if (!obj || obj.template.hideFromOutline) continue
+      const trackSetups = val(
+        obj.template.getMapOfValidSequenceTracks_forStudio(),
+      )
+      if (Object.keys(trackSetups).length > 0) return true
+    }
+    return false
+  }, [sheet])
+}
+
+const SequenceEditorPanel: React.FC<{}> = (props) => {
+  // 收拢状态只是临时 UI 态,不进历史(不想产生撤销步)、不持久化。
+  // null = 用户没手动切换过,跟随默认:没有任何关键帧轨道时收拢,有轨道时展开;
+  // 一旦用户点过收拢/展开按钮,就以用户的选择为准
+  const [collapsedOverride, setCollapsedOverride] = useState<boolean | null>(
+    null,
+  )
+  const sheet = useSelectedSheet()
+  const hasAnyTracks = useHasAnyTracks(sheet)
+  const collapsed = collapsedOverride ?? !hasAnyTracks
+
+  if (collapsed) {
+    return (
+      <CollapsedDock>
+        <TransportBar
+          sheet={sheet}
+          collapsed
+          onToggle={() => setCollapsedOverride(false)}
+        />
+      </CollapsedDock>
+    )
+  }
+
   return (
     <BasePanel
       panelId={'sequenceEditor' as UIPanelId}
       defaultPosition={defaultPosition}
       minDims={minDims}
+      docked="bottom"
     >
-      <Content />
+      <Content sheet={sheet} onCollapse={() => setCollapsedOverride(true)} />
     </BasePanel>
   )
 }
 
-const Content: React.VFC<{}> = () => {
+const Content: React.FC<{
+  sheet: Sheet | undefined
+  onCollapse: () => void
+}> = ({sheet, onCollapse}) => {
   const {dims} = usePanel()
   const [containerNode, setContainerNode] = useState<null | HTMLDivElement>(
     null,
@@ -109,8 +187,9 @@ const Content: React.VFC<{}> = () => {
     const panelSize = prism.memo(
       'panelSize',
       (): PanelDims => {
+        // 顶部让出工具条一行,其余交给原布局
         const width = dims.width
-        const height = dims.height
+        const height = dims.height - transportBarHeight
         return {
           width: width,
           height: height,
@@ -119,22 +198,11 @@ const Content: React.VFC<{}> = () => {
           heightWithoutBorder: height - 4,
 
           screenX: dims.left,
-          screenY: dims.top,
+          screenY: dims.top + transportBarHeight,
         }
       },
       [dims],
     )
-
-    const selectedSheets = uniq(
-      outlineSelection
-        .getValue()
-        .filter((s): s is SheetObject | Sheet => isSheet(s) || isSheetObject(s))
-        .map((s) => (isSheetObject(s) ? s.sheet : s)),
-    )
-    const selectedTemplates = uniq(selectedSheets.map((s) => s.template))
-
-    if (selectedTemplates.length !== 1) return <></>
-    const sheet = selectedSheets[0]
 
     if (!sheet) return <></>
 
@@ -155,8 +223,8 @@ const Content: React.VFC<{}> = () => {
       )
       .getValue()
 
-    if (val(layoutP.tree.children).length === 0) return <></>
-
+    // 注意:tree.children 为空(全场景还没有任何关键帧轨道)不再隐藏面板——
+    // 时间轴常驻,空轨道时就只显示 sheet 行和工具条
     const containerRef = prism.memo(
       'containerRef',
       preventHorizontalWheelEvents,
@@ -175,44 +243,21 @@ const Content: React.VFC<{}> = () => {
           }
         }}
       >
-        <LeftBackground style={{width: `${val(layoutP.leftDims.width)}px`}} />
-        <FrameStampPositionProvider layoutP={layoutP}>
-          <Header layoutP={layoutP} />
-          <DopeSheet key={key + '-dopeSheet'} layoutP={layoutP} />
-          {graphEditorOpen && (
-            <GraphEditor key={key + '-graphEditor'} layoutP={layoutP} />
-          )}
-          {graphEditorAvailable && <GraphEditorToggle layoutP={layoutP} />}
-          <RightOverlay layoutP={layoutP} />
-        </FrameStampPositionProvider>
+        <TransportBar sheet={sheet} collapsed={false} onToggle={onCollapse} />
+        <ContentBody>
+          <LeftBackground style={{width: `${val(layoutP.leftDims.width)}px`}} />
+          <FrameStampPositionProvider layoutP={layoutP}>
+            <DopeSheet key={key + '-dopeSheet'} layoutP={layoutP} />
+            {graphEditorOpen && (
+              <GraphEditor key={key + '-graphEditor'} layoutP={layoutP} />
+            )}
+            {graphEditorAvailable && <GraphEditorToggle layoutP={layoutP} />}
+            <RightOverlay layoutP={layoutP} />
+          </FrameStampPositionProvider>
+        </ContentBody>
       </Container>
     )
-  }, [dims, containerNode])
-}
-
-const Header: React.FC<{layoutP: Pointer<SequenceEditorPanelLayout>}> = ({
-  layoutP,
-}) => {
-  return usePrism(() => {
-    const sheet = val(layoutP.sheet)
-    return (
-      <Header_Container
-        style={{
-          width: val(layoutP.leftDims.width),
-        }}
-      >
-        <TitleBar>
-          <TitleBar_Piece>{sheet.address.sheetId} </TitleBar_Piece>
-
-          <TitleBar_Punctuation>{':'}&nbsp;</TitleBar_Punctuation>
-          <TitleBar_Piece>{sheet.address.sheetInstanceId} </TitleBar_Piece>
-
-          <TitleBar_Punctuation>&nbsp;{'>'}&nbsp;</TitleBar_Punctuation>
-          <TitleBar_Piece>Sequence</TitleBar_Piece>
-        </TitleBar>
-      </Header_Container>
-    )
-  }, [layoutP])
+  }, [dims, containerNode, sheet, onCollapse])
 }
 
 export default SequenceEditorPanel

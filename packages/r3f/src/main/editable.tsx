@@ -1,4 +1,10 @@
-import type {ComponentProps, ComponentType, Ref, RefAttributes} from 'react'
+import type {
+  ComponentProps,
+  ComponentType,
+  ForwardRefRenderFunction,
+  PropsWithoutRef,
+  Ref,
+} from 'react'
 import {useMemo, useState} from 'react'
 import React, {forwardRef, useEffect, useLayoutEffect, useRef} from 'react'
 import {allRegisteredObjects, editorStore} from './store'
@@ -7,17 +13,18 @@ import useInvalidate from './useInvalidate'
 import {useCurrentSheet} from './SheetProvider'
 import defaultEditableFactoryConfig from './defaultEditableFactoryConfig'
 import type {EditableFactoryConfig} from './editableFactoryConfigUtils'
+import type {ThreeElements} from '@react-three/fiber'
 import {makeStoreKey} from './utils'
 import type {$FixMe, $IntentionalAny} from '../types'
-import type {ISheetObject} from '@theatre/core'
-import {notify} from '@theatre/core'
+import type {ISheetObject, SheetObjectActionsConfig} from '@dreamerbird/core'
+import {notify} from '@dreamerbird/core'
 import {useCurrentRafDriver} from './RafDriverProvider'
 
-const createEditable = <Keys extends keyof JSX.IntrinsicElements>(
+const createEditable = <Keys extends keyof ThreeElements>(
   config: EditableFactoryConfig,
 ) => {
   const editable = <
-    T extends ComponentType<any> | keyof JSX.IntrinsicElements | 'primitive',
+    T extends ComponentType<any> | keyof ThreeElements | 'primitive',
     U extends Keys,
   >(
     Component: T,
@@ -26,14 +33,16 @@ const createEditable = <Keys extends keyof JSX.IntrinsicElements>(
     type Props = Omit<ComponentProps<T>, 'visible'> & {
       theatreKey: string
       visible?: boolean | 'editor'
+      /** 不进 studio 大纲树/时间轴(透传 core 的 sheet.object 选项) */
+      hideFromOutline?: boolean
       additionalProps?: $FixMe
+      objectActions?: SheetObjectActionsConfig
       objRef?: $FixMe
     } & (T extends 'primitive'
         ? {
             editableType: U
           }
-        : {}) &
-      RefAttributes<JSX.IntrinsicElements[U]>
+        : {})
 
     if (Component !== 'primitive' && !type) {
       throw new Error(
@@ -44,66 +53,71 @@ const createEditable = <Keys extends keyof JSX.IntrinsicElements>(
     // TODO: detect if `editable()` is being called in the body of a react component, which is a common
     // mistake. If it is, throw an error.
 
-    return forwardRef(
-      (
-        {
-          theatreKey,
-          visible,
-          editableType,
-          additionalProps,
-          objRef,
-          ...props
-        }: Props,
-        ref,
-      ) => {
-        //region Runtime type checks
-        if (typeof theatreKey !== 'string') {
-          throw new Error(
-            `No valid theatreKey was provided to the editable component. theatreKey must be a string. Received: ${theatreKey}`,
-          )
-        }
-
-        if (Component === 'primitive' && !editableType) {
-          throw new Error(
-            `When using the primitive component, you must provide the editableType prop. Received: ${editableType}`,
-          )
-        }
-        //endregion
-
-        const actualType = type ?? editableType
-
-        const objectRef = useRef<JSX.IntrinsicElements[U]>()
-
-        const sheet = useCurrentSheet()!
-        const rafDriver = useCurrentRafDriver()
-
-        const [sheetObject, setSheetObject] = useState<
-          undefined | ISheetObject<$FixMe>
-        >(undefined)
-
-        const storeKey = useMemo(
-          () =>
-            makeStoreKey({
-              ...sheet.address,
-              objectKey: theatreKey as $IntentionalAny,
-            }),
-          [sheet, theatreKey],
+    // PropsWithoutRef<Props> can't be reduced back to Props while T/U are
+    // still generic (conditional-type limitation in @types/react 19's
+    // forwardRef signature); the shapes are identical at every concrete
+    // instantiation, so assert the render function's type at the end.
+    return forwardRef(((
+      {
+        theatreKey,
+        visible,
+        hideFromOutline,
+        editableType,
+        additionalProps,
+        objectActions,
+        objRef,
+        ...props
+      }: Props,
+      ref,
+    ) => {
+      //region Runtime type checks
+      if (typeof theatreKey !== 'string') {
+        throw new Error(
+          `No valid theatreKey was provided to the editable component. theatreKey must be a string. Received: ${theatreKey}`,
         )
+      }
 
-        const invalidate = useInvalidate()
+      if (Component === 'primitive' && !editableType) {
+        throw new Error(
+          `When using the primitive component, you must provide the editableType prop. Received: ${editableType}`,
+        )
+      }
+      //endregion
 
-        // warn about cameras in r3f
-        useEffect(() => {
-          if (
-            Component === 'perspectiveCamera' ||
-            Component === 'orthographicCamera'
-          ) {
-            const dreiComponent =
-              Component.charAt(0).toUpperCase() + Component.slice(1)
+      const actualType = type ?? editableType
 
-            notify.warning(
-              `Possibly incorrect use of <e.${Component} />`,
-              `You seem to have declared the camera "${theatreKey}" simply as \`<e.${Component} ... />\`. This alone won't make r3f use it for rendering.
+      const objectRef = useRef<ThreeElements[U] | undefined>(undefined)
+
+      const sheet = useCurrentSheet()!
+      const rafDriver = useCurrentRafDriver()
+
+      const [sheetObject, setSheetObject] = useState<
+        undefined | ISheetObject<$FixMe>
+      >(undefined)
+
+      const storeKey = useMemo(
+        () =>
+          makeStoreKey({
+            ...sheet.address,
+            objectKey: theatreKey as $IntentionalAny,
+          }),
+        [sheet, theatreKey],
+      )
+
+      const invalidate = useInvalidate()
+
+      // warn about cameras in r3f
+      useEffect(() => {
+        if (
+          Component === 'perspectiveCamera' ||
+          Component === 'orthographicCamera'
+        ) {
+          const dreiComponent =
+            Component.charAt(0).toUpperCase() + Component.slice(1)
+
+          notify.warning(
+            `Possibly incorrect use of <e.${Component} />`,
+            `You seem to have declared the camera "${theatreKey}" simply as \`<e.${Component} ... />\`. This alone won't make r3f use it for rendering.
 
 The easiest way to create a custom animatable \`${dreiComponent}\` is to import it from \`@react-three/drei\`, and make it editable.
 \`\`\`
@@ -120,126 +134,120 @@ Then you can use it in your JSX like any other editable component. Note the make
 >
 \`\`\`
 `,
-            )
-          }
-        }, [Component, theatreKey])
-
-        // create sheet object and add editable to store
-        useLayoutEffect(() => {
-          if (!sheet) return
-          if (sheetObject) {
-            sheet.object(
-              theatreKey,
-              Object.assign(
-                {
-                  ...additionalProps,
-                },
-                // @ts-ignore
-                ...Object.values(config[actualType].props).map(
-                  // @ts-ignore
-                  (value) => value.type,
-                ),
-              ),
-              {reconfigure: true},
-            )
-            return
-          } else {
-            const sheetObject = sheet.object(
-              theatreKey,
-              Object.assign(
-                {
-                  ...additionalProps,
-                },
-                // @ts-ignore
-                ...Object.values(config[actualType].props).map(
-                  // @ts-ignore
-                  (value) => value.type,
-                ),
-              ),
-            )
-            allRegisteredObjects.add(sheetObject)
-            setSheetObject(sheetObject)
-
-            if (objRef)
-              typeof objRef === 'function'
-                ? objRef(sheetObject)
-                : (objRef.current = sheetObject)
-
-            editorStore.getState().addEditable(storeKey, {
-              type: actualType,
-              sheetObject,
-              visibleOnlyInEditor: visible === 'editor',
-              // @ts-ignore
-              objectConfig: config[actualType],
-            })
-          }
-        }, [sheet, storeKey, additionalProps])
-
-        // store initial values of props
-        useLayoutEffect(() => {
-          if (!sheetObject) return
-          sheetObject!.initialValue = Object.fromEntries(
-            // @ts-ignore
-            Object.entries(config[actualType].props).map(
-              // @ts-ignore
-              ([key, value]) => [key, value.parse(props)],
-            ),
           )
-        }, [
-          sheetObject,
+        }
+      }, [Component, theatreKey])
+
+      // create sheet object and add editable to store
+      useLayoutEffect(() => {
+        if (!sheet) return
+        const objectConfig = Object.assign(
+          {
+            ...additionalProps,
+          },
           // @ts-ignore
-          ...Object.keys(config[actualType].props).map(
+          ...Object.values(config[actualType].props).map(
             // @ts-ignore
-            (key) => props[key],
+            (value) => value.type,
           ),
-        ])
-
-        // subscribe to prop changes from theatre
-        useLayoutEffect(() => {
-          if (!sheetObject) return
-
-          const object = objectRef.current!
-
-          const setFromTheatre = (newValues: any) => {
-            // @ts-ignore
-            Object.entries(config[actualType].props).forEach(
-              // @ts-ignore
-              ([key, value]) => value.apply(newValues[key], object),
-            )
-            // @ts-ignore
-            config[actualType].updateObject?.(object)
-            invalidate()
-          }
-
-          setFromTheatre(sheetObject.value)
-
-          const unsubscribe = sheetObject.onValuesChange(
-            setFromTheatre,
-            rafDriver,
-          )
-
-          return () => {
-            unsubscribe()
-            sheetObject.sheet.detachObject(theatreKey)
-            allRegisteredObjects.delete(sheetObject)
-            editorStore.getState().removeEditable(storeKey)
-          }
-        }, [sheetObject, rafDriver])
-
-        return (
-          // @ts-ignore
-          <Component
-            ref={mergeRefs([objectRef, ref])}
-            {...props}
-            visible={visible !== 'editor' && visible}
-            userData={{
-              __editable: true,
-              __storeKey: storeKey,
-            }}
-          />
         )
-      },
-    )
+        if (sheetObject) {
+          sheet.object(theatreKey, objectConfig, {
+            reconfigure: true,
+            hideFromOutline,
+            // 面板动作区(属性后的按钮):core 机制,重复调用同 config 时只更新 actions
+            __actions__THIS_API_IS_UNSTABLE_AND_WILL_CHANGE_IN_THE_NEXT_VERSION:
+              objectActions,
+          })
+          return
+        } else {
+          const sheetObject = sheet.object(theatreKey, objectConfig, {
+            hideFromOutline,
+            __actions__THIS_API_IS_UNSTABLE_AND_WILL_CHANGE_IN_THE_NEXT_VERSION:
+              objectActions,
+          })
+          allRegisteredObjects.add(sheetObject)
+          setSheetObject(sheetObject)
+
+          if (objRef)
+            typeof objRef === 'function'
+              ? objRef(sheetObject)
+              : (objRef.current = sheetObject)
+
+          editorStore.getState().addEditable(storeKey, {
+            type: actualType,
+            sheetObject,
+            visibleOnlyInEditor: visible === 'editor',
+            // @ts-ignore
+            objectConfig: config[actualType],
+          })
+        }
+      }, [sheet, storeKey, additionalProps, objectActions])
+
+      // store initial values of props
+      useLayoutEffect(() => {
+        if (!sheetObject) return
+        sheetObject!.initialValue = Object.fromEntries(
+          // @ts-ignore
+          Object.entries(config[actualType].props).map(
+            // @ts-ignore
+            ([key, value]) => [key, value.parse(props)],
+          ),
+        )
+      }, [
+        sheetObject,
+        // @ts-ignore
+        ...Object.keys(config[actualType].props).map(
+          // @ts-ignore
+          (key) => props[key],
+        ),
+      ])
+
+      // subscribe to prop changes from theatre
+      useLayoutEffect(() => {
+        if (!sheetObject) return
+
+        const object = objectRef.current!
+
+        const setFromTheatre = (newValues: any) => {
+          // @ts-ignore
+          Object.entries(config[actualType].props).forEach(
+            // @ts-ignore
+            ([key, value]) => value.apply(newValues[key], object),
+          )
+          // @ts-ignore
+          config[actualType].updateObject?.(object)
+          invalidate()
+        }
+
+        setFromTheatre(sheetObject.value)
+
+        const unsubscribe = sheetObject.onValuesChange(
+          setFromTheatre,
+          rafDriver,
+        )
+
+        return () => {
+          unsubscribe()
+          sheetObject.sheet.detachObject(theatreKey)
+          allRegisteredObjects.delete(sheetObject)
+          editorStore.getState().removeEditable(storeKey)
+        }
+      }, [sheetObject, rafDriver])
+
+      return (
+        // @ts-ignore
+        <Component
+          ref={mergeRefs([objectRef, ref])}
+          {...props}
+          visible={visible !== 'editor' && visible}
+          userData={{
+            __editable: true,
+            __storeKey: storeKey,
+          }}
+        />
+      )
+    }) as ForwardRefRenderFunction<unknown, PropsWithoutRef<Props>>)
   }
 
   const extensions = {
@@ -253,10 +261,12 @@ Then you can use it in your JSX like any other editable component. Note the make
     primitive: editable('primitive', null),
   } as unknown as {
     [Property in Keys]: React.ForwardRefExoticComponent<
-      Omit<JSX.IntrinsicElements[Property], 'visible'> & {
+      Omit<ThreeElements[Property], 'visible'> & {
         theatreKey: string
         visible?: boolean | 'editor'
+        hideFromOutline?: boolean
         additionalProps?: $FixMe
+        objectActions?: SheetObjectActionsConfig
         objRef?: $FixMe
         // not exactly sure how to get the type of the threejs object itself
         ref?: Ref<unknown>
@@ -269,8 +279,9 @@ Then you can use it in your JSX like any other editable component. Note the make
         theatreKey: string
         visible?: boolean | 'editor'
         additionalProps?: $FixMe
+        objectActions?: SheetObjectActionsConfig
         objRef?: $FixMe
-        editableType: keyof JSX.IntrinsicElements
+        editableType: keyof ThreeElements
         // not exactly sure how to get the type of the threejs object itself
         ref?: Ref<unknown>
       } & {

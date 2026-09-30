@@ -1,5 +1,5 @@
-import {Atom} from '@theatre/dataverse'
-import type {ProjectId} from '@theatre/core/types/public'
+import {Atom} from '@dreamerbird/dataverse'
+import type {ProjectId} from '@dreamerbird/core/types/public'
 import type Project from './Project'
 
 interface State {

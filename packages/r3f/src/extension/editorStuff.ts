@@ -1,16 +1,30 @@
-import type {ISheet, ISheetObject} from '@theatre/core'
-import {types, getStudioSync} from '@theatre/core'
+import type {ISheet, ISheetObject} from '@dreamerbird/core'
+import {types, getStudioSync} from '@dreamerbird/core'
+import {translate} from '@dreamerbird/studio/i18n'
+import './i18n'
 
 let sheet: ISheet | undefined = undefined
 let sheetObject: ISheetObject<typeof editorSheetObjectConfig> | undefined =
   undefined
 
+/** label 函数:面板每次渲染现调,语言切换热改(模块级配置,引用稳定) */
+const editorLabel =
+  (key: string): (() => string) =>
+  () =>
+    translate(key)
+
 const editorSheetObjectConfig = {
   viewport: types.compound(
     {
-      showAxes: types.boolean(true, {label: 'Axes'}),
-      showGrid: types.boolean(true, {label: 'Grid'}),
-      showOverlayIcons: types.boolean(false, {label: 'Overlay Icons'}),
+      showAxes: types.boolean(true, {
+        label: editorLabel('r3f.editor.showAxes'),
+      }),
+      showGrid: types.boolean(true, {
+        label: editorLabel('r3f.editor.showGrid'),
+      }),
+      showOverlayIcons: types.boolean(false, {
+        label: editorLabel('r3f.editor.showOverlayIcons'),
+      }),
       shading: types.stringLiteral(
         'rendered',
         {
@@ -19,7 +33,7 @@ const editorSheetObjectConfig = {
           solid: 'Solid',
           wireframe: 'Wireframe',
         },
-        {as: 'menu', label: 'Shading'},
+        {as: 'menu', label: editorLabel('r3f.editor.shading')},
       ),
       referenceWindow: types.stringLiteral(
         'minimized',
@@ -28,10 +42,10 @@ const editorSheetObjectConfig = {
           minimized: 'Minimized',
           hidden: 'Hidden',
         },
-        {as: 'menu', label: 'Reference Window'},
+        {as: 'menu', label: editorLabel('r3f.editor.referenceWindow')},
       ),
     },
-    {label: 'Viewport Config'},
+    {label: editorLabel('r3f.editor.viewport')},
   ),
   transformControls: types.compound(
     {
@@ -42,7 +56,7 @@ const editorSheetObjectConfig = {
           rotate: 'Rotate',
           scale: 'Scale',
         },
-        {as: 'switch', label: 'Mode'},
+        {as: 'switch', label: editorLabel('r3f.editor.mode')},
       ),
       space: types.stringLiteral(
         'world',
@@ -50,10 +64,10 @@ const editorSheetObjectConfig = {
           local: 'Local',
           world: 'World',
         },
-        {as: 'switch', label: 'Space'},
+        {as: 'switch', label: editorLabel('r3f.editor.space')},
       ),
     },
-    {label: 'Transform Controls'},
+    {label: editorLabel('r3f.editor.transformControls')},
   ),
 }
 

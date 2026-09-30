@@ -2,8 +2,8 @@ import sade from 'sade'
 import {$, fs, path} from '@cspotcode/zx'
 import {config} from 'dotenv'
 import {fromZodError} from 'zod-validation-error'
-import * as envSchema from 'src/envSchema'
-import type {Env} from 'src/envSchema'
+import * as envSchema from '../src/envSchema'
+import type {Env} from '../src/envSchema'
 
 const isProduction = process.env.NODE_ENV === 'production'
 
@@ -32,19 +32,23 @@ function validateEnv() {
   }
 
   const env: Env = process.env as any
-  const url = new URL(env.DATABASE_URL)
-  if (url.protocol !== 'postgresql:' && url.protocol !== 'postgres:') {
-    throw new Error(`DATABASE_URL protocol must be postgresql: Given: ${url}`)
-  }
+  // AUTH_DISABLED=true = self-hosted minimal loop: no app, no postgres.
+  const authDisabled = env.AUTH_DISABLED === 'true'
+  if (!authDisabled) {
+    const url = new URL(env.DATABASE_URL as string)
+    if (url.protocol !== 'postgresql:' && url.protocol !== 'postgres:') {
+      throw new Error(`DATABASE_URL protocol must be postgresql: Given: ${url}`)
+    }
 
-  if (env.NODE_ENV !== 'production') {
-    if (
-      env.DATABASE_URL !==
-      `postgresql://postgres:${env.DEV_DB_PASSWORD}@localhost:${env.DEV_DB_PORT}/postgres`
-    ) {
-      throw new Error(
-        `We're in dev mode, so DATABASE_URL must match the other DB variables set in .env. DATABASE_URL should be: postgresql://postgres:${env.DEV_DB_PASSWORD}@localhost:${env.DEV_DB_PORT}/postgres`,
-      )
+    if (env.NODE_ENV !== 'production') {
+      if (
+        env.DATABASE_URL !==
+        `postgresql://postgres:${env.DEV_DB_PASSWORD}@localhost:${env.DEV_DB_PORT}/postgres`
+      ) {
+        throw new Error(
+          `We're in dev mode, so DATABASE_URL must match the other DB variables set in .env. DATABASE_URL should be: postgresql://postgres:${env.DEV_DB_PASSWORD}@localhost:${env.DEV_DB_PORT}/postgres`,
+        )
+      }
     }
   }
 }

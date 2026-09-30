@@ -1,19 +1,22 @@
-import getStudio from '@theatre/studio/getStudio'
-import {val} from '@theatre/dataverse'
+import getStudio from '@dreamerbird/studio/getStudio'
+import {val} from '@dreamerbird/dataverse'
 import type {
   SequenceEditorTree_PrimitiveProp,
   SequenceEditorTree_PropWithChildren,
   SequenceEditorTree_Sheet,
   SequenceEditorTree_SheetObject,
-} from '@theatre/studio/panels/SequenceEditorPanel/layout/tree'
-import type {BasicKeyframe, SequenceTrackId} from '@theatre/core/types/public'
-import type {TrackData} from '@theatre/core/types/private/core'
-import {encodePathToProp} from '@theatre/utils/pathToProp'
+} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/tree'
+import type {
+  BasicKeyframe,
+  SequenceTrackId,
+} from '@dreamerbird/core/types/public'
+import type {TrackData} from '@dreamerbird/core/types/private/core'
+import {encodePathToProp} from '@dreamerbird/utils/pathToProp'
 import {uniq} from 'lodash-es'
-import type SheetObject from '@theatre/core/sheetObjects/SheetObject'
-import type {StudioSheetItemKey} from '@theatre/core/types/private'
-import {createStudioSheetItemKey} from '@theatre/studio/utils/createStudioSheetItemKey'
-import {__private} from '@theatre/core'
+import type SheetObject from '@dreamerbird/core/sheetObjects/SheetObject'
+import type {StudioSheetItemKey} from '@dreamerbird/core/types/private'
+import {createStudioSheetItemKey} from '@dreamerbird/studio/utils/createStudioSheetItemKey'
+import {__private} from '@dreamerbird/core'
 
 const {keyframeUtils} = __private
 

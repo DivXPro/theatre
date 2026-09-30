@@ -1,7 +1,7 @@
-import type {Prism, Pointer} from '@theatre/dataverse'
-import {Atom, prism, val} from '@theatre/dataverse'
-import mousePositionD from '@theatre/studio/utils/mousePositionD'
-import type {$IntentionalAny} from '@theatre/core/types/public'
+import type {Prism, Pointer} from '@dreamerbird/dataverse'
+import {Atom, prism, val} from '@dreamerbird/dataverse'
+import mousePositionD from '@dreamerbird/studio/utils/mousePositionD'
+import type {$IntentionalAny} from '@dreamerbird/core/types/public'
 import {inRange, last} from 'lodash-es'
 import React, {
   createContext,
@@ -125,7 +125,7 @@ export const useFrameStampPositionD = () => useContext(context).currentD
 /** Version of {@link useLockFrameStampPosition} which allows you to directly set status of a lock. */
 export const useLockFrameStampPositionRef = () => {
   const {getLock} = useContext(context)
-  const lockRef = useRef<undefined | ReturnType<typeof getLock>>()
+  const lockRef = useRef<undefined | ReturnType<typeof getLock>>(undefined)
 
   useLayoutEffect(() => {
     return () => {
@@ -160,7 +160,7 @@ export const useLockFrameStampPositionRef = () => {
 
 export const useLockFrameStampPosition = (shouldLock: boolean, val: number) => {
   const {getLock} = useContext(context)
-  const lockRef = useRef<undefined | ReturnType<typeof getLock>>()
+  const lockRef = useRef<undefined | ReturnType<typeof getLock>>(undefined)
 
   useLayoutEffect(() => {
     if (!shouldLock) return

@@ -1,10 +1,10 @@
-import {setupTestSheet} from '@theatre/studio/integration-tests/testUtils'
-import {encodePathToProp} from '@theatre/utils/pathToProp'
+import {setupTestSheet} from '@dreamerbird/studio/integration-tests/testUtils'
+import {encodePathToProp} from '@dreamerbird/utils/pathToProp'
 import type {
   ObjectAddressKey,
   SequenceTrackId,
-} from '@theatre/core/types/public'
-import {__private} from '@theatre/core'
+} from '@dreamerbird/core/types/public'
+import {__private} from '@dreamerbird/core'
 
 const {keyframeUtils} = __private
 
@@ -56,9 +56,7 @@ describe(`Sequence`, () => {
 
     const seq = sheet.publicApi.sequence
 
-    const keyframes = seq.__experimental_getKeyframes(
-      objPublicAPI.props.position.y,
-    )
+    const keyframes = seq.getKeyframes(objPublicAPI.props.position.y)
     expect(keyframes).toHaveLength(2)
     expect(keyframes[0].value).toEqual(3)
     expect(keyframes[1].value).toEqual(6)

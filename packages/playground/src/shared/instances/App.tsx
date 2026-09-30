@@ -1,6 +1,6 @@
-import {editable as e, RefreshSnapshot, SheetProvider} from '@theatre/r3f'
+import {editable as e, RefreshSnapshot, SheetProvider} from '@dreamerbird/r3f'
 import {Stars} from '@react-three/drei'
-import {getProject} from '@theatre/core'
+import {getProject} from '@dreamerbird/core'
 import React, {Suspense, useState} from 'react'
 import {Canvas} from '@react-three/fiber'
 import {useGLTF, PerspectiveCamera} from '@react-three/drei'
@@ -14,7 +14,10 @@ function Model({
   url,
   instance,
   ...props
-}: {url: string; instance?: string} & JSX.IntrinsicElements['group']) {
+}: {url: string; instance?: string} & Omit<
+  React.JSX.IntrinsicElements['group'],
+  'ref'
+>) {
   const {nodes} = useGLTF(url) as any
 
   return (
@@ -64,7 +67,7 @@ function App() {
         height: '100vh',
       }}
     >
-      <Canvas dpr={[1.5, 2]} linear shadows frameloop="demand">
+      <Canvas dpr={[1.5, 2]} linear shadows="percentage" frameloop="demand">
         <SheetProvider sheet={getProject('Space').sheet('Scene')}>
           <fog attach="fog" args={[bg, 16, 70]} />
           <color attach="background" args={[bg]} />

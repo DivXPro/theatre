@@ -1,6 +1,6 @@
-import type {PropTypeConfig} from '@theatre/core/types/public'
-import type SheetObject from '@theatre/core/sheetObjects/SheetObject'
-import {getPointerParts} from '@theatre/dataverse'
+import type {PropTypeConfig} from '@dreamerbird/core/types/public'
+import type SheetObject from '@dreamerbird/core/sheetObjects/SheetObject'
+import {getPointerParts} from '@dreamerbird/dataverse'
 
 /**
  * @deprecated because it uses obj.template.staticConfig

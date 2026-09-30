@@ -1,17 +1,17 @@
-import type {SequenceEditorPanelLayout} from '@theatre/studio/panels/SequenceEditorPanel/layout/layout'
-import useDrag from '@theatre/studio/uiComponents/useDrag'
-import useRefAndState from '@theatre/studio/utils/useRefAndState'
-import {usePrism} from '@theatre/react'
-import type {Pointer} from '@theatre/dataverse'
-import {prism, val} from '@theatre/dataverse'
+import type {SequenceEditorPanelLayout} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/layout'
+import useDrag from '@dreamerbird/studio/uiComponents/useDrag'
+import useRefAndState from '@dreamerbird/studio/utils/useRefAndState'
+import {usePrism} from '@dreamerbird/react'
+import type {Pointer} from '@dreamerbird/dataverse'
+import {prism, val} from '@dreamerbird/dataverse'
 import {clamp} from 'lodash-es'
 import React, {useLayoutEffect, useMemo} from 'react'
 import styled from 'styled-components'
-import {useReceiveVerticalWheelEvent} from '@theatre/studio/panels/SequenceEditorPanel/VerticalScrollContainer'
-import {pointerEventsAutoInNormalMode} from '@theatre/studio/css'
-import {useCssCursorLock} from '@theatre/studio/uiComponents/PointerEventsHandler'
-import type {IRange} from '@theatre/core/types/public'
-import DopeSnap from '@theatre/studio/panels/SequenceEditorPanel/RightOverlay/DopeSnap'
+import {useReceiveVerticalWheelEvent} from '@dreamerbird/studio/panels/SequenceEditorPanel/VerticalScrollContainer'
+import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
+import {useCssCursorLock} from '@dreamerbird/studio/uiComponents/PointerEventsHandler'
+import type {IRange} from '@dreamerbird/core/types/public'
+import DopeSnap from '@dreamerbird/studio/panels/SequenceEditorPanel/RightOverlay/DopeSnap'
 import {snapToAll, snapToNone} from './KeyframeSnapTarget'
 
 const Container = styled.div`
@@ -60,7 +60,6 @@ const HorizontallyScrollableArea: React.FC<{
       style={{
         width: width + 'px',
         height: height + 'px',
-        // @ts-expect-error
         '--unitSpaceToScaledSpaceMultiplier': unitSpaceToScaledSpaceMultiplier,
       }}
     >

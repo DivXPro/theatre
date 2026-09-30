@@ -1,11 +1,11 @@
-import type {PropTypeConfig_Image} from '@theatre/core/types/public'
-import type {$FixMe} from '@theatre/core/types/public'
-import {Trash} from '@theatre/studio/uiComponents/icons'
+import type {PropTypeConfig_Image} from '@dreamerbird/core/types/public'
+import type {$FixMe} from '@dreamerbird/core/types/public'
+import {Trash} from '@dreamerbird/studio/uiComponents/icons'
 import React, {useCallback, useEffect} from 'react'
 import styled, {css} from 'styled-components'
 import type {ISimplePropEditorReactProps} from './ISimplePropEditorReactProps'
 
-const Container = styled.div<{empty: boolean}>`
+const Container = styled.div<{$empty: boolean}>`
   display: flex;
   align-items: center;
   height: 100%;
@@ -33,7 +33,7 @@ const AddImage = styled.div`
   background-size: 5px 5px;
 `
 
-const InputLabel = styled.label<{empty: boolean}>`
+const InputLabel = styled.label<{$empty: boolean}>`
   position: relative;
   cursor: default;
   box-sizing: border-box;
@@ -46,9 +46,9 @@ const InputLabel = styled.label<{empty: boolean}>`
   font-size: 16px;
 
   overflow: hidden;
-  color: #ccc;
+  color: var(--theatre-text-secondary);
   &:hover {
-    color: white;
+    color: var(--theatre-text-primary);
   }
 
   border-radius: 99999px;
@@ -57,7 +57,7 @@ const InputLabel = styled.label<{empty: boolean}>`
     border-color: hwb(220deg 45% 52%);
   }
 
-  ${(props) => (props.empty ? css`` : css``)}
+  ${(props) => (props.$empty ? css`` : css``)}
 `
 
 // file input
@@ -94,7 +94,7 @@ const DeleteButton = styled.button`
 
   &:hover {
     opacity: 1;
-    color: white;
+    color: var(--theatre-text-primary);
   }
 `
 
@@ -136,9 +136,9 @@ function ImagePropEditor({
   const empty = !value?.id
 
   return (
-    <Container empty={empty}>
+    <Container $empty={empty}>
       <InputLabel
-        empty={empty}
+        $empty={empty}
         title={
           empty ? 'Upload image' : `"${value.id}" (Click to upload new image)`
         }

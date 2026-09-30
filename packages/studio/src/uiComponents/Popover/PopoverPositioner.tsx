@@ -1,13 +1,14 @@
 import React from 'react'
 import {cloneElement, useLayoutEffect, useState} from 'react'
 import useWindowSize from 'react-use/esm/useWindowSize'
-import useBoundingClientRect from '@theatre/studio/uiComponents/useBoundingClientRect'
+import useBoundingClientRect from '@dreamerbird/studio/uiComponents/useBoundingClientRect'
 import ArrowContext from './ArrowContext'
-import useRefAndState from '@theatre/studio/utils/useRefAndState'
-import useOnClickOutside from '@theatre/studio/uiComponents/useOnClickOutside'
-import onPointerOutside from '@theatre/studio/uiComponents/onPointerOutside'
-import noop from '@theatre/utils/noop'
+import useRefAndState from '@dreamerbird/studio/utils/useRefAndState'
+import useOnClickOutside from '@dreamerbird/studio/uiComponents/useOnClickOutside'
+import onPointerOutside from '@dreamerbird/studio/uiComponents/onPointerOutside'
+import noop from '@dreamerbird/utils/noop'
 import {clamp} from 'lodash-es'
+import type {$IntentionalAny} from '@dreamerbird/core/types/public'
 
 const minimumDistanceOfArrowToEdgeOfPopover = 8
 
@@ -34,8 +35,13 @@ export type PopoverPositionerProps = {
 const PopoverPositioner: React.FC<PopoverPositionerProps> = (props) => {
   const originalElement = props.children()
   const [ref, container] = useRefAndState<HTMLElement | SVGElement | null>(null)
-  const style: Record<string, string> = originalElement.props.style
-    ? {...originalElement.props.style}
+  // react 19 types ReactElement.props as unknown; the child is always one of
+  // our own components accepting style/ref
+  const originalProps = originalElement.props as {
+    style?: Record<string, string>
+  }
+  const style: Record<string, string> = originalProps.style
+    ? {...originalProps.style}
     : {}
   style.position = 'absolute'
 
@@ -147,7 +153,7 @@ const PopoverPositioner: React.FC<PopoverPositionerProps> = (props) => {
 
   return (
     <ArrowContext.Provider value={arrowContextValue}>
-      {cloneElement(originalElement, {ref, style})}
+      {cloneElement(originalElement, {ref, style} as $IntentionalAny)}
     </ArrowContext.Provider>
   )
 }

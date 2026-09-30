@@ -6,15 +6,25 @@
 
 export * from './coreExports'
 export * from './types/public'
-import {defer} from '@theatre/utils/defer'
+import {defer} from '@dreamerbird/utils/defer'
 import CoreBundle from './CoreBundle'
 import {globalVariableNames} from './globals'
-import type {$____FixmeStudio} from '@theatre/core/types/public'
-import type {IStudio, InitOpts} from './types/public'
+import {initState} from './initState'
+import type {
+  IStudio,
+  IStudioBundle,
+  IStudioInternal,
+  InitOpts,
+} from './types/public'
 
-const studioDeferred = defer<$____FixmeStudio>()
+const studioDeferred = defer<IStudioInternal>()
 
 export async function getStudio(): Promise<IStudio> {
+  if (!initState.called) {
+    throw new Error(
+      `You seem to have called getStudio() before init(). The studio has not been initialized; make sure to call init() (e.g. theatre.init({studio: true})) before using the studio.`,
+    )
+  }
   return (await studioDeferred.promise).publicApi
 }
 
@@ -28,21 +38,39 @@ export function getStudioSync(
   return studioDeferred.currentValue!.publicApi
 }
 
-let initCalled = false
-const initOptsDeferred = defer<InitOpts | undefined>()
-
+/**
+ * Initializes Theatre.js with the given options.
+ *
+ * This is safe to call multiple times; only the first call has any effect.
+ */
 export async function init(opts?: InitOpts) {
-  if (initCalled) {
+  if (initState.called) {
     return
   }
-  initCalled = true
-  initOptsDeferred.resolve(opts)
+  initState.called = true
+  initState.optsDeferred.resolve(opts)
+
+  if (opts?.studio && typeof window !== 'undefined') {
+    // The studio bundle registers itself with core when imported; init() only
+    // supplies the opts. If nothing has attached after a while, the likely
+    // cause is a missing `import '@dreamerbird/studio'` — say so instead of
+    // leaving the user with a silently absent studio.
+    setTimeout(() => {
+      if (studioDeferred.status !== 'resolved') {
+        console.warn(
+          `theatre.init({studio: true}) was called, but @dreamerbird/studio has not loaded. ` +
+            `Did you forget to import it? Add \`import '@dreamerbird/studio'\` to your app's entry ` +
+            `module — the studio registers itself with core when it is imported.`,
+        )
+      }
+    }, 5000)
+  }
 }
 
 const theatre = {getStudio, getStudioSync, init}
 export default theatre
 
-type StudioBundle = $____FixmeStudio // todo
+type StudioBundle = IStudioBundle
 
 registerCoreBundle()
 
@@ -50,7 +78,7 @@ registerCoreBundle()
  * @remarks
  * the studio and core need to communicate with each other somehow, and currently we do that
  * by registering each of them as a global variable. This function does the work of registering
- * the core bundle (everything exported from `@theatre/core`) to window.__TheatreJS_CoreBundle.
+ * the core bundle (everything exported from `@dreamerbird/core`) to window.__TheatreJS_CoreBundle.
  */
 function registerCoreBundle() {
   // This only works in a browser environment
@@ -76,8 +104,8 @@ function registerCoreBundle() {
     ) {
       /*
       Another core bundle is registered. This usually means the bundler is not configured correctly and
-      is bundling `@theatre/core` multiple times, but, there are legitimate scenarios where a user may want
-      to include multiple instances of `@theatre/core` on the same page.
+      is bundling `@dreamerbird/core` multiple times, but, there are legitimate scenarios where a user may want
+      to include multiple instances of `@dreamerbird/core` on the same page.
 
       For example, an article might embed two separate interactive graphics that
       are made by different teams (and even different tech stacks -- one in JS, the other in clojurescript).
@@ -112,21 +140,21 @@ function registerCoreBundle() {
       
       */
       throw new Error(
-        `It seems that the module '@theatre/core' is loaded more than once. This could have two possible causes:\n` +
+        `It seems that the module '@dreamerbird/core' is loaded more than once. This could have two possible causes:\n` +
           `1. You might have two separate versions of Theatre.js in node_modules.\n` +
           `2. Or this might be a bundling misconfiguration, in case you're using a bundler like Webpack/ESBuild/Rollup.\n\n` +
-          `Note that it **is okay** to import '@theatre/core' multiple times. But those imports should point to the same module.`,
+          `Note that it **is okay** to import '@dreamerbird/core' multiple times. But those imports should point to the same module.`,
       )
     } else {
       throw new Error(
-        `The variable window.${globalVariableNames.coreBundle} seems to be already set by a module other than @theatre/core.`,
+        `The variable window.${globalVariableNames.coreBundle} seems to be already set by a module other than @dreamerbird/core.`,
       )
     }
   }
 
   const coreBundle = new CoreBundle({
     onAttach: (s) => {
-      void initOptsDeferred.promise.then((opts) => {
+      void initState.optsDeferred.promise.then((opts) => {
         s.initialize(opts)
         studioDeferred.resolve(s)
       })
@@ -138,7 +166,7 @@ function registerCoreBundle() {
 
   const possibleExistingStudioBundle: undefined | StudioBundle =
     // @ts-ignore ignore
-    globalContext[globalVariableNames.studioBundle]
+    globalContext[globalVariableNames.StudioBundle]
 
   if (
     possibleExistingStudioBundle &&

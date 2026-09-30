@@ -1,34 +1,34 @@
 import type {
   PropTypeConfig_Compound,
   PropTypeConfig_Number,
-} from '@theatre/core/types/public'
+} from '@dreamerbird/core/types/public'
 
-import type {$FixMe} from '@theatre/core/types/public'
-import {Atom, getPointerParts} from '@theatre/dataverse'
-import type {Pointer} from '@theatre/dataverse'
+import type {$FixMe} from '@dreamerbird/core/types/public'
+import {Atom, getPointerParts} from '@dreamerbird/dataverse'
+import type {Pointer} from '@dreamerbird/dataverse'
 import last from 'lodash-es/last'
-import {darken, transparentize} from 'polished'
 import React, {useMemo} from 'react'
 import styled from 'styled-components'
-import {rowIndentationFormulaCSS} from '@theatre/studio/panels/DetailPanel/DeterminePropEditorForDetail/rowIndentationFormulaCSS'
-import {propNameTextCSS} from '@theatre/studio/propEditors/utils/propNameTextCSS'
-import {pointerEventsAutoInNormalMode} from '@theatre/studio/css'
-import DeterminePropEditorForDetail from '@theatre/studio/panels/DetailPanel/DeterminePropEditorForDetail'
-import type SheetObject from '@theatre/core/sheetObjects/SheetObject'
-import {useEditingToolsForCompoundProp} from '@theatre/studio/propEditors/useEditingToolsForCompoundProp'
-import type {PropHighlighted} from '@theatre/studio/panels/SequenceEditorPanel/whatPropIsHighlighted'
-import {whatPropIsHighlighted} from '@theatre/studio/panels/SequenceEditorPanel/whatPropIsHighlighted'
-import {deriver} from '@theatre/studio/utils/derive-utils'
-import NumberPropEditor from '@theatre/studio/propEditors/simpleEditors/NumberPropEditor'
+import {rowIndentationFormulaCSS} from '@dreamerbird/studio/panels/DetailPanel/DeterminePropEditorForDetail/rowIndentationFormulaCSS'
+import {propNameTextCSS} from '@dreamerbird/studio/propEditors/utils/propNameTextCSS'
+import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
+import DeterminePropEditorForDetail from '@dreamerbird/studio/panels/DetailPanel/DeterminePropEditorForDetail'
+import type SheetObject from '@dreamerbird/core/sheetObjects/SheetObject'
+import {useEditingToolsForCompoundProp} from '@dreamerbird/studio/propEditors/useEditingToolsForCompoundProp'
+import type {PropHighlighted} from '@dreamerbird/studio/panels/SequenceEditorPanel/whatPropIsHighlighted'
+import {whatPropIsHighlighted} from '@dreamerbird/studio/panels/SequenceEditorPanel/whatPropIsHighlighted'
+import {deriver} from '@dreamerbird/studio/utils/derive-utils'
+import NumberPropEditor from '@dreamerbird/studio/propEditors/simpleEditors/NumberPropEditor'
 import type {IDetailSimplePropEditorProps} from './DetailSimplePropEditor'
-import {useEditingToolsForSimplePropInDetailsPanel} from '@theatre/studio/propEditors/useEditingToolsForSimpleProp'
-import {usePrism} from '@theatre/react'
-import {val} from '@theatre/dataverse'
+import {useEditingToolsForSimplePropInDetailsPanel} from '@dreamerbird/studio/propEditors/useEditingToolsForSimpleProp'
+import {usePrism} from '@dreamerbird/react'
+import {val} from '@dreamerbird/dataverse'
 import {HiOutlineChevronRight} from 'react-icons/hi'
-import memoizeFn from '@theatre/utils/memoizeFn'
+import memoizeFn from '@dreamerbird/utils/memoizeFn'
 import {collapsedMap} from './collapsedMap'
-import useChordial from '@theatre/studio/uiComponents/chordial/useChodrial'
-import {__private} from '@theatre/core'
+import useChordial from '@dreamerbird/studio/uiComponents/chordial/useChodrial'
+import {__private} from '@dreamerbird/core'
+import {usePropLabel, useT} from '@dreamerbird/studio/i18n'
 
 const {isPropConfigComposite} = __private.propTypeUtils
 
@@ -39,27 +39,27 @@ const Container = styled.div`
   --right-width: 60%;
 `
 
-const Header = styled.div<{isHighlighted: PropHighlighted}>`
+const Header = styled.div`
   height: 30px;
   display: flex;
   align-items: stretch;
   position: relative;
 `
 
-const Padding = styled.div<{isVectorProp: boolean}>`
+const Padding = styled.div<{$isVectorProp: boolean}>`
   padding-left: ${rowIndentationFormulaCSS};
   display: flex;
   align-items: center;
   overflow: hidden;
-  ${({isVectorProp}) =>
-    isVectorProp ? 'width: calc(100% - var(--right-width))' : ''};
+  ${({$isVectorProp}) =>
+    $isVectorProp ? 'width: calc(100% - var(--right-width))' : ''};
 `
 
 const ControlIndicators = styled.div`
   flexshrink: 0;
 `
 
-const PropName = deriver(styled.div<{isHighlighted: PropHighlighted}>`
+const PropName = deriver(styled.div<{$isHighlighted: PropHighlighted}>`
   margin-left: 4px;
   cursor: default;
   height: 100%;
@@ -68,14 +68,14 @@ const PropName = deriver(styled.div<{isHighlighted: PropHighlighted}>`
   gap: 4px;
   user-select: none;
   &:hover {
-    color: white;
+    color: var(--theatre-text-primary);
   }
   overflow: hidden;
 
   ${() => propNameTextCSS};
 `)
 
-const CollapseIcon = styled.span<{isCollapsed: boolean; isVector: boolean}>`
+const CollapseIcon = styled.span<{$isCollapsed: boolean; $isVector: boolean}>`
   width: 28px;
   height: 28px;
   font-size: 9px;
@@ -86,14 +86,14 @@ const CollapseIcon = styled.span<{isCollapsed: boolean; isVector: boolean}>`
   transition:
     transform 0.05s ease-out,
     color 0.1s ease-out;
-  transform: rotateZ(${(props) => (props.isCollapsed ? 0 : 90)}deg);
+  transform: rotateZ(${(props) => (props.$isCollapsed ? 0 : 90)}deg);
   color: #66686a;
 
   visibility: ${(props) =>
     // If it's a vector, show the collapse icon only when it's expanded
-    (!props.isVector && props.isCollapsed) ||
+    (!props.$isVector && props.$isCollapsed) ||
     // If it's a regular compond prop, show the collapse icon only when it's collapsed
-    (props.isVector && !props.isCollapsed)
+    (props.$isVector && !props.$isCollapsed)
       ? 'visible'
       : 'hidden'};
 
@@ -102,16 +102,13 @@ const CollapseIcon = styled.span<{isCollapsed: boolean; isVector: boolean}>`
   }
 
   &:hover {
-    transform: rotateZ(${(props) => (props.isCollapsed ? 15 : 75)}deg);
+    transform: rotateZ(${(props) => (props.$isCollapsed ? 15 : 75)}deg);
     color: #c0c4c9;
   }
 `
 
-const color = transparentize(0.05, `#282b2f`)
-
-const SubProps = styled.div<{depth: number; lastSubIsComposite: boolean}>`
-  /* background: ${({depth}) => darken(depth * 0.03, color)}; */
-  /* padding: ${(props) => (props.lastSubIsComposite ? 0 : '4px')} 0; */
+const SubProps = styled.div<{$depth: number; $lastSubIsComposite: boolean}>`
+  /* padding: ${(props) => (props.$lastSubIsComposite ? 0 : '4px')} 0; */
 `
 
 const isVectorProp = memoizeFn((propConfig: PropTypeConfig_Compound<any>) => {
@@ -176,8 +173,10 @@ function DetailCompoundPropEditor<
   propConfig,
   visualIndentation,
 }: ICompoundPropDetailEditorProps<TPropTypeConfig>) {
+  const t = useT()
   const propName =
-    propConfig.label ?? (last(getPointerParts(pointerToProp).path) as string)
+    usePropLabel(propConfig.label) ??
+    (last(getPointerParts(pointerToProp).path) as string)
 
   const allSubs = Object.entries(propConfig.props)
   const compositeSubs = allSubs.filter(([_, conf]) =>
@@ -193,7 +192,8 @@ function DetailCompoundPropEditor<
     propConfig,
   )
 
-  const label: string = propName || 'Props'
+  // 根 compound(对象本身的属性树)没有 propName,回退到收编的"Props/属性"
+  const label: string = propName || t('detailPanel.propsRoot')
 
   const lastSubPropIsComposite = compositeSubs.length > 0
 
@@ -233,15 +233,15 @@ function DetailCompoundPropEditor<
         // @ts-ignore
         style={{'--depth': visualIndentation - 1}}
       >
-        <Padding isVectorProp={isVector}>
+        <Padding $isVectorProp={isVector}>
           <ControlIndicators>{tools.controlIndicators}</ControlIndicators>
 
-          <PropName isHighlighted={isPropHighlightedD} ref={targetRef}>
+          <PropName $isHighlighted={isPropHighlightedD} ref={targetRef}>
             <span>{label}</span>
           </PropName>
           <CollapseIcon
-            isCollapsed={isCollapsed}
-            isVector={isVector}
+            $isCollapsed={isCollapsed}
+            $isVector={isVector}
             onClick={() => {
               isCollapsedAtom.set(!isCollapsedAtom.get())
             }}
@@ -257,7 +257,9 @@ function DetailCompoundPropEditor<
                   key={'prop-' + subPropKey}
                   // @ts-ignore
                   propConfig={subPropConfig}
-                  pointerToProp={pointerToProp[subPropKey] as Pointer<$FixMe>}
+                  pointerToProp={
+                    (pointerToProp as $FixMe)[subPropKey] as Pointer<$FixMe>
+                  }
                   obj={obj}
                 />
               )
@@ -270,8 +272,8 @@ function DetailCompoundPropEditor<
         <SubProps
           // @ts-ignore
           style={{'--depth': visualIndentation}}
-          depth={visualIndentation}
-          lastSubIsComposite={lastSubPropIsComposite}
+          $depth={visualIndentation}
+          $lastSubIsComposite={lastSubPropIsComposite}
         >
           {[...nonCompositeSubs, ...compositeSubs].map(
             ([subPropKey, subPropConfig]) => {
@@ -279,7 +281,9 @@ function DetailCompoundPropEditor<
                 <DeterminePropEditorForDetail
                   key={'prop-' + subPropKey}
                   propConfig={subPropConfig}
-                  pointerToProp={pointerToProp[subPropKey] as Pointer<$FixMe>}
+                  pointerToProp={
+                    (pointerToProp as $FixMe)[subPropKey] as Pointer<$FixMe>
+                  }
                   obj={obj}
                   visualIndentation={visualIndentation + 1}
                 />

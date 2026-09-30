@@ -1,16 +1,16 @@
 import React, {useEffect, useLayoutEffect} from 'react'
 import styled from 'styled-components'
-import {panelZIndexes} from '@theatre/studio/panels/BasePanel/common'
+import {panelZIndexes} from '@dreamerbird/studio/panels/BasePanel/common'
 import ProjectsList from './ProjectsList/ProjectsList'
-import {useVal} from '@theatre/react'
-import getStudio from '@theatre/studio/getStudio'
-import useHotspot from '@theatre/studio/uiComponents/useHotspot'
-import {Atom, prism, val} from '@theatre/dataverse'
-import {pointerEventsAutoInNormalMode} from '@theatre/studio/css'
+import {useVal} from '@dreamerbird/react'
+import getStudio from '@dreamerbird/studio/getStudio'
+import useHotspot from '@dreamerbird/studio/uiComponents/useHotspot'
+import {Atom, prism, val} from '@dreamerbird/dataverse'
+import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
 
 const headerHeight = `44px`
 
-const Container = styled.div<{pin: boolean}>`
+const Container = styled.div<{$pin: boolean}>`
   ${pointerEventsAutoInNormalMode};
   background-color: transparent;
   position: absolute;
@@ -31,7 +31,7 @@ const Container = styled.div<{pin: boolean}>`
 
   scrollbar-width: none;
 
-  display: ${({pin}) => (pin ? 'block' : 'none')};
+  display: ${({$pin}) => ($pin ? 'block' : 'none')};
 
   &:hover {
     display: block;
@@ -64,7 +64,7 @@ const OutlinePanel: React.FC<{}> = () => {
 
   return (
     <Container
-      pin={pin || show}
+      $pin={pin || show}
       onMouseEnter={() => {
         isOutlinePanelHoveredB.set(true)
       }}

@@ -1,6 +1,6 @@
 {
-  "name": "@theatre/saaz",
-  "version": "0.7.0",
+  "name": "@dreamerbird/saaz",
+  "version": "1.0.0",
   "license": "Apache-2.0",
   "author": {
     "name": "Aria Minaei",
@@ -30,13 +30,14 @@
     "precommit": "yarn run docs"
   },
   "devDependencies": {
+    "@dreamerbird/dataverse": "workspace:*",
+    "@dreamerbird/utils": "workspace:*",
     "@microsoft/api-extractor": "^7.36.4",
-    "@theatre/dataverse": "workspace:*",
-    "@theatre/utils": "workspace:*",
     "@types/jest": "^26.0.23",
     "@types/lodash-es": "^4.17.4",
     "@types/node": "^15.6.2",
     "esbuild": "^0.12.15",
+    "fake-indexeddb": "^5",
     "fast-deep-equal": "^3.1.3",
     "immer": "^9.0.6",
     "jest-diff": "^29.6.4",
@@ -46,7 +47,7 @@
     "tsx": "4.7.0",
     "typedoc": "^0.24.8",
     "typedoc-plugin-markdown": "^3.15.4",
-    "typescript": "5.1.6"
+    "typescript": "5.6.3"
   },
   "dependencies": {
     "idb": "^7.1.1"

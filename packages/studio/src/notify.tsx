@@ -7,8 +7,8 @@ import type {
   NotificationType,
   Notify,
   Notifiers,
-} from '@theatre/core/utils/notify'
-import {useVal} from '@theatre/react'
+} from '@dreamerbird/core/utils/notify'
+import {useVal} from '@dreamerbird/react'
 import getStudio from './getStudio'
 import {marked} from 'marked'
 import useTooltip from './uiComponents/Popover/useTooltip'
@@ -89,21 +89,21 @@ const NotificationContainer = styled.div`
   display: flex;
   gap: 12px;
   ${pointerEventsAutoInNormalMode};
-  background-color: rgba(40, 43, 47, 0.8);
+  background-color: var(--theatre-panel-bg-80);
   box-shadow:
-    0 1px 1px rgba(0, 0, 0, 0.25),
+    0 1px 1px var(--theatre-shadow-color),
     0 2px 6px rgba(0, 0, 0, 0.15);
   backdrop-filter: blur(14px);
 
   @supports not (backdrop-filter: blur()) {
-    background: rgba(40, 43, 47, 0.95);
+    background: var(--theatre-panel-bg-95);
   }
 `
 
 const NotificationTitle = styled.div`
   font-size: 14px;
   font-weight: bold;
-  color: #fff;
+  color: var(--theatre-text-primary);
 `
 
 const NotificationMain = styled.div`
@@ -183,7 +183,7 @@ const COLORS = {
   error: '#ef4444',
 }
 
-const IndicatorDot = styled.div<{type: NotificationType}>`
+const IndicatorDot = styled.div<{$type: NotificationType}>`
   display: flex;
   justify-content: center;
   margin-left: 12px;
@@ -194,7 +194,7 @@ const IndicatorDot = styled.div<{type: NotificationType}>`
     width: 8px;
     height: 8px;
     border-radius: 999999px;
-    background-color: ${({type}) => COLORS[type]};
+    background-color: ${({$type}) => COLORS[$type]};
   }
 `
 //endregion
@@ -218,7 +218,7 @@ const createHandler =
       toast.custom(
         (t) => (
           <NotificationContainer>
-            <IndicatorDot type={type} />
+            <IndicatorDot $type={type} />
             <NotificationMain>
               <NotificationTitle>{title}</NotificationTitle>
               <NotificationMessage
@@ -267,29 +267,30 @@ export const notify: Notifiers = {
 
 //region Styles
 const ButtonContainer = styled.div<{
-  align: 'center' | 'side'
-  danger?: boolean
+  $align: 'center' | 'side'
+  $danger?: boolean
 }>`
   display: flex;
-  justify-content: ${({align}) => (align === 'center' ? 'center' : 'flex-end')};
+  justify-content: ${({$align}) =>
+    $align === 'center' ? 'center' : 'flex-end'};
   gap: 12px;
 `
 
-const Button = styled.button<{danger?: boolean}>`
+const Button = styled.button<{$danger?: boolean}>`
   position: relative;
   border-radius: 4px;
   display: flex;
   align-items: center;
   gap: 12px;
   ${pointerEventsAutoInNormalMode};
-  background-color: rgba(40, 43, 47, 0.8);
+  background-color: var(--theatre-panel-bg-80);
   box-shadow:
-    0 1px 1px rgba(0, 0, 0, 0.25),
+    0 1px 1px var(--theatre-shadow-color),
     0 2px 6px rgba(0, 0, 0, 0.15);
   backdrop-filter: blur(14px);
   border: none;
   padding: 12px;
-  color: #fff;
+  color: var(--theatre-text-primary);
   overflow: hidden;
 
   ::before {
@@ -299,12 +300,12 @@ const Button = styled.button<{danger?: boolean}>`
   }
 
   :hover::before {
-    background: ${({danger}) =>
-      danger ? 'rgba(255, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)'};
+    background: ${({$danger}) =>
+      $danger ? 'rgba(255, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)'};
   }
 
   @supports not (backdrop-filter: blur()) {
-    background: rgba(40, 43, 47, 0.95);
+    background: var(--theatre-panel-bg-95);
   }
 `
 
@@ -393,7 +394,7 @@ export const Notifier = () => {
               </div>
             </NotificationScroller>
           )}
-      <ButtonContainer align="side">
+      <ButtonContainer $align="side">
         {pinNotifications && toasts.length > 0 && (
           <Button
             onClick={() => {
@@ -401,7 +402,7 @@ export const Notifier = () => {
               notificationUniquenessChecker.clear()
               toast.remove()
             }}
-            danger
+            $danger
           >
             Clear
           </Button>

@@ -54,10 +54,10 @@ export type EditorDefinitionToEditorInvocable<
 > = Editors extends EditorDefinitionFn
   ? (opts: Parameters<Editors>[2]) => void
   : Editors extends {[key: string]: EditorDefinitions}
-  ? {
-      [K in keyof Editors]: EditorDefinitionToEditorInvocable<Editors[K]>
-    }
-  : never
+    ? {
+        [K in keyof Editors]: EditorDefinitionToEditorInvocable<Editors[K]>
+      }
+    : never
 export type ValidGenerators = {
   [key: string]:
     | (() => SerializableValue)
@@ -253,9 +253,24 @@ export interface FrontStorageAdapter {
    * Sets a singular value.
    */
   getList<T extends {id: string}>(key: string, session: string): Promise<T[]>
+  /**
+   * Closes any underlying connection/resources. Must be idempotent; in-memory
+   * adapters are no-ops. IDB adapters release their database connection so
+   * teardown / tests don't leak open handles.
+   */
+  close(): Promise<void>
 }
 
-export interface BackStorageAdapter {}
+export interface BackStorageAdapter {
+  get<T>(key: string): Promise<T | void>
+  set<T>(key: string, value: T): Promise<void>
+  /**
+   * Closes any underlying connection/resources. Must be idempotent; in-memory
+   * adapters are no-ops. IDB adapters release their database connection so
+   * teardown / tests don't leak open handles.
+   */
+  close(): Promise<void>
+}
 
 export type Schema<
   OpSnapshot extends {$schemaVersion: number},

@@ -1,12 +1,12 @@
-import {setupTestSheet} from '@theatre/studio/integration-tests/testUtils'
-import {encodePathToProp} from '@theatre/utils/pathToProp'
+import {setupTestSheet} from '@dreamerbird/studio/integration-tests/testUtils'
+import {encodePathToProp} from '@dreamerbird/utils/pathToProp'
 import type {
   ObjectAddressKey,
   SequenceTrackId,
-} from '@theatre/core/types/public'
-import type {$IntentionalAny} from '@theatre/core/types/public'
-import {iterateOver} from '@theatre/dataverse'
-import {__private} from '@theatre/core'
+} from '@dreamerbird/core/types/public'
+import type {$IntentionalAny} from '@dreamerbird/core/types/public'
+import {iterateOver} from '@dreamerbird/dataverse'
+import {__private} from '@dreamerbird/core'
 const {asSequenceTrackId} = __private.ids
 
 describe(`SheetObjectTemplate`, () => {

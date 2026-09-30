@@ -1,5 +1,6 @@
-import theatre from '@theatre/core'
-import {getProject} from '@theatre/core'
+import theatre from '@dreamerbird/core'
+import '@dreamerbird/studio'
+import {getProject} from '@dreamerbird/core'
 
 void theatre.init({studio: true, usePersistentStorage: false})
 

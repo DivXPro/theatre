@@ -1,26 +1,32 @@
-import type {AppRouter} from '@theatre/app/src/server/api/root'
+import type {AppRouter} from '@dreamerbird/app/src/server/api/root'
+import type {CreateTRPCProxyClient} from '@trpc/client'
 import {createTRPCProxyClient, httpBatchLink} from '@trpc/client'
 import superjson from 'superjson'
 import {env} from './env'
 
-export let appHost = env.APP_URL
-// if host does not start with a protocol:
-if (!appHost.startsWith('http')) {
-  // then assume it's https
-  appHost = 'https://' + appHost
+// APP_URL is optional (AUTH_DISABLED=true needs no app). When it's absent,
+// appClient is null and authUtils never fetches the jwt public key — the
+// self-hosted minimal loop has no app to talk to.
+const rawAppUrl = env.APP_URL
+export let appHost = ''
+if (typeof rawAppUrl === 'string' && rawAppUrl !== '') {
+  // if host does not start with a protocol, assume https
+  appHost = rawAppUrl.startsWith('http') ? rawAppUrl : 'https://' + rawAppUrl
 }
 
-const appClient = createTRPCProxyClient<AppRouter>({
-  links: [
-    httpBatchLink({
-      url: appHost + '/api/trpc',
-    }),
-  ],
-  transformer: superjson,
-})
+const appClient: CreateTRPCProxyClient<AppRouter> | null = appHost
+  ? createTRPCProxyClient<AppRouter>({
+      links: [
+        httpBatchLink({
+          url: appHost + '/api/trpc',
+        }),
+      ],
+      transformer: superjson,
+    })
+  : null
 
 // if (process.env.NODE_ENV === 'development') {
-//   void appClient..query({name: 'the lib'}).then((res) => {
+//   void appClient?.query({name: 'the lib'}).then((res) => {
 //     console.log('app/healthCheck', res)
 //   })
 // }

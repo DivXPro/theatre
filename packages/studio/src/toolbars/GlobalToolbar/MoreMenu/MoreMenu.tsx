@@ -1,9 +1,8 @@
-import {useVal} from '@theatre/react'
-import type {$IntentionalAny} from '@theatre/core/types/public'
-import getStudio from '@theatre/studio/getStudio'
+import type {$IntentionalAny} from '@dreamerbird/core/types/public'
 import React from 'react'
 import styled from 'styled-components'
-import {env} from '@theatre/studio/env'
+import {env} from '@dreamerbird/studio/env'
+import {useT} from '@dreamerbird/studio/i18n'
 
 const Container = styled.div`
   width: 138px;
@@ -15,7 +14,7 @@ const Container = styled.div`
   align-items: stretch;
   justify-content: flex-start;
   box-shadow:
-    0px 1px 1px rgba(0, 0, 0, 0.25),
+    0px 1px 1px var(--theatre-shadow-color),
     0px 2px 6px rgba(0, 0, 0, 0.15);
   backdrop-filter: blur(14px);
   pointer-events: auto;
@@ -65,7 +64,7 @@ const Link = styled(Item)`
 
   &:hover {
     /* background-color: #398995; */
-    color: white !important;
+    color: var(--theatre-text-primary) !important;
     &:before {
       opacity: 1;
     }
@@ -104,25 +103,10 @@ const Divider = styled.div`
   background: rgba(255, 255, 255, 0.02);
 `
 
-const UpdateDot = styled.div`
-  position: absolute;
-  width: 8px;
-  height: 8px;
-  background: #40aaa4;
-  right: 14px;
-  top: 12px;
-  border-radius: 50%;
-`
-
 const version: string = env.THEATRE_VERSION ?? '0.4.0'
 
-const untaggedVersion: string = version.match(/^[^\-]+/)![0]
-
 const MoreMenu = React.forwardRef((props: {}, ref) => {
-  const hasUpdates = useVal(
-    getStudio().ahistoricAtom.pointer.updateChecker.result.hasUpdates,
-  )
-
+  const t = useT()
   return (
     <Container ref={ref as $IntentionalAny}>
       <Link
@@ -131,7 +115,7 @@ const MoreMenu = React.forwardRef((props: {}, ref) => {
         className=""
         target="_blank"
       >
-        Docs
+        {t('menu.docs')}
       </Link>
 
       <Link
@@ -140,7 +124,7 @@ const MoreMenu = React.forwardRef((props: {}, ref) => {
         className=""
         target="_blank"
       >
-        Changelog
+        {t('menu.changelog')}
       </Link>
 
       <Divider />
@@ -150,7 +134,7 @@ const MoreMenu = React.forwardRef((props: {}, ref) => {
         className=""
         target="_blank"
       >
-        Github
+        {t('menu.github')}
       </Link>
       <Link
         as="a"
@@ -158,7 +142,7 @@ const MoreMenu = React.forwardRef((props: {}, ref) => {
         className=""
         target="_blank"
       >
-        Twitter
+        {t('menu.twitter')}
       </Link>
       <Link
         className=""
@@ -166,48 +150,15 @@ const MoreMenu = React.forwardRef((props: {}, ref) => {
         href="https://discord.gg/bm9f8F9Y9N"
         target="_blank"
       >
-        Discord
+        {t('menu.discord')}
       </Link>
       <Divider />
       <VersionContainer>
-        <VersionLabel>Version</VersionLabel>
+        <VersionLabel>{t('menu.version')}</VersionLabel>
         <VersionValueRow>
-          <VersionValue>
-            {version}{' '}
-            {hasUpdates === true
-              ? '(outdated)'
-              : hasUpdates === false
-                ? '(latest)'
-                : ''}
-          </VersionValue>
+          <VersionValue>{version}</VersionValue>
         </VersionValueRow>
       </VersionContainer>
-      {hasUpdates === true && (
-        <>
-          <Divider />
-          <Link
-            as="a"
-            href={`https://www.theatrejs.com/docs/latest/releases${encodeURIComponent(
-              untaggedVersion,
-            )}`}
-            className=""
-            target="_blank"
-          >
-            Update
-            <UpdateDot />
-          </Link>
-          <Link
-            as="a"
-            href={`https://www.theatrejs.com/docs/latest/releases#${encodeURIComponent(
-              untaggedVersion,
-            )}`}
-            className=""
-            target="_blank"
-          >
-            What's new?
-          </Link>
-        </>
-      )}
     </Container>
   )
 })

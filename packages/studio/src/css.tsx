@@ -3,7 +3,7 @@ import {css} from 'styled-components'
 import styled, {createGlobalStyle, StyleSheetManager} from 'styled-components'
 import React, {useLayoutEffect, useState} from 'react'
 import ReactDOM from 'react-dom'
-import type {$IntentionalAny} from '@theatre/core/types/public'
+import type {$IntentionalAny} from '@dreamerbird/core/types/public'
 import {PortalContext} from 'reakit'
 import useRefAndState from './utils/useRefAndState'
 
@@ -25,20 +25,21 @@ export const pointerEventsAutoInNormalMode = css`
 
 export const theme = {
   panel: {
-    bg: `#282b2f`,
+    bg: `var(--theatre-panel-bg)`,
     head: {
       title: {
-        color: `#bbb`,
+        color: `var(--theatre-head-title)`,
       },
       punctuation: {
-        color: `#808080`,
+        color: `var(--theatre-head-punctuation)`,
       },
     },
     body: {
       compoudThing: {
         label: {
           get color(): string {
-            return lighten(0.6, theme.panel.bg)
+            // 派生色:polished 无法处理 var(),第一阶段保持静态计算值
+            return lighten(0.6, `#282b2f`)
           },
         },
       },
@@ -47,7 +48,7 @@ export const theme = {
 }
 
 export const panelUtils = {
-  panelBorder: `2px solid #1f1f1f`,
+  panelBorder: `2px solid var(--theatre-panel-border)`,
 }
 
 const GlobalStyle =
@@ -55,29 +56,36 @@ const GlobalStyle =
     ? createGlobalStyle`
         :host {
           all: initial;
-          color: white;
-          font:
-            11px -apple-system,
-            BlinkMacSystemFont,
-            Segoe WPC,
-            Segoe Editor,
-            HelveticaNeue-Light,
-            Ubuntu,
-            Droid Sans,
-            sans-serif;
+          --theatre-panel-bg: #282b2f;
+          --theatre-panel-bg-95: rgba(40, 43, 47, 0.95);
+          --theatre-panel-bg-80: rgba(40, 43, 47, 0.8);
+          --theatre-panel-bg-65: rgba(40, 43, 47, 0.65);
+          --theatre-panel-bg-99: rgba(40, 43, 47, 0.99);
+          --theatre-panel-border: #1f1f1f;
+          --theatre-text-primary: #ffffff;
+          --theatre-text-secondary: #cccccc;
+          --theatre-text-muted: #888888;
+          --theatre-head-title: #bbbbbb;
+          --theatre-head-punctuation: #808080;
+          --theatre-accent: #40aaa4;
+          --theatre-shadow-color: rgba(0, 0, 0, 0.25);
+          --theatre-font-family: -apple-system, BlinkMacSystemFont, Segoe WPC, Segoe Editor, HelveticaNeue-Light, Ubuntu, Droid Sans, sans-serif;
+          --theatre-font-size: 11px;
+          color: var(--theatre-text-primary);
+          font: var(--theatre-font-size) var(--theatre-font-family);
 
           // external links
           a[href^='http'] {
             text-decoration: none;
             text-decoration-line: underline;
-            text-decoration-color: #888;
+            text-decoration-color: var(--theatre-text-muted);
             position: relative;
             display: inline-block;
             margin-left: 0.4em;
 
             &:hover,
             &:active {
-              text-decoration-color: #ccc;
+              text-decoration-color: var(--theatre-text-secondary);
             }
           }
 
@@ -174,7 +182,7 @@ const GlobalStyle =
           }
 
           .text-color-pale {
-            color: #CCC;
+            color: var(--theatre-text-secondary);
           }
         }
 
@@ -204,7 +212,7 @@ export const ProvideStyles: React.FC<{
   children: React.ReactNode
 }> = (props) => {
   return (
-    <StyleSheetManager disableVendorPrefixes target={props.target}>
+    <StyleSheetManager target={props.target}>
       <>
         <GlobalStyle />
         {props.children}

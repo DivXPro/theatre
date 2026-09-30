@@ -1,8 +1,8 @@
-import deepEqual from '@theatre/utils/deepEqual'
+import deepEqual from '@dreamerbird/utils/deepEqual'
 import type {$IntentionalAny} from './types'
 import * as immer from 'immer'
 import setDeep from 'lodash-es/set'
-import memoizeFn from '@theatre/utils/memoizeFn'
+import memoizeFn from '@dreamerbird/utils/memoizeFn'
 
 type BranchName = 'base' | string
 
@@ -25,8 +25,8 @@ type CellToJSON<T extends Cell> = T extends {
 }
   ? CellBoxedToJSON<T>
   : T extends {$type: ['map']}
-  ? MapCellToJSON<T>
-  : never
+    ? MapCellToJSON<T>
+    : never
 
 type CellBoxedToJSON<T extends Cell> = T['$branches'] extends {
   [key: string]: {$boxedValue: infer V}
@@ -69,7 +69,7 @@ type PathSegment = [branchName: BranchName, mapProp: string]
 
 type Path = PathSegment[]
 
-function isCell(v: unknown): v is Cell {
+export function isCell(v: unknown): v is Cell {
   if (typeof v !== 'object' || v === null) return false
   const $type = (v as any).$type
   if (!Array.isArray($type)) return false
@@ -136,6 +136,7 @@ export function fromOps(base: any, ops: Ops): [cell: any] {
   }
 
   for (const op of ops) {
+    assertOpPathTraversable(immerDraft, op)
     const flatPath = op.path
       .map(([branchName, mapProp]) => [
         '$branches',
@@ -159,6 +160,43 @@ export function fromOps(base: any, ops: Ops): [cell: any] {
   }
 
   return [immer.finishDraft(immerDraft)]
+}
+
+/**
+ * 回放防护:op 的路径穿过缺失或畸形的中间节点时直接抛错(由调用方整体跳过
+ * 这条 update),而不是让 setDeep 自动补出没有 $type 的"裸" plain object。
+ * 裸节点混进 mapProps 后,下一个读写 draft 的事务会抛
+ * "mapProps[x] is not an ahistoric cell"——而这种毒化发生在内存派生阶段,
+ * 存档校验(isValidCell)看不见它。
+ *
+ * 合法边界:ChangeType 在已存在的父节点下创建新节点是节点诞生的正常方式;
+ * SetBoxedValue 落在不存在的节点上则一定会造出裸节点(真实 op 流里它的
+ * ChangeType 总是先出现于同一批 ops),必须拒绝。
+ */
+function assertOpPathTraversable(root: $IntentionalAny, op: Op): void {
+  let node = root
+  const {path} = op
+  for (let i = 0; i < path.length; i++) {
+    const [branchName, mapProp] = path[i]
+    const next = node?.$branches?.[branchName]?.$mapProps?.[mapProp]
+    const isLast = i === path.length - 1
+    if (next === undefined) {
+      if (!isLast || op.type === 'SetBoxedValue') {
+        throw Error(
+          `Cannot replay op: its path crosses a missing node ("${mapProp}"); ` +
+            `an earlier update that created it was likely skipped`,
+        )
+      }
+      return
+    }
+    if (!isCell(next)) {
+      throw Error(
+        `Cannot replay op: its path crosses an incompatible node ("${mapProp}"); ` +
+          `the state it was recorded against is incompatible`,
+      )
+    }
+    node = next
+  }
 }
 
 function compare(before: Cell, after: Cell): Ops {

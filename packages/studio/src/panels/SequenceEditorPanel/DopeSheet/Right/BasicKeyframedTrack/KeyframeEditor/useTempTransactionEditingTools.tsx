@@ -1,13 +1,13 @@
-import getStudio from '@theatre/studio/getStudio'
-import type {SerializableValue} from '@theatre/core/types/public'
+import getStudio from '@dreamerbird/studio/getStudio'
+import type {SerializableValue} from '@dreamerbird/core/types/public'
 import type {
   CommitOrDiscardOrRecapture,
   ITransactionPrivateApi,
-} from '@theatre/studio/StudioStore/StudioStore'
-import type {IEditingTools} from '@theatre/studio/propEditors/utils/IEditingTools'
+} from '@dreamerbird/studio/StudioStore/StudioStore'
+import type {IEditingTools} from '@dreamerbird/studio/propEditors/utils/IEditingTools'
 import {useMemo} from 'react'
-import type SheetObject from '@theatre/core/sheetObjects/SheetObject'
-import type {Asset} from '@theatre/core/types/public'
+import type SheetObject from '@dreamerbird/core/sheetObjects/SheetObject'
+import type {Asset} from '@dreamerbird/core/types/public'
 
 /**
  * This function takes a function `writeTx` that sets a value in the private Studio API and

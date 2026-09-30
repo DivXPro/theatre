@@ -1,8 +1,8 @@
-import type {AuthDerivedState} from '@theatre/studio/Auth'
-import getStudio from '@theatre/studio/getStudio'
-import ToolbarButton from '@theatre/studio/uiComponents/toolbar/ToolbarButton'
+import type {AuthDerivedState} from '@dreamerbird/studio/Auth'
+import getStudio from '@dreamerbird/studio/getStudio'
+import ToolbarButton from '@dreamerbird/studio/uiComponents/toolbar/ToolbarButton'
 import React from 'react'
-import SimplePopover from '@theatre/studio/uiComponents/Popover/SimplePopover'
+import SimplePopover from '@dreamerbird/studio/uiComponents/Popover/SimplePopover'
 import styled from 'styled-components'
 
 const ThePopover = styled(SimplePopover)`
@@ -18,8 +18,6 @@ const ThePopover = styled(SimplePopover)`
 const P1 = styled.p`
   margin-bottom: 1em;
 `
-
-const auth = getStudio().auth
 
 const Unauthorized: React.FC<{
   authState: Extract<AuthDerivedState, {loggedIn: false}>
@@ -40,7 +38,10 @@ const Unauthorized: React.FC<{
   const {procedureState} = authState
   if (!procedureState)
     return (
-      <ToolbarButton primary={true} onClick={() => auth.authorize()}>
+      <ToolbarButton
+        $primary={true}
+        onClick={() => getStudio().auth?.authorize()}
+      >
         Log in
       </ToolbarButton>
     )

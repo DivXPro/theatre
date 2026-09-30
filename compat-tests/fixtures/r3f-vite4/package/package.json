@@ -7,18 +7,18 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@react-three/drei": "^9.80.1",
-    "@react-three/fiber": "^8.13.6",
-    "three": "^0.155.0",
-    "@theatre/core": "0.0.1-COMPAT.1",
-    "@theatre/r3f": "0.0.1-COMPAT.1",
-    "@theatre/studio": "0.0.1-COMPAT.1",
-    "react": "^18.0.0",
-    "react-dom": "^18.0.0"
+    "@react-three/drei": "^10.7.8",
+    "@react-three/fiber": "^9.7.0",
+    "three": "^0.185.1",
+    "@dreamerbird/core": "0.0.1-COMPAT.1",
+    "@dreamerbird/r3f": "0.0.1-COMPAT.1",
+    "@dreamerbird/studio": "0.0.1-COMPAT.1",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
   },
   "devDependencies": {
-    "@types/react": "^18.0.0",
-    "@types/react-dom": "^18.0.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
     "@vitejs/plugin-react": "^1.3.0",
     "typescript": "^4.6.3",
     "vite": "^4.4.7"

@@ -1,9 +1,9 @@
-import type {$FixMe, VoidFn} from '@theatre/core/types/public'
+import type {$FixMe, VoidFn} from '@dreamerbird/core/types/public'
 import React from 'react'
 import styled, {css} from 'styled-components'
-import noop from '@theatre/utils/noop'
-import {pointerEventsAutoInNormalMode} from '@theatre/studio/css'
-import {ChevronDown, Package} from '@theatre/studio/uiComponents/icons'
+import noop from '@dreamerbird/utils/noop'
+import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
+import {ChevronDown, Package} from '@dreamerbird/studio/uiComponents/icons'
 
 export const Container = styled.li`
   margin: 0;
@@ -38,7 +38,7 @@ const Header = styled(BaseHeader)`
   box-shadow: 0 3px 4px -1px rgba(0, 0, 0, 0.48);
 
   color: rgba(255, 255, 255, 0.9);
-  background: rgba(40, 43, 47, 0.65);
+  background: var(--theatre-panel-bg-65);
   backdrop-filter: blur(14px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 
@@ -64,7 +64,7 @@ const Header = styled(BaseHeader)`
   }
 
   @supports not (backdrop-filter: blur()) {
-    background: rgba(40, 43, 47, 0.95);
+    background: var(--theatre-panel-bg-95);
   }
 `
 
@@ -86,6 +86,23 @@ const Head_Label = styled.span`
   height: 20px;
   align-items: center;
   box-sizing: border-box;
+`
+
+const NameInput = styled.input`
+  ${outlineItemFont};
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 2px;
+  color: rgba(255, 255, 255, 0.95);
+  height: 18px;
+  padding: 0 4px;
+  width: 150px;
+  outline: none;
+  box-sizing: border-box;
+
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.35);
+  }
 `
 
 const Head_IconContainer = styled.div`
@@ -142,6 +159,12 @@ const BaseItem: React.FC<{
   collapsed?: boolean
   setIsCollapsed?: (v: boolean) => void
   headerRef?: React.MutableRefObject<$FixMe>
+  rename?: {
+    editing: boolean
+    placeholder?: string
+    onSubmit: (name: string) => void
+    onCancel: () => void
+  }
 }> = ({
   label,
   children,
@@ -152,6 +175,7 @@ const BaseItem: React.FC<{
   collapsed = false,
   setIsCollapsed,
   headerRef,
+  rename,
 }) => {
   const canContainChildren = children !== undefined
 
@@ -186,7 +210,26 @@ const BaseItem: React.FC<{
         </Head_IconContainer>
 
         <Head_Label>
-          <span>{label}</span>
+          {rename?.editing ? (
+            <NameInput
+              autoFocus
+              defaultValue={typeof label === 'string' ? label : ''}
+              placeholder={rename.placeholder}
+              onFocus={(e) => e.currentTarget.select()}
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => {
+                // 输入态接管按键:别让折叠/全局快捷键抢(spec §8)
+                e.stopPropagation()
+                if (e.key === 'Enter') {
+                  rename.onSubmit(e.currentTarget.value)
+                } else if (e.key === 'Escape') {
+                  rename.onCancel()
+                }
+              }}
+            />
+          ) : (
+            <span>{label}</span>
+          )}
         </Head_Label>
         {labelDecoration}
       </Header>

@@ -1,9 +1,9 @@
 import React from 'react'
-import {usePrism, useVal} from '@theatre/react'
+import {usePrism, useVal} from '@dreamerbird/react'
 import type {ChodrialElement, ChordialOpts} from './chordialInternals'
 import {contextActor, contextStatus} from './contextActor'
-import ContextMenu from '@theatre/studio/uiComponents/simpleContextMenu/ContextMenu/ContextMenu'
-import {val} from '@theatre/dataverse'
+import ContextMenu from '@dreamerbird/studio/uiComponents/simpleContextMenu/ContextMenu/ContextMenu'
+import {val} from '@dreamerbird/dataverse'
 
 export const ContextOverlay: React.FC<{}> = () => {
   const currentStatus = useVal(contextStatus)

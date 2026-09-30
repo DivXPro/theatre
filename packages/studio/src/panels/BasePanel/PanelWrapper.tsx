@@ -1,4 +1,4 @@
-import {pointerEventsAutoInNormalMode} from '@theatre/studio/css'
+import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
 import React from 'react'
 import styled from 'styled-components'
 import {usePanel} from './BasePanel'
@@ -31,6 +31,7 @@ const PanelWrapper = React.forwardRef(
         // @ts-ignore
         ref={ref}
         {...otherProps}
+        data-panel-id={stuff.panelId}
         style={{
           width: stuff.dims.width + 'px',
           height: stuff.dims.height + 'px',

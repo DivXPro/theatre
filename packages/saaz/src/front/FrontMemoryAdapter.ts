@@ -2,7 +2,7 @@ import type {Draft} from 'immer'
 import {createDraft, current, finishDraft} from 'immer'
 import type {$IntentionalAny, FrontStorageAdapterTransaction} from '../types'
 import type {FrontStorageAdapter} from '../types'
-import {defer} from '@theatre/utils/defer'
+import {defer} from '@dreamerbird/utils/defer'
 
 export class FrontMemoryAdapter implements FrontStorageAdapter {
   private _state: {
@@ -35,6 +35,10 @@ export class FrontMemoryAdapter implements FrontStorageAdapter {
 
   get ready() {
     return this._readyDeferred.promise
+  }
+
+  async close(): Promise<void> {
+    // in-memory: nothing to close
   }
 
   async transaction<T>(
@@ -96,7 +100,9 @@ class Transaction implements FrontStorageAdapterTransaction {
     for (const [sessionId, v] of Object.entries(this._draft.sessions)) {
       if (!v) continue
       if (Object.hasOwn(v.keyval, key)) {
-        const value: T | undefined = v.keyval[key] as $IntentionalAny
+        // take an immutable snapshot (like get()/getList() do) so the value
+        // stays readable after the draft is finalized
+        const value: T | undefined = current(v.keyval)[key] as T | undefined
         if (value === undefined) continue
         vals[sessionId] = value
       }

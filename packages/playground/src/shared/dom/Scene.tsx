@@ -1,4 +1,4 @@
-import { getStudioSync} from '@theatre/core'
+import {getStudioSync} from '@dreamerbird/core'
 import type {UseDragOpts} from './useDrag'
 import useDrag from './useDrag'
 import React, {useLayoutEffect, useMemo, useRef, useState} from 'react'
@@ -6,9 +6,9 @@ import type {
   IProject,
   ISheet,
   ShorthandCompoundPropsToInitialValue,
-} from '@theatre/core'
-import {onChange, types} from '@theatre/core'
-import type {IScrub, IStudio} from '@theatre/core'
+} from '@dreamerbird/core'
+import {onChange, types} from '@dreamerbird/core'
+import type {IScrub, IStudio} from '@dreamerbird/core'
 
 const textInterpolate = (left: string, right: string, progression: number) => {
   if (!left || right.startsWith(left)) {

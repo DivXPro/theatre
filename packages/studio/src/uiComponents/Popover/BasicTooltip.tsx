@@ -1,18 +1,18 @@
 import styled from 'styled-components'
-import {pointerEventsAutoInNormalMode} from '@theatre/studio/css'
+import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
 import React from 'react'
-import type {$IntentionalAny} from '@theatre/core/types/public'
+import type {$IntentionalAny} from '@dreamerbird/core/types/public'
 
 const Container = styled.div`
   position: absolute;
 
-  color: white;
+  color: var(--theatre-text-primary);
   padding: 0;
   margin: 0;
   cursor: default;
   ${pointerEventsAutoInNormalMode};
 
-  color: white;
+  color: var(--theatre-text-primary);
   box-sizing: border-box;
 
   border-radius: 4px;

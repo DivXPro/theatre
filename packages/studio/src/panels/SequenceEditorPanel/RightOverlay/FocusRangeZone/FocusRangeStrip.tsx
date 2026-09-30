@@ -1,18 +1,18 @@
-import type {Pointer} from '@theatre/dataverse'
-import {prism, val} from '@theatre/dataverse'
-import {usePrism, useVal} from '@theatre/react'
-import type {$IntentionalAny} from '@theatre/core/types/public'
-import {pointerEventsAutoInNormalMode} from '@theatre/studio/css'
-import getStudio from '@theatre/studio/getStudio'
-import type {SequenceEditorPanelLayout} from '@theatre/studio/panels/SequenceEditorPanel/layout/layout'
-import {topStripHeight} from '@theatre/studio/panels/SequenceEditorPanel/RightOverlay/TopStrip'
-import type {CommitOrDiscardOrRecapture} from '@theatre/studio/StudioStore/StudioStore'
-import useContextMenu from '@theatre/studio/uiComponents/simpleContextMenu/useContextMenu'
-import useDrag from '@theatre/studio/uiComponents/useDrag'
-import useRefAndState from '@theatre/studio/utils/useRefAndState'
+import type {Pointer} from '@dreamerbird/dataverse'
+import {prism, val} from '@dreamerbird/dataverse'
+import {usePrism, useVal} from '@dreamerbird/react'
+import type {$IntentionalAny} from '@dreamerbird/core/types/public'
+import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
+import getStudio from '@dreamerbird/studio/getStudio'
+import type {SequenceEditorPanelLayout} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/layout'
+import {topStripHeight} from '@dreamerbird/studio/panels/SequenceEditorPanel/RightOverlay/TopStrip'
+import type {CommitOrDiscardOrRecapture} from '@dreamerbird/studio/StudioStore/StudioStore'
+import useContextMenu from '@dreamerbird/studio/uiComponents/simpleContextMenu/useContextMenu'
+import useDrag from '@dreamerbird/studio/uiComponents/useDrag'
+import useRefAndState from '@dreamerbird/studio/utils/useRefAndState'
 import React, {useMemo} from 'react'
 import styled from 'styled-components'
-import {useLockFrameStampPosition} from '@theatre/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
+import {useLockFrameStampPosition} from '@dreamerbird/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
 
 export const focusRangeStripTheme = {
   enabled: {
@@ -38,11 +38,11 @@ export const focusRangeStripTheme = {
 
 const stripWidth = 1000
 
-export const RangeStrip = styled.div<{enabled: boolean}>`
+export const RangeStrip = styled.div<{$enabled: boolean}>`
   position: absolute;
   height: ${() => topStripHeight - 1}px;
   background-color: ${(props) =>
-    props.enabled
+    props.$enabled
       ? focusRangeStripTheme.enabled.backgroundColor
       : focusRangeStripTheme.disabled.backgroundColor};
   cursor: grab;
@@ -282,7 +282,7 @@ const FocusRangeStrip: React.FC<{
         {contextMenu}
         <RangeStrip
           id="range-strip"
-          enabled={existingRange.enabled}
+          $enabled={existingRange.enabled}
           className={`${isDragging ? 'dragging' : ''} ${
             existingRange.enabled ? 'enabled' : ''
           }`}

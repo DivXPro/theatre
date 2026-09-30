@@ -1,5 +1,5 @@
-import type {$IntentionalAny} from '@theatre/core/types/public'
-import {pointerEventsAutoInNormalMode} from '@theatre/studio/css'
+import type {$IntentionalAny} from '@dreamerbird/core/types/public'
+import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
 import React from 'react'
 import styled from 'styled-components'
 import PopoverArrow from './PopoverArrow'
@@ -21,7 +21,7 @@ const Container = styled.div`
   background: var(--popover-bg);
   /* border: 1px solid var(--popover-inner-stroke); */
 
-  color: white;
+  color: var(--theatre-text-primary);
   padding: 1px 2px 1px 10px;
   margin: 0;
   cursor: default;

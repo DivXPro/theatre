@@ -1,15 +1,15 @@
-import type {Pointer} from '@theatre/dataverse'
-import {prism, val} from '@theatre/dataverse'
-import {usePrism} from '@theatre/react'
-import getStudio from '@theatre/studio/getStudio'
-import type {SequenceEditorPanelLayout} from '@theatre/studio/panels/SequenceEditorPanel/layout/layout'
-import {topStripHeight} from '@theatre/studio/panels/SequenceEditorPanel/RightOverlay/TopStrip'
+import type {Pointer} from '@dreamerbird/dataverse'
+import {prism, val} from '@dreamerbird/dataverse'
+import {usePrism} from '@dreamerbird/react'
+import getStudio from '@dreamerbird/studio/getStudio'
+import type {SequenceEditorPanelLayout} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/layout'
+import {topStripHeight} from '@dreamerbird/studio/panels/SequenceEditorPanel/RightOverlay/TopStrip'
 import React, {useMemo} from 'react'
 import styled from 'styled-components'
 
 const divWidth = 1000
 
-const Curtain = styled.div<{enabled: boolean}>`
+const Curtain = styled.div<{$enabled: boolean}>`
   position: absolute;
   top: ${topStripHeight}px;
   left: 0;
@@ -17,7 +17,7 @@ const Curtain = styled.div<{enabled: boolean}>`
   width: ${divWidth}px;
   transform-origin: top left;
   pointer-events: none;
-  background-color: ${(props) => (props.enabled ? '#000000' : 'transparent')};
+  background-color: ${(props) => (props.$enabled ? '#000000' : 'transparent')};
 `
 
 const FocusRangeCurtains: React.FC<{
@@ -106,7 +106,7 @@ const FocusRangeCurtains: React.FC<{
         {els.map(({translateX, scaleX}, i) => (
           <Curtain
             key={`curtain-${i}`}
-            enabled={true}
+            $enabled={true}
             style={{
               height: `${height}px`,
               transform: `translateX(${translateX}px) scaleX(${scaleX})`,

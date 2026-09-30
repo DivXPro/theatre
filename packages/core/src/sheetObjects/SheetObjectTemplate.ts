@@ -1,38 +1,38 @@
-import type Project from '@theatre/core/projects/Project'
-import type Sheet from '@theatre/core/sheets/Sheet'
-import type SheetTemplate from '@theatre/core/sheets/SheetTemplate'
-import {emptyArray} from '@theatre/utils'
+import type Project from '@dreamerbird/core/projects/Project'
+import type Sheet from '@dreamerbird/core/sheets/Sheet'
+import type SheetTemplate from '@dreamerbird/core/sheets/SheetTemplate'
+import {emptyArray} from '@dreamerbird/utils'
 import type {
   SheetObjectAddress,
   WithoutSheetInstance,
   SerializableMap,
   SerializablePrimitive,
   SerializableValue,
-} from '@theatre/core/types/public'
-import type {PathToProp} from '@theatre/utils/pathToProp'
-import getDeep from '@theatre/utils/getDeep'
+} from '@dreamerbird/core/types/public'
+import type {PathToProp} from '@dreamerbird/utils/pathToProp'
+import getDeep from '@dreamerbird/utils/getDeep'
 import type {
   ObjectAddressKey,
   SequenceTrackId,
-} from '@theatre/core/types/public'
-import SimpleCache from '@theatre/utils/SimpleCache'
-import type {$FixMe, $IntentionalAny} from '@theatre/core/types/public'
-import type {Prism, Pointer} from '@theatre/dataverse'
-import {Atom, getPointerParts, prism, val} from '@theatre/dataverse'
+} from '@dreamerbird/core/types/public'
+import SimpleCache from '@dreamerbird/utils/SimpleCache'
+import type {$FixMe, $IntentionalAny} from '@dreamerbird/core/types/public'
+import type {Prism, Pointer} from '@dreamerbird/dataverse'
+import {Atom, getPointerParts, prism, val} from '@dreamerbird/dataverse'
 import set from 'lodash-es/set'
 import getPropDefaultsOfSheetObject from './getPropDefaultsOfSheetObject'
 import SheetObject from './SheetObject'
 import {
   getPropConfigByPath,
   isPropConfSequencable,
-} from '@theatre/core/propTypes/utils'
+} from '@dreamerbird/core/propTypes/utils'
 import getOrderingOfPropTypeConfig from './getOrderingOfPropTypeConfig'
-import type {SheetState_Historic} from '@theatre/core/types/private/core'
+import type {SheetState_Historic} from '@dreamerbird/core/types/private/core'
 import {cloneDeep, unset} from 'lodash-es'
 import type {
   SheetObjectActionsConfig,
   SheetObjectPropTypeConfig,
-} from '@theatre/core/types/public'
+} from '@dreamerbird/core/types/public'
 
 function isObjectEmpty(obj: unknown): boolean {
   return (
@@ -76,6 +76,14 @@ export default class SheetObjectTemplate {
   readonly pointerToStaticOverrides: Pointer<
     SerializableMap<SerializablePrimitive> | undefined
   >
+
+  /**
+   * When true, the studio does not list this object in the outline panel
+   * (Tree) or in the sequence editor (timeline). For registry-style objects
+   * that exist only to persist data and are never meant to be selected or
+   * tweaked by hand. Set via `sheet.object(key, config, {hideFromOutline: true})`.
+   */
+  hideFromOutline: boolean = false
 
   get staticConfig() {
     return this._config.get()

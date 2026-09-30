@@ -1,20 +1,20 @@
-import type {SequenceEditorPanelLayout} from '@theatre/studio/panels/SequenceEditorPanel/layout/layout'
-import type {Pointer} from '@theatre/dataverse'
-import {Atom} from '@theatre/dataverse'
-import {val} from '@theatre/dataverse'
+import type {SequenceEditorPanelLayout} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/layout'
+import type {Pointer} from '@dreamerbird/dataverse'
+import {Atom} from '@dreamerbird/dataverse'
+import {val} from '@dreamerbird/dataverse'
 import React from 'react'
 import styled from 'styled-components'
-import {DopeSnapHitZoneUI} from '@theatre/studio/panels/SequenceEditorPanel/RightOverlay/DopeSnapHitZoneUI'
+import {DopeSnapHitZoneUI} from '@dreamerbird/studio/panels/SequenceEditorPanel/RightOverlay/DopeSnapHitZoneUI'
 import type {
   BasicKeyframe,
   ObjectAddressKey,
   SequenceTrackId,
-} from '@theatre/core/types/public'
+} from '@dreamerbird/core/types/public'
 import type {
   BasicKeyframedTrack,
   HistoricPositionalSequence,
-} from '@theatre/core/types/private/core'
-import {__private} from '@theatre/core'
+} from '@dreamerbird/core/types/private/core'
+import {__private} from '@dreamerbird/core'
 
 const {keyframeUtils} = __private
 
@@ -39,7 +39,7 @@ export type ISnapTargetPRops = {
   position: number
 }
 
-const KeyframeSnapTarget: React.VFC<ISnapTargetPRops> = (props) => {
+const KeyframeSnapTarget: React.FC<ISnapTargetPRops> = (props) => {
   return (
     <Container
       style={{

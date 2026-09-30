@@ -1,26 +1,26 @@
-import type {TrackData} from '@theatre/core/types/private/core'
-import type {SequenceEditorPanelLayout} from '@theatre/studio/panels/SequenceEditorPanel/layout/layout'
-import type {SequenceEditorTree_PrimitiveProp} from '@theatre/studio/panels/SequenceEditorPanel/layout/tree'
-import {usePrism, useVal} from '@theatre/react'
-import type {Pointer} from '@theatre/dataverse'
-import {val} from '@theatre/dataverse'
+import type {TrackData} from '@dreamerbird/core/types/private/core'
+import type {SequenceEditorPanelLayout} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/layout'
+import type {SequenceEditorTree_PrimitiveProp} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/tree'
+import {usePrism, useVal} from '@dreamerbird/react'
+import type {Pointer} from '@dreamerbird/dataverse'
+import {val} from '@dreamerbird/dataverse'
 import React, {useMemo} from 'react'
 import styled from 'styled-components'
 import SingleKeyframeEditor from './KeyframeEditor/SingleKeyframeEditor'
-import useContextMenu from '@theatre/studio/uiComponents/simpleContextMenu/useContextMenu'
-import useRefAndState from '@theatre/studio/utils/useRefAndState'
-import getStudio from '@theatre/studio/getStudio'
-import {arePathsEqual} from '@theatre/utils/pathToProp'
-import type {KeyframeWithPathToPropFromCommonRoot} from '@theatre/core/types/private'
+import useContextMenu from '@dreamerbird/studio/uiComponents/simpleContextMenu/useContextMenu'
+import useRefAndState from '@dreamerbird/studio/utils/useRefAndState'
+import getStudio from '@dreamerbird/studio/getStudio'
+import {arePathsEqual} from '@dreamerbird/utils/pathToProp'
+import type {KeyframeWithPathToPropFromCommonRoot} from '@dreamerbird/core/types/private'
 import KeyframeSnapTarget, {
   snapPositionsStateD,
-} from '@theatre/studio/panels/SequenceEditorPanel/DopeSheet/Right/KeyframeSnapTarget'
-import {createStudioSheetItemKey} from '@theatre/studio/utils/createStudioSheetItemKey'
-import type {BasicKeyframe} from '@theatre/core'
-import {__private} from '@theatre/core'
+} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/Right/KeyframeSnapTarget'
+import {createStudioSheetItemKey} from '@dreamerbird/studio/utils/createStudioSheetItemKey'
+import type {BasicKeyframe} from '@dreamerbird/core'
+import {__private} from '@dreamerbird/core'
 
 const {keyframeUtils} = __private
-import type {ContextMenuItem} from '@theatre/studio/uiComponents/chordial/chordialInternals'
+import type {ContextMenuItem} from '@dreamerbird/studio/uiComponents/chordial/chordialInternals'
 
 const Container = styled.div`
   position: relative;
@@ -34,7 +34,7 @@ type BasicKeyframedTracksProps = {
   trackData: TrackData
 }
 
-const BasicKeyframedTrack: React.VFC<BasicKeyframedTracksProps> = React.memo(
+const BasicKeyframedTrack: React.FC<BasicKeyframedTracksProps> = React.memo(
   (props) => {
     const {layoutP, trackData, leaf} = props
     const [containerRef, containerNode] = useRefAndState<HTMLDivElement | null>(
@@ -72,7 +72,7 @@ const BasicKeyframedTrack: React.VFC<BasicKeyframedTracksProps> = React.memo(
         ? snapPositionsState.positions[leaf.sheetObject.address.objectKey]?.[
             leaf.trackId
           ]
-        : [] ?? []
+        : []
 
     const snapToAllKeyframes = snapPositionsState.mode === 'snapToAll'
 

@@ -36,13 +36,13 @@ You can find the documentation and video tutorials [here](https://www.theatrejs.
 
 Join us on [Discord](https://discord.gg/bm9f8F9Y9N), follow the updates on [twitter](https://twitter.com/AriaMinaei) or write us an [email](mailto:hello@theatrejs.com).
 
-## `@theatre/studio`
+## `@dreamerbird/studio`
 
-Theatre.js comes in two packages: `@theatre/core` (the library) and `@theatre/studio` (the editor). This package is the editor, which is only used during design/development.
+Theatre.js comes in two packages: `@dreamerbird/core` (the library) and `@dreamerbird/studio` (the editor). This package is the editor, which is only used during design/development.
 
 ## License
 
 Your use of Theatre.js is governed under the Apache License Version 2.0:
 
-* Theatre's core (`@theatre/core`) is released under the Apache License.
-* The studio (`@theatre/studio`) is released under the AGPL 3.0 License. This is the package that you use to edit your animations, setup your scenes, etc. You only use the studio during design/development. Your project's final bundle only includes `@theatre/core`, so only the Apache License applies.
+* Theatre's core (`@dreamerbird/core`) is released under the Apache License.
+* The studio (`@dreamerbird/studio`) is released under the AGPL 3.0 License. This is the package that you use to edit your animations, setup your scenes, etc. You only use the studio during design/development. Your project's final bundle only includes `@dreamerbird/core`, so only the Apache License applies.

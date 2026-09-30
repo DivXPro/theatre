@@ -3,19 +3,19 @@ import type {
   PropTypeConfig_AllSimples,
   PropTypeConfig_Compound,
   UnknownValidCompoundProps,
-} from '@theatre/core/types/public'
-import type SheetObject from '@theatre/core/sheetObjects/SheetObject'
-import type {IPropPathToTrackIdTree} from '@theatre/core/sheetObjects/SheetObjectTemplate'
-import type Sheet from '@theatre/core/sheets/Sheet'
-import type {PathToProp} from '@theatre/utils/pathToProp'
-import type {StudioSheetItemKey} from '@theatre/core/types/private'
-import {createStudioSheetItemKey} from '@theatre/studio/utils/createStudioSheetItemKey'
-import type {$FixMe, $IntentionalAny} from '@theatre/core/types/public'
-import {prism, val, pointerToPrism} from '@theatre/dataverse'
-import logger from '@theatre/utils/logger'
-import {titleBarHeight} from '@theatre/studio/panels/BasePanel/common'
-import type {Studio} from '@theatre/studio/Studio'
-import type {SequenceTrackId} from '@theatre/core/types/public'
+} from '@dreamerbird/core/types/public'
+import type SheetObject from '@dreamerbird/core/sheetObjects/SheetObject'
+import type {IPropPathToTrackIdTree} from '@dreamerbird/core/sheetObjects/SheetObjectTemplate'
+import type Sheet from '@dreamerbird/core/sheets/Sheet'
+import type {PathToProp} from '@dreamerbird/utils/pathToProp'
+import type {StudioSheetItemKey} from '@dreamerbird/core/types/private'
+import {createStudioSheetItemKey} from '@dreamerbird/studio/utils/createStudioSheetItemKey'
+import type {$FixMe, $IntentionalAny} from '@dreamerbird/core/types/public'
+import {prism, val, pointerToPrism} from '@dreamerbird/dataverse'
+import logger from '@dreamerbird/utils/logger'
+import {titleBarHeight} from '@dreamerbird/studio/panels/BasePanel/common'
+import type {Studio} from '@dreamerbird/studio/Studio'
+import type {SequenceTrackId} from '@dreamerbird/core/types/public'
 
 /**
  * Base "view model" for each row with common
@@ -135,7 +135,8 @@ export const calculateSequenceEditorTree = (
   }
 
   for (const sheetObject of Object.values(val(sheet.objectsP))) {
-    if (sheetObject) {
+    // hideFromOutline 的对象(注册表等纯数据对象)在时间轴同样不出现
+    if (sheetObject && !sheetObject.template.hideFromOutline) {
       addObject(
         sheetObject,
         tree.children,

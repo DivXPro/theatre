@@ -1,13 +1,13 @@
-import type {StrictRecord} from '@theatre/core/types/public'
+import type {StrictRecord} from '@dreamerbird/core/types/public'
 import React, {useMemo} from 'react'
 import {useEffect} from 'react'
 import {useLogger} from './useLogger'
-import {prism, pointerToPrism} from '@theatre/dataverse'
-import {Atom} from '@theatre/dataverse'
-import {usePrismInstance} from '@theatre/react'
-import {selectClosestHTMLAncestor} from '@theatre/studio/utils/selectClosestHTMLAncestor'
-import pointerDeep from '@theatre/utils/pointerDeep'
-import type {StudioSheetItemKey} from '@theatre/core/types/private'
+import {prism, pointerToPrism} from '@dreamerbird/dataverse'
+import {Atom} from '@dreamerbird/dataverse'
+import {usePrismInstance} from '@dreamerbird/react'
+import {selectClosestHTMLAncestor} from '@dreamerbird/studio/utils/selectClosestHTMLAncestor'
+import pointerDeep from '@dreamerbird/utils/pointerDeep'
+import type {StudioSheetItemKey} from '@dreamerbird/core/types/private'
 
 /** To mean the presence value */
 export enum PresenceFlag {

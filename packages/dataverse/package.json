@@ -1,6 +1,6 @@
 {
-  "name": "@theatre/dataverse",
-  "version": "0.7.0",
+  "name": "@dreamerbird/dataverse",
+  "version": "1.0.0",
   "license": "Apache-2.0",
   "author": {
     "name": "Aria Minaei",
@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/AriaMinaei/theatre",
+    "url": "https://github.com/theatre-js/theatre",
     "directory": "packages/dataverse"
   },
   "main": "dist/index.js",
@@ -39,7 +39,7 @@
     "tsx": "4.7.0",
     "typedoc": "^0.24.8",
     "typedoc-plugin-markdown": "^3.15.4",
-    "typescript": "5.1.6"
+    "typescript": "5.6.3"
   },
   "dependencies": {
     "lodash-es": "^4.17.21"

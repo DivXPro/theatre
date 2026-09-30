@@ -1,16 +1,29 @@
-import ReactDOM from 'react-dom'
+import ReactDOM from 'react-dom/client'
 import './index.css'
 import reportWebVitals from './reportWebVitals'
-import '@theatre/studio'
-import {getProject} from '@theatre/core'
+import theatre from '@dreamerbird/core'
+// 1.0 API: side-effect import registers the studio bundle
+import '@dreamerbird/studio'
+import extension from '@dreamerbird/r3f/dist/extension'
 import React from 'react'
 import App from './App'
 
-ReactDOM.render(
+if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
+  // 1.0 API: init() must be called before getStudio()
+  void theatre
+    .init({studio: true, usePersistentStorage: false})
+    .then(() => theatre.getStudio())
+    .then((studio) => {
+      studio.extend(extension)
+    })
+}
+
+const container = document.getElementById('root')
+const root = ReactDOM.createRoot(container)
+root.render(
   <React.StrictMode>
     <App />
   </React.StrictMode>,
-  document.getElementById('root'),
 )
 
 // If you want to start measuring performance in your app, pass a function

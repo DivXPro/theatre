@@ -1,22 +1,22 @@
-import type {Pointer} from '@theatre/dataverse'
-import type {$FixMe, $IntentionalAny} from '@theatre/core/types/public'
+import type {Pointer} from '@dreamerbird/dataverse'
+import type {$FixMe, $IntentionalAny} from '@dreamerbird/core/types/public'
 import get from 'lodash-es/get'
 import type {ITransactionPrivateApi} from './StudioStore'
-import getDeep from '@theatre/utils/getDeep'
-import type {SequenceTrackId} from '@theatre/core/types/public'
-import {getPointerParts} from '@theatre/dataverse'
+import getDeep from '@dreamerbird/utils/getDeep'
+import type {SequenceTrackId} from '@dreamerbird/core/types/public'
+import {getPointerParts} from '@dreamerbird/dataverse'
 import type {
   PropTypeConfig,
   PropTypeConfig_AllSimples,
   PropTypeConfig_Compound,
-} from '@theatre/core/types/public'
-import type {PathToProp} from '@theatre/utils/pathToProp'
-import {__private} from '@theatre/core'
+} from '@dreamerbird/core/types/public'
+import type {PathToProp} from '@dreamerbird/utils/pathToProp'
+import {__private} from '@dreamerbird/core'
 import {isPlainObject} from 'lodash-es'
-import userReadableTypeOfValue from '@theatre/utils/userReadableTypeOfValue'
-import type {StudioState} from '@theatre/core/types/private'
-import type {IInvokableDraftEditors} from '@theatre/sync-server/state/schema'
-import {stateEditors} from '@theatre/sync-server/state/schema'
+import userReadableTypeOfValue from '@dreamerbird/utils/userReadableTypeOfValue'
+import type {StudioState} from '@dreamerbird/core/types/private'
+import type {IInvokableDraftEditors} from '@dreamerbird/sync-server/state/schema'
+import {stateEditors} from '@dreamerbird/sync-server/state/schema'
 
 const {getPropConfigByPath, forEachPropDeep} = __private.propTypeUtils
 const {isSheetObject} = __private.instanceTypes

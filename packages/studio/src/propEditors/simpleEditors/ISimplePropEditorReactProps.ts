@@ -1,5 +1,5 @@
-import type {IBasePropType} from '@theatre/core/types/public'
-import type {IEditingTools} from '@theatre/studio/propEditors/utils/IEditingTools'
+import type {IBasePropType} from '@dreamerbird/core/types/public'
+import type {IEditingTools} from '@dreamerbird/studio/propEditors/utils/IEditingTools'
 
 /** Helper for defining consistent prop editor components */
 export type ISimplePropEditorReactProps<

@@ -8,8 +8,8 @@ import type {
   ColorModel,
   ColorPickerBaseProps,
   AnyColor,
-} from '@theatre/studio/uiComponents/colorPicker/types'
-import {useColorManipulation} from '@theatre/studio/uiComponents/colorPicker/hooks/useColorManipulation'
+} from '@dreamerbird/studio/uiComponents/colorPicker/types'
+import {useColorManipulation} from '@dreamerbird/studio/uiComponents/colorPicker/hooks/useColorManipulation'
 import styled from 'styled-components'
 
 const Container = styled.div`
@@ -35,7 +35,7 @@ export const AlphaColorPicker = <T extends AnyColor>({
   permanentlySetValue,
   discardTemporaryValue,
   ...rest
-}: Props<T>): JSX.Element => {
+}: Props<T>): React.JSX.Element => {
   const [tempHsva, updateHsva] = useColorManipulation<T>(
     colorModel,
     color,

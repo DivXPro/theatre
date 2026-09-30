@@ -1,5 +1,5 @@
-import type {Prism} from '@theatre/dataverse'
-import {prism, val} from '@theatre/dataverse'
+import type {Prism} from '@dreamerbird/dataverse'
+import {prism, val} from '@dreamerbird/dataverse'
 import type {
   KeyframeId,
   ObjectAddressKey,
@@ -7,16 +7,16 @@ import type {
   SequenceTrackId,
   SheetId,
   BasicKeyframe,
-} from '@theatre/core/types/public'
-import getStudio from '@theatre/studio/getStudio'
-import type {DopeSheetSelection} from '@theatre/studio/panels/SequenceEditorPanel/layout/layout'
+} from '@dreamerbird/core/types/public'
+import getStudio from '@dreamerbird/studio/getStudio'
+import type {DopeSheetSelection} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/layout'
 import {
   commonRootOfPathsToProps,
   decodePathToProp,
-} from '@theatre/utils/pathToProp'
-import type {StrictRecord} from '@theatre/core/types/public'
-import type {KeyframeWithPathToPropFromCommonRoot} from '@theatre/core/types/private'
-import {__private} from '@theatre/core'
+} from '@dreamerbird/utils/pathToProp'
+import type {StrictRecord} from '@dreamerbird/core/types/public'
+import type {KeyframeWithPathToPropFromCommonRoot} from '@dreamerbird/core/types/private'
+import {__private} from '@dreamerbird/core'
 
 const {keyframeUtils} = __private
 
@@ -195,7 +195,7 @@ function swapKeyAndValue<K extends string, V extends string>(
   obj: StrictRecord<K, V>,
 ): StrictRecord<V, K> {
   const result: StrictRecord<V, K> = {}
-  for (const [key, value] of Object.entries(obj)) {
+  for (const [key, value] of Object.entries(obj) as Array<[K, V]>) {
     result[value as V] = key
   }
   return result

@@ -1,8 +1,11 @@
 import styled from 'styled-components'
-import {pointerEventsAutoInNormalMode} from '@theatre/studio/css'
+import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
 import React from 'react'
 
-export const Container = styled.button<{disabled?: boolean; primary?: boolean}>`
+export const Container = styled.button<{
+  disabled?: boolean
+  $primary?: boolean
+}>`
   ${pointerEventsAutoInNormalMode};
   position: relative;
   display: flex;
@@ -13,15 +16,19 @@ export const Container = styled.button<{disabled?: boolean; primary?: boolean}>`
   outline: none;
   padding: 0 8px;
 
-  color: ${({disabled, primary}) =>
-    disabled === true ? '#919191' : primary === true ? 'white' : '#a8a8a9'};
+  color: ${({disabled, $primary}) =>
+    disabled === true
+      ? '#919191'
+      : $primary === true
+        ? 'var(--theatre-text-primary)'
+        : '#a8a8a9'};
 
-  background: ${({disabled, primary}) =>
+  background: ${({disabled, $primary}) =>
     disabled === true
       ? 'rgba(64, 67, 71, 0.8)'
-      : primary === true
+      : $primary === true
         ? 'rgb(41 110 120 / 60%)'
-        : 'rgba(40, 43, 47, 0.8)'};
+        : 'var(--theatre-panel-bg-80)'};
 
   backdrop-filter: blur(14px);
   border: none;
@@ -34,10 +41,10 @@ export const Container = styled.button<{disabled?: boolean; primary?: boolean}>`
   }
 
   &:hover {
-    background: ${({disabled, primary}) =>
+    background: ${({disabled, $primary}) =>
       disabled === true
         ? 'rgba(64, 67, 71, 0.8)'
-        : primary === true
+        : $primary === true
           ? 'rgba(50, 155, 169, 0.80)'
           : 'rgba(59, 63, 69, 0.8)'};
   }

@@ -1,4 +1,4 @@
-import type {ProjectState_Historic} from '@theatre/core/types/private/core'
+import type {ProjectState_Historic} from '@dreamerbird/core/types/private/core'
 import type {
   ProjectAddress,
   SheetAddress,
@@ -6,20 +6,20 @@ import type {
   WithoutSheetInstance,
   PaneInstanceId,
   SequenceMarkerId,
-} from '@theatre/core/types/public'
-import type {PathToProp_Encoded} from '@theatre/utils/pathToProp'
-import type {StrictRecord} from '@theatre/core/types/public'
-import type {PointableSet} from '@theatre/utils/PointableSet'
+} from '@dreamerbird/core/types/public'
+import type {PathToProp_Encoded} from '@dreamerbird/utils/pathToProp'
+import type {StrictRecord} from '@dreamerbird/core/types/public'
+import type {PointableSet} from '@dreamerbird/utils/PointableSet'
 import type {
   ObjectAddressKey,
   ProjectId,
   SheetId,
   SheetInstanceId,
-} from '@theatre/core/types/public'
+} from '@dreamerbird/core/types/public'
 import type {
   UIPanelId,
   GraphEditorColors,
-} from '@theatre/core/types/private/studio'
+} from '@dreamerbird/core/types/private/studio'
 
 export type PanelPosition = {
   edges: {
@@ -105,6 +105,26 @@ export type StudioHistoricStateProjectSheet = {
 /** See {@link StudioHistoricState} */
 export type StudioHistoricStateProject = {
   stateBySheetId: StrictRecord<SheetId, StudioHistoricStateProjectSheet>
+  /**
+   * 大纲显示名（key = 对象地址的稳定 JSON，见 outlineOps/addressKey.ts）。
+   * 只影响显示，不触碰 core 存储键。
+   */
+  outlineNamesByObjectAddress?: StrictRecord<string, string>
+  /** 伪集合：显示层名单（扁平、单归属），members 存 objectKey */
+  outlineCollections?: OutlineCollectionState[]
+}
+
+export type OutlineCollectionState = {
+  id: string
+  name: string
+  /**
+   * 集合挂在 sheet 维度(spec §4):创建时记录当前 sheet 地址,
+   * 渲染/菜单只显示对得上当前 sheet 的集合,单归属驱逐与名单
+   * 清理也按 sheet 限定作用域。
+   */
+  sheetId: SheetId
+  sheetInstanceId: SheetInstanceId
+  members: string[]
 }
 
 export type StudioHistoricState = {

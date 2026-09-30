@@ -1,35 +1,35 @@
-import type {Pointer} from '@theatre/dataverse'
-import {prism, val} from '@theatre/dataverse'
-import {usePrism} from '@theatre/react'
-import type {$IntentionalAny} from '@theatre/core/types/public'
-import getStudio from '@theatre/studio/getStudio'
+import type {Pointer} from '@dreamerbird/dataverse'
+import {prism, val} from '@dreamerbird/dataverse'
+import {usePrism} from '@dreamerbird/react'
+import type {$IntentionalAny} from '@dreamerbird/core/types/public'
+import getStudio from '@dreamerbird/studio/getStudio'
 import {
   panelDimsToPanelPosition,
   usePanel,
-} from '@theatre/studio/panels/BasePanel/BasePanel'
-import type {SequenceEditorPanelLayout} from '@theatre/studio/panels/SequenceEditorPanel/layout/layout'
-import {topStripHeight} from '@theatre/studio/panels/SequenceEditorPanel/RightOverlay/TopStrip'
-import type {CommitOrDiscardOrRecapture} from '@theatre/studio/StudioStore/StudioStore'
-import {useCssCursorLock} from '@theatre/studio/uiComponents/PointerEventsHandler'
-import useDrag from '@theatre/studio/uiComponents/useDrag'
-import useHoverWithoutDescendants from '@theatre/studio/uiComponents/useHoverWithoutDescendants'
-import useKeyDown from '@theatre/studio/uiComponents/useKeyDown'
-import useRefAndState from '@theatre/studio/utils/useRefAndState'
+} from '@dreamerbird/studio/panels/BasePanel/BasePanel'
+import type {SequenceEditorPanelLayout} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/layout'
+import {topStripHeight} from '@dreamerbird/studio/panels/SequenceEditorPanel/RightOverlay/TopStrip'
+import type {CommitOrDiscardOrRecapture} from '@dreamerbird/studio/StudioStore/StudioStore'
+import {useCssCursorLock} from '@dreamerbird/studio/uiComponents/PointerEventsHandler'
+import useDrag from '@dreamerbird/studio/uiComponents/useDrag'
+import useHoverWithoutDescendants from '@dreamerbird/studio/uiComponents/useHoverWithoutDescendants'
+import useKeyDown from '@dreamerbird/studio/uiComponents/useKeyDown'
+import useRefAndState from '@dreamerbird/studio/utils/useRefAndState'
 import {clamp} from 'lodash-es'
 import React, {useEffect, useMemo, useRef, useState} from 'react'
 import styled from 'styled-components'
 import FocusRangeStrip, {focusRangeStripTheme} from './FocusRangeStrip'
 import FocusRangeThumb from './FocusRangeThumb'
-import {minVisibleSize} from '@theatre/studio/panels/BasePanel/common'
+import {minVisibleSize} from '@dreamerbird/studio/panels/BasePanel/common'
 
-const Container = styled.div<{isShiftDown: boolean}>`
+const Container = styled.div<{$isShiftDown: boolean}>`
   position: absolute;
   height: ${() => topStripHeight}px;
   left: 0;
   right: 0;
   box-sizing: border-box;
   /* Use the "grab" cursor if the shift key is up, which is the one used on the top strip of the sequence editor */
-  cursor: ${(props) => (props.isShiftDown ? 'ew-resize' : 'move')};
+  cursor: ${(props) => (props.$isShiftDown ? 'ew-resize' : 'move')};
 `
 
 const FocusRangeZone: React.FC<{
@@ -73,7 +73,7 @@ const FocusRangeZone: React.FC<{
     return (
       <Container
         ref={containerRef as $IntentionalAny}
-        isShiftDown={isShiftDown}
+        $isShiftDown={isShiftDown}
       >
         <FocusRangeStrip layoutP={layoutP} />
         <FocusRangeThumb thumbType={0} layoutP={layoutP} />

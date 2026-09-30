@@ -1,6 +1,6 @@
-import type {$FixMe} from '@theatre/core/types/public'
-import type {PanelPosition, UIPanelId} from '@theatre/core/types/private'
-import type {PaneInstance} from '@theatre/core/types/public'
+import type {$FixMe} from '@dreamerbird/core/types/public'
+import type {PanelPosition, UIPanelId} from '@dreamerbird/core/types/private'
+import type {PaneInstance} from '@dreamerbird/core/types/public'
 import React, {useCallback, useLayoutEffect, useState} from 'react'
 import styled from 'styled-components'
 import {F2 as F2Impl, TitleBar} from './common'
@@ -9,9 +9,9 @@ import PanelDragZone from './PanelDragZone'
 import PanelWrapper from './PanelWrapper'
 import {ErrorBoundary} from 'react-error-boundary'
 import {IoClose} from 'react-icons/io5'
-import getStudio from '@theatre/studio/getStudio'
-import {panelZIndexes} from '@theatre/studio/panels/BasePanel/common'
-import type {PaneInstanceId} from '@theatre/core/types/public'
+import getStudio from '@dreamerbird/studio/getStudio'
+import {panelZIndexes} from '@dreamerbird/studio/panels/BasePanel/common'
+import type {PaneInstanceId} from '@dreamerbird/core/types/public'
 
 const defaultPosition: PanelPosition = {
   edges: {
@@ -73,7 +73,7 @@ const ClosePanelButton = styled.button`
   border: none;
   cursor: pointer;
   &:hover {
-    color: white;
+    color: var(--theatre-text-primary);
   }
 `
 

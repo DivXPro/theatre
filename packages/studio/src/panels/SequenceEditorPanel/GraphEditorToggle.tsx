@@ -1,10 +1,10 @@
-import type {Pointer} from '@theatre/dataverse'
-import {val} from '@theatre/dataverse'
-import {useVal} from '@theatre/react'
-import getStudio from '@theatre/studio/getStudio'
+import type {Pointer} from '@dreamerbird/dataverse'
+import {val} from '@dreamerbird/dataverse'
+import {useVal} from '@dreamerbird/react'
+import getStudio from '@dreamerbird/studio/getStudio'
 import React, {useCallback} from 'react'
 import styled from 'styled-components'
-import type {SequenceEditorPanelLayout} from '@theatre/studio/panels/SequenceEditorPanel/layout/layout'
+import type {SequenceEditorPanelLayout} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/layout'
 import {VscTriangleUp} from 'react-icons/vsc'
 import {includeLockFrameStampAttrs} from './FrameStampPositionProvider'
 
@@ -26,7 +26,7 @@ const Container = styled.button`
   font-size: 10px;
 
   &:hover {
-    color: white;
+    color: var(--theatre-text-primary);
   }
 
   & > svg {

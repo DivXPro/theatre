@@ -1,9 +1,9 @@
-import type {AuthDerivedState} from '@theatre/studio/Auth'
-import {pointerEventsAutoInNormalMode} from '@theatre/studio/css'
-import getStudio from '@theatre/studio/getStudio'
-import type {ContextMenuItem} from '@theatre/studio/uiComponents/chordial/chordialInternals'
-import useChordial from '@theatre/studio/uiComponents/chordial/useChodrial'
-import BaseMenu from '@theatre/studio/uiComponents/simpleContextMenu/ContextMenu/BaseMenu'
+import type {AuthDerivedState} from '@dreamerbird/studio/Auth'
+import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
+import getStudio from '@dreamerbird/studio/getStudio'
+import type {ContextMenuItem} from '@dreamerbird/studio/uiComponents/chordial/chordialInternals'
+import useChordial from '@dreamerbird/studio/uiComponents/chordial/useChodrial'
+import BaseMenu from '@dreamerbird/studio/uiComponents/simpleContextMenu/ContextMenu/BaseMenu'
 import React from 'react'
 import styled from 'styled-components'
 
@@ -30,8 +30,6 @@ const AvatarImage = styled.img`
     --box-shadow-color: rgba(0, 0, 0, 1);
   }
 `
-
-const auth = getStudio().auth
 
 const Stroke = styled.div`
   position: absolute;
@@ -89,7 +87,7 @@ const Avatar: React.FC<Props> = (props) => {
             {
               label: 'Log out',
               type: 'normal',
-              callback: () => auth.deauthorize(),
+              callback: () => getStudio().auth?.deauthorize(),
             },
           ]
 

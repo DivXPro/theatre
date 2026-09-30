@@ -1,4 +1,4 @@
-import {defer} from '@theatre/utils/defer'
+import {defer} from '@dreamerbird/utils/defer'
 import {applyOptimisticUpdateToState} from '../shared/transactions'
 import type {
   BackApplyUpdateOps,
@@ -16,8 +16,8 @@ import {BackStorage} from './BackStorage'
 import type {DebouncedFunc} from 'lodash-es'
 import {cloneDeep, throttle} from 'lodash-es'
 import {ensureStateIsUptodate as ensureOpStateIsUptodate} from '../shared/utils'
-import {Atom} from '@theatre/dataverse'
-import deepEqual from '@theatre/utils/deepEqual'
+import {Atom} from '@dreamerbird/dataverse'
+import deepEqual from '@dreamerbird/utils/deepEqual'
 
 export default class SaazBack implements SaazBackInterface {
   private _dbName: string
@@ -42,14 +42,26 @@ export default class SaazBack implements SaazBackInterface {
   }) {
     this._schema = opts.schema
     this._dbName = opts.dbName
-    this._storage = new BackStorage({
-      dbName: opts.dbName,
-      storageAdapter: opts.storageAdapter,
-    })
+    this._storage = new BackStorage({storageAdapter: opts.storageAdapter})
 
-    void this._storage.ready.then(() => {
-      this._readyDeferred.resolve()
-    })
+    void this._storage.ready.then(
+      () => {
+        const loaded = this._storage.loadedState
+        if (loaded?.snapshot) {
+          this._dbState = ensureOpStateIsUptodate(loaded.snapshot, this._schema)
+        }
+        if (typeof loaded?.clock === 'number') {
+          this._clock = loaded.clock
+        }
+        this._readyDeferred.resolve()
+      },
+      (err) => {
+        // The backend storage could not be loaded, so this backend is
+        // unusable. Reject `ready` instead of hanging forever — consumers
+        // (e.g. the persistence degradation path) observe this rejection.
+        this._readyDeferred.reject(err)
+      },
+    )
 
     this._schedulePresenseUpdate = throttle(
       () => {
@@ -207,13 +219,25 @@ export default class SaazBack implements SaazBackInterface {
       }
 
       const snapshotBefore = snapshotSoFar
-      const [opSnapshotAfter] = applyOptimisticUpdateToState(
-        update,
-        snapshotBefore,
-        this._schema,
-        true,
-      )
-      snapshotSoFar = opSnapshotAfter
+      try {
+        const [opSnapshotAfter] = applyOptimisticUpdateToState(
+          update,
+          snapshotBefore,
+          this._schema,
+          true,
+        )
+        snapshotSoFar = opSnapshotAfter
+      } catch (error) {
+        // 无法回放的 update(旧开发版本/不兼容数据):跳过并照常确认。
+        // 不确认的话它会永远卡在客户端队列里,每次同步都重试(且旧实现是
+        // 整批抛错——同批后续好更新也永远落不了库)。跳过的数据丢失用
+        // 告警显式记录,与前端 _applyPersistedTransaction 的跳过策略一致。
+        console.warn(
+          '[saaz-back] skipping an update that fails to replay ' +
+            '(it may come from an older, incompatible version):',
+          error,
+        )
+      }
       lastAcknowledgedClock = update.peerClock
       backendClock++
     }
@@ -223,7 +247,13 @@ export default class SaazBack implements SaazBackInterface {
       peerState.lastIncorporatedPeerClock = lastAcknowledgedClock
       this._clock = backendClock
       this._callSubscribersForBackendStateUpdate()
-      // TODO: save individual updates to storage
+      // Save failures are handled inside BackStorage.save (its serialized
+      // queue attaches a rejection handler, keeping them out of the
+      // unhandled-rejection channel; the caller receives them via the returned
+      // promise). We deliberately don't throw back into the op-apply flow —
+      // the memory state is already committed and the next apply retries the
+      // save. Task C8 wires an observable persistence-failure signal.
+      void this._storage.save(this._dbState, this._clock)
     }
 
     const s = this._getUpdatesSinceClockSync({

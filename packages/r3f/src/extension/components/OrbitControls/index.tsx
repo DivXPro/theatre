@@ -1,7 +1,8 @@
-import type {EventManager, ReactThreeFiber} from '@react-three/fiber'
+import type {EventManager, ThreeElement, Vector3} from '@react-three/fiber'
+import type {$IntentionalAny, Overwrite} from '../../../types'
 import {useFrame, useThree} from '@react-three/fiber'
 import * as React from 'react'
-import type {Camera, Event} from 'three'
+import type {Camera, Event, OrthographicCamera, PerspectiveCamera} from 'three'
 import {OrbitControlsImpl} from './OrbitControlsImpl'
 
 export type OrbitControlsChangeEvent = Event & {
@@ -9,8 +10,9 @@ export type OrbitControlsChangeEvent = Event & {
 }
 
 export type OrbitControlsProps = Omit<
-  ReactThreeFiber.Overwrite<
-    ReactThreeFiber.Object3DNode<OrbitControlsImpl, typeof OrbitControlsImpl>,
+  Overwrite<
+    // the component constructs the impl itself, so `args` is meaningless here
+    Omit<ThreeElement<typeof OrbitControlsImpl>, 'args'>,
     {
       camera?: Camera
       domElement?: HTMLElement
@@ -20,7 +22,7 @@ export type OrbitControlsProps = Omit<
       onEnd?: (e?: Event) => void
       onStart?: (e?: Event) => void
       regress?: boolean
-      target?: ReactThreeFiber.Vector3
+      target?: Vector3
       keyEvents?: boolean | HTMLElement
     }
   >,
@@ -57,8 +59,8 @@ export const OrbitControls = React.forwardRef<
     const get = useThree((state) => state.get)
     const performance = useThree((state) => state.performance)
     const explCamera = (camera || defaultCamera) as
-      | THREE.OrthographicCamera
-      | THREE.PerspectiveCamera
+      | OrthographicCamera
+      | PerspectiveCamera
     const explDomElement = (domElement ||
       events.connected ||
       gl.domElement) as HTMLElement
@@ -81,10 +83,13 @@ export const OrbitControls = React.forwardRef<
     }, [keyEvents, explDomElement, regress, controls, invalidate])
 
     React.useEffect(() => {
-      const callback = (e: OrbitControlsChangeEvent) => {
+      // the impl's event map types the 'change' event loosely; our public
+      // OrbitControlsChangeEvent narrows target to the controls instance,
+      // which is what the impl always dispatches
+      const callback = (e: $IntentionalAny) => {
         invalidate()
         if (regress) performance.regress()
-        if (onChange) onChange(e)
+        if (onChange) onChange(e as OrbitControlsChangeEvent)
       }
 
       const onStartCb = (e: Event) => {

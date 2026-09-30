@@ -24,7 +24,15 @@ import {
 const moduloWrapAround = (offset: number, capacity: number) =>
   ((offset % capacity) + capacity) % capacity
 
-class OrbitControls extends EventDispatcher {
+// three r163+ types EventDispatcher with a strict event map; declare ours so
+// dispatchEvent/addEventListener accept the orbit controls' custom events.
+interface OrbitControlsEventMap {
+  change: {}
+  start: {}
+  end: {}
+}
+
+class OrbitControls extends EventDispatcher<OrbitControlsEventMap> {
   object: PerspectiveCamera | OrthographicCamera
   domElement: HTMLElement | undefined
   // Set to false to disable this control
@@ -374,9 +382,9 @@ class OrbitControls extends EventDispatcher {
 
     const scope = this
 
-    const changeEvent = {type: 'change'}
-    const startEvent = {type: 'start'}
-    const endEvent = {type: 'end'}
+    const changeEvent = {type: 'change' as const}
+    const startEvent = {type: 'start' as const}
+    const endEvent = {type: 'end' as const}
 
     const STATE = {
       NONE: -1,

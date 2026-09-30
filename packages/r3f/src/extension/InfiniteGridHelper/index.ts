@@ -128,10 +128,8 @@ export class InfiniteGridHelper extends Mesh {
               if (fragColor.a <= 0.0) discard;
           }
       `,
-
-      extensions: {
-        derivatives: true,
-      },
+      // three r163+ is WebGL2-only, where derivatives are core functionality;
+      // the old `extensions: {derivatives: true}` opt-in no longer exists.
     })
 
     super(geometry, material)

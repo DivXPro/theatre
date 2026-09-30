@@ -1,7 +1,7 @@
-import {__private} from '@theatre/core'
-import getStudio from '@theatre/studio/getStudio'
-import useContextMenu from '@theatre/studio/uiComponents/simpleContextMenu/useContextMenu'
-import useRefAndState from '@theatre/studio/utils/useRefAndState'
+import {__private} from '@dreamerbird/core'
+import getStudio from '@dreamerbird/studio/getStudio'
+import useContextMenu from '@dreamerbird/studio/uiComponents/simpleContextMenu/useContextMenu'
+import useRefAndState from '@dreamerbird/studio/utils/useRefAndState'
 import React from 'react'
 import styled from 'styled-components'
 import type KeyframeEditor from './KeyframeEditor'
@@ -21,7 +21,7 @@ type IProps = Parameters<typeof KeyframeEditor>[0]
 // for keyframe.type === 'hold'
 const pathForHoldType = `M 0 0 L 1 0 L 1 1`
 
-const Curve: React.VFC<IProps> = (props) => {
+const Curve: React.FC<IProps> = (props) => {
   const {index, trackData} = props
   const cur = keyframeUtils.getSortedKeyframesCached(trackData.keyframes)[index]
   const next = keyframeUtils.getSortedKeyframesCached(trackData.keyframes)[

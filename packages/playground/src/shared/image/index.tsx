@@ -1,5 +1,6 @@
-import {getProject, types} from '@theatre/core'
-import theatre from '@theatre/core'
+import {getProject, types} from '@dreamerbird/core'
+import theatre from '@dreamerbird/core'
+import '@dreamerbird/studio'
 import React, {useEffect, useState} from 'react'
 import ReactDom from 'react-dom/client'
 import styled from 'styled-components'

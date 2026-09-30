@@ -1,25 +1,26 @@
-import getStudio from '@theatre/studio/getStudio'
-import {usePrism, useVal} from '@theatre/react'
-import {val} from '@theatre/dataverse'
+import getStudio from '@dreamerbird/studio/getStudio'
+import {usePrism, useVal} from '@dreamerbird/react'
+import {val} from '@dreamerbird/dataverse'
 import React, {useEffect} from 'react'
 import styled, {createGlobalStyle} from 'styled-components'
 import PanelsRoot from './PanelsRoot'
-import GlobalToolbar from '@theatre/studio/toolbars/GlobalToolbar/GlobalToolbar'
-import useRefAndState from '@theatre/studio/utils/useRefAndState'
+import GlobalToolbar from '@dreamerbird/studio/toolbars/GlobalToolbar/GlobalToolbar'
+import useRefAndState from '@dreamerbird/studio/utils/useRefAndState'
 import {PortalContext} from 'reakit'
-import type {$IntentionalAny} from '@theatre/core/types/public'
+import type {$IntentionalAny} from '@dreamerbird/core/types/public'
 import useKeyboardShortcuts from './useKeyboardShortcuts'
-import PointerEventsHandler from '@theatre/studio/uiComponents/PointerEventsHandler'
-import {MountAll} from '@theatre/studio/utils/renderInPortalInContext'
-import {PortalLayer, ProvideStyles} from '@theatre/studio/css'
+import PointerEventsHandler from '@dreamerbird/studio/uiComponents/PointerEventsHandler'
+import {MountAll} from '@dreamerbird/studio/utils/renderInPortalInContext'
+import {PortalLayer, ProvideStyles} from '@dreamerbird/studio/css'
 import {
   createTheatreInternalLogger,
   TheatreLoggerLevel,
-} from '@theatre/utils/logger'
-import {ProvideLogger} from '@theatre/studio/uiComponents/useLogger'
-import {Notifier} from '@theatre/studio/notify'
-import {useChordialCaptureEvents} from '@theatre/studio/uiComponents/chordial/useChodrial'
-import {ChordialOverlay} from '@theatre/studio/uiComponents/chordial/ChordialOverlay'
+} from '@dreamerbird/utils/logger'
+import {ProvideLogger} from '@dreamerbird/studio/uiComponents/useLogger'
+import {Notifier} from '@dreamerbird/studio/notify'
+import {useChordialCaptureEvents} from '@dreamerbird/studio/uiComponents/chordial/useChodrial'
+import {ChordialOverlay} from '@dreamerbird/studio/uiComponents/chordial/ChordialOverlay'
+import {I18nProvider} from '@dreamerbird/studio/i18n'
 
 const MakeRootHostContainStatic =
   typeof window !== 'undefined'
@@ -85,30 +86,32 @@ export default function UIRoot(props: {
       <ProvideLogger logger={logger}>
         <MountExtensionComponents />
         <PortalContext.Provider value={portalLayer}>
-          <ProvideStyles
-            target={
-              window.__IS_VISUAL_REGRESSION_TESTING === true
-                ? undefined
-                : props.containerShadow
-            }
-          >
-            <>
-              <MakeRootHostContainStatic />
-              <Container
-                className={
-                  visiblityState === 'everythingIsHidden' ? 'invisible' : ''
-                }
-                // @ts-ignore
-                ref={chordialRootRef}
-              >
-                <PortalLayer ref={portalLayerRef} />
-                <ChordialOverlay />
-                <GlobalToolbar />
-                <PanelsRoot />
-                <Notifier />
-              </Container>
-            </>
-          </ProvideStyles>
+          <I18nProvider>
+            <ProvideStyles
+              target={
+                window.__IS_VISUAL_REGRESSION_TESTING === true
+                  ? undefined
+                  : props.containerShadow
+              }
+            >
+              <>
+                <MakeRootHostContainStatic />
+                <Container
+                  className={
+                    visiblityState === 'everythingIsHidden' ? 'invisible' : ''
+                  }
+                  // @ts-ignore
+                  ref={chordialRootRef}
+                >
+                  <PortalLayer ref={portalLayerRef} />
+                  <ChordialOverlay />
+                  <GlobalToolbar />
+                  <PanelsRoot />
+                  <Notifier />
+                </Container>
+              </>
+            </ProvideStyles>
+          </I18nProvider>
         </PortalContext.Provider>
       </ProvideLogger>
     )

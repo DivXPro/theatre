@@ -21,18 +21,18 @@ import {
 import {FrontStorage} from './FrontStorage'
 import {ensureStateIsUptodate} from '../shared/utils'
 import {debounce} from 'lodash-es'
-import type {Prism} from '@theatre/dataverse'
-import {Atom, prism, val} from '@theatre/dataverse'
-import waitForPrism from '@theatre/utils/waitForPrism'
-import {subscribeDebounced} from '@theatre/utils/subscribeDebounced'
+import type {Prism} from '@dreamerbird/dataverse'
+import {Atom, prism, val} from '@dreamerbird/dataverse'
+import waitForPrism from '@dreamerbird/utils/waitForPrism'
+import {subscribeDebounced} from '@dreamerbird/utils/subscribeDebounced'
 import fastDeepEqual from 'fast-deep-equal'
 import {diff} from 'jest-diff'
 import type {Ops} from '../rogue'
 import {jsonFromCell, makeDraft} from '../rogue'
-import memoizeFn from '@theatre/utils/memoizeFn'
+import memoizeFn from '@dreamerbird/utils/memoizeFn'
 import {nanoid} from 'nanoid'
-import {defer} from '@theatre/utils/defer'
-import type {VoidFn} from '@theatre/utils/types'
+import {defer} from '@dreamerbird/utils/defer'
+import type {VoidFn} from '@dreamerbird/utils/types'
 
 const emptyObject = {}
 const MAX_UNDO_STACK_SIZE = 1000
@@ -124,7 +124,7 @@ export class SaazFront<
    * then a reference to SaazBack can be passed here. This is useful for testing.
    *
    * In environments where the backend and the frontend are in different processes (a client/server setup), an object that
-   * implements `SaazBackInterface` should be passed here. See `@theatre/sync-server` for a TRPC-based implementation.
+   * implements `SaazBackInterface` should be passed here. See `@dreamerbird/sync-server` for a TRPC-based implementation.
    */
   private _backend: SaazBackInterface
 
@@ -142,6 +142,16 @@ export class SaazFront<
    * A list of functions that will be called when the frontend is destroyed.
    */
   private _teardownCallbacks: (() => void)[] = []
+  private _isTeardown = false
+  private _onStorageFailure: ((error: Error) => void) | undefined
+
+  /**
+   * Locks acquired for crashed/closed sessions (see
+   * `_acquireLocksOnClosedSessions`). Held for the lifetime of the frontend so
+   * no other tab can take over the session; released in teardown so they don't
+   * hang until the process exits.
+   */
+  private _sessionLocks: Array<SessionLock> = []
 
   /**
    * We use dataverse prisms to derive several values from the atom. This makes the reactive parts of the code easier to maintain.
@@ -189,11 +199,7 @@ export class SaazFront<
       const closedSessions = val(this._atom.pointer.closedSessions)
       for (const session of closedSessions) {
         for (const update of session.optimisticUpdates) {
-          stateSoFar = this._cachedApplyTransactionToState(
-            update,
-            base,
-            stateSoFar,
-          )
+          stateSoFar = this._applyPersistedTransaction(update, base, stateSoFar)
         }
       }
 
@@ -206,11 +212,7 @@ export class SaazFront<
         // if the update has already been incorporated into the backend state, skip it (it'll be garbage collected soon)
         if (update.peerClock <= lastIncorporatedPeerClock) continue
 
-        stateSoFar = this._cachedApplyTransactionToState(
-          update,
-          base,
-          stateSoFar,
-        )
+        stateSoFar = this._applyPersistedTransaction(update, base, stateSoFar)
       }
 
       return stateSoFar
@@ -323,6 +325,12 @@ export class SaazFront<
      * If true (default), the frontend will keep the prisms hot. This is a perf optimization
      */
     keepPrismsHot?: boolean
+    /**
+     * Called when persistence fails during init (e.g. IndexedDB can't be
+     * opened). The frontend degrades to in-memory-only: editing keeps
+     * working, but nothing is persisted. The host decides what to surface.
+     */
+    onStorageFailure?: (error: Error) => void
   }) {
     if (opts.diskSnapshot) {
       this._diskSnapshot = {
@@ -366,6 +374,7 @@ export class SaazFront<
     this._schema = opts.schema
     this._peerId = opts.peerId ?? nanoid(PEERID_LENGTH)
     this._backend = opts.backend
+    this._onStorageFailure = opts.onStorageFailure
     this._dbName = opts.dbName
     this._storage = new FrontStorage(this._dbName, opts.storageAdapter)
 
@@ -373,47 +382,76 @@ export class SaazFront<
   }
 
   private async _init() {
-    await this._loadClosedSessions()
+    try {
+      await this._loadClosedSessions()
 
-    // The most recent backend state that one of the closed sessions has cached.
-    // We can use this until we get the first update from the backend
-    const cachedBackendState: SessionState<unknown> | undefined =
-      await this._storage.transaction(async (t) =>
-        t.getMostRecentlySyncedSessionState(),
-      )
+      // The most recent backend state that one of the closed sessions has cached.
+      // We can use this until we get the first update from the backend
+      const cachedBackendState: SessionState<unknown> | undefined =
+        await this._storage.transaction(async (t) =>
+          t.getMostRecentlySyncedSessionState(),
+        )
 
-    // this will create the database and start a transaction
-    await this._storage.transaction(async (t) => {
-      const initialSnapshot = this._diskSnapshot
-      if (!cachedBackendState) {
-        // there are no closed/crashed sessions that have a backend state.
-        this._setSessionState({
-          backendClock: initialSnapshot?.clock ?? null,
-          lastIncorporatedPeerClock: null,
-          lastSyncTime: null,
-          snapshot: initialSnapshot?.snapshot ?? null,
-          peerId: this._peerId,
-        })
-      } else {
-        if (initialSnapshot) {
-          // TODO
-          throw new Error(`Not implemented`)
-        } else {
-          this._atom.setByPointer((p) => p.sessionState, {
-            lastSyncTime: null,
-            backendClock: cachedBackendState.backendClock ?? null,
+      // this will create the database and start a transaction
+      await this._storage.transaction(async (t) => {
+        const initialSnapshot = this._diskSnapshot
+        if (!cachedBackendState) {
+          // there are no closed/crashed sessions that have a backend state.
+          this._setSessionState({
+            backendClock: initialSnapshot?.clock ?? null,
             lastIncorporatedPeerClock: null,
+            lastSyncTime: null,
+            snapshot: initialSnapshot?.snapshot ?? null,
             peerId: this._peerId,
-            snapshot: ensureStateIsUptodate<OpSnapshot>(
-              cachedBackendState.snapshot as $IntentionalAny,
-              this._schema,
-            ),
           })
+        } else {
+          if (initialSnapshot) {
+            const cachedClock = cachedBackendState.backendClock ?? -1
+            if (initialSnapshot.clock > cachedClock) {
+              // the user explicitly provided a newer save file: restore from it
+              this._setSessionState({
+                backendClock: initialSnapshot.clock,
+                lastIncorporatedPeerClock: null,
+                lastSyncTime: null,
+                snapshot: initialSnapshot.snapshot,
+                peerId: this._peerId,
+              })
+            } else {
+              this._atom.setByPointer((p) => p.sessionState, {
+                lastSyncTime: null,
+                backendClock: cachedBackendState.backendClock ?? null,
+                lastIncorporatedPeerClock: null,
+                peerId: this._peerId,
+                snapshot: ensureStateIsUptodate<OpSnapshot>(
+                  cachedBackendState.snapshot as $IntentionalAny,
+                  this._schema,
+                ),
+              })
+            }
+          } else {
+            this._atom.setByPointer((p) => p.sessionState, {
+              lastSyncTime: null,
+              backendClock: cachedBackendState.backendClock ?? null,
+              lastIncorporatedPeerClock: null,
+              peerId: this._peerId,
+              snapshot: ensureStateIsUptodate<OpSnapshot>(
+                cachedBackendState.snapshot as $IntentionalAny,
+                this._schema,
+              ),
+            })
+          }
         }
-      }
 
+        this._atom.setByPointer((p) => p.initialized, true)
+      })
+    } catch (error) {
+      // Persistence failed (e.g. IndexedDB couldn't be opened). Degrade to
+      // in-memory-only: editing must not block, so mark initialized anyway and
+      // let the host decide what to surface.
+      console.warn('[saaz] persistence failed; running in-memory only:', error)
       this._atom.setByPointer((p) => p.initialized, true)
-    })
+      this._onStorageFailure?.(error as Error)
+    }
 
     this._teardownCallbacks.push(
       this._subscribeToBackend(),
@@ -430,18 +468,33 @@ export class SaazFront<
     // in case there are crashed/closed sesions that haven't synced
     // with backend yet, let's take them over
     const closedSessionsLocks = await this._acquireLocksOnClosedSessions()
+    // Hold the locks until teardown so no other tab can take over these
+    // sessions while we're processing them.
+    this._sessionLocks = closedSessionsLocks
 
     const closedSessions: ClosedSession[] = await this._storage.transaction(
       async (t) =>
         await Promise.all(
           closedSessionsLocks.map(
             async (closedSessionLock): Promise<ClosedSession> => {
+              // updates the backend has already confirmed (according to the
+              // session's cached state) must not be re-applied or re-pushed —
+              // they may still sit in storage waiting to be garbage collected
+              const storedState = await t.getSessionState(
+                closedSessionLock.peerId,
+              )
+              const lastIncorporatedPeerClock =
+                storedState?.lastIncorporatedPeerClock ?? null
+              const optimisticUpdates = (
+                await t.getOptimisticUpdates(closedSessionLock.peerId)
+              ).filter(
+                (update) =>
+                  update.peerClock > (lastIncorporatedPeerClock ?? -1),
+              )
               return {
-                optimisticUpdates: await t.getOptimisticUpdates(
-                  closedSessionLock.peerId,
-                ),
+                optimisticUpdates,
                 peerId: closedSessionLock.peerId,
-                lastIncorporatedPeerClock: null,
+                lastIncorporatedPeerClock,
               }
             },
           ),
@@ -500,11 +553,28 @@ export class SaazFront<
     return all.filter((v): v is SessionLock => !!v)
   }
 
+  /**
+   * Logs an error unless teardown has begun. Reflection callbacks that were
+   * already in-flight when teardown ran keep failing against the closed
+   * storage/backend — those are expected and shouldn't spam the console.
+   */
+  private _consoleErrorFiltered(error: unknown) {
+    if (this._isTeardown) return
+    console.error(error)
+  }
+
   teardown(): void {
+    this._isTeardown = true
     for (const cb of this._teardownCallbacks) {
       cb()
     }
     this._teardownCallbacks.length = 0
+    // Release the session locks so they don't hang until the process exits.
+    for (const lock of this._sessionLocks) lock.unlock()
+    this._sessionLocks = []
+    // Release the underlying IDB connection so teardown doesn't leak open
+    // handles. Memory adapters are no-ops.
+    void this._storage.closeAdapter()
   }
 
   private _removeStalePeerPresenceStates() {
@@ -531,10 +601,12 @@ export class SaazFront<
         ) {
           lastTempTransactions = tempTransactions
           lastUpdateSent = now
-          void this._backend.updatePresence({
-            peerId: this._peerId,
-            presence: {tempTransactions},
-          })
+          void this._backend
+            .updatePresence({
+              peerId: this._peerId,
+              presence: {tempTransactions},
+            })
+            .catch((err) => this._consoleErrorFiltered(err))
         }
         await new Promise((resolve) => setTimeout(resolve, 30))
       },
@@ -595,13 +667,49 @@ export class SaazFront<
         if (res.ok) {
           this._processBackendUpdate(res)
         } else {
-          console.error(res.error)
-          throw new Error('Backend rejected optimistic update')
+          // spec:169 — the backend rejected this optimistic update. Never
+          // crash: dev fails loud, prod drops the update and notifies the host
+          // through the C8 persistence-failure signal (a dropped update means
+          // that part of the session state is no longer being saved, so the
+          // "state won't be saved" banner applies).
+          if (process.env.NODE_ENV !== 'production') {
+            this._consoleErrorFiltered(res.error)
+          } else {
+            this._onStorageFailure?.(res.error as Error)
+          }
+          // remove the rejected update so it isn't retried on every sync
+          this._dropRejectedOptimisticUpdate(updates)
         }
       } catch (errs) {
-        console.error(errs)
+        this._consoleErrorFiltered(errs)
       }
     })
+  }
+
+  /**
+   * Removes the rejected optimistic updates from the sync queues (both the
+   * current session's and any closed sessions') so they are not retried
+   * forever. The updates are identified by reference — the exact objects that
+   * were handed to the backend.
+   */
+  private _dropRejectedOptimisticUpdate(rejectedUpdates: Transaction[]) {
+    const rejected = new Set(rejectedUpdates)
+    this._atom.reduce((state) => ({
+      ...state,
+      optimisticUpdatesQueue: state.optimisticUpdatesQueue.filter(
+        (update) => !rejected.has(update),
+      ),
+      closedSessions: state.closedSessions.map((closedSession) =>
+        closedSession.optimisticUpdates.some((update) => rejected.has(update))
+          ? {
+              ...closedSession,
+              optimisticUpdates: closedSession.optimisticUpdates.filter(
+                (update) => !rejected.has(update),
+              ),
+            }
+          : closedSession,
+      ),
+    }))
   }
 
   private _processBackendUpdate(s: BackGetUpdateSinceClockResult) {
@@ -648,7 +756,7 @@ export class SaazFront<
             backendState,
           )
         } catch (error) {
-          console.error(error)
+          this._consoleErrorFiltered(error)
         }
       },
     )
@@ -686,14 +794,20 @@ export class SaazFront<
         const toPush: Transaction[] = []
         const toPluck: Transaction[] = []
 
-        for (const transacion of memory) {
-          const existing = last.find(
-            (t) => t.peerClock === transacion.peerClock,
+        for (const transaction of memory) {
+          const alreadyStored = last.some(
+            (t) => t.peerClock === transaction.peerClock,
           )
-          if (!existing) {
-            toPush.push(transacion)
-          } else {
-            toPluck.push(existing)
+          if (!alreadyStored) {
+            toPush.push(transaction)
+          }
+        }
+        for (const stored of last) {
+          const stillOutstanding = memory.some(
+            (t) => t.peerClock === stored.peerClock,
+          )
+          if (!stillOutstanding) {
+            toPluck.push(stored)
           }
         }
 
@@ -707,11 +821,43 @@ export class SaazFront<
             memory,
           )
         } catch (error) {
-          console.error(error)
+          this._consoleErrorFiltered(error)
           return
         }
       },
     )
+  }
+
+  /**
+   * Transactions that fail to replay (e.g. persisted by an older, incompatible
+   * version whose editor names have changed). Skipped silently after the first
+   * warning so hot prisms don't re-warn on every recalculation.
+   */
+  private _unreplayableTransactions = new Set<Transaction>()
+
+  /**
+   * Like {@link _cachedApplyTransactionToState}, but for persisted updates:
+   * an update that fails to replay is skipped (with a warning) instead of
+   * crashing the prism chain, which would leave `state` undefined and break
+   * every subsequent read and write.
+   */
+  private _applyPersistedTransaction(
+    transaction: Transaction,
+    base: FullSnapshot<OpSnapshot>,
+    before: FullSnapshot<OpSnapshot>,
+  ): FullSnapshot<OpSnapshot> {
+    if (this._unreplayableTransactions.has(transaction)) return before
+    try {
+      return this._cachedApplyTransactionToState(transaction, base, before)
+    } catch (error) {
+      this._unreplayableTransactions.add(transaction)
+      console.warn(
+        '[saaz] skipping a persisted update that fails to replay ' +
+          '(it may come from an older, incompatible version):',
+        error,
+      )
+      return before
+    }
   }
 
   private _cachedApplyTransactionToState(
@@ -746,7 +892,10 @@ export class SaazFront<
   _setSessionState(opts: SessionState<OpSnapshot>) {
     const s = {
       ...opts,
-      value: ensureStateIsUptodate(opts.snapshot, this._schema),
+      // The cleaned snapshot must land in `snapshot` itself: the base prism
+      // reads `sessionState.snapshot`, so a raw-but-cleaned-elsewhere value
+      // would still feed incompatible data into every transaction.
+      snapshot: ensureStateIsUptodate(opts.snapshot, this._schema),
     }
 
     if (s.peerId === this._peerId) {
@@ -825,7 +974,12 @@ export class SaazFront<
   }
 
   private _subscribeToBackend(): () => void {
-    void this._pullUpdatesFromBackend()
+    // Degraded mode (persistence failed) leaves sessionState null, so the
+    // initial pull has no backend state to sync from and rejects — don't let
+    // that become an unhandled rejection.
+    void this._pullUpdatesFromBackend().catch((err) => {
+      console.error(err)
+    })
     const stop = this._backend.subscribe(
       {
         peerId: this._peerId,
@@ -840,15 +994,31 @@ export class SaazFront<
       },
     )
 
+    // subscribe() rejects when the backend is unreachable. Log it here so the
+    // rejection is handled; otherwise it surfaces as an unhandled rejection.
+    void stop.catch((err) => this._consoleErrorFiltered(err))
+
     const unsub = () => {
-      void stop.then((s) => stop)
+      // `stop` is a promise resolving to the backend's unsubscribe function —
+      // call it, so teardown actually stops the backend subscription.
+      // The rejection case is already logged above; ignore it here.
+      void stop.then((s) => s()).catch(() => {})
     }
 
     return unsub
   }
 
   get state(): {op: OpSnapshot; cell: CellShape} {
-    return finalState(this._prisms.withPeers.getValue()) as $IntentionalAny
+    const s = this._prisms.withPeers.getValue()
+    if (s === undefined) {
+      // Should not happen: the prism chain starts from a non-null base and
+      // persisted updates that fail to replay are skipped. If it does, fail
+      // loudly here instead of deep inside finalState with a confusing error.
+      throw new Error(
+        '[saaz] state is unavailable (see earlier console errors)',
+      )
+    }
+    return finalState(s) as $IntentionalAny
   }
 
   get isReady(): boolean {
@@ -864,8 +1034,15 @@ export class SaazFront<
     draftFn?: (cellDraft: CellShape) => void,
     undoable: boolean = true,
   ): void {
+    const currentState = this._prisms.optimisticState.getValue()
+    if (currentState === undefined) {
+      throw new Error(
+        '[saaz] cannot create a transaction: state is unavailable ' +
+          '(see earlier console errors)',
+      )
+    }
     const [update, isEmpty, backwardOps] = this._createTransaction(
-      this._prisms.optimisticState.getValue(),
+      currentState,
       editorFn,
       draftFn,
     )
@@ -1231,6 +1408,10 @@ export class SaazFront<
     let oldState = withPeers.getValue()
     return withPeers.onStale(() => {
       const newState = withPeers.getValue()
+      // A failed recalculation leaves the prism undefined (the error is
+      // logged by dataverse). Skip the notification rather than crash the
+      // subscriber with a confusing "reading 'op'" deep inside finalState.
+      if (newState === undefined) return
       if (newState !== oldState) {
         oldState = newState
         fn(finalState(newState) as $IntentionalAny)

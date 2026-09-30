@@ -1,36 +1,38 @@
-import {usePrism, useVal} from '@theatre/react'
-import getStudio from '@theatre/studio/getStudio'
-import React, {useMemo, useRef} from 'react'
-import useTooltip from '@theatre/studio/uiComponents/Popover/useTooltip'
-import ErrorTooltip from '@theatre/studio/uiComponents/Popover/ErrorTooltip'
-import BasicTooltip from '@theatre/studio/uiComponents/Popover/BasicTooltip'
-import {val} from '@theatre/dataverse'
-import usePopover from '@theatre/studio/uiComponents/Popover/usePopover'
+import {usePrism} from '@dreamerbird/react'
+import getStudio from '@dreamerbird/studio/getStudio'
+import React, {useRef} from 'react'
+import useTooltip from '@dreamerbird/studio/uiComponents/Popover/useTooltip'
+import ErrorTooltip from '@dreamerbird/studio/uiComponents/Popover/ErrorTooltip'
+import BasicTooltip from '@dreamerbird/studio/uiComponents/Popover/BasicTooltip'
+import {val} from '@dreamerbird/dataverse'
+import usePopover from '@dreamerbird/studio/uiComponents/Popover/usePopover'
+import {useT} from '@dreamerbird/studio/i18n'
 import MoreMenu from './MoreMenu/MoreMenu'
 
-let showedVisualTestingWarning = false
-
 export function useOutlineTriggerTooltip(
-  conflicts: ReturnType<typeof uesConflicts>,
+  conflicts: ReturnType<typeof useConflicts>,
 ) {
+  const t = useT()
   return useTooltip(
     {enabled: conflicts.length > 0, enterDelay: conflicts.length > 0 ? 0 : 200},
     () =>
       conflicts.length > 0 ? (
         <ErrorTooltip>
           {conflicts.length === 1
-            ? `There is a state conflict in project "${conflicts[0].projectId}". Select the project in the outline below in order to fix it.`
-            : `There are ${conflicts.length} projects that have state conflicts. They are highlighted in the outline below. `}
+            ? t('toolbar.outline.conflict.one', {
+                projectId: conflicts[0].projectId,
+              })
+            : t('toolbar.outline.conflict.many', {count: conflicts.length})}
         </ErrorTooltip>
       ) : (
         <BasicTooltip>
-          <>Outline</>
+          <>{t('toolbar.outline.tooltip')}</>
         </BasicTooltip>
       ),
   )
 }
 
-export function uesConflicts() {
+export function useConflicts() {
   return usePrism(() => {
     const ephemeralStateOfAllProjects = val(
       getStudio().ephemeralAtom.pointer.coreByProject,
@@ -72,27 +74,4 @@ export function useMoreMenu() {
   )
   const moreMenuTriggerRef = useRef<HTMLButtonElement>(null)
   return {moreMenu, moreMenuTriggerRef}
-}
-
-export function useShouldShowUpdatesBadge(): boolean {
-  const hasUpdates =
-    useVal(
-      getStudio().ahistoricAtom.pointer.updateChecker.result.hasUpdates,
-    ) === true
-
-  return useMemo(() => {
-    if (window.__IS_VISUAL_REGRESSION_TESTING) {
-      if (!showedVisualTestingWarning) {
-        showedVisualTestingWarning = true
-        console.warn(
-          "Visual regression testing enabled, so we're showing the updates badge unconditionally",
-        )
-      }
-    }
-    if (hasUpdates || window.__IS_VISUAL_REGRESSION_TESTING) {
-      return true
-    }
-
-    return hasUpdates
-  }, [hasUpdates])
 }

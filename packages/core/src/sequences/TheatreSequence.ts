@@ -1,10 +1,10 @@
-import {privateAPI, setPrivateAPI} from '@theatre/core/privateAPIs'
-import {defer} from '@theatre/utils/defer'
+import {privateAPI, setPrivateAPI} from '@dreamerbird/core/privateAPIs'
+import {defer} from '@dreamerbird/utils/defer'
 import type Sequence from './Sequence'
 import AudioPlaybackController from './playbackControllers/AudioPlaybackController'
-import {getCoreTicker} from '@theatre/core/coreTicker'
-import type {Pointer} from '@theatre/dataverse'
-import {notify} from '@theatre/core/utils/notify'
+import {getCoreTicker} from '@dreamerbird/core/coreTicker'
+import type {Pointer} from '@dreamerbird/dataverse'
+import {notify} from '@dreamerbird/core/utils/notify'
 import type {
   IAttachAudioArgs,
   IPlaybackDirection,
@@ -12,7 +12,7 @@ import type {
   ISequence,
   IRafDriver,
   BasicKeyframe,
-} from '@theatre/core/types/public'
+} from '@dreamerbird/core/types/public'
 
 export default class TheatreSequence implements ISequence {
   get type(): 'Theatre_Sequence_PublicAPI' {
@@ -46,8 +46,8 @@ export default class TheatreSequence implements ISequence {
         notify.warning(
           "Sequence can't be played",
           'You seem to have called `sequence.play()` before the project has finished loading.\n\n' +
-            'This would **not** a problem in production when using `@theatre/core`, since Theatre.js loads instantly in core mode. ' +
-            "However, when using `@theatre/studio`, it takes a few milliseconds for it to load your project's state, " +
+            'This would **not** a problem in production when using `@dreamerbird/core`, since Theatre.js loads instantly in core mode. ' +
+            "However, when using `@dreamerbird/studio`, it takes a few milliseconds for it to load your project's state, " +
             `before which your sequences cannot start playing.\n` +
             `\n` +
             'To fix this, simply defer calling `sequence.play()` until after the project is loaded, like this:\n\n' +
@@ -74,6 +74,11 @@ export default class TheatreSequence implements ISequence {
     privateAPI(this).pause()
   }
 
+  /** 把位置吸附到序列网格(theatre 写帧也贴同一网格) */
+  closestGridPosition(posInUnitSpace: number): number {
+    return privateAPI(this).closestGridPosition(posInUnitSpace)
+  }
+
   get position() {
     return privateAPI(this).position
   }
@@ -82,7 +87,7 @@ export default class TheatreSequence implements ISequence {
     privateAPI(this).position = position
   }
 
-  __experimental_getKeyframes(prop: Pointer<any>): BasicKeyframe[] {
+  getKeyframes(prop: Pointer<any>): BasicKeyframe[] {
     return privateAPI(this).getKeyframesOfSimpleProp(prop)
   }
 

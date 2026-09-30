@@ -1,4 +1,4 @@
-[@theatre/dataverse](../README.md) / Ticker
+[@dreamerbird/dataverse](../README.md) / Ticker
 
 # Class: Ticker
 

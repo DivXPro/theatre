@@ -14,7 +14,7 @@ import {defer} from '../utils/testUtils'
  * @returns boolean
  */
 const isTheatreDependency = (pkg) =>
-  pkg.startsWith('@theatre/') || pkg === 'theatric'
+  pkg.startsWith('@dreamerbird/') || pkg === '@dreamerbird/theatric'
 
 const verbose = !!argv['verbose']
 
@@ -75,7 +75,7 @@ export async function installFixtures(): Promise<void> {
   const verdaccioServer = await startVerdaccio(config.VERDACCIO_PORT)
   console.log(`Verdaccio is running on ${config.VERDACCIO_URL}`)
 
-  console.log('Releasing @theatre/* packages to verdaccio')
+  console.log('Releasing @dreamerbird/* packages to verdaccio')
   await releaseToVerdaccio()
 
   console.log('Running `$ npm install` on test packages')
@@ -154,10 +154,10 @@ Original error: ${error}`)
 
 /**
  * Takes an absolute path to a package.json file and replaces all of its
- * dependencies on `@theatre/*` packatges to `version`.
+ * dependencies on `@dreamerbird/*` packatges to `version`.
  *
  * @param {string} pathToPackageJson absolute path to the package.json file
- * @param {string} version The version to set all `@theatre/*` dependencies to
+ * @param {string} version The version to set all `@dreamerbird/*` dependencies to
  */
 async function patchTheatreDependencies(pathToPackageJson, version) {
   const originalFileContent = fs.readFileSync(pathToPackageJson, {
@@ -166,7 +166,7 @@ async function patchTheatreDependencies(pathToPackageJson, version) {
   // get the package.json file's content
   const packageJson = JSON.parse(originalFileContent)
 
-  // find all dependencies on '@theatre/*' packages and replace them with the local version
+  // find all dependencies on '@dreamerbird/*' packages and replace them with the local version
   for (const dependencyType of [
     'dependencies',
     'devDependencies',
@@ -199,13 +199,13 @@ async function patchTestPackageJsons(): Promise<() => void> {
     (pathToPackageDir) => path.join(pathToPackageDir, 'package.json'),
   )
 
-  // replace all dependencies on @theatre/* packages with the local version
+  // replace all dependencies on @dreamerbird/* packages with the local version
   for (const pathToPackageJson of packagePaths) {
     patchTheatreDependencies(pathToPackageJson, tempVersion)
   }
 
   return () => {
-    // replace all dependencies on @theatre/* packages with the 0.0.1-COMPAT.1
+    // replace all dependencies on @dreamerbird/* packages with the 0.0.1-COMPAT.1
     for (const pathToPackageJson of packagePaths) {
       patchTheatreDependencies(pathToPackageJson, '0.0.1-COMPAT.1')
     }
@@ -263,17 +263,17 @@ async function startVerdaccio(port: number): Promise<{close: () => void}> {
 }
 
 const packagesToPublish = [
-  '@theatre/core',
-  '@theatre/studio',
-  '@theatre/dataverse',
-  '@theatre/react',
-  '@theatre/browser-bundles',
-  '@theatre/r3f',
-  'theatric',
+  '@dreamerbird/core',
+  '@dreamerbird/studio',
+  '@dreamerbird/dataverse',
+  '@dreamerbird/react',
+  '@dreamerbird/browser-bundles',
+  '@dreamerbird/r3f',
+  '@dreamerbird/theatric',
 ]
 
 /**
- * Assigns a new version to each of @theatre/* packages. If there a package depends on another package in this monorepo,
+ * Assigns a new version to each of @dreamerbird/* packages. If there a package depends on another package in this monorepo,
  * this function makes sure the dependency version is fixed at "version"
  *
  * @param workspacesListObjects - An Array of objects containing information about the workspaces
@@ -308,8 +308,8 @@ async function writeVersionsToPackageJSONs(
     let {dependencies, peerDependencies, devDependencies} = originalJson
 
     // Normally we don't have to override the package versions in dependencies because yarn would already convert
-    // all the "workspace:*" versions to a fixed version before publishing. However, packages like @theatre/studio
-    // have a peerDependency on @theatre/core set to "*" (meaning they would work with any version of @theatre/core).
+    // all the "workspace:*" versions to a fixed version before publishing. However, packages like @dreamerbird/studio
+    // have a peerDependency on @dreamerbird/core set to "*" (meaning they would work with any version of @dreamerbird/core).
     // This is not the desired behavior in pre-release versions, so here, we'll fix those "*" versions to the set version.
     for (const deps of [dependencies, peerDependencies, devDependencies]) {
       if (!deps) continue
@@ -337,7 +337,7 @@ async function writeVersionsToPackageJSONs(
 }
 
 /**
- * Builds all the @theatre/* packages with version number 0.0.1-COMPAT.1 and publishes
+ * Builds all the @dreamerbird/* packages with version number 0.0.1-COMPAT.1 and publishes
  * them all to the verdaccio registry
  */
 async function releaseToVerdaccio() {

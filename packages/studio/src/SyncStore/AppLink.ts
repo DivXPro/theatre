@@ -1,4 +1,4 @@
-import type {StudioTRPCRouter} from '@theatre/app/server/studio-api/root'
+import type {StudioTRPCRouter} from '@dreamerbird/app/server/studio-api/root'
 import type {CreateTRPCProxyClient} from '@trpc/client'
 import {
   createTRPCProxyClient,
@@ -32,7 +32,7 @@ export default class AppLink {
     })
   }
 
-  get api() {
+  get api(): CreateTRPCProxyClient<StudioTRPCRouter> {
     return this._client
   }
 }

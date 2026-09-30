@@ -6,15 +6,15 @@
     "start": "next start"
   },
   "dependencies": {
-    "@react-three/drei": "^9.80.1",
-    "@react-three/fiber": "^8.13.6",
-    "three": "^0.155.0",
-    "@theatre/core": "0.0.1-COMPAT.1",
-    "@theatre/r3f": "0.0.1-COMPAT.1",
-    "@theatre/studio": "0.0.1-COMPAT.1",
-    "theatric": "0.0.1-COMPAT.1",
+    "@react-three/drei": "^10.7.8",
+    "@react-three/fiber": "^9.7.0",
+    "three": "^0.185.1",
+    "@dreamerbird/core": "0.0.1-COMPAT.1",
+    "@dreamerbird/r3f": "0.0.1-COMPAT.1",
+    "@dreamerbird/studio": "0.0.1-COMPAT.1",
+    "@dreamerbird/theatric": "0.0.1-COMPAT.1",
     "next": "latest",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
   }
 }

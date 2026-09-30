@@ -1,38 +1,38 @@
-import type {SequenceEditorPanelLayout} from '@theatre/studio/panels/SequenceEditorPanel/layout/layout'
-import RoomToClick from '@theatre/studio/uiComponents/RoomToClick'
-import useRefAndState from '@theatre/studio/utils/useRefAndState'
-import {usePrism, useVal} from '@theatre/react'
-import type {$IntentionalAny} from '@theatre/core/types/public'
-import type {Pointer} from '@theatre/dataverse'
-import {val} from '@theatre/dataverse'
+import type {SequenceEditorPanelLayout} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/layout'
+import RoomToClick from '@dreamerbird/studio/uiComponents/RoomToClick'
+import useRefAndState from '@dreamerbird/studio/utils/useRefAndState'
+import {usePrism, useVal} from '@dreamerbird/react'
+import type {$IntentionalAny} from '@dreamerbird/core/types/public'
+import type {Pointer} from '@dreamerbird/dataverse'
+import {val} from '@dreamerbird/dataverse'
 import clamp from 'lodash-es/clamp'
 import React, {useState} from 'react'
 import styled from 'styled-components'
-import {zIndexes} from '@theatre/studio/panels/SequenceEditorPanel/SequenceEditorPanel'
+import {zIndexes} from '@dreamerbird/studio/panels/SequenceEditorPanel/SequenceEditorPanel'
 import {
   includeLockFrameStampAttrs,
   useLockFrameStampPosition,
-} from '@theatre/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
-import {pointerEventsAutoInNormalMode} from '@theatre/studio/css'
-import BasicPopover from '@theatre/studio/uiComponents/Popover/BasicPopover'
+} from '@dreamerbird/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
+import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
+import BasicPopover from '@dreamerbird/studio/uiComponents/Popover/BasicPopover'
 import PlayheadPositionPopover from './PlayheadPositionPopover'
-import {getIsPlayheadAttachedToFocusRange} from '@theatre/studio/UIRoot/useKeyboardShortcuts'
+import {getIsPlayheadAttachedToFocusRange} from '@dreamerbird/studio/UIRoot/useKeyboardShortcuts'
 import {
   lockedCursorCssVarName,
   useCssCursorLock,
-} from '@theatre/studio/uiComponents/PointerEventsHandler'
-import getStudio from '@theatre/studio/getStudio'
+} from '@dreamerbird/studio/uiComponents/PointerEventsHandler'
+import getStudio from '@dreamerbird/studio/getStudio'
 import DopeSnap from './DopeSnap'
 import {
   snapToAll,
   snapToNone,
-} from '@theatre/studio/panels/SequenceEditorPanel/DopeSheet/Right/KeyframeSnapTarget'
-import useChordial from '@theatre/studio/uiComponents/chordial/useChodrial'
+} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/Right/KeyframeSnapTarget'
+import useChordial from '@dreamerbird/studio/uiComponents/chordial/useChodrial'
 import {mergeRefs} from 'react-merge-refs'
-import usePopover from '@theatre/studio/uiComponents/Popover/usePopover'
-import {generateSequenceMarkerId} from '@theatre/studio/utils/ids'
+import usePopover from '@dreamerbird/studio/uiComponents/Popover/usePopover'
+import {generateSequenceMarkerId} from '@dreamerbird/studio/utils/ids'
 
-const Container = styled.div<{isVisible: boolean}>`
+const Container = styled.div<{$isVisible: boolean}>`
   --thumbColor: #00e0ff;
   position: absolute;
   top: 0;
@@ -42,7 +42,7 @@ const Container = styled.div<{isVisible: boolean}>`
   z-index: ${() => zIndexes.playhead};
   pointer-events: none;
 
-  display: ${(props) => (props.isVisible ? 'block' : 'none')};
+  display: ${(props) => (props.$isVisible ? 'block' : 'none')};
 `
 
 const Rod = styled.div`
@@ -306,7 +306,7 @@ const Playhead: React.FC<{layoutP: Pointer<SequenceEditorPanelLayout>}> = ({
       {popover.node}
 
       <Container
-        isVisible={isVisible}
+        $isVisible={isVisible}
         style={{transform: `translate3d(${posInClippedSpace}px, 0, 0)`}}
         className={`${isSeeking && 'seeking'} ${
           popover.isOpen && 'popoverOpen'

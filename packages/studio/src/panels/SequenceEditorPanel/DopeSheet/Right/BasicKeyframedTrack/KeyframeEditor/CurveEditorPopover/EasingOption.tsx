@@ -1,13 +1,13 @@
-import useTooltip from '@theatre/studio/uiComponents/Popover/useTooltip'
+import useTooltip from '@dreamerbird/studio/uiComponents/Popover/useTooltip'
 import React from 'react'
 import styled, {css} from 'styled-components'
 import {handlesFromCssCubicBezierArgs} from './shared'
 import SVGCurveSegment from './SVGCurveSegment'
 import {mergeRefs} from 'react-merge-refs'
 import {COLOR_BASE} from './colors'
-import BasicPopover from '@theatre/studio/uiComponents/Popover/BasicPopover'
+import BasicPopover from '@dreamerbird/studio/uiComponents/Popover/BasicPopover'
 
-const Wrapper = styled.div<{isSelected: boolean}>`
+const Wrapper = styled.div<{$isSelected: boolean}>`
   position: relative;
   display: flex;
   align-items: center;
@@ -21,8 +21,8 @@ const Wrapper = styled.div<{isSelected: boolean}>`
   cursor: pointer;
   outline: none;
 
-  ${({isSelected}) =>
-    isSelected &&
+  ${({$isSelected}) =>
+    $isSelected &&
     css`
       background-color: #383d42;
     `}
@@ -38,7 +38,7 @@ const Wrapper = styled.div<{isSelected: boolean}>`
 
 const EasingTooltip = styled(BasicPopover)`
   padding: 0.5em;
-  color: white;
+  color: var(--theatre-text-primary);
   max-width: 240px;
   pointer-events: none !important;
   --popover-bg: black;
@@ -54,9 +54,10 @@ type IProps = {
   }
   tooltipPlacement: 'top' | 'bottom'
   isSelected: boolean
-} & Parameters<typeof Wrapper>[0]
+} & Omit<Parameters<typeof Wrapper>[0], '$isSelected'>
 
 const EasingOption: React.FC<IProps> = React.forwardRef((props, ref) => {
+  const {isSelected, ...rest} = props
   const [tooltip, tooltipHostRef] = useTooltip(
     {enabled: true, verticalPlacement: props.tooltipPlacement, verticalGap: 0},
     () => (
@@ -67,7 +68,11 @@ const EasingOption: React.FC<IProps> = React.forwardRef((props, ref) => {
   )
 
   return (
-    <Wrapper ref={mergeRefs([tooltipHostRef, ref])} {...props}>
+    <Wrapper
+      ref={mergeRefs([tooltipHostRef, ref])}
+      {...rest}
+      $isSelected={isSelected}
+    >
       {tooltip}
       <SVGCurveSegment
         easing={handlesFromCssCubicBezierArgs(props.easing.value)}

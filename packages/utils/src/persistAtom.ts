@@ -1,5 +1,5 @@
-import type {Atom, Pointer} from '@theatre/dataverse'
-import {prism, val} from '@theatre/dataverse'
+import type {Atom, Pointer} from '@dreamerbird/dataverse'
+import {prism, val} from '@dreamerbird/dataverse'
 import debounce from 'lodash-es/debounce'
 
 const lastStateByStore = new WeakMap<Atom<{}>, {}>()

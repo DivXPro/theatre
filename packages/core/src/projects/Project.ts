@@ -2,32 +2,33 @@ import type {
   OnDiskState,
   ProjectEphemeralState,
   ProjectState,
-} from '@theatre/core/types/private/core'
-import type TheatreProject from '@theatre/core/projects/TheatreProject'
-import type Sheet from '@theatre/core/sheets/Sheet'
-import SheetTemplate from '@theatre/core/sheets/SheetTemplate'
-// import type {Studio} from '@theatre/studio/Studio'
-import type {ProjectAddress} from '@theatre/core/types/public'
-import type {Pointer} from '@theatre/dataverse'
-import {PointerProxy} from '@theatre/dataverse'
-import {Atom} from '@theatre/dataverse'
+} from '@dreamerbird/core/types/private/core'
+import type TheatreProject from '@dreamerbird/core/projects/TheatreProject'
+import type Sheet from '@dreamerbird/core/sheets/Sheet'
+import SheetTemplate from '@dreamerbird/core/sheets/SheetTemplate'
+// import type {Studio} from '@dreamerbird/studio/Studio'
+import type {ProjectAddress} from '@dreamerbird/core/types/public'
+import type {Pointer} from '@dreamerbird/dataverse'
+import {PointerProxy} from '@dreamerbird/dataverse'
+import {Atom} from '@dreamerbird/dataverse'
 import initialiseProjectState from './initialiseProjectState'
 import projectsSingleton from './projectsSingleton'
-import type {Deferred} from '@theatre/utils/defer'
-import {defer} from '@theatre/utils/defer'
-import {globals} from '@theatre/core/globals'
+import type {Deferred} from '@dreamerbird/utils/defer'
+import {defer} from '@dreamerbird/utils/defer'
+import {globals} from '@dreamerbird/core/globals'
+import {initState} from '@dreamerbird/core/initState'
 import type {
   ProjectId,
   SheetId,
   SheetInstanceId,
-} from '@theatre/core/types/public'
+} from '@dreamerbird/core/types/public'
 
 import type {
   $IntentionalAny,
   $____FixmeStudio,
-} from '@theatre/core/types/public'
-import {InvalidArgumentError} from '@theatre/utils/errors'
-import userReadableTypeOfValue from '@theatre/utils/userReadableTypeOfValue'
+} from '@dreamerbird/core/types/public'
+import {InvalidArgumentError} from '@dreamerbird/utils/errors'
+import userReadableTypeOfValue from '@dreamerbird/utils/userReadableTypeOfValue'
 
 type Studio = $____FixmeStudio
 
@@ -141,7 +142,7 @@ export default class Project {
 
     if (config.state) {
       setTimeout(() => {
-        // The user has provided config.state but in case @theatre/studio is loaded,
+        // The user has provided config.state but in case @dreamerbird/studio is loaded,
         // let's give it one tick to attach itself
         if (!this._studio) {
           this._studioReadyDeferred.resolve(undefined)
@@ -159,17 +160,24 @@ export default class Project {
           )
         }
       } else {
-        setTimeout(() => {
+        const emptyStateTimer = setTimeout(() => {
           if (!this._studio) {
             throw new Error(
               `Argument config.state in Theatre.getProject("${id}", config) is empty. This is fine ` +
-                `while you are using @theatre/core along with @theatre/studio. But since @theatre/studio ` +
+                `while you are using @dreamerbird/core along with @dreamerbird/studio. But since @dreamerbird/studio ` +
                 `is not loaded, the state of project "${id}" will be empty.\n\n` +
-                `To fix this, you need to add @theatre/studio into the bundle and export ` +
+                `To fix this, you need to add @dreamerbird/studio into the bundle and export ` +
                 `the project's state. Learn how to do that at https://www.theatrejs.com/docs/latest/manual/projects#state\n`,
             )
           }
         }, 1000)
+        // If init({studio: true}) was called, the studio is on its way — it
+        // will attach itself once loaded, so don't treat the empty state as
+        // an error. Studio loading can exceed the 1s grace period above
+        // (e.g. cold dev servers), so this is not a race the timer can win.
+        void initState.optsDeferred.promise.then((opts) => {
+          if (opts?.studio) clearTimeout(emptyStateTimer)
+        })
       }
     }
   }

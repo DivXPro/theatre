@@ -2,6 +2,7 @@
 module.exports = {
   testMatch: [
     '<rootDir>/packages/*/src/**/*.test.ts',
+    '<rootDir>/packages/*/src/**/*.test.tsx',
     '<rootDir>/devEnv/**/*.test.ts',
   ],
   moduleNameMapper: {
@@ -14,6 +15,11 @@ module.exports = {
     uuid: '<rootDir>/node_modules/uuid/dist/index.js',
     nanoid: '<rootDir>/node_modules/nanoid/index.cjs',
     'nanoid/non-secure': '<rootDir>/node_modules/nanoid/non-secure/index.cjs',
+    // ESM-only exports(只有 import 条件):直接指到 dist,靠 transformIgnorePatterns 例外转 CJS
+    '^@dreamerbird/threeik$':
+      '<rootDir>/node_modules/@dreamerbird/threeik/dist/index.js',
+    '^@dreamerbird/threeik/controls$':
+      '<rootDir>/node_modules/@dreamerbird/threeik/dist/controls/index.js',
     'react-icons/(.*)': 'identity-obj-proxy',
     'react-merge-refs': 'identity-obj-proxy',
     '@trpc/client': 'identity-obj-proxy',
@@ -28,6 +34,7 @@ module.exports = {
       'jest-esbuild',
       {
         sourcemap: true,
+        target: 'es2020',
         supported: {
           'dynamic-import': false,
         },
@@ -37,11 +44,18 @@ module.exports = {
       'jest-esbuild',
       {
         sourcemap: true,
+        target: 'es2020',
         supported: {
           'dynamic-import': false,
         },
       },
     ],
+    '^.+\\.mjs$': './devEnv/jestMjsTransformer.js',
   },
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
+  transformIgnorePatterns: [
+    // three/examples/jsm:threeik 0.1.0 操纵器换芯 TransformControls 后
+    // 依赖链上的纯 ESM(three 主包走 require 条件是 CJS,无需例外)
+    'node_modules/(?!(property-graph|@gltf-transform|@dreamerbird/threeik|three/examples)/)',
+  ],
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'mjs', 'json', 'node'],
 }

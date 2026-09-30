@@ -1,5 +1,5 @@
 import {get} from 'lodash-es'
-import type {$IntentionalAny} from '@theatre/core/types/public'
+import type {$IntentionalAny} from '@dreamerbird/core/types/public'
 
 type AnyFn = (...args: any[]) => any
 

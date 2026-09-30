@@ -1,11 +1,11 @@
-import type {$FixMe} from '@theatre/core/types/public'
+import type {$FixMe} from '@dreamerbird/core/types/public'
 import {useLayoutEffect, useRef} from 'react'
 import {useCssCursorLock} from './PointerEventsHandler'
-import type {CapturedPointer} from '@theatre/studio/UIRoot/PointerCapturing'
-import {usePointerCapturing} from '@theatre/studio/UIRoot/PointerCapturing'
-import noop from '@theatre/utils/noop'
+import type {CapturedPointer} from '@dreamerbird/studio/UIRoot/PointerCapturing'
+import {usePointerCapturing} from '@dreamerbird/studio/UIRoot/PointerCapturing'
+import noop from '@dreamerbird/utils/noop'
 import {isSafari} from './isSafari'
-import useRefAndState from '@theatre/studio/utils/useRefAndState'
+import useRefAndState from '@dreamerbird/studio/utils/useRefAndState'
 
 export enum MouseButton {
   Left = 0,
@@ -174,7 +174,7 @@ export default function useDrag(
     onClick: OnClickCallback
   }>({onDrag: noop, onDragEnd: noop, onClick: noop})
 
-  const capturedPointerRef = useRef<undefined | CapturedPointer>()
+  const capturedPointerRef = useRef<undefined | CapturedPointer>(undefined)
   // needed to have a state on the react lifecycle which can be updated
   // via a ref (e.g. via the below layout effect).
   const [isDraggingRef, isDragging] = useRefAndState(false)

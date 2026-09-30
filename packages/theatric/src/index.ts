@@ -4,11 +4,11 @@ import type {
   ISheetObject,
   UnknownShorthandCompoundProps,
   IStudio,
-} from '@theatre/core'
-import {getStudio, val, init, getStudioSync} from '@theatre/core'
-import {getProject} from '@theatre/core'
-import type {Pointer} from '@theatre/dataverse'
-import {isPointer} from '@theatre/dataverse'
+} from '@dreamerbird/core'
+import {val, init, getStudioSync} from '@dreamerbird/core'
+import {getProject} from '@dreamerbird/core'
+import type {Pointer} from '@dreamerbird/dataverse'
+import {isPointer} from '@dreamerbird/dataverse'
 import isEqualWith from 'lodash-es/isEqualWith'
 import isEqual from 'lodash-es/isEqual'
 import {useEffect, useMemo, useState, useRef} from 'react'
@@ -24,7 +24,10 @@ type OmitMatching<T extends object, V> = Omit<T, KeysMatching<T, V>>
 // That way we can treeshake our own, and the user can give us theirs, if they want to.
 
 if (process.env.NODE_ENV === 'development') {
-  void getStudio().then((studio) => {
+  // Load the studio bundle (importing it registers the bundle with core), and
+  // only then call init() — calling getStudio() before init() throws.
+  // Kept behind the NODE_ENV check so production builds treeshake the studio.
+  void import('@dreamerbird/studio').then(() => {
     void init({studio: true})
   })
 }
@@ -32,8 +35,14 @@ if (process.env.NODE_ENV === 'development') {
 // Just to be able to treeshake studio out of the bundle
 const maybeTransaction: IStudio['transaction'] =
   process.env.NODE_ENV === 'development'
-    ? (...args: Parameters<IStudio['transaction']>) =>
-        getStudioSync(true)!.transaction(...args)
+    ? (...args: Parameters<IStudio['transaction']>) => {
+        // the studio loads asynchronously; edits that land before it has
+        // attached can't be transacted (same as production, where this whole
+        // function is a no-op)
+        const studio = getStudioSync()
+        if (!studio) return
+        return studio.transaction(...args)
+      }
     : () => {}
 
 let _projectConfig: IProjectConfig['state'] | undefined = undefined
@@ -317,7 +326,7 @@ export function useControls<Config extends ControlsAndButtons>(
   return {...values, ...$setAndGet}
 }
 
-export {types} from '@theatre/core'
+export {types} from '@dreamerbird/core'
 
 export const button = (onClick: Button['onClick']) => {
   return {
@@ -342,7 +351,10 @@ function selectObjectIfNecessary(obj: ISheetObject) {
   if (objAlreadySelected) return
   objAlreadySelected = true
   if (process.env.NODE_ENV === 'development') {
-    const studio = getStudioSync()!
+    // the studio loads asynchronously; it may not have attached yet when the
+    // first object is created
+    const studio = getStudioSync()
+    if (!studio) return
     if (studio.selection.length === 0) {
       studio.setSelection([obj])
     }

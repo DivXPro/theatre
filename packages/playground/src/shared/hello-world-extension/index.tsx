@@ -1,13 +1,15 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
-import theatre from '@theatre/core'
-import extension from '@theatre/r3f/dist/extension'
+import theatre from '@dreamerbird/core'
+import '@dreamerbird/studio'
+import extension from '@dreamerbird/r3f/dist/extension'
 
+void theatre.init({studio: true})
 void theatre.getStudio().then((studio) => {
   studio.extend(extension)
   studio.extend({
-    id: '@theatre/hello-world-extension',
+    id: '@dreamerbird/hello-world-extension',
     toolbars: {
       global(set, studio) {
         let switchValue = 'mobile'
@@ -92,6 +94,5 @@ void theatre.getStudio().then((studio) => {
     ],
   })
 })
-void theatre.init({studio: true})
 
 ReactDOM.createRoot(document.getElementById('root')!).render(<App />)

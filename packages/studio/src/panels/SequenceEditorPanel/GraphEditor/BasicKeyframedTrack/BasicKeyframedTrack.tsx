@@ -1,24 +1,24 @@
-import type {TrackData} from '@theatre/core/types/private/core'
-import type SheetObject from '@theatre/core/sheetObjects/SheetObject'
-import type {PathToProp} from '@theatre/utils/pathToProp'
-import {createStudioSheetItemKey} from '@theatre/studio/utils/createStudioSheetItemKey'
+import type {TrackData} from '@dreamerbird/core/types/private/core'
+import type SheetObject from '@dreamerbird/core/sheetObjects/SheetObject'
+import type {PathToProp} from '@dreamerbird/utils/pathToProp'
+import {createStudioSheetItemKey} from '@dreamerbird/studio/utils/createStudioSheetItemKey'
 import type {
   $IntentionalAny,
   BasicKeyframe,
   VoidFn,
-} from '@theatre/core/types/public'
-import type {Pointer} from '@theatre/dataverse'
+} from '@dreamerbird/core/types/public'
+import type {Pointer} from '@dreamerbird/dataverse'
 import React, {useMemo, useRef, useState} from 'react'
-import type {SequenceEditorPanelLayout} from '@theatre/studio/panels/SequenceEditorPanel/layout/layout'
+import type {SequenceEditorPanelLayout} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/layout'
 import KeyframeEditor from './KeyframeEditor/KeyframeEditor'
-import {__private} from '@theatre/core'
+import {__private} from '@dreamerbird/core'
 import type {
   PropTypeConfig_AllSimples,
   SequenceTrackId,
-} from '@theatre/core/types/public'
-import {useVal} from '@theatre/react'
-import type {GraphEditorColors} from '@theatre/core/types/private'
-import {graphEditorColors} from '@theatre/sync-server/state/schema'
+} from '@dreamerbird/core/types/public'
+import {useVal} from '@dreamerbird/react'
+import type {GraphEditorColors} from '@dreamerbird/core/types/private'
+import {graphEditorColors} from '@dreamerbird/sync-server/state/schema'
 
 const {getPropConfigByPath, isPropConfigComposite, valueInProp} =
   __private.propTypeUtils
@@ -32,7 +32,7 @@ export type ExtremumSpace = {
   lock(): VoidFn
 }
 
-const BasicKeyframedTrack: React.VFC<{
+const BasicKeyframedTrack: React.FC<{
   layoutP: Pointer<SequenceEditorPanelLayout>
   sheetObject: SheetObject
   pathToProp: PathToProp

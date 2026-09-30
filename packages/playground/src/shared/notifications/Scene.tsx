@@ -1,6 +1,6 @@
 import React, {useLayoutEffect, useRef} from 'react'
-import type {IProject} from '@theatre/core'
-import {onChange, types} from '@theatre/core'
+import type {IProject} from '@dreamerbird/core'
+import {onChange, types} from '@dreamerbird/core'
 
 const globalConfig = {
   background: {

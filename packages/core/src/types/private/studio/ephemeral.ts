@@ -3,8 +3,8 @@ import type {
   ProjectId,
   SerializableMap,
   SheetId,
-} from '@theatre/core/types/public'
-import type {StrictRecord} from '@theatre/core/types/public'
+} from '@dreamerbird/core/types/public'
+import type {StrictRecord} from '@dreamerbird/core/types/public'
 
 /**
  * Technically, all parts of the ephemeral state can be implemented

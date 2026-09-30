@@ -1,12 +1,12 @@
-import {setupTestSheet} from '@theatre/studio/integration-tests/testUtils'
-import {encodePathToProp} from '@theatre/utils/pathToProp'
+import {setupTestSheet} from '@dreamerbird/studio/integration-tests/testUtils'
+import {encodePathToProp} from '@dreamerbird/utils/pathToProp'
 import type {
   ObjectAddressKey,
   SequenceTrackId,
-} from '@theatre/core/types/public'
-import {iterateOver, prism} from '@theatre/dataverse'
-import type {SheetState_Historic} from '@theatre/core/types/private/core'
-import {__private} from '@theatre/core'
+} from '@dreamerbird/core/types/public'
+import {iterateOver, prism} from '@dreamerbird/dataverse'
+import type {SheetState_Historic} from '@dreamerbird/core/types/private/core'
+import {__private} from '@dreamerbird/core'
 
 const {keyframeUtils} = __private
 

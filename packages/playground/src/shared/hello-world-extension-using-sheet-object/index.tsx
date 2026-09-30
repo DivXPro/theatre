@@ -1,10 +1,11 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
-import type {ISheetObject} from '@theatre/core'
-import {onChange, types, val} from '@theatre/core'
-import theatre from '@theatre/core'
-import extension from '@theatre/r3f/dist/extension'
+import type {ISheetObject} from '@dreamerbird/core'
+import {onChange, types, val} from '@dreamerbird/core'
+import theatre from '@dreamerbird/core'
+import '@dreamerbird/studio'
+import extension from '@dreamerbird/r3f/dist/extension'
 
 const dataConfig = {
   exampleProp: types.stringLiteral('yes', {
@@ -13,10 +14,11 @@ const dataConfig = {
   }),
 }
 
+void theatre.init({studio: true})
 void theatre.getStudio().then((studio) => {
   studio.extend(extension)
   studio.extend({
-    id: '@theatre/hello-world-extension',
+    id: '@dreamerbird/hello-world-extension',
     toolbars: {
       global(set, studio) {
         // A sheet object used by this extension
@@ -62,6 +64,5 @@ void theatre.getStudio().then((studio) => {
     panes: [],
   })
 })
-void theatre.init({studio: true})
 
 ReactDOM.createRoot(document.getElementById('root')!).render(<App />)
