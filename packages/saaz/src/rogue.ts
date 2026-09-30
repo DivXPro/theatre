@@ -199,7 +199,7 @@ function assertOpPathTraversable(root: $IntentionalAny, op: Op): void {
   }
 }
 
-function compare(before: Cell, after: Cell): Ops {
+export function compare(before: Cell, after: Cell): Ops {
   const ops: Ops = []
   compareCell(before, after, [], ops)
 
@@ -229,10 +229,18 @@ function compareCell(
   }
 
   const [type, branchName] = [after.$type[0], after.$type[1] ?? 'base']
-  const afterBranch = after.$branches?.[branchName]
+  let afterBranch = after.$branches?.[branchName]
   const beforeBranch = before?.$branches?.[branchName]
   if (afterBranch === beforeBranch) return
-  if (!afterBranch) return
+  if (!afterBranch) {
+    if (type !== 'map' || !beforeBranch) return
+    // 空 map 的 cell 没有指向分支($branches 为空/缺失,真实数据里随处可见,
+    // 如建轨产生的空 keyframes.byId)。after 侧按空 map 继续比:否则「before
+    // 独有的 key」走不到下面的 deleted 逆操作循环,往空 map 写第一个 key 的
+    // 事务 backwardOps 为空、不进撤销栈(2026-09-30 根因实锤:姿势模式首个
+    // 关键帧提交不可撤销)。boxed 无分支即无值可比,上面已保持原样返回。
+    afterBranch = {}
+  }
 
   if (type === 'deleted') return
 
@@ -250,7 +258,7 @@ function compareCell(
 
   if (type === 'map') {
     const beforeMapProps = beforeBranch?.$mapProps ?? {}
-    const afterMapProps = afterBranch.$mapProps ?? {}
+    const afterMapProps = afterBranch?.$mapProps ?? {}
     const afterKeys = Object.keys(afterMapProps)
     for (const prop of afterKeys) {
       compareCell(

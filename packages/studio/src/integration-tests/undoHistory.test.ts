@@ -11,9 +11,7 @@
  *   3. studio.createContentOfSaveFile —— 读存档的 revisionHistory 副作用不入栈
  *
  * 测试技法说明:每个用例先压一笔「修改已有 key」的锚点事务占位栈顶,再执行
- * 被测操作,最后 undo——弹掉的必须是锚点而不是被测操作。锚点不能用「新增 key」
- * 事务(saaz compare 对 sparse 缺失的父链不生成删除型逆操作,新增子树的事务
- * backwardOps 恒空、本就不入栈——saaz 既有缺陷,见此文件头部注释日期 2026-09-28)。
+ * 被测操作,最后 undo——弹掉的必须是锚点而不是被测操作。
  */
 import {val} from '@dreamerbird/core'
 import {setupTestSheet} from '@dreamerbird/studio/integration-tests/testUtils'
@@ -21,6 +19,78 @@ import getStudio from '@dreamerbird/studio/getStudio'
 import type {ObjectAddressKey} from '@dreamerbird/core/types/public'
 
 const studio = getStudio()!
+
+/** 探 saaz 撤销栈(私有路径,供本文件用例断言栈行为) */
+const undoStackOf = (): any[] => {
+  const s = studio as any
+  const saaz = s._store?._saaz ?? s._saaz
+  return saaz?._atom?.get?.()?.undoRedo?.stack ?? []
+}
+
+/** 读 saaz 当前可见状态(optimistic)里某路径的 cell,walk 走指向分支 */
+const readCellAt = (segs: string[]): any => {
+  const s = studio as any
+  const saaz = s._store?._saaz ?? s._saaz
+  let c = saaz?._prisms?.optimisticState?.getValue?.()?.cell
+  for (const seg of segs) {
+    const b = c && c.$branches && c.$branches[c.$type[1]]
+    c = b && b.$mapProps ? b.$mapProps[seg] : undefined
+  }
+  return c
+}
+
+test('往空 map 容器写首个 key 的事务必须入撤销栈(姿势建轨→首帧的真实形状)', async () => {
+  await setupTestSheet({staticOverrides: {byObject: {}}})
+  const s = studio as any
+  const saaz = s._store?._saaz ?? s._saaz
+  // 发现本用例的项目 id(setupTestSheet 每次自增)
+  const projId = Object.keys(
+    readCellAt(['historic', 'coreByProject'])?.$branches?.base?.$mapProps ?? {},
+  )[0]
+  expect(projId).toBeTruthy()
+
+  const len0 = undoStackOf().length
+
+  // tx1:建空容器——模拟 sequenceProp 建轨落下的空 keyframes.byId;
+  // 空 map 落库后没有指向分支($branches 为空),这是触发缺陷的形状
+  saaz.tx(undefined, (draft: any) => {
+    const sbi = draft.historic.coreByProject[projId].sheetsById
+    if (!sbi.Sheet) sbi.Sheet = {}
+    sbi.Sheet.__emptyBox = {}
+  })
+  // tx2:往这个空容器写首个 key——模拟 scrub 提交首个关键帧;
+  // 修复前这笔 backwardOps 为空,不进撤销栈
+  saaz.tx(undefined, (draft: any) => {
+    draft.historic.coreByProject[projId].sheetsById.Sheet.__emptyBox.firstKey =
+      {value: 1}
+  })
+
+  expect(undoStackOf().length).toBe(len0 + 2) // 两笔都必须入栈
+
+  const boxKeys = (): string[] => {
+    const box = readCellAt([
+      'historic',
+      'coreByProject',
+      projId,
+      'sheetsById',
+      'Sheet',
+      '__emptyBox',
+    ])
+    const b = box && box.$branches && box.$branches[box.$type[1]]
+    if (!b || !b.$mapProps) return []
+    // saaz 删除是软删($type 标 deleted,key 仍在),统计可见 key 要过滤
+    return Object.keys(b.$mapProps).filter(
+      (k) => b.$mapProps[k]?.$type?.[0] !== 'deleted',
+    )
+  }
+  expect(boxKeys()).toEqual(['firstKey'])
+
+  // undo 弹掉 tx2:firstKey 消失(容器还在);redo 回来
+  studio.undo()
+  expect(boxKeys()).toEqual([])
+  ;(studio as any).redo()
+  expect(boxKeys()).toEqual(['firstKey'])
+})
 
 /** 预置 override:让 byObject.obj 子树与两个 prop 都已是「已有 key」 */
 const PRESET_OVERRIDES = {

@@ -3,7 +3,7 @@ import SaazBack from './back/SaazBack'
 import {FrontMemoryAdapter} from './front/FrontMemoryAdapter'
 import {SaazFront} from './front/SaazFront'
 import type {Root} from './rogue'
-import {change, fromOps, jsonFromCell} from './rogue'
+import {change, compare, fromOps, jsonFromCell} from './rogue'
 import type {Ops} from './rogue'
 import type {Schema} from './types'
 
@@ -62,18 +62,106 @@ describe(`Rogue`, () => {
     expect(rep1).toBe(rep2)
     expect(ops).toEqual([])
   })
-  test('诊断:新增深层子树的 backwardOps', () => {
+  test('新增深层子树的 backwardOps 带删除型逆操作,undo 可回', () => {
     const [rep1] = change({}, (draft) => {
       draft.byId = {obj1: {x: 1}}
     })
-    const [rep2, ops2, backwardOps2] = change(rep1, (draft) => {
+    const [rep2, , backwardOps] = change(rep1, (draft) => {
       draft.byId.obj2 = {y: 2}
     })
-    console.log('ops2:', JSON.stringify(ops2))
-    console.log('backwardOps2:', JSON.stringify(backwardOps2))
-    const [back] = fromOps(rep2, backwardOps2)
-    console.log('undo 结果:', JSON.stringify(jsonFromCell(back)))
-    console.log('期望回到:', JSON.stringify(jsonFromCell(rep1)))
+    expect(backwardOps.length).toBeGreaterThan(0)
+    const [back] = fromOps(rep2, backwardOps)
+    expect(jsonFromCell(back)).toEqual(jsonFromCell(rep1))
+  })
+  test('往空 map 写入首个 key:backwardOps 必须带删除型逆操作(撤销栈漏登根因)', () => {
+    // 空 map 的 cell 没有指向分支($branches 为 {})——真实数据里 sequenceProp
+    // 建轨产生的 keyframes.byId 就是这样。compare(新,旧) 算 backwardOps 时,
+    // 旧态空 map 落在 after 侧:afterBranch 为 undefined,compareCell 的
+    // `if (!afterBranch) return` 提前返回,「before 独有 key 补 deleted 逆操作」
+    // 的循环被跳过 → backwardOps 空 → 事务不进撤销栈。
+    // (2026-09-30 浏览器实测:首次摆姿势的关键帧提交不可撤销,根因即此)
+    const [rep1] = change({}, (draft) => {
+      draft.a = {}
+    })
+    // 前提:a 确实是「无指向分支」的空 map($branches 缺失或为空),否则测的不是目标场景
+    const aCell = (rep1 as any).$branches.base.$mapProps.a
+    expect(aCell.$type).toEqual(['map', 'base'])
+    expect(Object.keys(aCell.$branches ?? {})).toHaveLength(0)
+
+    const [rep2, , backwardOps] = change(rep1, (draft) => {
+      draft.a.b = 1
+    })
+    expect(jsonFromCell(rep2)).toEqual({a: {b: 1}})
+    // backwardOps 非空,且 undo 后 b 消失、回到 rep1 的快照
+    expect(backwardOps.length).toBeGreaterThan(0)
+    const [back] = fromOps(rep2, backwardOps)
+    expect(jsonFromCell(back)).toEqual(jsonFromCell(rep1))
+  })
+  test('从 map 删掉最后一个 key:forwardOps 必须带删除操作(对称方向)', () => {
+    // 对称场景:删除最后一个 key 后 after 侧变空 map(无指向分支),
+    // 同一处提前返回会把 forwardOps 里的 deleted 操作也吞掉
+    const [rep1] = change({}, (draft) => {
+      draft.a = {b: 1}
+    })
+    const [rep2, ops] = change(rep1, (draft) => {
+      delete draft.a.b
+    })
+    expect(jsonFromCell(rep2)).toEqual({a: {}})
+    expect(ops.length).toBeGreaterThan(0)
+    // 重放 ops 必须能从 rep1 得到 rep2
+    const [replayed] = fromOps(rep1, ops)
+    expect(jsonFromCell(replayed)).toEqual(jsonFromCell(rep2))
+  })
+  test('已知边界:双分支 cell 上,非 $type 指向分支的改动不进 ops', () => {
+    // 节点标 ['map','ahistoric'],ahistoric 分支有旧内容;新态新增 base 分支
+    // (ahistoric 分支同引用,模拟 immer 未碰它)。
+    // compare 只比 $type[1] 指向的那一个分支,新分支的出现不进 ops。
+    // 真实写入路径不会产生这种错位(traps.set 永远写 $type[1] 指向的分支),
+    // 错位只可能来自多端合并/重放;若未来要支持,compareCell 需改为按
+    // before/after 分支并集逐个比较。本测试钉住现状作为边界文档。
+    const ahistoricBranch = {
+      $mapProps: {
+        ui: {$type: ['boxed', 'base'], $branches: {base: {$boxedValue: 1}}},
+      },
+    }
+    const oldCell: any = {
+      $type: ['map', 'ahistoric'],
+      $branches: {ahistoric: ahistoricBranch},
+    }
+    const newCell: any = {
+      $type: ['map', 'ahistoric'],
+      $branches: {
+        ahistoric: ahistoricBranch,
+        base: {
+          $mapProps: {
+            pose: {
+              $type: ['boxed', 'base'],
+              $branches: {base: {$boxedValue: 2}},
+            },
+          },
+        },
+      },
+    }
+    expect(compare(oldCell, newCell)).toEqual([])
+    expect(compare(newCell, oldCell)).toEqual([])
+  })
+  test('软删节点上重建子树的 backwardOps 带删除型逆操作,undo 可回', () => {
+    const [rep1] = change({}, (draft) => {
+      draft.a = {b: 1}
+    })
+    // 删除 a(saaz 软删:标 deleted 但子树保留)
+    const [rep2] = change(rep1, (draft) => {
+      delete draft.a
+    })
+    expect(jsonFromCell(rep2)).toEqual({})
+    // 在(软删的)a 上重建子树
+    const [rep3, , backwardOps] = change(rep2, (draft) => {
+      draft.a = {c: 2}
+    })
+    expect(jsonFromCell(rep3)).toEqual({a: {c: 2}})
+    expect(backwardOps.length).toBeGreaterThan(0)
+    const [back] = fromOps(rep3, backwardOps)
+    expect(jsonFromCell(back)).toEqual(jsonFromCell(rep2))
   })
   test('overriding an existing prop', () => {
     const [rep1] = change({}, (draft) => {
