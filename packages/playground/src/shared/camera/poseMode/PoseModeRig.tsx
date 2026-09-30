@@ -106,7 +106,8 @@ export function PoseModeRig({
     // 尺寸语义随 0.1.0 换芯拆分:ringRadius/ballRadius 已变成操纵器屏尺寸倍率
     // (÷类默认后传给 TransformControls.size,gizmo 屏幕恒定大小)——乘 sizeScale
     // 会把 gizmo 放大成 sizeScale 倍屏尺寸(0.0.1 的世界尺寸语义已作废),保持默认;
-    // rootRadius(重心活动球域)与 lookAtRadius(注视球恒距)仍是世界单位语义,随骨架等比
+    // rootRadius(重心活动球域)、lookAtRadius(注视球恒距)与 joystickRadius(头顶摇杆
+    // 球离头距离,0.2.1 起独立默认项)仍是世界单位语义,随骨架等比
     const ctl = createSkeletonControls({
       rig,
       scene,
@@ -117,6 +118,10 @@ export function PoseModeRig({
       defaults: {
         rootRadius: 0.4 * sizeScale,
         lookAtRadius: 0.35 * sizeScale,
+        // 0.16×倍率 ≈ 球心嵌头顶表面内侧:球收进头部轮廓内偏顶,不悬空(0.35 注视
+        // 距离会悬在头顶上方一截);球 depthTest:false 透显,嵌入头内仍可见可拖
+        // (命中是纯数学判定,头部网格不挡);推杆时球沿贴头球面滑动
+        joystickRadius: 0.16 * sizeScale,
       },
       dragControl: {
         lock: () => {
