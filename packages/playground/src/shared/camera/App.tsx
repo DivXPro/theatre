@@ -6,6 +6,9 @@ import {
   GizmoViewport,
 } from '@react-three/drei'
 import {getProject, getStudioSync, onChange, val} from '@dreamerbird/core'
+// 诊断撤销栈用:模块级单例直达私有 Studio(getStudioSync 返回的是 publicApi,
+// 空构造不存 internals,摸不到 _store._saaz——TheatreStudio.ts:121)
+import getStudio from '@dreamerbird/studio/getStudio'
 import {privateAPI} from '@dreamerbird/core/privateAPIs'
 import getDeep from '@dreamerbird/utils/getDeep'
 import {usePrism, useVal} from '@dreamerbird/react'
@@ -930,6 +933,27 @@ function App({
     targetObjRef,
     shotRefs: shotRefsMapRef.current,
     activeKey: () => activeCamera?.cameraKey ?? null,
+  }
+  // 调试挂钩(诊断撤销栈用):探 saaz 栈长度与栈顶内容,只读不改
+  ;(window as any).__undoDebug = {
+    stack: () => {
+      const s = getStudio() as any
+      const saaz = s?._store?._saaz ?? s?._saaz
+      return saaz?._atom?.get?.()?.undoRedo?.stack ?? 'no saaz'
+    },
+    len: () => {
+      const st = (window as any).__undoDebug.stack()
+      return Array.isArray(st) ? st.length : st
+    },
+    top: () => {
+      const st = (window as any).__undoDebug.stack()
+      return Array.isArray(st) ? st[0] ?? null : st
+    },
+  }
+  // 诊断期直挂 saaz 实例(惰性:render 时 studio 可能未初始化)
+  ;(window as any).__saaz = () => {
+    const s = getStudio() as any
+    return s?._store?._saaz ?? s?._saaz ?? 'no saaz'
   }
   const {
     placing,
