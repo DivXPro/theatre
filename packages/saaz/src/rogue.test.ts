@@ -4,7 +4,7 @@ import {FrontMemoryAdapter} from './front/FrontMemoryAdapter'
 import {SaazFront} from './front/SaazFront'
 import type {Root} from './rogue'
 import {change, fromOps, jsonFromCell} from './rogue'
-import type { Schema} from './types'
+import type {Schema} from './types'
 
 const ahistoricSnapshot: Root = {
   $type: ['map', 'base'],
@@ -60,6 +60,19 @@ describe(`Rogue`, () => {
     })
     expect(rep1).toBe(rep2)
     expect(ops).toEqual([])
+  })
+  test('诊断:新增深层子树的 backwardOps', () => {
+    const [rep1] = change({}, (draft) => {
+      draft.byId = {obj1: {x: 1}}
+    })
+    const [rep2, ops2, backwardOps2] = change(rep1, (draft) => {
+      draft.byId.obj2 = {y: 2}
+    })
+    console.log('ops2:', JSON.stringify(ops2))
+    console.log('backwardOps2:', JSON.stringify(backwardOps2))
+    const [back] = fromOps(rep2, backwardOps2)
+    console.log('undo 结果:', JSON.stringify(jsonFromCell(back)))
+    console.log('期望回到:', JSON.stringify(jsonFromCell(rep1)))
   })
   test('overriding an existing prop', () => {
     const [rep1] = change({}, (draft) => {
