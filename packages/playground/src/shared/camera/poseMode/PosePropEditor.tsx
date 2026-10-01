@@ -46,6 +46,8 @@ const PosePropEditor: React.FC<
   const {t} = useI18n()
   const poseEntries = useLibraryEntries('pose') as PoseEntry[]
   const [pickerOpen, setPickerOpen] = useState(false)
+  // 值区域 hover 态:对齐 BasicStringInput(静态透明无边框,hover 出底出边)
+  const [valueHovered, setValueHovered] = useState(false)
   // 编辑器所属对象的骨架族(obj → placement → 模型库条目),用于过滤异族预设
   const [rig, setRig] = useState<string | undefined>(undefined)
   useEffect(() => {
@@ -91,14 +93,16 @@ const PosePropEditor: React.FC<
         data-testid="PosePropValue"
         title={poseDisplayText({poseJson, libEntries: poseEntries, t})}
         onClick={() => setPickerOpen(true)}
+        onMouseEnter={() => setValueHovered(true)}
+        onMouseLeave={() => setValueHovered(false)}
         style={{
           width: '100%',
           boxSizing: 'border-box',
-          padding: '3px 6px',
+          padding: '1px 6px',
           borderRadius: 2,
-          border: '1px solid var(--theatre-panel-border, #1f1f1f)',
-          background: 'rgba(0, 0, 0, 0.25)',
-          color: 'var(--theatre-text-primary, #ffffff)',
+          border: `1px solid ${valueHovered ? '#00000059' : 'transparent'}`,
+          background: valueHovered ? '#10101042' : 'transparent',
+          color: 'rgba(255, 255, 255, 0.9)',
           fontSize: 11,
           cursor: 'pointer',
           whiteSpace: 'nowrap',
