@@ -40,3 +40,18 @@ export function posePropConfigShape(): {
 export function shouldApplyPoseDuringPlayback(hasPoseTrack: boolean): boolean {
   return hasPoseTrack
 }
+
+/**
+ * 空闲(非播放)时是否把姿势值应用到骨骼:
+ * - 播放中不应用(mixer/播放求值独占骨骼);
+ * - 姿势模式会话中不应用——骨骼归 IK 骨架每帧重解算,applyPose 会被当帧
+ *   压回,抢了也白抢。会话期间值被弹框/撤销/同步改掉时,靠会话退出后
+ *   effect 依赖(poseModeActive)重跑把当前值补刷回骨骼,修「Esc 后模型
+ *   停在旧姿势、再点同值不生效」的脱节卡死。
+ */
+export function shouldApplyPoseWhenIdle(
+  playing: boolean,
+  poseModeActive: boolean,
+): boolean {
+  return !playing && !poseModeActive
+}

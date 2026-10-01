@@ -45,6 +45,7 @@ import {
   isPoseEntryUsed,
   posePropConfigShape,
   shouldApplyPoseDuringPlayback,
+  shouldApplyPoseWhenIdle,
 } from './placementPoseProps'
 import {PoseModeRig} from './poseMode/PoseModeRig'
 import {PoseModeBar} from './poseMode/PoseModeBar'
@@ -1178,6 +1179,8 @@ function PlacedModelCore({
   const animationId = useVal(sheetObject?.props.animation) ?? ''
   const poseJson = (useVal(sheetObject?.props.pose) as string | undefined) ?? ''
   const poseSessionKey = usePoseSessionKey()
+  // 本模型正处于姿势模式会话:期间骨骼归 IK 骨架每帧重解算
+  const poseModeActive = poseSessionKey === entry.key
   const [clip, setClip] = useState<AnimationClip | null>(null)
   const currentActionRef = useRef<AnimationAction | null>(null)
   const pendingUncachesRef = useRef<Array<ReturnType<typeof setTimeout>>>([])
@@ -1342,12 +1345,22 @@ function PlacedModelCore({
       }
     })
   }, [sheet, invalidate, instance, poseBones])
-  // pose 数据变化且当前未播放时立即应用,覆盖 pose 值切换与撤销/重做路径
+  // pose 数据变化且当前未播放时立即应用,覆盖 pose 值切换与撤销/重做路径。
+  // poseModeActive 进 deps:姿势模式期间不抢骨骼(IK 骨架每帧重解算,应用了
+  // 也会被压回);会话退出(true→false)时本 effect 重跑,把当前值补刷回骨骼——
+  // 修「会话期间值被弹框/撤销/同步改掉,Esc 后模型停在旧姿势、再点同值因
+  // 值没变不重刷而永久卡死」的脱节。
   useEffect(() => {
-    if (val(sheet.sequence.pointer.playing)) return
+    if (
+      !shouldApplyPoseWhenIdle(
+        val(sheet.sequence.pointer.playing),
+        poseModeActive,
+      )
+    )
+      return
     applyPose(instance, poseBones ?? bindPoseRef.current)
     invalidate()
-  }, [instance, poseBones, invalidate, sheet])
+  }, [instance, poseBones, invalidate, sheet, poseModeActive])
   useFrame((_, delta) => {
     if (!val(sheet.sequence.pointer.playing)) return
     if (!sheetObject) return
@@ -1412,7 +1425,7 @@ function PlacedModelCore({
       onDoubleClick={enterPoseViaDoubleClick}
     >
       <primitive object={instance} position={[0, lift, 0]} />
-      {sheetObject && poseSessionKey === entry.key && (
+      {sheetObject && poseModeActive && (
         <>
           <PoseModeRig
             instance={instance}
