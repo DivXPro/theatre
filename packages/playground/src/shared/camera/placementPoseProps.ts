@@ -12,12 +12,14 @@ export function isPoseEntryUsed(poseJson: string, entryId: string): boolean {
   return v?.kind === 'lib' && v.id === entryId
 }
 
-/** pose 属性的注册形态(spec §6.1):值是 JSON 字符串,面板隐藏,自定义插值 */
+/** pose 属性的注册形态(spec §6.1 + 2026-10-01 属性行化):值是 JSON 字符串,
+ *  面板显示为普通属性行,值区域由注册表里的 pose 编辑器渲染(弹框选预设,
+ *  显示 T 姿势/预设名/自定义姿势);自定义插值器让轨道帧间平滑混合 */
 export function posePropConfigShape(): {
   defaultValue: string
   opts: {
     label: () => string
-    hidden: boolean
+    editor: string
     interpolate: typeof poseInterpolate
   }
 } {
@@ -25,7 +27,7 @@ export function posePropConfigShape(): {
     defaultValue: '',
     opts: {
       label: () => translate('pg.props.pose'),
-      hidden: true,
+      editor: 'pose',
       interpolate: poseInterpolate,
     },
   }

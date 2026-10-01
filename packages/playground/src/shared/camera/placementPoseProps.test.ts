@@ -18,10 +18,10 @@ test('isPoseEntryUsed:旧裸 id 与新格式 lib 引用都算使用;custom 不�
   expect(isPoseEntryUsed('', 'entry_a')).toBe(false)
 })
 
-test('posePropConfigShape:hidden + poseInterpolate + 空默认', () => {
+test('posePropConfigShape:editor=pose + poseInterpolate + 空默认(属性行化)', () => {
   const shape = posePropConfigShape()
   expect(shape.defaultValue).toBe('')
-  expect(shape.opts.hidden).toBe(true)
+  expect(shape.opts.editor).toBe('pose')
   expect(shape.opts.interpolate).toBe(poseInterpolate)
   expect(typeof shape.opts.label).toBe('function')
 })

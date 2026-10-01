@@ -8,13 +8,13 @@
  * __setPointerRootResolverForTest 注入(仅测试用)。
  *
  * 写入(spec §7.2/§7.3 两条通道):
- *   writePoseKeyframe:摆姿势保存与面板「打帧」按钮。有轨道 = scrub set
- *   (theatre 按当前 position 写贝塞尔帧,同 position 覆盖);无轨道 =
- *   transaction sequenceProp 建轨 + scrub set 写首帧——两步事务为已知
- *   限制(setPrimitivePropAsSequenced 的 trackId 随机生成,set 看不到
- *   同事务草稿里的新轨道,spec §2.4)。
- *   setPoseValue:面板库姿势应用。永不建轨:有轨道写帧、无轨道写静态,
- *   theatre track-aware set 原生行为。
+ *   writePoseKeyframe:摆姿势退出提交。有轨道 = scrub set(theatre 按当前
+ *   position 写贝塞尔帧,同 position 覆盖);无轨道 = transaction
+ *   sequenceProp 建轨 + scrub set 写首帧——两步事务为已知限制
+ *   (setPrimitivePropAsSequenced 的 trackId 随机生成,set 看不到同事务
+ *   草稿里的新轨道,spec §2.4)。面板打帧走属性行原生打帧钮,不经这里。
+ *   setPoseValue:右键菜单/弹框应用姿势。永不建轨:有轨道写帧、无轨道
+ *   写静态,theatre track-aware set 原生行为。
  */
 import {getStudioSync} from '@dreamerbird/core'
 import {getPointerParts, val} from '@dreamerbird/dataverse'
@@ -122,21 +122,8 @@ export function writePoseKeyframe(
   const scrub = studio.scrub()
   scrub.capture(({set}) => {
     set(sheetObject.props.pose as $IntentionalAny, json)
-    backupCustomPose(sheetObject, set, json)
   })
   scrub.commit()
-}
-
-/** 自定义快照顺手写进 poseCustom 备份属性(自定义保留可切回,2026-10-01);
- *  库引用/空值不动备份——切到预设后仍能切回最近一次自定义 */
-function backupCustomPose(
-  sheetObject: ISheetObject<$IntentionalAny>,
-  set: (pointer: $IntentionalAny, value: $IntentionalAny) => void,
-  json: string,
-): void {
-  if (!sheetObject.props.poseCustom) return
-  if (parsePoseValue(json)?.kind !== 'custom') return
-  set(sheetObject.props.poseCustom as $IntentionalAny, json)
 }
 
 export function setPoseValue(
@@ -148,7 +135,6 @@ export function setPoseValue(
   const scrub = studio.scrub()
   scrub.capture(({set}) => {
     set(sheetObject.props.pose as $IntentionalAny, json)
-    backupCustomPose(sheetObject, set, json)
   })
   scrub.commit()
 }

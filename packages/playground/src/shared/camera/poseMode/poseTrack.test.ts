@@ -4,6 +4,7 @@
  * 限制,spec §2.4)。setPoseValue 永不建轨。轨道读取依赖 theatre 内部
  * 指针结构,单测用注入的根解析器;真实对象行为进冒烟清单。
  * jest-esbuild 不提升 jest.mock:doMock + resetModules + 运行时 require。
+ * (2026-10-01 属性行化:poseCustom 备份机制退役,写入只动 pose 本身。)
  */
 import type {$IntentionalAny} from '@dreamerbird/core/types/public'
 
@@ -48,7 +49,7 @@ function setup() {
       sheetInstanceId: 'i',
       objectKey: 'o',
     },
-    props: {pose: {__name: 'pose'}, poseCustom: {__name: 'poseCustom'}},
+    props: {pose: {__name: 'pose'}},
   } as $IntentionalAny
   return {calls, setCalls, mod, sheetObject, rootWithTrack}
 }
@@ -57,45 +58,27 @@ afterEach(() => jest.dontMock('@dreamerbird/core'))
 
 describe('writePoseKeyframe', () => {
   test('无轨道:transaction 建轨 + scrub 写首帧(两步)', () => {
-    const {calls, mod, sheetObject, rootWithTrack} = setup()
+    const {calls, setCalls, mod, sheetObject, rootWithTrack} = setup()
     mod.__setPointerRootResolverForTest(() => rootWithTrack(undefined))
     mod.writePoseKeyframe(sheetObject, '{"kind":"custom","bones":{}}')
     expect(calls.transaction).toBe(1)
     expect(calls.sequenceProp).toBe(1)
-    // set ×2:pose 值 + poseCustom 备份(自定义快照)
-    expect(calls.set).toBe(2)
+    expect(setCalls).toEqual([
+      {prop: 'pose', value: '{"kind":"custom","bones":{}}'},
+    ])
     expect(calls.commit).toBe(1)
     mod.__setPointerRootResolverForTest(null)
   })
 
   test('有轨道:只 scrub set(帧上覆盖/帧间新建由 theatre 按 position 决定)', () => {
-    const {calls, mod, sheetObject, rootWithTrack} = setup()
+    const {calls, setCalls, mod, sheetObject, rootWithTrack} = setup()
     mod.__setPointerRootResolverForTest(() => rootWithTrack('track-1'))
     mod.writePoseKeyframe(sheetObject, '{"kind":"custom","bones":{}}')
     expect(calls.transaction).toBe(0)
-    expect(calls.set).toBe(2)
+    expect(setCalls).toEqual([
+      {prop: 'pose', value: '{"kind":"custom","bones":{}}'},
+    ])
     expect(calls.commit).toBe(1)
-    mod.__setPointerRootResolverForTest(null)
-  })
-
-  test('写自定义快照:同事务顺手写 poseCustom 备份(自定义保留可切回)', () => {
-    const {setCalls, mod, sheetObject, rootWithTrack} = setup()
-    mod.__setPointerRootResolverForTest(() => rootWithTrack('track-1'))
-    mod.writePoseKeyframe(sheetObject, '{"kind":"custom","bones":{"Hips":{}}}')
-    expect(setCalls).toEqual([
-      {prop: 'pose', value: '{"kind":"custom","bones":{"Hips":{}}}'},
-      {prop: 'poseCustom', value: '{"kind":"custom","bones":{"Hips":{}}}'},
-    ])
-    mod.__setPointerRootResolverForTest(null)
-  })
-
-  test('写库引用/空值:不动 poseCustom 备份', () => {
-    const {setCalls, mod, sheetObject, rootWithTrack} = setup()
-    mod.__setPointerRootResolverForTest(() => rootWithTrack('track-1'))
-    mod.writePoseKeyframe(sheetObject, '{"kind":"lib","id":"wave"}')
-    expect(setCalls).toEqual([
-      {prop: 'pose', value: '{"kind":"lib","id":"wave"}'},
-    ])
     mod.__setPointerRootResolverForTest(null)
   })
 
@@ -111,22 +94,11 @@ describe('writePoseKeyframe', () => {
 
 describe('setPoseValue', () => {
   test('永不建轨:无轨道也只 scrub set', () => {
-    const {calls, mod, sheetObject, rootWithTrack} = setup()
+    const {calls, setCalls, mod, sheetObject, rootWithTrack} = setup()
     mod.__setPointerRootResolverForTest(() => rootWithTrack(undefined))
     mod.setPoseValue(sheetObject, '{"kind":"lib","id":"x"}')
     expect(calls.transaction).toBe(0)
-    expect(calls.set).toBe(1)
-    mod.__setPointerRootResolverForTest(null)
-  })
-
-  test('设自定义快照:同事务写 poseCustom 备份', () => {
-    const {setCalls, mod, sheetObject, rootWithTrack} = setup()
-    mod.__setPointerRootResolverForTest(() => rootWithTrack(undefined))
-    mod.setPoseValue(sheetObject, '{"kind":"custom","bones":{}}')
-    expect(setCalls).toEqual([
-      {prop: 'pose', value: '{"kind":"custom","bones":{}}'},
-      {prop: 'poseCustom', value: '{"kind":"custom","bones":{}}'},
-    ])
+    expect(setCalls).toEqual([{prop: 'pose', value: '{"kind":"lib","id":"x"}'}])
     mod.__setPointerRootResolverForTest(null)
   })
 })

@@ -122,6 +122,35 @@ test('对象右键菜单:只传姿势回调时只有「改变姿势」一项', (
   expect(String((items[0] as any).label)).toContain('改变姿势')
 })
 
+test('对象右键菜单:传 onClearPose 时「清除姿势」排在姿势组末位', () => {
+  const onClearPose = jest.fn()
+  const items = buildObjectMenuItems(
+    {
+      mode: 'select',
+      onSelectMode: jest.fn(),
+      onDelete: jest.fn(),
+      onChangePose: jest.fn(),
+      onClearPose,
+    },
+    t,
+  )
+  // [改变姿势, 清除姿势, sep, select, translate, rotate, scale, sep, 删除]
+  expect(items.map((i) => i.type)).toEqual([
+    'normal',
+    'normal',
+    'separator',
+    'normal',
+    'normal',
+    'normal',
+    'normal',
+    'separator',
+    'normal',
+  ])
+  expect(String((items[1] as any).label)).toContain('清除姿势')
+  ;(items[1] as any).callback?.({} as any)
+  expect(onClearPose).toHaveBeenCalled()
+})
+
 test('摆姿势菜单项:提供 onPoseMode 时排在最前,可点击', () => {
   const onPoseMode = jest.fn()
   const items = buildObjectMenuItems(

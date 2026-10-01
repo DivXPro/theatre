@@ -86,6 +86,8 @@ export function buildObjectMenuItems(
     poseModeHint?: string
     /** 提供时菜单顶部出「改变姿势」(右键库来源模型时由 App 传入) */
     onChangePose?: () => void
+    /** 提供时出「清除姿势」(删轨道+回默认;有骨骼的模型由 App 传入) */
+    onClearPose?: () => void
     /** 提供时菜单顶部出「播放动作」 */
     onPlayAnimation?: () => void
   },
@@ -110,6 +112,13 @@ export function buildObjectMenuItems(
       type: 'normal',
       label: t('pg.menu.changePose'),
       callback: opts.onChangePose,
+    } as ContextMenuItem)
+  }
+  if (opts.onClearPose) {
+    applyItems.push({
+      type: 'normal',
+      label: t('pg.menu.clearPose'),
+      callback: opts.onClearPose,
     } as ContextMenuItem)
   }
   if (opts.onPlayAnimation) {
