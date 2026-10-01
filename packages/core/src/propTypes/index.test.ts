@@ -1,4 +1,4 @@
-import {number, resolvePropLabel, string, stringLiteral} from './index'
+import {boolean, number, resolvePropLabel, string, stringLiteral} from './index'
 
 describe('label 选项(PropLabel:字符串或函数)', () => {
   it('字符串 label 原样存入配置', () => {
@@ -40,6 +40,22 @@ describe('hidden 选项(属性面板隐藏纯数据属性)', () => {
 
   it('hidden 必须是布尔,否则开发模式下抛错', () => {
     expect(() => string('[]', {hidden: 1 as never})).toThrow(/opts\.hidden/)
+  })
+})
+
+describe('editor 选项(属性面板自定义编辑器注册表 key)', () => {
+  it('editor 透传进配置;不传则为 undefined', () => {
+    expect(string('[]', {editor: 'pose'}).editor).toBe('pose')
+    expect(string('[]').editor).toBeUndefined()
+    expect(number(0, {editor: 'pose'}).editor).toBe('pose')
+    expect(stringLiteral('a', {a: 'A'}, {editor: 'pose'}).editor).toBe('pose')
+    expect(boolean(true, {editor: 'pose'}).editor).toBe('pose')
+  })
+
+  it('editor 必须是非空字符串,否则开发模式下抛错', () => {
+    expect(() => string('[]', {editor: 1 as never})).toThrow(/opts\.editor/)
+    expect(() => string('[]', {editor: ''})).toThrow(/opts\.editor/)
+    expect(() => string('[]', {editor: ' a '})).toThrow(/opts\.editor/)
   })
 })
 

@@ -89,6 +89,27 @@ const validateCommonOpts = (fnCallSignature: string, opts?: CommonOpts) => {
         )
       }
     }
+    if (Object.prototype.hasOwnProperty.call(opts, 'editor')) {
+      const {editor} = opts
+      // 与 label 字符串同规则:非空、无首尾空白(注册表 key 要稳定可比)
+      if (typeof editor !== 'string') {
+        throw new Error(
+          `opts.editor in ${fnCallSignature} should be a string. ${userReadableTypeOfValue(
+            editor,
+          )} given.`,
+        )
+      }
+      if (editor.trim().length !== editor.length) {
+        throw new Error(
+          `opts.editor in ${fnCallSignature} should not start/end with whitespace. "${editor}" given.`,
+        )
+      }
+      if (editor.length === 0) {
+        throw new Error(
+          `opts.editor in ${fnCallSignature} should not be an empty string.`,
+        )
+      }
+    }
   }
 }
 
@@ -192,6 +213,7 @@ export const file = (
   opts: {
     label?: PropLabel
     hidden?: boolean
+    editor?: string
     interpolate?: Interpolator<File['id']>
   } = {},
 ): PropTypeConfig_File => {
@@ -215,6 +237,7 @@ export const file = (
     [propTypeSymbol]: 'TheatrePropType',
     label: opts.label,
     hidden: opts.hidden,
+    editor: opts.editor,
     interpolate,
     deserializeAndSanitize: _ensureFile,
   }
@@ -262,6 +285,7 @@ export const image = (
   opts: {
     label?: PropLabel
     hidden?: boolean
+    editor?: string
     interpolate?: Interpolator<Asset['id']>
   } = {},
 ): PropTypeConfig_Image => {
@@ -285,6 +309,7 @@ export const image = (
     [propTypeSymbol]: 'TheatrePropType',
     label: opts.label,
     hidden: opts.hidden,
+    editor: opts.editor,
     interpolate,
     deserializeAndSanitize: _ensureImage,
   }
@@ -358,6 +383,7 @@ export const number = (
     nudgeMultiplier?: number
     label?: PropLabel
     hidden?: boolean
+    editor?: string
   } = {},
 ): PropTypeConfig_Number => {
   if (process.env.NODE_ENV !== 'production') {
@@ -428,6 +454,7 @@ export const number = (
     ...(opts ? opts : {}),
     label: opts.label,
     hidden: opts.hidden,
+    editor: opts.editor,
     nudgeFn: opts.nudgeFn ?? defaultNumberNudgeFn,
     nudgeMultiplier:
       typeof opts.nudgeMultiplier === 'number'
@@ -502,6 +529,7 @@ export const rgba = (
     [propTypeSymbol]: 'TheatrePropType',
     label: opts.label,
     hidden: opts.hidden,
+    editor: opts.editor,
     interpolate: _interpolateRgba,
     deserializeAndSanitize: _sanitizeRgba,
   }
@@ -578,6 +606,7 @@ export const boolean = (
   opts: {
     label?: PropLabel
     hidden?: boolean
+    editor?: string
     interpolate?: Interpolator<boolean>
   } = {},
 ): PropTypeConfig_Boolean => {
@@ -599,6 +628,7 @@ export const boolean = (
     [propTypeSymbol]: 'TheatrePropType',
     label: opts.label,
     hidden: opts.hidden,
+    editor: opts.editor,
     interpolate: opts.interpolate ?? leftInterpolate,
     deserializeAndSanitize: _ensureBoolean,
   }
@@ -638,6 +668,7 @@ export const string = (
   opts: {
     label?: PropLabel
     hidden?: boolean
+    editor?: string
     interpolate?: Interpolator<string>
   } = {},
 ): PropTypeConfig_String => {
@@ -658,6 +689,7 @@ export const string = (
     [propTypeSymbol]: 'TheatrePropType',
     label: opts.label,
     hidden: opts.hidden,
+    editor: opts.editor,
     interpolate: opts.interpolate ?? leftInterpolate,
     deserializeAndSanitize: _ensureString,
   }
@@ -712,6 +744,7 @@ export function stringLiteral<
     as?: 'menu' | 'switch'
     label?: PropLabel
     hidden?: boolean
+    editor?: string
     interpolate?: Interpolator<Extract<keyof ValuesAndLabels, string>>
   } = {},
 ): PropTypeConfig_StringLiteral<Extract<keyof ValuesAndLabels, string>> {
@@ -728,6 +761,7 @@ export function stringLiteral<
     as: opts.as ?? 'menu',
     label: opts.label,
     hidden: opts.hidden,
+    editor: opts.editor,
     interpolate: opts.interpolate ?? leftInterpolate,
     deserializeAndSanitize(
       json: unknown,
@@ -799,4 +833,9 @@ type CommonOpts = {
    * (see {@link IBasePropType.hidden}). Data behavior is unaffected.
    */
   hidden?: boolean
+  /**
+   * Key into the studio's custom prop editor registry (see
+   * {@link IBasePropType.editor}). Only meaningful for simple prop types.
+   */
+  editor?: string
 }

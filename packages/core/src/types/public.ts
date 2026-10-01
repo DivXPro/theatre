@@ -839,6 +839,16 @@ export interface IBasePropType<
    * hand-edit — e.g. a serialized list managed by viewport tools.
    */
   hidden?: boolean
+  /**
+   * Key into the studio's custom prop editor registry: when set and a host
+   * (e.g. the playground) has registered an editor component under this key,
+   * the details panel renders that component for this prop's value instead of
+   * the built-in editor for its type. The row chrome (keyframe button,
+   * prev/next keyframe navigation, context menu) is unaffected, so sequencing
+   * keeps working exactly like a built-in prop. Unknown keys fall back to the
+   * built-in editor. Only meaningful for simple prop types.
+   */
+  editor?: string
   default: ValueType
   /**
    * Each prop config has a `deserializeAndSanitize()` function that deserializes and sanitizes
