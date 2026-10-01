@@ -154,6 +154,10 @@ import {
 import {parsePoseValue, serializeLibPose} from './poseMode/poseValue'
 import {isPoseExitGuardedTarget} from './poseMode/poseExitGuard'
 import {poseStatusText} from './poseStatusText'
+import {buildPoseOptions} from './poseMode/poseOptions'
+import type {PoseOptionKey} from './poseMode/poseOptions'
+import PosePropSection, {useDetailPanelSlot} from './poseMode/PosePropSection'
+import {createPortal} from 'react-dom'
 
 document.body.style.backgroundColor = '#171717'
 
@@ -1575,12 +1579,76 @@ function App({
   const onClearPose = useCallback(() => {
     const studio = getStudioSync()
     if (!studio || !selectedPlacement) return
-    // 单事务(spec §6.2):删轨道(当前值落静态)+ 清静态 → 回默认绑定,一步撤销
-    studio.transaction(({unsequenceProp, unset}) => {
+    // 两个事务(theatre API 限制,2026-10-01 冒烟暴露):单事务里
+    // unsequenceProp 之后的 unset(pose) 读到的是事务前的轨道树,错走
+    // 「删播放头帧」分支,unsequence 落下来的静态删不掉——「删轨道」与
+    // 「清静态」只能分两步;撤销同样两步(先回静态+备份,再回轨道)。
+    // 事务1:删轨道(theatre 把当前值落为静态,姿势视觉不变)
+    studio.transaction(({unsequenceProp}) => {
       unsequenceProp(selectedPlacement.props.pose)
-      unset(selectedPlacement.props.pose)
+    })
+    // 事务2:清静态 → 回默认绑定;自定义备份一并清(显式清除=全量重置,
+    // 留着备份会让选择器复活「自定义」选项)。unset 对不存在的 key 会
+    // 抛 TypeError 并回滚整个事务(同冒烟暴露):值非默认(非空串)才
+    // 说明有 override 可删,空值跳过——全空时事务为空,saaz 不入栈
+    studio.transaction(({unset}) => {
+      if (((val(selectedPlacement.props.pose) as string) ?? '') !== '') {
+        unset(selectedPlacement.props.pose)
+      }
+      if (((val(selectedPlacement.props.poseCustom) as string) ?? '') !== '') {
+        unset(selectedPlacement.props.poseCustom)
+      }
     })
   }, [selectedPlacement])
+
+  // 属性面板姿势区(2026-10-01):选择器选项 = 绑定/自定义(有备份可切回)/
+  // 库预设(骨架过滤);自定义快照由 poseTrack 写入通道顺手备份进 poseCustom
+  const selectedPoseCustomJson =
+    (useVal(selectedPlacement?.props.poseCustom) as string | undefined) ?? ''
+  const poseOptions = buildPoseOptions({
+    poseJson: selectedPoseJson,
+    backupJson: selectedPoseCustomJson,
+    libEntries: poseEntries,
+    selectedRig,
+    t,
+  })
+  const onSelectPoseOption = useCallback(
+    (key: PoseOptionKey) => {
+      if (!selectedPlacement) return
+      if (key === 'bind') {
+        setPoseValue(selectedPlacement, '')
+      } else if (key === 'custom') {
+        // 切回自定义 = 应用备份快照;备份缺失(旧工程)时当前已是自定义,不动
+        const backup =
+          (val(selectedPlacement.props.poseCustom) as string | undefined) ?? ''
+        if (parsePoseValue(backup)?.kind === 'custom')
+          setPoseValue(selectedPlacement, backup)
+      } else if (key.startsWith('lib:')) {
+        setPoseValue(selectedPlacement, serializeLibPose(key.slice(4)))
+      }
+    },
+    [selectedPlacement],
+  )
+  // 姿势区显隐与摆姿势可用性:规则与右键菜单一致(有骨骼即可见;
+  // 映射不出人形关键骨则摆姿势按钮置灰)。姿势会话进行中隐藏——
+  // 会话内切换预设会与退出提交互相覆盖,姿势条已给足上下文
+  const selectedPlacementKey = selectedPlacement
+    ? getPlacementEntryForObject(selectedPlacement)?.key
+    : undefined
+  const poseSection =
+    selectedPlacement !== null &&
+    selectionCount === 1 &&
+    selectedPlacementInstance !== undefined &&
+    collectBoneNames(selectedPlacementInstance).length > 0 &&
+    poseSessionKey === null
+      ? {
+          canPoseInteractively:
+            resolveControlSpec(selectedPlacementInstance) !== null,
+          placementKey: selectedPlacementKey,
+        }
+      : null
+  // 姿势区渲染在详情面板内部(shadow DOM slot + portal),面板不存在时 null
+  const poseSlot = useDetailPanelSlot(poseSection !== null)
 
   // ── 宿主能力句柄(规格:host-picker-integration)────────────
   // 纯转发既有函数;宿主注入自己的选择框后,经 onFlows 拿到句柄,
@@ -1750,6 +1818,26 @@ function App({
           onClose={() => closeFrame('animation')}
         />
       )}
+      {poseSection &&
+        poseSlot &&
+        createPortal(
+          <PosePropSection
+            options={poseOptions.options}
+            current={poseOptions.current}
+            onSelect={onSelectPoseOption}
+            status={poseStatus}
+            keyframeCount={poseKeyframeCount}
+            onAddKeyframe={onWritePoseKeyframe}
+            onClear={onClearPose}
+            onEnterPoseMode={
+              poseSection.canPoseInteractively && poseSection.placementKey
+                ? () => enterPoseSession(poseSection.placementKey!)
+                : undefined
+            }
+            poseModeHint={t('pg.menu.poseModeUnsupported')}
+          />,
+          poseSlot,
+        )}
       {objectMenu && (
         <CanvasContextMenu
           position={{x: objectMenu.x, y: objectMenu.y}}

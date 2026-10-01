@@ -122,8 +122,21 @@ export function writePoseKeyframe(
   const scrub = studio.scrub()
   scrub.capture(({set}) => {
     set(sheetObject.props.pose as $IntentionalAny, json)
+    backupCustomPose(sheetObject, set, json)
   })
   scrub.commit()
+}
+
+/** 自定义快照顺手写进 poseCustom 备份属性(自定义保留可切回,2026-10-01);
+ *  库引用/空值不动备份——切到预设后仍能切回最近一次自定义 */
+function backupCustomPose(
+  sheetObject: ISheetObject<$IntentionalAny>,
+  set: (pointer: $IntentionalAny, value: $IntentionalAny) => void,
+  json: string,
+): void {
+  if (!sheetObject.props.poseCustom) return
+  if (parsePoseValue(json)?.kind !== 'custom') return
+  set(sheetObject.props.poseCustom as $IntentionalAny, json)
 }
 
 export function setPoseValue(
@@ -135,6 +148,7 @@ export function setPoseValue(
   const scrub = studio.scrub()
   scrub.capture(({set}) => {
     set(sheetObject.props.pose as $IntentionalAny, json)
+    backupCustomPose(sheetObject, set, json)
   })
   scrub.commit()
 }

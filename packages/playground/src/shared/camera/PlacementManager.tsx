@@ -1085,6 +1085,13 @@ function PlacedModelCore({
       // 姿势 = 时间轴单属性(spec §6.1):值 JSON(lib 引用|custom 快照),
       // 面板 hidden(JSON 不可读),自定义插值器让它可打帧且平滑混合
       pose: t.string('', posePropConfigShape().opts),
+      // 自定义姿势备份(2026-10-01 属性面板姿势区):任何把 pose 写为
+      // custom 值的事务顺手同值备份到这里,被库预设顶掉后仍能切回;
+      // 面板隐藏、永不被 sequence(备份语义=静态快照)
+      poseCustom: t.string('', {
+        label: () => translate('pg.props.poseCustom'),
+        hidden: true,
+      }),
       // 迁移过渡(spec §9):读取/清理旧值用,面板隐藏;下个大版本删 key
       poseOverride: t.string('', {
         label: () => translate('pg.props.poseOverride'),

@@ -10,13 +10,20 @@ import type {$IntentionalAny} from '@dreamerbird/core/types/public'
 function setup() {
   jest.resetModules()
   const calls = {sequenceProp: 0, set: 0, commit: 0, transaction: 0}
+  const setCalls: Array<{prop: string; value: $IntentionalAny}> = []
   const fakeStudio = {
     transaction: jest.fn((fn: $IntentionalAny) => {
       calls.transaction++
       fn({sequenceProp: () => calls.sequenceProp++})
     }),
     scrub: jest.fn(() => ({
-      capture: (fn: $IntentionalAny) => fn({set: () => calls.set++}),
+      capture: (fn: $IntentionalAny) =>
+        fn({
+          set: (ptr: $IntentionalAny, value: $IntentionalAny) => {
+            calls.set++
+            setCalls.push({prop: ptr.__name, value})
+          },
+        }),
       commit: () => calls.commit++,
     })),
   }
@@ -41,9 +48,9 @@ function setup() {
       sheetInstanceId: 'i',
       objectKey: 'o',
     },
-    props: {pose: {}},
+    props: {pose: {__name: 'pose'}, poseCustom: {__name: 'poseCustom'}},
   } as $IntentionalAny
-  return {calls, mod, sheetObject, rootWithTrack}
+  return {calls, setCalls, mod, sheetObject, rootWithTrack}
 }
 
 afterEach(() => jest.dontMock('@dreamerbird/core'))
@@ -55,7 +62,8 @@ describe('writePoseKeyframe', () => {
     mod.writePoseKeyframe(sheetObject, '{"kind":"custom","bones":{}}')
     expect(calls.transaction).toBe(1)
     expect(calls.sequenceProp).toBe(1)
-    expect(calls.set).toBe(1)
+    // set ×2:pose 值 + poseCustom 备份(自定义快照)
+    expect(calls.set).toBe(2)
     expect(calls.commit).toBe(1)
     mod.__setPointerRootResolverForTest(null)
   })
@@ -65,8 +73,29 @@ describe('writePoseKeyframe', () => {
     mod.__setPointerRootResolverForTest(() => rootWithTrack('track-1'))
     mod.writePoseKeyframe(sheetObject, '{"kind":"custom","bones":{}}')
     expect(calls.transaction).toBe(0)
-    expect(calls.set).toBe(1)
+    expect(calls.set).toBe(2)
     expect(calls.commit).toBe(1)
+    mod.__setPointerRootResolverForTest(null)
+  })
+
+  test('写自定义快照:同事务顺手写 poseCustom 备份(自定义保留可切回)', () => {
+    const {setCalls, mod, sheetObject, rootWithTrack} = setup()
+    mod.__setPointerRootResolverForTest(() => rootWithTrack('track-1'))
+    mod.writePoseKeyframe(sheetObject, '{"kind":"custom","bones":{"Hips":{}}}')
+    expect(setCalls).toEqual([
+      {prop: 'pose', value: '{"kind":"custom","bones":{"Hips":{}}}'},
+      {prop: 'poseCustom', value: '{"kind":"custom","bones":{"Hips":{}}}'},
+    ])
+    mod.__setPointerRootResolverForTest(null)
+  })
+
+  test('写库引用/空值:不动 poseCustom 备份', () => {
+    const {setCalls, mod, sheetObject, rootWithTrack} = setup()
+    mod.__setPointerRootResolverForTest(() => rootWithTrack('track-1'))
+    mod.writePoseKeyframe(sheetObject, '{"kind":"lib","id":"wave"}')
+    expect(setCalls).toEqual([
+      {prop: 'pose', value: '{"kind":"lib","id":"wave"}'},
+    ])
     mod.__setPointerRootResolverForTest(null)
   })
 
@@ -87,6 +116,17 @@ describe('setPoseValue', () => {
     mod.setPoseValue(sheetObject, '{"kind":"lib","id":"x"}')
     expect(calls.transaction).toBe(0)
     expect(calls.set).toBe(1)
+    mod.__setPointerRootResolverForTest(null)
+  })
+
+  test('设自定义快照:同事务写 poseCustom 备份', () => {
+    const {setCalls, mod, sheetObject, rootWithTrack} = setup()
+    mod.__setPointerRootResolverForTest(() => rootWithTrack(undefined))
+    mod.setPoseValue(sheetObject, '{"kind":"custom","bones":{}}')
+    expect(setCalls).toEqual([
+      {prop: 'pose', value: '{"kind":"custom","bones":{}}'},
+      {prop: 'poseCustom', value: '{"kind":"custom","bones":{}}'},
+    ])
     mod.__setPointerRootResolverForTest(null)
   })
 })

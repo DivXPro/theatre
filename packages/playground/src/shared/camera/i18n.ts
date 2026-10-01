@@ -77,6 +77,8 @@ export const en: Messages = {
   'pg.pose.keyframesUnit': 'keyframes',
   'pg.pose.addKeyframe': 'Add keyframe',
   'pg.pose.clear': 'Clear pose',
+  'pg.pose.libMissing': ' (missing)',
+  'pg.pose.selectorTitle': 'Pose source',
 
   'pg.props.aimTarget': 'Aim target',
   'pg.props.aimNone': 'None',
@@ -86,6 +88,7 @@ export const en: Messages = {
   'pg.props.pathManual': 'None',
   'pg.props.animation': 'Animation',
   'pg.props.pose': 'Pose',
+  'pg.props.poseCustom': 'Custom pose backup',
   'pg.props.poseOverride': 'Pose override',
   'pg.props.source': 'Source file',
   'pg.parts.head': 'Head',
@@ -199,6 +202,8 @@ export const zhCN: Messages = {
   'pg.pose.keyframesUnit': '个关键帧',
   'pg.pose.addKeyframe': '打帧',
   'pg.pose.clear': '清除姿势',
+  'pg.pose.libMissing': '(缺失)',
+  'pg.pose.selectorTitle': '姿势来源',
 
   'pg.props.aimTarget': '瞄准目标',
   'pg.props.aimNone': '无',
@@ -208,6 +213,7 @@ export const zhCN: Messages = {
   'pg.props.pathManual': '无',
   'pg.props.animation': '动作',
   'pg.props.pose': '姿势',
+  'pg.props.poseCustom': '自定义姿势备份',
   'pg.props.poseOverride': '姿势覆盖',
   'pg.props.source': '来源文件',
   'pg.parts.head': '头',
