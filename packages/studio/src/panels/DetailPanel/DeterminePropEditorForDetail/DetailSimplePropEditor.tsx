@@ -61,6 +61,7 @@ function DetailSimplePropEditor<
         editingTools={editingTools}
         propConfig={propConfig}
         value={editingTools.value}
+        obj={obj}
       />
     </SingleRowPropEditor>
   )
