@@ -78,6 +78,7 @@ import {PipCameraSelector} from './PipCameraSelector'
 import {usePipBottom} from './pipLayout'
 import {bindUndoShortcuts, isInsideStudioUi} from './undoShortcuts'
 import {AssetLibraryPanel} from './assetLibrary/AssetLibraryPanel'
+import {ModelPickerSlot} from './assetLibrary/ModelPickerSlot'
 import {getLibrary, useLibraryEntries} from './assetLibrary/library'
 import {ShotCamera} from './ShotCamera'
 import {
@@ -1732,8 +1733,7 @@ function App({
         </div>
       )}
       {!onOpenModelPicker && frameOpen.model && (
-        <AssetLibraryPanel
-          kind="model"
+        <ModelPickerSlot
           onPlaceModel={placeModelAtDefault}
           onDragStartModel={startModelDrag}
           disabled={rigLoading}

@@ -21,6 +21,7 @@ import {planImport, executeImport, realImportDeps} from './importPipeline'
 import type {ImportPlan} from './importPipeline'
 import {backfillModelThumbnails} from './thumbnail'
 import {seedBuiltinModels} from './seedBuiltinModels'
+import {useModelThumbUrl} from './useModelThumbUrl'
 import type {AnimationEntry, ModelEntry, PoseEntry} from './types'
 
 export type AssetKind = 'model' | 'pose' | 'animation' | 'path'
@@ -426,7 +427,8 @@ export function AssetLibraryPanel({
   const [menu, setMenu] = useState<{x: number; y: number; id: string} | null>(
     null,
   )
-  const [thumbUrls, setThumbUrls] = useState<Record<string, string>>({})
+  // 缩略图懒加载抽到 useModelThumbUrl(注册制改造:宿主模型框体也用它)
+  const {getThumbUrl: thumbUrl, dropThumbUrl} = useModelThumbUrl()
 
   const modelGesture = useCardGesture<ModelEntry>(
     (entry) => onPlaceModel?.(entry),
@@ -449,31 +451,6 @@ export function AssetLibraryPanel({
   useEffect(() => {
     if (kind === 'model') seedBuiltinModels()
   }, [kind])
-
-  // 防止同一缩略图并发多次 getBlobUrl
-  const loadingThumbsRef = useRef<Set<string>>(new Set())
-
-  // 缩略图 URL 懒加载:卡片出现时取 blob URL 并缓存。
-  // URL 生命周期由后端的 session 级缓存管理,组件侧只维护 id->url 映射,
-  // 不在卸载或删除时 revoke,避免其他消费者拿到失效地址。
-  const thumbUrl = (entry: ModelEntry): string | undefined => {
-    if (!entry.thumbnailId) return undefined
-    const cached = thumbUrls[entry.id]
-    if (cached) return cached
-    if (loadingThumbsRef.current.has(entry.id)) return undefined
-    loadingThumbsRef.current.add(entry.id)
-    void getLibrary()
-      .backend.getBlobUrl(entry.thumbnailId)
-      .then((url) => {
-        loadingThumbsRef.current.delete(entry.id)
-        if (!mountedRef.current) return
-        setThumbUrls((m) => ({...m, [entry.id]: url}))
-      })
-      .catch(() => {
-        loadingThumbsRef.current.delete(entry.id)
-      })
-    return undefined
-  }
 
   const rigAliases = useRigAliases()
   /** 骨架标签文案:有别名显示别名,否则短哈希 */
@@ -535,10 +512,7 @@ export function AssetLibraryPanel({
     if (!window.confirm(message)) return
     await getLibrary().deleteEntryDeep(id)
     if (mountedRef.current) {
-      setThumbUrls((m) => {
-        const {[id]: _, ...rest} = m
-        return rest
-      })
+      dropThumbUrl(id)
     }
   }
 
