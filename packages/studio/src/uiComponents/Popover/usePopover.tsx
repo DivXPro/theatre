@@ -33,7 +33,14 @@ type State =
       onClickOutside: () => void
     }
 
-const PopoverAutoCloseLock = React.createContext({
+/**
+ * 嵌套弹框锁:子弹框打开时 takeFocus,父弹框的「点外部关/挪远关」检查到
+ * 子锁持有即跳过——颜色选择器等二级弹框赖此存活。usePopover 的子弹框自动
+ * 入锁;不经 usePopover 的自制弹层(如姿势选择停靠框,直接 portal 到
+ * document.body)须手动 useContext 本锁,打开期间 takeFocus、关闭释放。
+ * 不在任何弹框内时拿到默认值(takeFocus 为空操作),零影响。
+ */
+export const PopoverAutoCloseLock = React.createContext({
   // defaults have no effects, since there would not be a
   // parent popover to worry about auto-closing.
   takeFocus() {

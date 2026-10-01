@@ -22,9 +22,10 @@
  * 框体经 createPortal 挂到 document.body:属性面板在 shadow DOM 里,停靠
  * 框要盖全画布必须脱离 shadow 根(React context 穿 portal 保留,i18n 照常)。
  */
-import React, {useEffect, useState} from 'react'
+import React, {useContext, useEffect, useState} from 'react'
 import {createPortal} from 'react-dom'
 import {useI18n} from '@dreamerbird/studio/i18n'
+import {PopoverAutoCloseLock} from '@dreamerbird/studio/uiComponents/Popover/usePopover'
 import type {PropTypeConfig_AllSimples} from '@dreamerbird/core/types/public'
 import type {ISimplePropEditorReactProps} from '@dreamerbird/studio/propEditors/simpleEditors/ISimplePropEditorReactProps'
 import type {ISheetObject} from '@dreamerbird/core'
@@ -48,6 +49,16 @@ const PosePropEditor: React.FC<
   const [pickerOpen, setPickerOpen] = useState(false)
   // 值区域 hover 态:对齐 BasicStringInput(静态透明无边框,hover 出底出边)
   const [valueHovered, setValueHovered] = useState(false)
+  // 停靠框打开期间持父弹框锁:本编辑器也会渲染在时间轴帧弹框里,帧弹框
+  // 有「挪远/点外部自动关」;停靠框 portal 到 body 不在其 DOM 内,不持锁
+  // 的话鼠标一移向停靠框帧弹框就先关,本组件连同停靠框一起被卸载——
+  // 颜色选择器的二级弹框赖同一机制存活。属性面板场景拿到默认空锁,零影响
+  const parentPopoverLock = useContext(PopoverAutoCloseLock)
+  useEffect(() => {
+    if (!pickerOpen) return
+    const held = parentPopoverLock.takeFocus()
+    return () => held.releaseFocus()
+  }, [pickerOpen, parentPopoverLock])
   // 编辑器所属对象的骨架族(obj → placement → 模型库条目),用于过滤异族预设
   const [rig, setRig] = useState<string | undefined>(undefined)
   useEffect(() => {
@@ -98,6 +109,11 @@ const PosePropEditor: React.FC<
         style={{
           width: '100%',
           boxSizing: 'border-box',
+          // 高度对齐 BasicStringInput 的 calc(100% - 4px):不显式撑高,
+          // hover 出底边时会比相邻原生输入框矮一截
+          height: 'calc(100% - 4px)',
+          display: 'flex',
+          alignItems: 'center',
           padding: '1px 6px',
           borderRadius: 2,
           border: `1px solid ${valueHovered ? '#00000059' : 'transparent'}`,

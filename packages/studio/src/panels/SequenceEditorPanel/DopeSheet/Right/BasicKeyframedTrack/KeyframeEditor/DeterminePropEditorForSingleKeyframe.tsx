@@ -4,6 +4,7 @@ import styled from 'styled-components'
 import type {PropTypeConfig_AllSimples} from '@dreamerbird/core/types/public'
 import type {ISimplePropEditorReactProps} from '@dreamerbird/studio/propEditors/simpleEditors/ISimplePropEditorReactProps'
 import {simplePropEditorByPropType} from '@dreamerbird/studio/propEditors/simpleEditors/simplePropEditorByPropType'
+import {getCustomPropEditor} from '@dreamerbird/studio/propEditors/customPropEditors'
 import type {
   EditingOptionsTree,
   PrimitivePropEditingOptions,
@@ -117,9 +118,13 @@ function PrimitivePropEditor(
     // notice: enums are not implemented, yet.
     return <></>
   } else {
-    const PropEditor = simplePropEditorByPropType[
-      p.propConfig.type
-    ] as React.FC<ISimplePropEditorReactProps<PropTypeConfig_AllSimples>>
+    // 与 DeterminePropEditorForDetail 同一接法:propConfig.editor 声明且宿主
+    // 已注册 → 自定义编辑器;未注册静默回落内置。obj 透传给自定义编辑器
+    // (姿势编辑器靠它定位对象解析骨架族);写值走帧事务(改该帧,非播放头)
+    const PropEditor = (getCustomPropEditor(p.propConfig.editor) ??
+      simplePropEditorByPropType[p.propConfig.type]) as React.FC<
+      ISimplePropEditorReactProps<PropTypeConfig_AllSimples>
+    >
     return (
       <SingleKeyframePropEditorContainer>
         <SingleKeyframePropLabel>
@@ -133,6 +138,7 @@ function PrimitivePropEditor(
             propConfig={p.propConfig}
             value={valueInProp(p.keyframe.value, p.propConfig)}
             autoFocus={p.autoFocusInput}
+            obj={p.sheetObject}
           />
         </SingleKeyframeSimplePropEditorContainer>
       </SingleKeyframePropEditorContainer>
