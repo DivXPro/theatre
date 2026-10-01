@@ -34,3 +34,10 @@ test('可编辑目标与 studio UI 内事件 = null(不抢 studio/输入框的�
   expect(z({isEditableTarget: true})).toBe(null)
   expect(z({insideStudioUi: true})).toBe(null)
 })
+
+test('已被上游 preventDefault 的按键 = null(另一方已撤,不重复撤)', () => {
+  // 2026-10-01 冒烟实证:studio 快捷键实为 window 级(非注释原假设的
+  // 「只在 UI 焦点内」),画布焦点下一次 Cmd+Z 撤两步。双侧互认
+  // defaultPrevented 后,先跑的一方处理,后跑的一方跳过
+  expect(z({defaultPrevented: true})).toBe(null)
+})

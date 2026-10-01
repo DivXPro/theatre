@@ -12,11 +12,17 @@ export type UndoKeyEventLike = {
   shiftKey: boolean
   isEditableTarget: boolean
   insideStudioUi: boolean
+  /** 事件已被上游监听 preventDefault(另一方已接管此按键,不得重复处理) */
+  defaultPrevented?: boolean
 }
 
 export function undoIntentFromKeyEvent(
   ev: UndoKeyEventLike,
 ): 'undo' | 'redo' | null {
+  // 与 studio 的 window 级快捷键(useKeyboardShortcuts)互认 defaultPrevented:
+  // 两个监听都挂在 window 上、注册顺序不定,先跑的一方 preventDefault,
+  // 后跑的一方见到即跳过——否则画布焦点下一次 Cmd+Z 撤两步(2026-10-01 实证)
+  if (ev.defaultPrevented) return null
   if (ev.isEditableTarget || ev.insideStudioUi) return null
   if (!ev.ctrlKey && !ev.metaKey) return null
   const key = ev.key.toLowerCase()
@@ -64,6 +70,7 @@ export function bindUndoShortcuts(
       shiftKey: ev.shiftKey,
       isEditableTarget: isEditableTarget(ev.target),
       insideStudioUi: isInsideStudioUi(ev),
+      defaultPrevented: ev.defaultPrevented,
     })
     if (!intent) return
     ev.preventDefault()

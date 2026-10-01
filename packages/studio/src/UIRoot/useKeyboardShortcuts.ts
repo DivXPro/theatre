@@ -22,6 +22,11 @@ export default function useKeyboardShortcuts() {
   const studio = getStudio()
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // 宿主已接管的按键不抢:本监听挂在 window 级(画布焦点下同样触发),
+      // 宿主(如 playground 的 bindUndoShortcuts)也挂 window 级时一次
+      // Cmd+Z 会撤两步(2026-10-01 冒烟实证)。先跑的一方 preventDefault,
+      // 后跑的一方见到 defaultPrevented 即跳过——与宿主侧同款守卫互认
+      if (e.defaultPrevented) return
       const target: null | HTMLElement =
         e.composedPath()[0] as unknown as $IntentionalAny
       if (
