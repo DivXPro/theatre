@@ -6,6 +6,7 @@ import type {
 } from '@dreamerbird/core/types/public'
 import type SheetObject from '@dreamerbird/core/sheetObjects/SheetObject'
 import {simplePropEditorByPropType} from '@dreamerbird/studio/propEditors/simpleEditors/simplePropEditorByPropType'
+import {getCustomPropEditor} from '@dreamerbird/studio/propEditors/customPropEditors'
 import type {PropConfigForType} from '@dreamerbird/studio/propEditors/utils/PropConfigForType'
 import type {ISimplePropEditorReactProps} from '@dreamerbird/studio/propEditors/simpleEditors/ISimplePropEditorReactProps'
 import DetailCompoundPropEditor from './DeterminePropEditorForDetail/DetailCompoundPropEditor'
@@ -40,7 +41,12 @@ const DeterminePropEditorForDetail: React.FC<
     // notice: enums are not implemented, yet.
     return <></>
   } else {
-    const PropEditor = simplePropEditorByPropType[propConfig.type]
+    // 配置声明了 editor 且宿主已注册 → 用宿主编辑器渲染值区域;属性行
+    // 外壳(打帧钮/帧导航/右键菜单)不变。未注册(宿主未启动/已卸载)
+    // 静默回落内置编辑器,数据不受影响
+    const PropEditor =
+      getCustomPropEditor(propConfig.editor) ??
+      simplePropEditorByPropType[propConfig.type]
 
     return (
       <DetailSimplePropEditor
