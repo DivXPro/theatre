@@ -20,6 +20,7 @@
     "./src/**/*",
     "./src/**/*.json",
     "./devEnv/**/*",
+    "./scripts/**/*",
     "./vite.config.ts"
   ]
 }

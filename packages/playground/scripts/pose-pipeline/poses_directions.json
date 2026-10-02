@@ -1,0 +1,1399 @@
+{
+ "format": "pose-directions-v1",
+ "source": "blender-metarig-procedural",
+ "coordinate": "three (y-up, +z-forward)",
+ "poses": [
+  {
+   "key": "stand-relaxed",
+   "name": "站立放松",
+   "dirs": {
+    "mixamorigHips": [
+     0.0,
+     0.96834,
+     0.24964
+    ],
+    "mixamorigSpine": [
+     0.0,
+     0.99241,
+     0.12295
+    ],
+    "mixamorigSpine1": [
+     0.0,
+     0.99949,
+     -0.03181
+    ],
+    "mixamorigSpine2": [
+     0.0,
+     0.99959,
+     -0.02856
+    ],
+    "mixamorigNeck": [
+     0.0,
+     0.92952,
+     0.36878
+    ],
+    "mixamorigHead": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "mixamorigLeftShoulder": [
+     0.86189,
+     -0.00057,
+     -0.50709
+    ],
+    "mixamorigLeftArm": [
+     0.22114,
+     -0.97503,
+     -0.0201
+    ],
+    "mixamorigLeftForeArm": [
+     0.18051,
+     -0.98276,
+     0.04011
+    ],
+    "mixamorigLeftHand": [
+     0.12025,
+     -0.99273,
+     -0.00413
+    ],
+    "mixamorigRightShoulder": [
+     -0.86189,
+     -0.00057,
+     -0.50709
+    ],
+    "mixamorigRightArm": [
+     -0.22114,
+     -0.97503,
+     -0.0201
+    ],
+    "mixamorigRightForeArm": [
+     -0.18051,
+     -0.98276,
+     0.04011
+    ],
+    "mixamorigRightHand": [
+     -0.12025,
+     -0.99273,
+     -0.00413
+    ],
+    "mixamorigLeftUpLeg": [
+     0.06983,
+     -0.99756,
+     0.0
+    ],
+    "mixamorigLeftLeg": [
+     0.06829,
+     -0.9823,
+     -0.17441
+    ],
+    "mixamorigLeftFoot": [
+     0.04358,
+     -0.59167,
+     0.805
+    ],
+    "mixamorigLeftToeBase": [
+     0.008,
+     -0.07607,
+     0.99707
+    ],
+    "mixamorigRightUpLeg": [
+     -0.06983,
+     -0.99756,
+     0.0
+    ],
+    "mixamorigRightLeg": [
+     -0.06829,
+     -0.9823,
+     -0.17441
+    ],
+    "mixamorigRightFoot": [
+     -0.04358,
+     -0.59167,
+     0.805
+    ],
+    "mixamorigRightToeBase": [
+     -0.008,
+     -0.07607,
+     0.99707
+    ]
+   }
+  },
+  {
+   "key": "arms-akimbo",
+   "name": "叉腰",
+   "dirs": {
+    "mixamorigHips": [
+     0.0,
+     0.96834,
+     0.24964
+    ],
+    "mixamorigSpine": [
+     0.0,
+     0.99241,
+     0.12295
+    ],
+    "mixamorigSpine1": [
+     0.0,
+     0.99949,
+     -0.03181
+    ],
+    "mixamorigSpine2": [
+     0.0,
+     0.99959,
+     -0.02856
+    ],
+    "mixamorigNeck": [
+     0.0,
+     0.92952,
+     0.36878
+    ],
+    "mixamorigHead": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "mixamorigLeftShoulder": [
+     0.86189,
+     -0.00057,
+     -0.50709
+    ],
+    "mixamorigLeftArm": [
+     0.5542,
+     -0.82626,
+     0.10076
+    ],
+    "mixamorigLeftForeArm": [
+     -0.30151,
+     -0.90453,
+     0.30151
+    ],
+    "mixamorigLeftHand": [
+     -0.34232,
+     -0.90887,
+     0.23824
+    ],
+    "mixamorigRightShoulder": [
+     -0.86189,
+     -0.00057,
+     -0.50709
+    ],
+    "mixamorigRightArm": [
+     -0.5542,
+     -0.82626,
+     0.10076
+    ],
+    "mixamorigRightForeArm": [
+     0.30151,
+     -0.90453,
+     0.30151
+    ],
+    "mixamorigRightHand": [
+     0.34232,
+     -0.90887,
+     0.23824
+    ],
+    "mixamorigLeftUpLeg": [
+     0.1005,
+     -0.99494,
+     0.0
+    ],
+    "mixamorigLeftLeg": [
+     0.09829,
+     -0.97976,
+     -0.17441
+    ],
+    "mixamorigLeftFoot": [
+     0.06271,
+     -0.58995,
+     0.805
+    ],
+    "mixamorigLeftToeBase": [
+     0.01151,
+     -0.07567,
+     0.99707
+    ],
+    "mixamorigRightUpLeg": [
+     -0.1005,
+     -0.99494,
+     0.0
+    ],
+    "mixamorigRightLeg": [
+     -0.09829,
+     -0.97976,
+     -0.17441
+    ],
+    "mixamorigRightFoot": [
+     -0.06271,
+     -0.58995,
+     0.805
+    ],
+    "mixamorigRightToeBase": [
+     -0.01151,
+     -0.07567,
+     0.99707
+    ]
+   }
+  },
+  {
+   "key": "wave-right",
+   "name": "挥手",
+   "dirs": {
+    "mixamorigHips": [
+     0.0,
+     0.96834,
+     0.24964
+    ],
+    "mixamorigSpine": [
+     0.0,
+     0.99241,
+     0.12295
+    ],
+    "mixamorigSpine1": [
+     0.0,
+     0.99949,
+     -0.03181
+    ],
+    "mixamorigSpine2": [
+     0.0,
+     0.99959,
+     -0.02856
+    ],
+    "mixamorigNeck": [
+     0.0,
+     0.92952,
+     0.36878
+    ],
+    "mixamorigHead": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "mixamorigLeftShoulder": [
+     0.86189,
+     -0.00057,
+     -0.50709
+    ],
+    "mixamorigLeftArm": [
+     0.19992,
+     -0.97961,
+     -0.01999
+    ],
+    "mixamorigLeftForeArm": [
+     0.15942,
+     -0.98641,
+     0.03985
+    ],
+    "mixamorigLeftHand": [
+     0.09883,
+     -0.9951,
+     -0.0042
+    ],
+    "mixamorigRightShoulder": [
+     -0.86189,
+     -0.00057,
+     -0.50709
+    ],
+    "mixamorigRightArm": [
+     -0.35178,
+     0.93473,
+     0.05025
+    ],
+    "mixamorigRightForeArm": [
+     -0.10037,
+     0.99368,
+     0.05019
+    ],
+    "mixamorigRightHand": [
+     -0.14937,
+     0.98876,
+     -0.00693
+    ],
+    "mixamorigLeftUpLeg": [
+     0.0,
+     -0.99707,
+     0.07644
+    ],
+    "mixamorigLeftLeg": [
+     0.0,
+     -0.99512,
+     -0.09863
+    ],
+    "mixamorigLeftFoot": [
+     0.0,
+     -0.53,
+     0.848
+    ],
+    "mixamorigLeftToeBase": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "mixamorigRightUpLeg": [
+     0.0,
+     -0.99707,
+     0.07644
+    ],
+    "mixamorigRightLeg": [
+     0.0,
+     -0.99512,
+     -0.09863
+    ],
+    "mixamorigRightFoot": [
+     0.0,
+     -0.53,
+     0.848
+    ],
+    "mixamorigRightToeBase": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   }
+  },
+  {
+   "key": "cheer",
+   "name": "欢呼",
+   "dirs": {
+    "mixamorigHips": [
+     0.0,
+     0.96834,
+     0.24964
+    ],
+    "mixamorigSpine": [
+     0.0,
+     0.99241,
+     0.12295
+    ],
+    "mixamorigSpine1": [
+     0.0,
+     0.99494,
+     -0.1005
+    ],
+    "mixamorigSpine2": [
+     0.0,
+     0.99526,
+     -0.09726
+    ],
+    "mixamorigNeck": [
+     0.0,
+     0.95268,
+     0.30396
+    ],
+    "mixamorigHead": [
+     0.0,
+     0.99763,
+     -0.0688
+    ],
+    "mixamorigLeftShoulder": [
+     0.86189,
+     -0.03546,
+     -0.50585
+    ],
+    "mixamorigLeftArm": [
+     0.38176,
+     0.92207,
+     -0.06359
+    ],
+    "mixamorigLeftForeArm": [
+     0.19996,
+     0.97748,
+     -0.06741
+    ],
+    "mixamorigLeftHand": [
+     0.24331,
+     0.96159,
+     -0.12704
+    ],
+    "mixamorigRightShoulder": [
+     -0.86189,
+     -0.03546,
+     -0.50585
+    ],
+    "mixamorigRightArm": [
+     -0.38176,
+     0.92207,
+     -0.06359
+    ],
+    "mixamorigRightForeArm": [
+     -0.19996,
+     0.97748,
+     -0.06741
+    ],
+    "mixamorigRightHand": [
+     -0.24331,
+     0.96159,
+     -0.12704
+    ],
+    "mixamorigLeftUpLeg": [
+     0.0,
+     -0.99707,
+     0.07644
+    ],
+    "mixamorigLeftLeg": [
+     0.0,
+     -0.99512,
+     -0.09863
+    ],
+    "mixamorigLeftFoot": [
+     0.0,
+     -0.53,
+     0.848
+    ],
+    "mixamorigLeftToeBase": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "mixamorigRightUpLeg": [
+     0.0,
+     -0.99707,
+     0.07644
+    ],
+    "mixamorigRightLeg": [
+     0.0,
+     -0.99512,
+     -0.09863
+    ],
+    "mixamorigRightFoot": [
+     0.0,
+     -0.53,
+     0.848
+    ],
+    "mixamorigRightToeBase": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   }
+  },
+  {
+   "key": "point-forward",
+   "name": "前指",
+   "dirs": {
+    "mixamorigHips": [
+     0.0,
+     0.96834,
+     0.24964
+    ],
+    "mixamorigSpine": [
+     0.0,
+     0.99241,
+     0.12295
+    ],
+    "mixamorigSpine1": [
+     0.0,
+     0.99949,
+     -0.03181
+    ],
+    "mixamorigSpine2": [
+     0.0,
+     0.99959,
+     -0.02856
+    ],
+    "mixamorigNeck": [
+     0.0,
+     0.92952,
+     0.36878
+    ],
+    "mixamorigHead": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "mixamorigLeftShoulder": [
+     0.86189,
+     -0.00057,
+     -0.50709
+    ],
+    "mixamorigLeftArm": [
+     0.19992,
+     -0.97961,
+     -0.01999
+    ],
+    "mixamorigLeftForeArm": [
+     0.14773,
+     -0.92687,
+     0.34509
+    ],
+    "mixamorigLeftHand": [
+     0.08929,
+     -0.94886,
+     0.30281
+    ],
+    "mixamorigRightShoulder": [
+     -0.86189,
+     -0.00057,
+     -0.50709
+    ],
+    "mixamorigRightArm": [
+     -0.05021,
+     0.1707,
+     0.98404
+    ],
+    "mixamorigRightForeArm": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "mixamorigRightHand": [
+     -0.03475,
+     -0.06687,
+     0.99716
+    ],
+    "mixamorigLeftUpLeg": [
+     0.0,
+     -0.99707,
+     0.07644
+    ],
+    "mixamorigLeftLeg": [
+     0.0,
+     -0.99512,
+     -0.09863
+    ],
+    "mixamorigLeftFoot": [
+     0.0,
+     -0.53,
+     0.848
+    ],
+    "mixamorigLeftToeBase": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "mixamorigRightUpLeg": [
+     0.0,
+     -0.99707,
+     0.07644
+    ],
+    "mixamorigRightLeg": [
+     0.0,
+     -0.99512,
+     -0.09863
+    ],
+    "mixamorigRightFoot": [
+     0.0,
+     -0.53,
+     0.848
+    ],
+    "mixamorigRightToeBase": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   }
+  },
+  {
+   "key": "think",
+   "name": "思考",
+   "dirs": {
+    "mixamorigHips": [
+     0.0,
+     0.96834,
+     0.24964
+    ],
+    "mixamorigSpine": [
+     0.0,
+     0.99241,
+     0.12295
+    ],
+    "mixamorigSpine1": [
+     0.0,
+     0.99949,
+     -0.03181
+    ],
+    "mixamorigSpine2": [
+     0.0,
+     0.99959,
+     -0.02856
+    ],
+    "mixamorigNeck": [
+     0.0,
+     0.92952,
+     0.36878
+    ],
+    "mixamorigHead": [
+     0.0,
+     0.98355,
+     0.18065
+    ],
+    "mixamorigLeftShoulder": [
+     0.86189,
+     -0.00057,
+     -0.50709
+    ],
+    "mixamorigLeftArm": [
+     0.24927,
+     -0.96715,
+     0.04985
+    ],
+    "mixamorigLeftForeArm": [
+     0.45043,
+     -0.8408,
+     0.30029
+    ],
+    "mixamorigLeftHand": [
+     0.39856,
+     -0.87915,
+     0.26122
+    ],
+    "mixamorigRightShoulder": [
+     -0.86189,
+     -0.00057,
+     -0.50709
+    ],
+    "mixamorigRightArm": [
+     -0.45113,
+     -0.70176,
+     0.55138
+    ],
+    "mixamorigRightForeArm": [
+     0.35046,
+     0.93121,
+     -0.10013
+    ],
+    "mixamorigRightHand": [
+     0.38993,
+     0.92011,
+     -0.03684
+    ],
+    "mixamorigLeftUpLeg": [
+     0.0,
+     -0.99707,
+     0.07644
+    ],
+    "mixamorigLeftLeg": [
+     0.0,
+     -0.99512,
+     -0.09863
+    ],
+    "mixamorigLeftFoot": [
+     0.0,
+     -0.53,
+     0.848
+    ],
+    "mixamorigLeftToeBase": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "mixamorigRightUpLeg": [
+     0.0,
+     -0.99707,
+     0.07644
+    ],
+    "mixamorigRightLeg": [
+     0.0,
+     -0.99512,
+     -0.09863
+    ],
+    "mixamorigRightFoot": [
+     0.0,
+     -0.53,
+     0.848
+    ],
+    "mixamorigRightToeBase": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   }
+  },
+  {
+   "key": "sit-chair",
+   "name": "坐椅子",
+   "dirs": {
+    "mixamorigHips": [
+     0.0,
+     0.96834,
+     0.24964
+    ],
+    "mixamorigSpine": [
+     0.0,
+     0.99241,
+     0.12295
+    ],
+    "mixamorigSpine1": [
+     0.0,
+     0.99949,
+     -0.03181
+    ],
+    "mixamorigSpine2": [
+     0.0,
+     0.99959,
+     -0.02856
+    ],
+    "mixamorigNeck": [
+     0.0,
+     0.92952,
+     0.36878
+    ],
+    "mixamorigHead": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "mixamorigLeftShoulder": [
+     0.86189,
+     -0.00057,
+     -0.50709
+    ],
+    "mixamorigLeftArm": [
+     0.18023,
+     -0.95124,
+     0.25033
+    ],
+    "mixamorigLeftForeArm": [
+     0.10025,
+     -0.75188,
+     0.65163
+    ],
+    "mixamorigLeftHand": [
+     0.05015,
+     -0.79042,
+     0.6105
+    ],
+    "mixamorigRightShoulder": [
+     -0.86189,
+     -0.00057,
+     -0.50709
+    ],
+    "mixamorigRightArm": [
+     -0.18023,
+     -0.95124,
+     0.25033
+    ],
+    "mixamorigRightForeArm": [
+     -0.10025,
+     -0.75188,
+     0.65163
+    ],
+    "mixamorigRightHand": [
+     -0.05015,
+     -0.79042,
+     0.6105
+    ],
+    "mixamorigLeftUpLeg": [
+     0.06042,
+     0.05035,
+     0.9969
+    ],
+    "mixamorigLeftLeg": [
+     0.04032,
+     -0.99792,
+     0.0504
+    ],
+    "mixamorigLeftFoot": [
+     -0.0,
+     -0.5291,
+     0.84856
+    ],
+    "mixamorigLeftToeBase": [
+     -0.00634,
+     0.00102,
+     0.99998
+    ],
+    "mixamorigRightUpLeg": [
+     -0.06042,
+     0.05035,
+     0.9969
+    ],
+    "mixamorigRightLeg": [
+     -0.04032,
+     -0.99792,
+     0.0504
+    ],
+    "mixamorigRightFoot": [
+     0.0,
+     -0.5291,
+     0.84856
+    ],
+    "mixamorigRightToeBase": [
+     0.00634,
+     0.00102,
+     0.99998
+    ]
+   }
+  },
+  {
+   "key": "squat",
+   "name": "下蹲",
+   "dirs": {
+    "mixamorigHips": [
+     0.0,
+     0.96834,
+     0.24964
+    ],
+    "mixamorigSpine": [
+     0.0,
+     0.95358,
+     0.30113
+    ],
+    "mixamorigSpine1": [
+     0.0,
+     0.98865,
+     0.15022
+    ],
+    "mixamorigSpine2": [
+     0.0,
+     0.98816,
+     0.15344
+    ],
+    "mixamorigNeck": [
+     0.0,
+     0.84709,
+     0.53145
+    ],
+    "mixamorigHead": [
+     0.0,
+     0.99494,
+     -0.1005
+    ],
+    "mixamorigLeftShoulder": [
+     0.86189,
+     0.09153,
+     -0.49877
+    ],
+    "mixamorigLeftArm": [
+     0.1502,
+     -0.82107,
+     0.55072
+    ],
+    "mixamorigLeftForeArm": [
+     0.05012,
+     -0.5212,
+     0.85196
+    ],
+    "mixamorigLeftHand": [
+     0.01985,
+     -0.57942,
+     0.81479
+    ],
+    "mixamorigRightShoulder": [
+     -0.86189,
+     0.09153,
+     -0.49877
+    ],
+    "mixamorigRightArm": [
+     -0.1502,
+     -0.82107,
+     0.55072
+    ],
+    "mixamorigRightForeArm": [
+     -0.05012,
+     -0.5212,
+     0.85196
+    ],
+    "mixamorigRightHand": [
+     -0.01985,
+     -0.57942,
+     0.81479
+    ],
+    "mixamorigLeftUpLeg": [
+     0.08038,
+     -0.2512,
+     0.96459
+    ],
+    "mixamorigLeftLeg": [
+     0.04987,
+     -0.98749,
+     0.14962
+    ],
+    "mixamorigLeftFoot": [
+     0.05124,
+     -0.30261,
+     0.95174
+    ],
+    "mixamorigLeftToeBase": [
+     0.0274,
+     0.24799,
+     0.96838
+    ],
+    "mixamorigRightUpLeg": [
+     -0.08038,
+     -0.2512,
+     0.96459
+    ],
+    "mixamorigRightLeg": [
+     -0.04987,
+     -0.98749,
+     0.14962
+    ],
+    "mixamorigRightFoot": [
+     -0.05124,
+     -0.30261,
+     0.95174
+    ],
+    "mixamorigRightToeBase": [
+     -0.0274,
+     0.24799,
+     0.96838
+    ]
+   }
+  },
+  {
+   "key": "kneel",
+   "name": "跪姿",
+   "dirs": {
+    "mixamorigHips": [
+     0.0,
+     0.96834,
+     0.24964
+    ],
+    "mixamorigSpine": [
+     0.0,
+     0.9982,
+     -0.05989
+    ],
+    "mixamorigSpine1": [
+     0.0,
+     0.97697,
+     -0.21336
+    ],
+    "mixamorigSpine2": [
+     0.0,
+     0.97766,
+     -0.21018
+    ],
+    "mixamorigNeck": [
+     0.0,
+     0.98114,
+     0.19328
+    ],
+    "mixamorigHead": [
+     0.0,
+     0.98327,
+     -0.18217
+    ],
+    "mixamorigLeftShoulder": [
+     0.86189,
+     -0.09294,
+     -0.49851
+    ],
+    "mixamorigLeftArm": [
+     0.85647,
+     -0.50082,
+     -0.12506
+    ],
+    "mixamorigLeftForeArm": [
+     0.82561,
+     -0.50772,
+     0.24613
+    ],
+    "mixamorigLeftHand": [
+     0.79839,
+     -0.56569,
+     0.2063
+    ],
+    "mixamorigRightShoulder": [
+     -0.86189,
+     -0.09294,
+     -0.49851
+    ],
+    "mixamorigRightArm": [
+     -0.85647,
+     -0.50082,
+     -0.12506
+    ],
+    "mixamorigRightForeArm": [
+     -0.82561,
+     -0.50772,
+     0.24613
+    ],
+    "mixamorigRightHand": [
+     -0.79839,
+     -0.56569,
+     0.2063
+    ],
+    "mixamorigLeftUpLeg": [
+     0.03992,
+     -0.98793,
+     0.14969
+    ],
+    "mixamorigLeftLeg": [
+     0.02016,
+     -0.25196,
+     -0.96753
+    ],
+    "mixamorigLeftFoot": [
+     0.0,
+     -0.43921,
+     -0.89838
+    ],
+    "mixamorigLeftToeBase": [
+     0.01637,
+     -0.84836,
+     -0.52916
+    ],
+    "mixamorigRightUpLeg": [
+     -0.03992,
+     -0.98793,
+     0.14969
+    ],
+    "mixamorigRightLeg": [
+     -0.02016,
+     -0.25196,
+     -0.96753
+    ],
+    "mixamorigRightFoot": [
+     -0.0,
+     -0.43921,
+     -0.89838
+    ],
+    "mixamorigRightToeBase": [
+     -0.01637,
+     -0.84836,
+     -0.52916
+    ]
+   }
+  },
+  {
+   "key": "walk-stride",
+   "name": "行走跨步",
+   "dirs": {
+    "mixamorigHips": [
+     0.0,
+     0.96834,
+     0.24964
+    ],
+    "mixamorigSpine": [
+     0.0,
+     0.99241,
+     0.12295
+    ],
+    "mixamorigSpine1": [
+     0.0,
+     0.9982,
+     0.05989
+    ],
+    "mixamorigSpine2": [
+     0.0,
+     0.998,
+     0.06314
+    ],
+    "mixamorigNeck": [
+     0.0,
+     0.89182,
+     0.45239
+    ],
+    "mixamorigHead": [
+     0.0,
+     0.99579,
+     0.09162
+    ],
+    "mixamorigLeftShoulder": [
+     0.86189,
+     0.04589,
+     -0.50501
+    ],
+    "mixamorigLeftArm": [
+     0.22011,
+     -0.87454,
+     -0.43212
+    ],
+    "mixamorigLeftForeArm": [
+     0.14951,
+     -0.92999,
+     -0.3358
+    ],
+    "mixamorigLeftHand": [
+     0.0813,
+     -0.92636,
+     -0.36776
+    ],
+    "mixamorigRightShoulder": [
+     -0.86189,
+     0.04589,
+     -0.50501
+    ],
+    "mixamorigRightArm": [
+     -0.22011,
+     -0.93871,
+     0.26529
+    ],
+    "mixamorigRightForeArm": [
+     -0.15038,
+     -0.89447,
+     0.42108
+    ],
+    "mixamorigRightHand": [
+     -0.10404,
+     -0.92353,
+     0.36915
+    ],
+    "mixamorigLeftUpLeg": [
+     0.05009,
+     -0.71121,
+     0.70119
+    ],
+    "mixamorigLeftLeg": [
+     0.02994,
+     -0.96792,
+     0.24946
+    ],
+    "mixamorigLeftFoot": [
+     0.0,
+     -0.83662,
+     0.54779
+    ],
+    "mixamorigLeftToeBase": [
+     -0.00903,
+     -0.41917,
+     0.90786
+    ],
+    "mixamorigRightUpLeg": [
+     -0.05007,
+     -0.89129,
+     -0.45065
+    ],
+    "mixamorigRightLeg": [
+     -0.02994,
+     -0.96792,
+     -0.24946
+    ],
+    "mixamorigRightFoot": [
+     -0.0,
+     -0.9798,
+     0.19996
+    ],
+    "mixamorigRightToeBase": [
+     0.00892,
+     -0.72491,
+     0.68879
+    ]
+   }
+  },
+  {
+   "key": "lie-down",
+   "name": "平躺",
+   "dirs": {
+    "mixamorigHips": [
+     0.0,
+     0.0605,
+     -0.99817
+    ],
+    "mixamorigSpine": [
+     0.0,
+     0.04037,
+     -0.99918
+    ],
+    "mixamorigSpine1": [
+     0.0,
+     0.0202,
+     -0.9998
+    ],
+    "mixamorigSpine2": [
+     0.0,
+     0.0202,
+     -0.9998
+    ],
+    "mixamorigNeck": [
+     0.0,
+     0.04037,
+     -0.99918
+    ],
+    "mixamorigHead": [
+     0.0,
+     0.22119,
+     -0.97523
+    ],
+    "mixamorigLeftShoulder": [
+     0.86189,
+     -0.50652,
+     -0.02415
+    ],
+    "mixamorigLeftArm": [
+     0.25074,
+     -0.1003,
+     -0.96284
+    ],
+    "mixamorigLeftForeArm": [
+     0.19971,
+     -0.04993,
+     -0.97858
+    ],
+    "mixamorigLeftHand": [
+     0.22632,
+     -0.11948,
+     -0.9667
+    ],
+    "mixamorigRightShoulder": [
+     -0.86189,
+     -0.50652,
+     -0.02415
+    ],
+    "mixamorigRightArm": [
+     -0.25074,
+     -0.1003,
+     -0.96284
+    ],
+    "mixamorigRightForeArm": [
+     -0.19971,
+     -0.04993,
+     -0.97858
+    ],
+    "mixamorigRightHand": [
+     -0.22632,
+     -0.11948,
+     -0.9667
+    ],
+    "mixamorigLeftUpLeg": [
+     0.05035,
+     -0.06042,
+     -0.9969
+    ],
+    "mixamorigLeftLeg": [
+     0.03996,
+     -0.01998,
+     -0.999
+    ],
+    "mixamorigLeftFoot": [
+     0.0,
+     0.93715,
+     -0.34894
+    ],
+    "mixamorigLeftToeBase": [
+     -0.46988,
+     0.70915,
+     -0.52565
+    ],
+    "mixamorigRightUpLeg": [
+     -0.05035,
+     -0.06042,
+     -0.9969
+    ],
+    "mixamorigRightLeg": [
+     -0.03996,
+     -0.01998,
+     -0.999
+    ],
+    "mixamorigRightFoot": [
+     -0.0,
+     0.93715,
+     -0.34894
+    ],
+    "mixamorigRightToeBase": [
+     0.46988,
+     0.70915,
+     -0.52565
+    ]
+   }
+  },
+  {
+   "key": "bow",
+   "name": "鞠躬",
+   "dirs": {
+    "mixamorigHips": [
+     0.0,
+     0.96834,
+     0.24964
+    ],
+    "mixamorigSpine": [
+     0.0,
+     0.89241,
+     0.45122
+    ],
+    "mixamorigSpine1": [
+     0.0,
+     0.83662,
+     0.54779
+    ],
+    "mixamorigSpine2": [
+     0.0,
+     0.83662,
+     0.54779
+    ],
+    "mixamorigNeck": [
+     0.0,
+     0.55205,
+     0.83381
+    ],
+    "mixamorigHead": [
+     0.0,
+     0.93715,
+     0.34894
+    ],
+    "mixamorigLeftShoulder": [
+     0.86189,
+     0.28931,
+     -0.41646
+    ],
+    "mixamorigLeftArm": [
+     0.20051,
+     -0.93238,
+     0.30077
+    ],
+    "mixamorigLeftForeArm": [
+     0.15057,
+     -0.90339,
+     0.40151
+    ],
+    "mixamorigLeftHand": [
+     0.13003,
+     -0.93309,
+     0.3353
+    ],
+    "mixamorigRightShoulder": [
+     -0.86189,
+     0.28931,
+     -0.41646
+    ],
+    "mixamorigRightArm": [
+     -0.20051,
+     -0.93238,
+     0.30077
+    ],
+    "mixamorigRightForeArm": [
+     -0.15057,
+     -0.90339,
+     0.40151
+    ],
+    "mixamorigRightHand": [
+     -0.13003,
+     -0.93309,
+     0.3353
+    ],
+    "mixamorigLeftUpLeg": [
+     0.0,
+     -0.99707,
+     0.07644
+    ],
+    "mixamorigLeftLeg": [
+     0.0,
+     -0.99512,
+     -0.09863
+    ],
+    "mixamorigLeftFoot": [
+     0.0,
+     -0.53,
+     0.848
+    ],
+    "mixamorigLeftToeBase": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "mixamorigRightUpLeg": [
+     0.0,
+     -0.99707,
+     0.07644
+    ],
+    "mixamorigRightLeg": [
+     0.0,
+     -0.99512,
+     -0.09863
+    ],
+    "mixamorigRightFoot": [
+     0.0,
+     -0.53,
+     0.848
+    ],
+    "mixamorigRightToeBase": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   }
+  }
+ ]
+}

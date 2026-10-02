@@ -30,6 +30,7 @@ import type {PropTypeConfig_AllSimples} from '@dreamerbird/core/types/public'
 import type {ISimplePropEditorReactProps} from '@dreamerbird/studio/propEditors/simpleEditors/ISimplePropEditorReactProps'
 import type {ISheetObject} from '@dreamerbird/core'
 import {getLibrary, useLibraryEntries} from '../assetLibrary/library'
+import {seedBuiltinPoses} from '../assetLibrary/seedBuiltinPoses'
 import type {PoseEntry} from '../assetLibrary/types'
 import {getPlacementEntryForObject} from '../PlacementManager'
 import {buildPoseOptions} from './poseOptions'
@@ -46,6 +47,10 @@ const PosePropEditor: React.FC<
 > = ({editingTools, value, obj}) => {
   const {t} = useI18n()
   const poseEntries = useLibraryEntries('pose') as PoseEntry[]
+  // 内置姿势播种保底:姿势行首次出现时触发(模块级幂等,失败自动重试)
+  useEffect(() => {
+    seedBuiltinPoses()
+  }, [])
   const [pickerOpen, setPickerOpen] = useState(false)
   // 值区域 hover 态:对齐 BasicStringInput(静态透明无边框,hover 出底出边)
   const [valueHovered, setValueHovered] = useState(false)
