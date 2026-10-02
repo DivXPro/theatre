@@ -1,7 +1,10 @@
 // packages/playground/src/shared/camera/assetLibrary/seedBuiltinPoses.ts
 /**
- * 随包内置姿势播种(2026-10-02 内置姿势管线):把构建期产物 seedPoses.ts
- * 写进资产库,姿势选择框开箱即有 12 个基础姿势。
+ * 随包内置姿势播种(2026-10-02 内置姿势管线):把构建期产物写进资产库,
+ * 姿势选择框开箱即有姿势可用。两批来源:
+ *   - seedPoses:12 个程序化基础姿势(blender_dump.py 按方向摆 metarig)
+ *   - seedPosesDpl:58 个 Dynamic Pose Library 姿势(blender_dump_dpl.py
+ *     读 BlendAtlas 免费姿势包 .blend,含手指映射)
  *
  * 与模型播种(seedBuiltinModels)同模式:模块级幂等,失败只告警不阻塞。
  * rig 关联族代表 Y Bot 的模型条目(姿势是 Mixamo 骨架骨向换算产物);
@@ -11,6 +14,7 @@
 import {getLibrary} from './library'
 import type {Library} from './library'
 import {seedPoses} from './seedPoses'
+import {seedPosesDpl} from './seedPosesDpl'
 import type {ModelEntry} from './types'
 
 const SEED_RIG_MODEL_NAME = 'Y Bot'
@@ -64,7 +68,8 @@ export async function seedBuiltinPosesInto(
     )
     return 0
   }
-  for (const p of seedPoses) {
+  const all = [...seedPoses, ...seedPosesDpl]
+  for (const p of all) {
     await lib.putEntry({
       id: 'seed-pose-' + p.key,
       kind: 'pose',
@@ -74,5 +79,5 @@ export async function seedBuiltinPosesInto(
       createdAt: Date.now(),
     })
   }
-  return seedPoses.length
+  return all.length
 }

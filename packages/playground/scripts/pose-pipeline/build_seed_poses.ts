@@ -3,15 +3,17 @@
  * 内置姿势管线第二步:骨向 JSON → 最终 PoseBones → seedPoses.ts
  *
  * 用法(仓库根或 playground 目录):
- *   npx tsx scripts/pose-pipeline/build_seed_poses.ts
+ *   npx tsx scripts/pose-pipeline/build_seed_poses.ts [输入.json] [输出.ts] [导出名]
+ * 默认(无参):poses_directions.json → seedPoses.ts(export seedPoses)
+ * DPL 批:poses_directions_dpl.json → seedPosesDpl.ts(export seedPosesDpl)
  *
  * 输入:
- *   - scripts/pose-pipeline/poses_directions.json(blender_dump.py 产物,
- *     每姿势 22 根映射骨的世界 Y 目标方向,three 系)
+ *   - scripts/pose-pipeline/*.json(blender_dump*.py 产物,
+ *     每姿势映射骨的世界 Y 目标方向,three 系)
  *   - src/shared/camera/assetLibrary/seedModels/Y Bot.fbx(族代表骨架,
  *     提 rest 基准:主套骨层级 + rest local/world 四元数)
  * 输出:
- *   - src/shared/camera/assetLibrary/seedPoses.ts(内嵌 12 个姿势的
+ *   - src/shared/camera/assetLibrary/seedPoses*.ts(内嵌姿势的
  *     PoseBones,随包播种;运行时不做换算)
  *
  * 重名骨处理:Y Bot.fbx 有两套同名骨骼(蒙皮分两层),traverse 先序
@@ -32,11 +34,14 @@ const fbxPath = path.join(
   pkgRoot,
   'src/shared/camera/assetLibrary/seedModels/Y Bot.fbx',
 )
-const dirsPath = path.join(here, 'poses_directions.json')
-const outPath = path.join(
-  pkgRoot,
-  'src/shared/camera/assetLibrary/seedPoses.ts',
-)
+// 可选参数:输入 JSON / 输出 ts / 导出变量名
+const [
+  inName = 'poses_directions.json',
+  outName = 'seedPoses.ts',
+  exportName = 'seedPoses',
+] = process.argv.slice(2)
+const dirsPath = path.join(here, inName)
+const outPath = path.join(pkgRoot, 'src/shared/camera/assetLibrary', outName)
 
 // ---------- 1. rest 基准(主套,每骨名取首次) ----------
 const buf = fs.readFileSync(fbxPath)
@@ -69,6 +74,7 @@ console.log(`rest 基准: ${restBones.length} 根主套骨`)
 
 // ---------- 2. 逐姿势换算 ----------
 const dirsDoc = JSON.parse(fs.readFileSync(dirsPath, 'utf-8')) as {
+  source?: string
   poses: {
     key: string
     name: string
@@ -99,15 +105,15 @@ const seedPoses = dirsDoc.poses.map((p) => ({
 }))
 console.log(`换算姿势: ${seedPoses.map((p) => p.key).join(', ')}`)
 
-// ---------- 3. 写 seedPoses.ts ----------
+// ---------- 3. 写产物 ts ----------
 const body = `// 本文件由 scripts/pose-pipeline/build_seed_poses.ts 生成,勿手改。
-// 重新生成:npx tsx scripts/pose-pipeline/build_seed_poses.ts
-// (骨向来源:scripts/pose-pipeline/blender_dump.py → poses_directions.json)
+// 重新生成:npx tsx scripts/pose-pipeline/build_seed_poses.ts ${inName} ${outName} ${exportName}
+// 骨向来源:${dirsDoc.source ?? inName}
 import type {PoseBones} from '../poseMode/poseOverride'
 
 export type SeedPose = {key: string; name: string; bones: PoseBones}
 
-export const seedPoses: SeedPose[] = ${JSON.stringify(seedPoses, null, 1)}
+export const ${exportName}: SeedPose[] = ${JSON.stringify(seedPoses, null, 1)}
 `
 fs.writeFileSync(outPath, body)
-console.log(`已写出 ${path.relative(pkgRoot, outPath)}`)
+console.log(`已写出 ${path.relative(pkgRoot, outPath)}(${exportName})`)
