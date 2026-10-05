@@ -157,6 +157,10 @@ import {isPoseExitGuardedTarget} from './poseMode/poseExitGuard'
 import {poseStatusText} from './poseStatusText'
 import PosePropEditor from './poseMode/PosePropEditor'
 import {
+  GesturePropEditorLeft,
+  GesturePropEditorRight,
+} from './gesturePropsEditor'
+import {
   registerCustomPropEditor,
   unregisterCustomPropEditor,
 } from '@dreamerbird/studio/propEditors/customPropEditors'
@@ -1535,6 +1539,10 @@ function App({
         bones,
         createdAt: Date.now(),
       })
+      // 自存姿势顺手补缩略图(运行时离屏渲染,后台进行,失败只告警)
+      void import('./assetLibrary/poseThumbnail')
+        .then((m) => m.backfillPoseThumbnails(getLibrary()))
+        .catch((err) => console.warn('[assetLibrary] 姿势缩略图补图失败', err))
     } catch (err) {
       console.warn('[assetLibrary] 存姿势失败', err)
     }
@@ -1604,7 +1612,14 @@ function App({
   // 组件自给自足(i18n/库条目/骨架族都经模块级通路),无需闭包刷新
   useEffect(() => {
     registerCustomPropEditor('pose', PosePropEditor)
-    return () => unregisterCustomPropEditor('pose')
+    // 手势属性编辑器(2026-10-05):纯选择版姿势编辑器,左右手各一个 key
+    registerCustomPropEditor('gestureL', GesturePropEditorLeft)
+    registerCustomPropEditor('gestureR', GesturePropEditorRight)
+    return () => {
+      unregisterCustomPropEditor('pose')
+      unregisterCustomPropEditor('gestureL')
+      unregisterCustomPropEditor('gestureR')
+    }
   }, [])
 
   // ── 宿主能力句柄(规格:host-picker-integration)────────────

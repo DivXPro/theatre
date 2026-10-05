@@ -18,17 +18,23 @@ export type PoseOption = {
   label: string
   disabled?: boolean
   hint?: string
+  /** 缩略图 URL(条目带 thumbnailId 且解析完成时由调用方注入) */
+  thumbUrl?: string
 }
 
 export function buildPoseOptions(args: {
   /** 当前 pose 属性值(JSON 字符串,''=绑定/T 姿势) */
   poseJson: string
-  libEntries: Pick<PoseEntry, 'id' | 'name' | 'rig'>[]
+  libEntries: Pick<PoseEntry, 'id' | 'name' | 'rig' | 'thumbnailId'>[]
   /** 当前选中模型的骨架族;缺省=不过滤 */
   selectedRig?: string
+  /** 缩略图 URL 解析(懒加载 hook 的 getThumbUrl);缺省=无图 */
+  thumbUrlOf?: (entry: {id: string; thumbnailId?: string}) => string | undefined
+  /** 显示名解析(poseEntryName:种子条目查 i18n 词典);缺省=条目名原文 */
+  nameOf?: (entry: {id: string; name: string}) => string
   t: (k: string) => string
 }): {options: PoseOption[]; current: PoseCurrentKey} {
-  const {poseJson, libEntries, selectedRig, t} = args
+  const {poseJson, libEntries, selectedRig, thumbUrlOf, nameOf, t} = args
   const currentValue = parsePoseValue(poseJson)
   const current: PoseCurrentKey = !currentValue
     ? 'bind'
@@ -40,11 +46,13 @@ export function buildPoseOptions(args: {
 
   for (const entry of libEntries) {
     const rigMismatch = selectedRig !== undefined && entry.rig !== selectedRig
+    const thumbUrl = thumbUrlOf?.(entry)
     options.push({
       key: `lib:${entry.id}`,
-      label: entry.name,
+      label: nameOf?.(entry) ?? entry.name,
       disabled: rigMismatch || undefined,
       hint: rigMismatch ? t('pg.lib.rigMismatch') : undefined,
+      ...(thumbUrl ? {thumbUrl} : {}),
     })
   }
   // 当前值引用的库条目已不在库里(被删/多端缺条目):追加置灰缺失项

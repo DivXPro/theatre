@@ -16,6 +16,7 @@ import {
   type InterpolationVars,
   type Messages,
 } from '@dreamerbird/studio/i18n'
+import {poseNameEn, poseNameZhCN} from './poseNameMessages'
 
 export const en: Messages = {
   'pg.toolbar.addModel': 'Add model',
@@ -91,6 +92,11 @@ export const en: Messages = {
   'pg.props.animation': 'Animation',
   'pg.props.pose': 'Pose',
   'pg.props.poseOverride': 'Pose override',
+  'pg.props.gestureL': 'Left gesture',
+  'pg.props.gestureR': 'Right gesture',
+  'pg.gesture.none': 'No gesture',
+  'pg.gesture.selectorTitleL': 'Left-hand gesture',
+  'pg.gesture.selectorTitleR': 'Right-hand gesture',
   'pg.props.source': 'Source file',
   'pg.parts.head': 'Head',
   'pg.parts.chest': 'Chest',
@@ -217,6 +223,11 @@ export const zhCN: Messages = {
   'pg.props.animation': '动作',
   'pg.props.pose': '姿势',
   'pg.props.poseOverride': '姿势覆盖',
+  'pg.props.gestureL': '左手势',
+  'pg.props.gestureR': '右手势',
+  'pg.gesture.none': '无手势',
+  'pg.gesture.selectorTitleL': '选择左手势',
+  'pg.gesture.selectorTitleR': '选择右手势',
   'pg.props.source': '来源文件',
   'pg.parts.head': '头',
   'pg.parts.chest': '胸口',
@@ -270,8 +281,9 @@ export const zhCN: Messages = {
   'pg.import.reason.animationExists': '动作已在库中',
 }
 
-registerMessages('en', en)
-registerMessages('zh-CN', zhCN)
+// 姿势名词典单独成册(poseNameMessages.ts,约 180 条 × 双语),此处合并注册
+registerMessages('en', {...en, ...poseNameEn})
+registerMessages('zh-CN', {...zhCN, ...poseNameZhCN})
 // navigator.language 是 'zh' / 'zh-TW' 等时也能落到 zh-CN 词典
 registerFallback('zh', 'zh-CN')
 

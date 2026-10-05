@@ -10,12 +10,16 @@ export function poseDisplayText(args: {
   /** 当前 pose 属性值(JSON 字符串,''=绑定/T 姿势) */
   poseJson: string
   libEntries: Pick<PoseEntry, 'id' | 'name' | 'rig'>[]
+  /** 显示名解析(poseEntryName:种子条目查 i18n 词典);缺省=条目名原文 */
+  nameOf?: (entry: {id: string; name: string}) => string
   t: (k: string) => string
 }): string {
-  const {poseJson, libEntries, t} = args
+  const {poseJson, libEntries, nameOf, t} = args
   const value = parsePoseValue(poseJson)
   if (!value) return t('pg.pose.tPose')
   if (value.kind === 'custom') return t('pg.pose.statusCustom')
   const entry = libEntries.find((e) => e.id === value.id)
-  return entry ? entry.name : `${value.id}${t('pg.pose.libMissing')}`
+  return entry
+    ? nameOf?.(entry) ?? entry.name
+    : `${value.id}${t('pg.pose.libMissing')}`
 }

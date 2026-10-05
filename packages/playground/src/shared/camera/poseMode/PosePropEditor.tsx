@@ -22,7 +22,7 @@
  * 框体经 createPortal 挂到 document.body:属性面板在 shadow DOM 里,停靠
  * 框要盖全画布必须脱离 shadow 根(React context 穿 portal 保留,i18n 照常)。
  */
-import React, {useContext, useEffect, useState} from 'react'
+import React, {useContext, useEffect, useMemo, useState} from 'react'
 import {createPortal} from 'react-dom'
 import {useI18n} from '@dreamerbird/studio/i18n'
 import {PopoverAutoCloseLock} from '@dreamerbird/studio/uiComponents/Popover/usePopover'
@@ -31,12 +31,14 @@ import type {ISimplePropEditorReactProps} from '@dreamerbird/studio/propEditors/
 import type {ISheetObject} from '@dreamerbird/core'
 import {getLibrary, useLibraryEntries} from '../assetLibrary/library'
 import {seedBuiltinPoses} from '../assetLibrary/seedBuiltinPoses'
+import {useModelThumbUrl} from '../assetLibrary/useModelThumbUrl'
 import type {PoseEntry} from '../assetLibrary/types'
 import {getPlacementEntryForObject} from '../PlacementManager'
 import {buildPoseOptions} from './poseOptions'
-import type {PoseOptionKey} from './poseOptions'
 import {poseDisplayText} from './poseDisplayText'
+import {poseEntryName} from '../poseNames'
 import {serializeLibPose} from './poseValue'
+import {isHandPoseEntry} from '../gestureProps'
 import {getRegisteredPicker} from '../pickerRegistry'
 import {PosePickerFrame} from './PosePickerFrame'
 
@@ -86,18 +88,31 @@ const PosePropEditor: React.FC<
   }, [obj])
 
   const poseJson = (value as string) ?? ''
+  // 姿势框回归纯身体姿势(2026-10-05):纯手势条目(全是手指骨)挪去
+  // 左手势/右手势选择框;显示文本仍查全表(旧值引用了手势条目也显名)
+  const bodyPoseEntries = useMemo(
+    () => poseEntries.filter((e) => !isHandPoseEntry(e)),
+    [poseEntries],
+  )
+  // 缩略图懒加载(条目带 thumbnailId 时给选择框选项配图)
+  const {getThumbUrl} = useModelThumbUrl()
+  // 显示名:种子条目查 i18n 词典(纯姿势名),用户自存姿势回退条目名原文
+  const nameOf = (e: {id: string; name: string}) => poseEntryName(e, t)
   const {options, current} = buildPoseOptions({
     poseJson,
-    libEntries: poseEntries,
+    libEntries: bodyPoseEntries,
     selectedRig: rig,
+    thumbUrlOf: getThumbUrl,
+    nameOf,
     t,
   })
 
-  const handlePick = (key: PoseOptionKey): void => {
+  // 选后不关框(2026-10-05 与用户对齐):框留着可连续换姿势看效果,
+  // 高亮随值刷新;关闭走 ✕/Esc
+  const handlePick = (key: string): void => {
     editingTools.permanentlySetValue(
       key === 'bind' ? '' : serializeLibPose(key.slice(4)),
     )
-    setPickerOpen(false)
   }
 
   // 每次开框现读注册表:宿主注册/注销无需订阅,下一次开框即生效
@@ -107,7 +122,7 @@ const PosePropEditor: React.FC<
     <>
       <div
         data-testid="PosePropValue"
-        title={poseDisplayText({poseJson, libEntries: poseEntries, t})}
+        title={poseDisplayText({poseJson, libEntries: poseEntries, nameOf, t})}
         onClick={() => setPickerOpen(true)}
         onMouseEnter={() => setValueHovered(true)}
         onMouseLeave={() => setValueHovered(false)}
@@ -132,7 +147,7 @@ const PosePropEditor: React.FC<
           userSelect: 'none',
         }}
       >
-        {poseDisplayText({poseJson, libEntries: poseEntries, t})}
+        {poseDisplayText({poseJson, libEntries: poseEntries, nameOf, t})}
       </div>
       {pickerOpen &&
         createPortal(
