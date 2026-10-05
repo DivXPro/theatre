@@ -1,7 +1,8 @@
 // packages/playground/src/shared/camera/assetLibrary/useModelThumbUrl.ts
 /**
- * 模型缩略图懒加载 hook:从 AssetLibraryPanel 抽出(2026-10-01 注册制改造),
- * 内置模型框体与注册进站的宿主模型框体(ModelPickerProps.getThumbUrl)共用。
+ * 缩略图懒加载 hook:从 AssetLibraryPanel 抽出(2026-10-01 注册制改造),
+ * 内置模型框体与注册进站的宿主模型框体(ModelPickerProps.getThumbUrl)共用;
+ * 2026-10-05 起姿势/手势选择框也用它(姿势条目的 QBX 预览图)。
  *
  * 用法:卡片渲染时调 getThumbUrl——命中缓存直接给 URL;未命中触发异步
  * 加载并先返回 undefined,加载完成 setState 触发重渲后命中。并发同一
@@ -11,10 +12,12 @@
  */
 import {useEffect, useRef, useState} from 'react'
 import {getLibrary} from './library'
-import type {ModelEntry} from './types'
+
+/** 结构只要 id + thumbnailId:模型/姿势条目都满足 */
+export type ThumbEntry = {id: string; thumbnailId?: string}
 
 export function useModelThumbUrl(): {
-  getThumbUrl: (entry: ModelEntry) => string | undefined
+  getThumbUrl: (entry: ThumbEntry) => string | undefined
   dropThumbUrl: (id: string) => void
 } {
   const [thumbUrls, setThumbUrls] = useState<Record<string, string>>({})
@@ -29,7 +32,7 @@ export function useModelThumbUrl(): {
     }
   }, [])
 
-  const getThumbUrl = (entry: ModelEntry): string | undefined => {
+  const getThumbUrl = (entry: ThumbEntry): string | undefined => {
     if (!entry.thumbnailId) return undefined
     const cached = thumbUrls[entry.id]
     if (cached) return cached

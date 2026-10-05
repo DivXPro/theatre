@@ -99,7 +99,10 @@ export class Library {
     const ids = new Set<string>()
     for (const e of entries) {
       if ('blobId' in e) ids.add(e.blobId)
-      if (e.kind === 'model' && e.thumbnailId) ids.add(e.thumbnailId)
+      // thumbnailId 不再是模型专属(2026-10-05 起姿势条目也挂预览图),
+      // 结构性判断:有字段且非空就算引用,否则启动清扫会把手势预览图
+      // 当孤儿删掉(条目还在、图没了)
+      if ('thumbnailId' in e && e.thumbnailId) ids.add(e.thumbnailId)
     }
     return ids
   }
@@ -111,7 +114,7 @@ export class Library {
       if (!entry) return
       const own: string[] = []
       if ('blobId' in entry) own.push(entry.blobId)
-      if (entry.kind === 'model' && entry.thumbnailId)
+      if ('thumbnailId' in entry && entry.thumbnailId)
         own.push(entry.thumbnailId)
       await this.backend.deleteEntry(id)
       const referenced = await this.referencedBlobIds()

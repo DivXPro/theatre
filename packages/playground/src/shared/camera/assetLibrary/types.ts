@@ -24,6 +24,8 @@ export type PoseEntry = {
   kind: 'pose'
   name: string
   rig: RigId
+  /** 缩略图 blob id(QBX 手势:源包内嵌预览图,管线期导出随包播种) */
+  thumbnailId?: string
   bones: Record<
     string,
     {
