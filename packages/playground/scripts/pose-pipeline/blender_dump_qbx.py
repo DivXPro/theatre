@@ -16,11 +16,24 @@ blender_assets.cats 的 UUID → catalog 路径(如 Female/03_Hands/01_Base)。
     pose 骨世界 Y;赋前全骨 matrix_basis 复位(未 key 的骨保持上一姿势的坑)
   - 只取 */03_Hands/* 目录(01_Base/02_Other/03_Signs/04_Weapons),
     且只输出 30 根手指骨(不含手腕)——产物是叠加用的纯手势片段
-  - 每手势 Female/Male 两份去重留 Female(骨向是世界系,性别差由
-    retarget 吸收),L/R 手都保留
+  - 每手势 Female/Male 两份去重留 Female,L/R 手都保留
+  - 方向是「手腕相对」(v2,2026-10-05 起):源包模型手臂下垂,按世界方向
+    提取会把手臂姿态烤进手势,应用到 T 姿势骨架时手指相对手腕错位
+    (拇指最显眼,实测最差 120°)。改为每姿势先取手腕骨(hand.L/R)的
+    世界旋转 W,手指方向存 W⁻¹·dir;build 侧用目标骨架手腕 rest 还原
+  - 按侧裁骨(2026-10-05 二轮):源包有的 action 名字没带侧(Peace Flipped
+    其实是左手)或侧标在名字中间(Gun 03 L ...),运行时的列表过滤靠名字
+    后缀,无后缀=双手手势会两侧都列——挂错侧应用就是「没效果」。
+    提取时先录 rest 基准,逐姿势量每侧与 rest 的最大偏差(未动侧恒
+    0.2°,动了的最小 14.5°,阈值 5°),未动侧的骨不写;恰好单侧动了
+    且名字没带侧后缀的,补上「· 左手/右手」。两侧都没动的(base=
+    rest 本体)保留双骨,当中立手势用
+  - 源包漏帧补丁(2026-10-05 三轮):FU R / Peace Flipped R 的右小指
+    三节完全没 key(Female/Male 版都恒等于 rest),左手对应姿势是蜷好
+    的——把左小指方向经世界镜像(x 取反)换算进右手腕系补上
 产物经 build_seed_poses.ts 换算成最终 PoseBones 后随包播种。
 """
-import bpy, json, re, sys
+import bpy, json, math, re, sys
 from pathlib import Path
 from mathutils import Matrix, Vector
 
@@ -37,6 +50,9 @@ for side_t, side_s in [('Left', 'L'), ('Right', 'R')]:
                 f'mixamorig{side_t}Hand{three_f}{i}',
                 f'{src_f}.0{i}.{side_s}',
             ))
+
+# 手腕骨(方向参考系):three 侧 → 源侧
+WRIST = {'Left': 'hand.L', 'Right': 'hand.R'}
 
 # 目录末段 → 显示名前缀
 CATEGORY = {
@@ -65,6 +81,28 @@ def to_three(d):
 
 def world_Y(arm, pb):
     return ((arm.matrix_world @ pb.matrix).to_3x3() @ Vector((0, 1, 0))).normalized()
+
+
+def capture_dirs(arm):
+    """当前 pose 下 30 根手指骨的手腕相对方向(向量,未转 three 系)+ 缺骨
+    + 两手腕的世界旋转(漏帧补丁做镜像换算要用)"""
+    wrist_rot = {}
+    wrist_world = {}
+    for side_t, src_name in WRIST.items():
+        pb = arm.pose.bones.get(src_name)
+        if pb is not None:
+            wrist_world[side_t] = (arm.matrix_world @ pb.matrix).to_3x3()
+            wrist_rot[side_t] = wrist_world[side_t].inverted()
+    dirs, miss = {}, []
+    for three_name, src_name in MAP:
+        pb = arm.pose.bones.get(src_name)
+        if pb is not None:
+            side_t = 'Left' if three_name.startswith('mixamorigLeft') else 'Right'
+            if side_t in wrist_rot:
+                dirs[three_name] = (wrist_rot[side_t] @ world_Y(arm, pb)).normalized()
+        else:
+            miss.append(src_name)
+    return dirs, miss, wrist_world
 
 
 def slug(s):
@@ -105,7 +143,20 @@ def main():
     if female.animation_data is None:
         female.animation_data_create()
 
+    # rest 基准:复位后采一遍,作「该侧动不动」的判定参照
+    for pb in female.pose.bones:
+        pb.matrix_basis = Matrix.Identity(4)
+    bpy.context.scene.frame_set(1)
+    bpy.context.view_layer.update()
+    rest_dirs, rest_miss, _ = capture_dirs(female)
+    assert not rest_miss, f'rest 缺骨: {rest_miss}'
+
+    SIDE_OF = lambda b: 'Left' if b.startswith('mixamorigLeft') else 'Right'
+    POSE_SIDE = {'Left': '左手', 'Right': '右手'}
+    SIDE_THRESHOLD = math.radians(5)  # 未动侧恒 ~0.2°,动了的最小 14.5°
+
     poses_out, skipped = [], []
+    raw = []
     seen_keys = set()
     for act, cat in picked:
         subcat = cat.rsplit('/', 1)[-1]
@@ -127,27 +178,82 @@ def main():
         bpy.context.scene.frame_set(frame)
         bpy.context.view_layer.update()
 
-        dirs, miss = {}, []
-        for three_name, src_name in MAP:
-            pb = female.pose.bones.get(src_name)
-            if pb is not None:
-                dirs[three_name] = to_three(world_Y(female, pb))
-            else:
-                miss.append(src_name)
+        dirs, miss, wrist_world = capture_dirs(female)
         if miss:
             skipped.append((act.name, f'缺骨 {len(miss)}: {miss[:3]}'))
             print('SKIP', act.name, f'缺 {len(miss)}/{len(MAP)} 骨')
             continue
+
+        # 按侧裁骨:偏差超阈值才算动了;两侧都没动(base=rest)按名字侧
+        # 留单骨(中立手势每侧有自己的条目),无名字侧才保留双骨
+        dev = {}
+        for side_t in ('Left', 'Right'):
+            dev[side_t] = max(
+                dirs[b].angle(rest_dirs[b])
+                for b in dirs
+                if SIDE_OF(b) == side_t
+            )
+        posed = [s for s in ('Left', 'Right') if dev[s] > SIDE_THRESHOLD]
+        if not posed:
+            posed = (
+                ['Left' if side == 'L' else 'Right']
+                if side
+                else ['Left', 'Right']
+            )
+        dirs = {b: u for b, u in dirs.items() if SIDE_OF(b) in posed}
+
         disp = f'{CATEGORY.get(subcat, subcat)} · {base}'
         if side:
             disp += f' · {SIDE_NAME[side]}'
-        poses_out.append({'key': key, 'name': disp, 'dirs': dirs})
-        print('POSE_OK', key, f'({len(dirs)} 骨)')
+            # 名字侧与实测动侧不一致 → 告警(包作者标错)
+            if len(posed) == 1 and posed[0] != ('Left' if side == 'L' else 'Right'):
+                print('WARN_SIDE', act.name, '名字侧', side, '实测动侧', posed)
+        elif len(posed) == 1:
+            # 名字没带侧但实测单侧动了 → 补侧后缀(否则运行时按双手手势
+            # 两侧都列,挂错侧应用无效果)
+            disp += f' · {POSE_SIDE[posed[0]]}'
+        raw.append({
+            'key': key,
+            'name': disp,
+            'dirs': dirs,
+            'wrist': wrist_world,
+        })
+        print('POSE_OK', key, f'({len(dirs)} 骨, 动侧 {"+".join(posed)})')
+
+    # 源包漏帧补丁:这两条右手 action 的右小指三节完全没 key(Female/Male
+    # 版都恒等于 rest,2026-10-05 探针实测),而左手对应姿势小指是蜷好的
+    # (作者意图明确)。把左小指方向经世界镜像(x 取反,角色关于 x=0 平面
+    # 对称)换算进右手腕系补上;其余 14 骨本就镜像一致,不动
+    PINKY_PATCH = [
+        ('qbx-hands-03-signs-fu-r', 'qbx-hands-03-signs-fu-l'),
+        ('qbx-hands-03-signs-peace-flipped-r', 'qbx-hands-03-signs-peace-flipped'),
+    ]
+    by_key = {r['key']: r for r in raw}
+    for dst_key, src_key in PINKY_PATCH:
+        dst, src = by_key.get(dst_key), by_key.get(src_key)
+        assert dst is not None and src is not None, f'补丁缺料: {dst_key}/{src_key}'
+        wr_inv = dst['wrist']['Right'].inverted()
+        for i in (1, 2, 3):
+            u_l = src['dirs'][f'mixamorigLeftHandPinky{i}']
+            world_l = (src['wrist']['Left'] @ u_l).normalized()
+            mirrored = Vector((-world_l.x, world_l.y, world_l.z))
+            dst['dirs'][f'mixamorigRightHandPinky{i}'] = (
+                wr_inv @ mirrored
+            ).normalized()
+        print('PATCH_PINKY', dst_key, '<-', src_key)
+
+    poses_out = [
+        {'key': r['key'], 'name': r['name'],
+         'dirs': {b: to_three(u) for b, u in r['dirs'].items()}}
+        for r in raw
+    ]
 
     doc = {
-        'format': 'pose-directions-v1',
+        'format': 'pose-directions-v2',
+        'space': 'wrist',
+        'wristBones': WRIST,
         'source': 'QBX Pose Asset Pack v1.1 (qbx.gumroad.com, 免费包)',
-        'coordinate': 'three (y-up, +z-forward)',
+        'coordinate': 'three (y-up, +z-forward);方向为手腕骨(hand.L/R)系',
         'poses': poses_out,
     }
     with open(out_path, 'w', encoding='utf-8') as fh:

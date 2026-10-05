@@ -11,94 +11,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '基础 · Base · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
+        rotation: [-0.02605, 0, -0.01095, -0.9996],
       },
       mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
+        rotation: [-0.01719, -0.00086, -0.04024, 0.99904],
       },
       mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
+        rotation: [0.00352, 0.0007, 0.06684, 0.99776],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
+        rotation: [-0.02324, 0, -0.00918, -0.99969],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
+        rotation: [-0.01332, -0.00056, -0.02951, 0.99948],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
+        rotation: [0.03767, 0.00163, 0.08745, 0.99546],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
+        rotation: [0.13566, 0.19721, -0.40854, -0.8808],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
+        rotation: [-0.17502, 0.05603, -0.01927, 0.98278],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
+        rotation: [0.17093, 0.00406, -0.07171, 0.98266],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
+        rotation: [0.00329, 0, 0.02148, -0.99976],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
+        rotation: [0.0249, 0.0006, -0.02057, 0.99948],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
+        rotation: [0.05616, 0.00449, 0.0981, 0.99358],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
+        rotation: [-0.00445, 0, 0.0144, -0.99989],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
+        rotation: [-0.03179, -0.00044, 0.00283, 0.99949],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [0.03744, -0.00192, 0.08594, 0.99559],
       },
     },
   },
@@ -106,95 +61,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-01-base-base-r',
     name: '基础 · Base · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
+        rotation: [-0.03848, 0.17992, -0.42876, 0.88449],
       },
       mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
+        rotation: [-0.17489, -0.04194, -0.02041, 0.98348],
       },
       mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
+        rotation: [0.14976, -0.01125, 0.10921, 0.98261],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
+        rotation: [-0.00852, 0, 0.01998, 0.99976],
       },
       mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
+        rotation: [0.01902, -0.0006, 0.0261, 0.99948],
       },
       mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
+        rotation: [0.07874, -0.00449, -0.0811, 0.99358],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
+        rotation: [0.02479, 0, -0.00314, 0.99969],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
+        rotation: [-0.02022, 0.00056, 0.02529, 0.99948],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
+        rotation: [0.05818, -0.00163, -0.07538, 0.99545],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
+        rotation: [0.02796, 0, -0.00416, 0.9996],
       },
       mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
+        rotation: [-0.02663, 0.00086, 0.03472, 0.99904],
       },
       mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
+        rotation: [0.01998, -0.0007, -0.06388, 0.99776],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
+        rotation: [0.00075, 0, 0.01505, 0.99989],
       },
       mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
+        rotation: [-0.0301, 0.00044, -0.01063, 0.99949],
       },
       mixamorigRightHandPinky3: {
-        rotation: [0.09353, 0.00137, -0.00626, 0.9956],
+        rotation: [0.05759, 0.00192, -0.07397, 0.99559],
       },
     },
   },
@@ -203,94 +113,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '其他 · Bowl · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.57465, 0, -0.0184, -0.81819],
+        rotation: [-0.15636, 0, -0.31088, -0.9375],
       },
       mixamorigLeftHandRing2: {
-        rotation: [0.24653, 0.00012, 0.00807, 0.9691],
+        rotation: [0.10192, 0.00367, 0.22463, 0.96909],
       },
       mixamorigLeftHandRing3: {
-        rotation: [0.34609, 0.0206, 0.02886, 0.93753],
+        rotation: [0.12733, 0.01728, 0.3231, 0.9376],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.57265, 0, 0.00887, -0.81975],
+        rotation: [-0.17667, 0, -0.29815, -0.93803],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [0.25765, 0.00462, 0.00262, 0.96622],
+        rotation: [0.10793, 0.00976, 0.23397, 0.96619],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [0.37823, 0.02135, 0.01613, 0.92532],
+        rotation: [0.14388, 0.0256, 0.35017, 0.92521],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.47171, 0.03523, -0.3569, -0.80553],
+        rotation: [0.08208, 0.18614, -0.41276, -0.88783],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [-0.32525, -0.02071, -0.2543, 0.91056],
+        rotation: [-0.05564, 0.15647, -0.4091, 0.89725],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [0.08232, 0.04513, -0.44611, 0.89004],
+        rotation: [0.43369, 0.15425, -0.13303, 0.87774],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.53929, 0, 0.01912, -0.8419],
+        rotation: [-0.16856, 0, -0.25995, -0.9508],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [0.28088, -0.00845, -0.02314, 0.95943],
+        rotation: [0.1379, 0.00587, 0.24578, 0.95945],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [0.3928, 0.06654, 0.03582, 0.91651],
+        rotation: [0.12988, 0.0553, 0.37244, 0.91726],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.538, -0.00008, -0.05363, -0.84124],
+        rotation: [-0.11071, -0.00001, -0.28814, -0.95117],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [0.235, 0.00068, 0.02492, 0.97168],
+        rotation: [0.08746, -0.001, 0.21953, 0.97168],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [0.33554, -0.06306, -0.02638, 0.93954],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [0.17106, -0.03309, 0.28987, 0.94107],
       },
     },
   },
@@ -298,95 +163,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-02-other-bowl-r',
     name: '其他 · Bowl · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.47165, 0.03524, -0.35688, 0.80556],
+        rotation: [0.01334, 0.16597, -0.42064, 0.89182],
       },
       mixamorigRightHandThumb2: {
-        rotation: [-0.32527, 0.02069, 0.25428, 0.91056],
+        rotation: [-0.14972, -0.12897, 0.38476, 0.90162],
       },
       mixamorigRightHandThumb3: {
-        rotation: [0.08231, -0.04517, 0.44611, 0.89004],
+        rotation: [0.38822, -0.17212, 0.23468, 0.87441],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.53922, 0, 0.01911, 0.84195],
+        rotation: [0.22777, 0, -0.21001, 0.9508],
       },
       mixamorigRightHandIndex2: {
-        rotation: [0.28088, 0.00844, 0.02313, 0.95943],
+        rotation: [0.19457, -0.00587, -0.2039, 0.95945],
       },
       mixamorigRightHandIndex3: {
-        rotation: [0.39281, -0.06653, -0.03581, 0.91651],
+        rotation: [0.2182, -0.0553, -0.32858, 0.91726],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.57258, 0, 0.00887, 0.8198],
+        rotation: [0.24511, 0, -0.24501, 0.93802],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [0.25765, -0.00462, -0.00262, 0.96622],
+        rotation: [0.16259, -0.00976, -0.19988, 0.96619],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [0.37823, -0.02135, -0.01613, 0.92532],
+        rotation: [0.22624, -0.02561, -0.30354, 0.92521],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.57458, 0, -0.0184, 0.81824],
+        rotation: [0.2286, 0, -0.26239, 0.9375],
       },
       mixamorigRightHandRing2: {
-        rotation: [0.24653, -0.00012, -0.00807, 0.9691],
+        rotation: [0.15446, -0.00366, -0.19232, 0.96909],
       },
       mixamorigRightHandRing3: {
-        rotation: [0.34609, -0.02059, -0.02885, 0.93753],
+        rotation: [0.2035, -0.01728, -0.28142, 0.9376],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.53793, 0, -0.05358, 0.84128],
+        rotation: [0.17872, 0, -0.25168, 0.95117],
       },
       mixamorigRightHandPinky2: {
-        rotation: [0.23499, -0.00098, -0.02495, 0.97168],
+        rotation: [0.13918, 0.00094, -0.19098, 0.97168],
       },
       mixamorigRightHandPinky3: {
-        rotation: [0.33555, 0.06326, 0.02631, 0.93953],
+        rotation: [0.2376, 0.03314, -0.23839, 0.94107],
       },
     },
   },
@@ -395,94 +215,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '其他 · Card · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.83257, 0, -0.0043, -0.5539],
+        rotation: [-0.25892, 0, -0.52813, -0.80873],
       },
       mixamorigLeftHandRing2: {
-        rotation: [0.3483, 0.63526, 0.42443, 0.54313],
+        rotation: [0.20208, 0.03148, 0.51051, 0.8352],
       },
       mixamorigLeftHandRing3: {
-        rotation: [-0.4109, 0.5828, -0.482, -0.5091],
+        rotation: [-0.26074, 0.04306, -0.57722, -0.77264],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.80767, 0, -0.00193, -0.58963],
+        rotation: [-0.24585, 0, -0.49475, -0.83354],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [0.50886, 0.03085, 0.02374, 0.85997],
+        rotation: [0.19819, 0.02078, 0.46928, 0.86027],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [-0.65892, 0.0316, -0.02383, -0.75117],
+        rotation: [-0.29759, 0.06648, -0.58838, -0.74889],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
+        rotation: [0.13566, 0.19721, -0.40854, -0.8808],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [-0.04209, -0.05952, -0.22697, 0.97117],
+        rotation: [0.08992, 0.06279, -0.2126, 0.97096],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [0.10315, -0.13205, -0.53683, 0.82688],
+        rotation: [0.49384, 0.0587, -0.2344, 0.8353],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.65162, 0, -0.00197, -0.75854],
+        rotation: [-0.16051, 0, -0.30827, -0.93766],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [0.43675, -0.01275, -0.01351, 0.89939],
+        rotation: [0.19196, 0.00409, 0.39253, 0.89947],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [0.33316, 0.18598, 0.07452, 0.92134],
+        rotation: [0.11255, 0.04545, 0.32231, 0.93882],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.84091, -0.00012, 0.00365, -0.54116],
+        rotation: [-0.26884, -0.00004, -0.53699, -0.7996],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [0.11977, 0.81394, 0.52337, 0.2219],
+        rotation: [0.16661, 0.05959, 0.5104, 0.84154],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [-0.16563, 0.77703, -0.56463, -0.22359],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [-0.22895, 0.06497, -0.54205, -0.80594],
       },
     },
   },
@@ -490,95 +265,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-02-other-card-r',
     name: '其他 · Card · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
+        rotation: [-0.03848, 0.17992, -0.42876, 0.88449],
       },
       mixamorigRightHandThumb2: {
-        rotation: [-0.04212, 0.0595, 0.22696, 0.97117],
+        rotation: [0.04159, -0.05552, 0.22706, 0.97141],
       },
       mixamorigRightHandThumb3: {
-        rotation: [0.10314, 0.132, 0.53683, 0.82689],
+        rotation: [0.43433, -0.07296, 0.33193, 0.83418],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.65156, 0, -0.00197, 0.7586],
+        rotation: [0.23197, 0, -0.25882, 0.93766],
       },
       mixamorigRightHandIndex2: {
-        rotation: [0.43675, 0.01274, 0.01351, 0.89939],
+        rotation: [0.28333, -0.00408, -0.33265, 0.89947],
       },
       mixamorigRightHandIndex3: {
-        rotation: [0.33318, -0.18574, -0.07443, 0.92139],
+        rotation: [0.18898, -0.04546, -0.28432, 0.93882],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.80762, 0, -0.00193, 0.5897],
+        rotation: [0.36089, 0, -0.4183, 0.83354],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [0.50886, -0.03082, -0.02372, 0.85997],
+        rotation: [0.3084, -0.02078, -0.40546, 0.86027],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [-0.65892, -0.03157, 0.0238, -0.75117],
+        rotation: [-0.43423, -0.06648, 0.49617, -0.74889],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.83252, 0, -0.0043, 0.55397],
+        rotation: [0.38184, 0, -0.44741, 0.80872],
       },
       mixamorigRightHandRing2: {
-        rotation: [0.35151, -0.63112, -0.42178, 0.54793],
+        rotation: [0.3224, -0.03147, -0.44442, 0.8352],
       },
       mixamorigRightHandRing3: {
-        rotation: [-0.41454, -0.57893, 0.47887, -0.5135],
+        rotation: [-0.39577, -0.04305, 0.4945, -0.77265],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.84087, 0, 0.00383, 0.54123],
+        rotation: [0.39367, 0, -0.45351, 0.79959],
       },
       mixamorigRightHandPinky2: {
-        rotation: [0.12068, -0.81365, -0.52317, 0.22296],
+        rotation: [0.28794, -0.05979, -0.45316, 0.84152],
       },
       mixamorigRightHandPinky3: {
-        rotation: [-0.16648, -0.77669, 0.56438, -0.22477],
+        rotation: [-0.35616, -0.06512, 0.46838, -0.80593],
       },
     },
   },
@@ -587,94 +317,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '其他 · Claw · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.14969, 0, 0.05491, -0.98721],
+        rotation: [0.01494, 0, 0.18983, -0.9817],
       },
       mixamorigLeftHandRing2: {
-        rotation: [0.31676, 0.01808, 0.00309, 0.94833],
+        rotation: [0.12711, 0.02016, 0.29015, 0.94829],
       },
       mixamorigLeftHandRing3: {
-        rotation: [0.49725, 0.04499, 0.03724, 0.86564],
+        rotation: [0.17399, 0.03573, 0.4673, 0.86607],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.12925, 0, -0.06404, -0.98954],
+        rotation: [0.13133, 0, 0.15441, -0.97924],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [0.3309, -0.02144, -0.00022, 0.94342],
+        rotation: [0.15776, -0.01413, 0.29087, 0.94356],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [0.54116, -0.06181, -0.05322, 0.83695],
+        rotation: [0.28182, -0.02681, 0.46504, 0.83881],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.41506, 0.07188, -0.44776, -0.78872],
+        rotation: [0.21028, 0.21238, -0.40317, -0.86494],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [-0.12525, 0.02817, -0.01595, 0.9916],
+        rotation: [-0.10183, 0.06787, -0.07465, 0.98967],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [0.30564, -0.11679, -0.58471, 0.74233],
+        rotation: [0.62024, 0.02941, -0.22496, 0.75089],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.12693, 0, -0.16754, -0.97766],
+        rotation: [0.22095, 0, 0.09958, -0.97019],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [0.17928, -0.03437, -0.02808, 0.9828],
+        rotation: [0.11874, -0.01906, 0.13722, 0.98321],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [0.65501, -0.12839, -0.11128, 0.73627],
+        rotation: [0.39358, -0.0716, 0.53527, 0.74394],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.13564, -0.00002, 0.12824, -0.98242],
+        rotation: [-0.04814, -0.00001, 0.22918, -0.97219],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [0.22548, 0.03104, 0.01239, 0.97367],
+        rotation: [0.07207, 0.02755, 0.21401, 0.97378],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [0.55988, 0.0728, 0.01879, 0.82515],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [0.19505, 0.06797, 0.52515, 0.82556],
       },
     },
   },
@@ -682,95 +367,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-02-other-claw-r',
     name: '其他 · Claw · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.41501, 0.07189, -0.44774, 0.78875],
+        rotation: [-0.11043, 0.19917, -0.4411, 0.86808],
       },
       mixamorigRightHandThumb2: {
-        rotation: [-0.12525, -0.02817, 0.01593, 0.9916],
+        rotation: [-0.11633, -0.05471, 0.04906, 0.99049],
       },
       mixamorigRightHandThumb3: {
-        rotation: [0.3056, 0.11674, 0.58473, 0.74234],
+        rotation: [0.55645, -0.05004, 0.35448, 0.7498],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.12684, 0, -0.16754, 0.97767],
+        rotation: [-0.23875, 0, 0.04166, 0.97019],
       },
       mixamorigRightHandIndex2: {
-        rotation: [0.17928, 0.03437, 0.02809, 0.9828],
+        rotation: [0.14907, 0.01906, -0.10347, 0.98321],
       },
       mixamorigRightHandIndex3: {
-        rotation: [0.65501, 0.12837, 0.11128, 0.73628],
+        rotation: [0.51406, 0.0716, -0.42091, 0.74394],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.12916, 0, -0.06404, 0.98955],
+        rotation: [-0.16553, 0, 0.117, 0.97924],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [0.3309, 0.02144, 0.00023, 0.94342],
+        rotation: [0.22499, 0.01413, -0.24265, 0.94356],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [0.54116, 0.0618, 0.05322, 0.83695],
+        rotation: [0.38837, 0.02681, -0.3806, 0.83881],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.14961, 0, 0.05491, 0.98722],
+        rotation: [-0.06156, 0, 0.18019, 0.9817],
       },
       mixamorigRightHandRing2: {
-        rotation: [0.31676, -0.01808, -0.0031, 0.94833],
+        rotation: [0.19511, -0.02016, -0.24955, 0.94829],
       },
       mixamorigRightHandRing3: {
-        rotation: [0.49725, -0.04498, -0.03724, 0.86564],
+        rotation: [0.28448, -0.03572, -0.40954, 0.86607],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.13556, 0, 0.12824, 0.98243],
+        rotation: [-0.01021, 0, 0.23396, 0.97219],
       },
       mixamorigRightHandPinky2: {
-        rotation: [0.22548, -0.03114, -0.01241, 0.97367],
+        rotation: [0.1229, -0.02759, -0.18945, 0.97378],
       },
       mixamorigRightHandPinky3: {
-        rotation: [0.55988, -0.07273, -0.01885, 0.82516],
+        rotation: [0.3192, -0.06795, -0.46036, 0.82557],
       },
     },
   },
@@ -779,94 +419,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '手势 · Cobblepot · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.35895, 0, 0.13608, -0.92338],
+        rotation: [-0.13613, 0, 0.04183, -0.98981],
       },
       mixamorigLeftHandRing2: {
-        rotation: [-0.04368, -0.00546, 0.00252, 0.99903],
+        rotation: [-0.01761, -0.00625, -0.04006, 0.99902],
       },
       mixamorigLeftHandRing3: {
-        rotation: [0.06386, 0.01601, 0.02004, 0.99763],
+        rotation: [0.00407, 0.00833, 0.06681, 0.99772],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.35625, 0, 0.13424, -0.9247],
+        rotation: [-0.13334, 0, 0.04399, -0.99009],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [-0.03229, -0.00376, 0.00241, 0.99947],
+        rotation: [-0.01357, -0.00456, -0.0294, 0.99947],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [0.0951, 0.01188, -0.00479, 0.99539],
+        rotation: [0.03773, 0.01337, 0.08742, 0.99537],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
+        rotation: [0.13566, 0.19721, -0.40854, -0.8808],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
+        rotation: [-0.17502, 0.05603, -0.01927, 0.98278],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
+        rotation: [0.17093, 0.00406, -0.07171, 0.98266],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.32017, 0, -0.14193, -0.93667],
+        rotation: [0.11621, 0, -0.03568, -0.99258],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [-0.00498, -0.01016, -0.03191, 0.99943],
+        rotation: [0.02481, 0.00153, -0.02067, 0.99948],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [0.11303, -0.01354, -0.00148, 0.9935],
+        rotation: [0.05789, -0.0098, 0.09708, 0.99354],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.32904, -0.00005, 0.12557, -0.93593],
+        rotation: [-0.1141, -0.00002, 0.06821, -0.99112],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [-0.00907, 0.00942, 0.03061, 0.99945],
+        rotation: [-0.0318, -0.0019, 0.00278, 0.99949],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [0.09374, 0.00898, -0.00125, 0.99556],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [0.03646, 0.00958, 0.08637, 0.99555],
       },
     },
   },
@@ -874,95 +469,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-03-signs-cobblepot-r',
     name: '手势 · Cobblepot · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
+        rotation: [-0.03848, 0.17992, -0.42876, 0.88449],
       },
       mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
+        rotation: [-0.17489, -0.04194, -0.02041, 0.98348],
       },
       mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
+        rotation: [0.14976, -0.01125, 0.10921, 0.98261],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.32009, 0, -0.14193, 0.93669],
+        rotation: [-0.10373, 0, -0.06341, 0.99258],
       },
       mixamorigRightHandIndex2: {
-        rotation: [-0.00498, 0.01015, 0.03191, 0.99943],
+        rotation: [0.0189, -0.00153, 0.02619, 0.99948],
       },
       mixamorigRightHandIndex3: {
-        rotation: [0.11303, 0.01354, 0.00148, 0.9935],
+        rotation: [0.08017, 0.0098, -0.07969, 0.99354],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.35617, 0, 0.13423, 0.92473],
+        rotation: [0.11827, 0, 0.07568, 0.99009],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [-0.03229, 0.00376, -0.00241, 0.99947],
+        rotation: [-0.02044, 0.00456, 0.02511, 0.99947],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [0.0951, -0.01188, 0.00478, 0.99539],
+        rotation: [0.05824, -0.01337, -0.07533, 0.99537],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.35887, 0, 0.13608, 0.92341],
+        rotation: [0.1215, 0, 0.07429, 0.98981],
       },
       mixamorigRightHandRing2: {
-        rotation: [-0.04368, 0.00546, -0.00252, 0.99903],
+        rotation: [-0.02699, 0.00625, 0.03443, 0.99902],
       },
       mixamorigRightHandRing3: {
-        rotation: [0.06386, -0.016, -0.02004, 0.99763],
+        rotation: [0.02052, -0.00833, -0.06371, 0.99772],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.32896, 0, 0.12558, 0.93596],
+        rotation: [0.09362, 0, 0.09438, 0.99112],
       },
       mixamorigRightHandPinky2: {
-        rotation: [-0.00907, -0.00954, -0.03061, 0.99944],
+        rotation: [-0.03012, 0.00187, -0.01059, 0.99949],
       },
       mixamorigRightHandPinky3: {
-        rotation: [0.09374, -0.00891, 0.00124, 0.99556],
+        rotation: [0.05674, -0.00956, -0.07462, 0.99555],
       },
     },
   },
@@ -971,94 +521,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '持握 · Detonator · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.75876, 0, -0.00144, -0.65137],
+        rotation: [-0.21849, 0, -0.43319, -0.87442],
       },
       mixamorigLeftHandRing2: {
-        rotation: [0.42713, 0.01419, 0.013, 0.90399],
+        rotation: [0.16894, 0.01438, 0.39251, 0.90398],
       },
       mixamorigLeftHandRing3: {
-        rotation: [-0.51964, 0.02182, -0.00508, -0.85409],
+        rotation: [0.1244, 0.13581, 0.50455, 0.84351],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.75692, 0, -0.00083, -0.6535],
+        rotation: [-0.21787, 0, -0.43076, -0.87577],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [0.43749, 0.00899, 0.00825, 0.89914],
+        rotation: [0.17564, 0.01331, 0.40077, 0.89909],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [-0.54848, 0.01962, -0.00214, -0.83593],
+        rotation: [-0.0155, 0.34706, 0.54826, 0.76074],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.47872, 0.05118, -0.43285, -0.76213],
+        rotation: [0.15528, 0.20506, -0.42345, -0.86864],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [-0.18682, 0.07181, 0.09438, 0.97521],
+        rotation: [-0.20905, 0.05839, 0.01051, 0.9761],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [0.22113, -0.12866, -0.66184, 0.70464],
+        rotation: [0.59489, 0.08142, -0.36474, 0.71165],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.73072, 0, 0.00098, -0.68267],
+        rotation: [-0.20473, 0, -0.39858, -0.89399],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [0.459, -0.01623, -0.01577, 0.88815],
+        rotation: [0.19777, 0.00675, 0.41451, 0.88827],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [-0.56145, 0.08333, 0.03717, -0.82247],
+        rotation: [-0.31987, 0.67472, 0.46291, 0.47766],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.73738, -0.0001, 0.00054, -0.67548],
+        rotation: [-0.20812, -0.00003, -0.40665, -0.88956],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [0.43763, 0.13776, 0.12629, 0.87952],
+        rotation: [0.1146, 0.05065, 0.44083, 0.8888],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [-0.54681, 0.29027, -0.0243, -0.78496],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [-0.25314, 0.54928, 0.48529, 0.63143],
       },
     },
   },
@@ -1066,95 +571,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-04-weapons-detonator-r',
     name: '持握 · Detonator · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.47868, 0.05119, -0.43283, 0.76217],
+        rotation: [-0.0542, 0.18796, -0.44776, 0.87249],
       },
       mixamorigRightHandThumb2: {
-        rotation: [-0.18681, -0.0718, -0.09441, 0.97521],
+        rotation: [-0.20132, -0.04314, -0.05729, 0.9769],
       },
       mixamorigRightHandThumb3: {
-        rotation: [0.22109, 0.12861, 0.66185, 0.70465],
+        rotation: [0.49837, -0.09373, 0.48842, 0.71013],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.73066, 0, 0.00098, 0.68274],
+        rotation: [0.2972, 0, -0.33534, 0.89399],
       },
       mixamorigRightHandIndex2: {
-        rotation: [0.459, 0.01623, 0.01577, 0.88815],
+        rotation: [0.29442, -0.00674, -0.35249, 0.88827],
       },
       mixamorigRightHandIndex3: {
-        rotation: [-0.56144, -0.08336, -0.03718, -0.82246],
+        rotation: [-0.19509, -0.67476, -0.52777, 0.4776],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.75687, 0, -0.00083, 0.65357],
+        rotation: [0.31792, 0, -0.36326, 0.87577],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [0.43749, -0.00899, -0.00825, 0.89914],
+        rotation: [0.26957, -0.01331, -0.34467, 0.89909],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [-0.54847, -0.01961, 0.00214, -0.83594],
+        rotation: [0.12094, -0.34712, -0.53498, 0.76071],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.7587, 0, -0.00144, 0.65144],
+        rotation: [0.31912, 0, -0.36546, 0.87442],
       },
       mixamorigRightHandRing2: {
-        rotation: [0.42712, -0.0142, -0.01301, 0.90399],
+        rotation: [0.26103, -0.01438, -0.33834, 0.90398],
       },
       mixamorigRightHandRing3: {
-        rotation: [-0.51964, -0.02184, 0.00508, -0.85409],
+        rotation: [0.24568, -0.1358, -0.45793, 0.84351],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.73732, 0, 0.00065, 0.67554],
+        rotation: [0.3025, 0, -0.34231, 0.88956],
       },
       mixamorigRightHandPinky2: {
-        rotation: [0.43756, -0.13851, -0.12653, 0.8794],
+        rotation: [0.22036, -0.05076, -0.39864, 0.88879],
       },
       mixamorigRightHandPinky3: {
-        rotation: [-0.54679, -0.29085, 0.02466, -0.78474],
+        rotation: [-0.12493, -0.54926, -0.53289, 0.63145],
       },
     },
   },
@@ -1163,94 +623,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '手势 · FU · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.56085, 0, -0.4027, -0.72338],
+        rotation: [-0.24514, 0, -0.31464, -0.91701],
       },
       mixamorigLeftHandRing2: {
-        rotation: [-0.07852, 0.50336, 0.59286, 0.62369],
+        rotation: [0.17635, 0.09225, 0.57145, 0.79614],
       },
       mixamorigLeftHandRing3: {
-        rotation: [-0.24952, 0.71785, -0.62049, -0.19347],
+        rotation: [-0.51883, 0.54281, -0.422, -0.50803],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.30404, 0, -0.1539, -0.94015],
+        rotation: [0.01177, 0, 0.00245, -0.99993],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [-0.01991, -0.005, -0.02553, 0.99946],
+        rotation: [-0.01374, 0.00031, -0.02932, 0.99948],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [0.02554, -0.00448, -0.00343, 0.99966],
+        rotation: [0.02564, 0.00075, 0.00259, 0.99967],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.15612, 0.1284, -0.40637, -0.89107],
+        rotation: [0.1703, 0.17288, -0.27561, -0.93013],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [0.48742, -0.09888, -0.05695, 0.86568],
+        rotation: [0.48574, -0.02504, -0.06977, 0.87095],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [0.17519, -0.40457, -0.79885, 0.40923],
+        rotation: [0.6613, -0.06457, -0.48119, 0.57182],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.48078, 0, -0.43078, -0.76373],
+        rotation: [-0.16215, 0, -0.31548, -0.93497],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [0.3261, 0.1641, 0.55286, 0.74905],
+        rotation: [0.4347, -0.06477, 0.47227, 0.76407],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [-0.39714, 0.31172, -0.50503, -0.70004],
+        rotation: [-0.32785, -0.16965, -0.55253, -0.74729],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.5529, -0.00008, -0.38181, -0.74063],
+        rotation: [-0.23457, -0.00003, -0.29196, -0.92722],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [-0.13988, 0.51829, 0.59777, 0.59538],
+        rotation: [0.11916, 0.11475, 0.60224, 0.78099],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [-0.23548, 0.71438, -0.65155, -0.09846],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [-0.51892, 0.5815, -0.45901, -0.42649],
       },
     },
   },
@@ -1258,95 +673,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-03-signs-fu-r',
     name: '手势 · FU · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.15607, 0.12841, -0.40637, 0.89107],
+        rotation: [-0.09923, 0.16499, -0.30841, 0.93157],
       },
       mixamorigRightHandThumb2: {
-        rotation: [0.48741, 0.09887, 0.057, 0.86569],
+        rotation: [0.46097, 0.00211, 0.16829, 0.87131],
       },
       mixamorigRightHandThumb3: {
-        rotation: [0.17525, 0.40449, 0.79884, 0.4093],
+        rotation: [0.57924, 0.04949, 0.57736, 0.57332],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.48074, 0, -0.43075, 0.76377],
+        rotation: [0.23535, 0, -0.26541, 0.93497],
       },
       mixamorigRightHandIndex2: {
-        rotation: [0.32636, -0.16383, -0.55272, 0.7491],
+        rotation: [0.53826, 0.06478, -0.34967, 0.76407],
       },
       mixamorigRightHandIndex3: {
-        rotation: [-0.39731, -0.31137, 0.50491, -0.70019],
+        rotation: [-0.45466, 0.16968, 0.45394, -0.74728],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.30396, 0, -0.15389, 0.94017],
+        rotation: [-0.012, 0, -0.00055, 0.99993],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [-0.01991, 0.005, 0.02553, 0.99946],
+        rotation: [-0.02058, -0.00031, 0.02499, 0.99948],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [0.02554, 0.00448, 0.00343, 0.99966],
+        rotation: [0.02548, -0.00075, 0.00385, 0.99967],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.5608, 0, -0.40267, 0.72343],
+        rotation: [0.31553, 0, -0.24401, 0.91701],
       },
       mixamorigRightHandRing2: {
-        rotation: [-0.07829, -0.50318, -0.59289, 0.62383],
+        rotation: [0.31259, -0.09225, -0.50984, 0.79614],
       },
       mixamorigRightHandRing3: {
-        rotation: [-0.2497, -0.71778, 0.62041, -0.19374],
+        rotation: [-0.60729, -0.54279, 0.28012, -0.50805],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.55289, 0, -0.38173, 0.74068],
+        rotation: [0.29967, 0, -0.22464, 0.92722],
       },
       mixamorigRightHandPinky2: {
-        rotation: [-0.03159, -0.01288, 0.00456, 0.99941],
+        rotation: [0.26479, -0.11485, -0.55388, 0.78097],
       },
       mixamorigRightHandPinky3: {
-        rotation: [0.00973, -0.05944, -0.09324, 0.99382],
+        rotation: [-0.61652, -0.58153, 0.31602, -0.42645],
       },
     },
   },
@@ -1355,94 +725,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '手势 · Fingers Crossed · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.6827, 0, 0.16345, -0.71218],
+        rotation: [-0.30036, 0, -0.30143, -0.90494],
       },
       mixamorigLeftHandRing2: {
-        rotation: [0.57755, 0.2813, 0.15518, 0.75048],
+        rotation: [0.13159, 0.1498, 0.58338, 0.78735],
       },
       mixamorigLeftHandRing3: {
-        rotation: [-0.66725, 0.46052, -0.04517, -0.58367],
+        rotation: [-0.53994, 0.63362, -0.39462, -0.38892],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.21902, 0, -0.08421, -0.97208],
+        rotation: [0.11887, 0, 0.08674, -0.98911],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [0.08279, -0.00656, 0.0027, 0.99654],
+        rotation: [0.03832, -0.00547, 0.07344, 0.99655],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [0.01399, 0.00023, 0.0047, 0.99989],
+        rotation: [0.00278, -0.00114, 0.0145, 0.99989],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.48802, -0.00344, -0.21759, -0.84527],
+        rotation: [0.04506, 0.13741, -0.24691, -0.95819],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [0.27622, -0.08322, -0.32336, 0.90123],
+        rotation: [0.42281, -0.01082, -0.04572, 0.905],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [-0.47036, -0.49034, -0.45442, 0.57606],
+        rotation: [0.39079, -0.07432, -0.52441, 0.75283],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.31375, 0, 0.07603, -0.94646],
+        rotation: [-0.06329, 0, 0.06723, -0.99573],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [-0.03905, -0.01243, -0.02803, 0.99877],
+        rotation: [0.01111, -0.00222, -0.04676, 0.99884],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [0.01512, -0.00305, -0.0164, 0.99975],
+        rotation: [0.02078, 0.00299, 0.0081, 0.99975],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.66233, -0.00009, 0.14769, -0.73451],
+        rotation: [-0.27896, -0.00004, -0.27995, -0.91859],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [0.54571, 0.36295, 0.28123, 0.70098],
+        rotation: [0.07607, 0.16173, 0.60918, 0.77263],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [-0.67969, 0.56475, -0.13409, -0.44843],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [-0.53538, 0.64469, -0.4397, -0.32312],
       },
     },
   },
@@ -1450,95 +775,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-03-signs-fingers-crossed-r',
     name: '手势 · Fingers Crossed · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.48796, -0.00342, -0.21757, 0.84531],
+        rotation: [0.01423, 0.12451, -0.25059, 0.95995],
       },
       mixamorigRightHandThumb2: {
-        rotation: [0.27621, 0.08319, 0.32337, 0.90123],
+        rotation: [0.40519, -0.00995, 0.12914, 0.90501],
       },
       mixamorigRightHandThumb3: {
-        rotation: [-0.47032, 0.49029, 0.45445, 0.5761],
+        rotation: [0.28672, 0.08089, 0.5878, 0.75215],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.31367, 0, 0.07603, 0.94648],
+        rotation: [0.04464, 0, 0.08083, 0.99573],
       },
       mixamorigRightHandIndex2: {
-        rotation: [-0.03905, 0.01243, 0.02803, 0.99877],
+        rotation: [-0.00084, 0.00222, 0.04805, 0.99884],
       },
       mixamorigRightHandIndex3: {
-        rotation: [0.01512, 0.00304, 0.0164, 0.99975],
+        rotation: [0.02214, -0.00299, -0.00269, 0.99975],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.21894, 0, -0.08421, 0.9721],
+        rotation: [-0.13666, 0, 0.05454, 0.98912],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [0.08279, 0.00656, -0.0027, 0.99654],
+        rotation: [0.05533, 0.00547, -0.06164, 0.99655],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [0.01399, -0.00023, -0.0047, 0.99989],
+        rotation: [0.00629, 0.00114, -0.01336, 0.99989],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.68264, 0, 0.16344, 0.71224],
+        rotation: [0.36575, 0, -0.21751, 0.90494],
       },
       mixamorigRightHandRing2: {
-        rotation: [0.57756, -0.28122, -0.15514, 0.75051],
+        rotation: [0.27219, -0.14979, -0.5325, 0.78735],
       },
       mixamorigRightHandRing3: {
-        rotation: [-0.66725, -0.46049, 0.04507, -0.58369],
+        rotation: [-0.62095, -0.63361, 0.24837, -0.38894],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.66225, 0, 0.14776, 0.73457],
+        rotation: [0.3397, 0, -0.202, 0.91859],
       },
       mixamorigRightHandPinky2: {
-        rotation: [0.5455, -0.36364, -0.28165, 0.70063],
+        rotation: [0.22478, -0.16183, -0.57128, 0.77261],
       },
       mixamorigRightHandPinky3: {
-        rotation: [-0.67958, -0.56517, 0.13465, -0.44791],
+        rotation: [-0.62769, -0.64472, 0.29322, -0.32307],
       },
     },
   },
@@ -1547,94 +827,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '其他 · Fist · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.7555, 0, -0.00133, -0.65515],
+        rotation: [-0.21675, 0, -0.42919, -0.87682],
       },
       mixamorigLeftHandRing2: {
-        rotation: [0.56237, 0.04331, 0.03856, 0.82485],
+        rotation: [0.21609, 0.02292, 0.52062, 0.82567],
       },
       mixamorigLeftHandRing3: {
-        rotation: [-0.82265, 0.03552, -0.04488, -0.56566],
+        rotation: [-0.34961, 0.03901, -0.74601, -0.56543],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.75694, 0, -0.00083, -0.65348],
+        rotation: [-0.21788, 0, -0.43079, -0.87576],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [0.57246, 0.02908, 0.02574, 0.81901],
+        rotation: [0.22399, 0.02104, 0.52744, 0.81926],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [-0.84184, 0.03622, -0.02975, -0.53768],
+        rotation: [-0.36631, 0.05173, -0.75855, -0.53641],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.52763, 0.00783, -0.30711, -0.79198],
+        rotation: [0.05846, 0.16575, -0.34986, -0.92017],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [-0.05499, -0.07608, -0.24462, 0.96507],
+        rotation: [0.11298, 0.05178, -0.22382, 0.96667],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [0.00913, -0.16479, -0.61713, 0.76936],
+        rotation: [0.56461, 0.08516, -0.24928, 0.78219],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.70666, 0, -0.00002, -0.70755],
+        rotation: [-0.19103, 0, -0.37052, -0.90897],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [0.64839, 0.10299, 0.10315, 0.74722],
+        rotation: [0.24314, 0.02906, 0.60986, 0.75373],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [-0.68009, 0.1004, -0.0933, -0.7202],
+        rotation: [-0.28933, 0.05401, -0.6225, -0.72516],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.73382, -0.0001, -0.02813, -0.67876],
+        rotation: [-0.18666, -0.00003, -0.41219, -0.89177],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [0.51054, 0.29609, 0.29382, 0.75189],
+        rotation: [0.14383, 0.053, 0.57123, 0.80635],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [-0.76834, 0.24428, -0.34289, -0.48208],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [-0.2835, 0.08291, -0.79218, -0.53405],
       },
     },
   },
@@ -1642,95 +877,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-02-other-fist-r',
     name: '其他 · Fist · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.52757, 0.00784, -0.30709, 0.79203],
+        rotation: [0.02325, 0.14775, -0.35395, 0.92323],
       },
       mixamorigRightHandThumb2: {
-        rotation: [-0.055, 0.07606, 0.24461, 0.96507],
+        rotation: [0.06192, -0.04568, 0.24295, 0.96698],
       },
       mixamorigRightHandThumb3: {
-        rotation: [0.00915, 0.16473, 0.61713, 0.76937],
+        rotation: [0.50333, -0.10298, 0.35719, 0.78004],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.7066, 0, -0.00002, 0.70761],
+        rotation: [0.27697, 0, -0.31157, 0.90896],
       },
       mixamorigRightHandIndex2: {
-        rotation: [0.64841, -0.10286, -0.10303, 0.74724],
+        rotation: [0.38683, -0.02905, -0.53049, 0.75373],
       },
       mixamorigRightHandIndex3: {
-        rotation: [-0.68011, -0.10026, 0.09318, -0.72022],
+        rotation: [-0.4347, -0.05398, 0.53128, -0.72516],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.75689, 0, -0.00083, 0.65355],
+        rotation: [0.31794, 0, -0.36328, 0.87575],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [0.57246, -0.02905, -0.02572, 0.81902],
+        rotation: [0.34782, -0.02104, -0.45539, 0.81926],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [-0.84184, -0.0362, 0.02972, -0.53768],
+        rotation: [-0.54302, -0.05173, 0.64398, -0.53641],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.75544, 0, -0.00133, 0.65521],
+        rotation: [0.31644, 0, -0.36201, 0.87682],
       },
       mixamorigRightHandRing2: {
-        rotation: [0.56237, -0.04327, -0.03853, 0.82485],
+        rotation: [0.33849, -0.02291, -0.45074, 0.82567],
       },
       mixamorigRightHandRing3: {
-        rotation: [-0.82265, -0.03549, 0.04484, -0.56567],
+        rotation: [-0.52373, -0.03899, 0.63598, -0.56544],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.73377, 0, -0.02801, 0.67882],
+        rotation: [0.28309, 0, -0.35301, 0.89177],
       },
       mixamorigRightHandPinky2: {
-        rotation: [0.51023, -0.29712, -0.29437, 0.75148],
+        rotation: [0.28099, -0.05311, -0.51772, 0.80635],
       },
       mixamorigRightHandPinky3: {
-        rotation: [-0.76792, -0.24486, 0.34383, -0.48179],
+        rotation: [-0.47107, -0.08297, 0.69714, -0.53404],
       },
     },
   },
@@ -1739,94 +929,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '手势 · Five · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
+        rotation: [-0.02605, 0, -0.01095, -0.9996],
       },
       mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
+        rotation: [-0.01719, -0.00086, -0.04024, 0.99904],
       },
       mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
+        rotation: [0.00352, 0.0007, 0.06684, 0.99776],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.36312, 0, -0.0523, -0.93027],
+        rotation: [0.02323, 0, -0.03134, -0.99924],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [-0.03231, 0.00097, -0.00217, 0.99948],
+        rotation: [-0.01321, 0.0011, -0.02956, 0.99948],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [0.01393, 0.00098, 0.00488, 0.99989],
+        rotation: [0.00224, -0.00054, 0.0146, 0.99989],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.33448, 0.07475, -0.36979, -0.86359],
+        rotation: [0.26221, 0.18577, -0.24644, -0.91433],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [-0.04418, -0.01261, -0.18799, 0.9811],
+        rotation: [0.08727, 0.09166, -0.17226, 0.97689],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [0.11674, -0.00452, -0.14397, 0.98266],
+        rotation: [0.1851, 0.0262, -0.00965, 0.98232],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.37424, 0, -0.14011, -0.91668],
+        rotation: [0.08713, 0, -0.08526, -0.99254],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [-0.00598, -0.01205, -0.03174, 0.99941],
+        rotation: [0.02421, -0.0002, -0.02137, 0.99948],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [0.01762, -0.00752, -0.01368, 0.99972],
+        rotation: [0.02062, -0.00186, 0.0085, 0.99975],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.33389, -0.00005, 0.07792, -0.93939],
+        rotation: [-0.07377, -0.00001, 0.04847, -0.9961],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [-0.01007, 0.0098, 0.03029, 0.99944],
+        rotation: [-0.0318, -0.00136, 0.0028, 0.99949],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [0.09374, 0.00518, 0.00152, 0.99558],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [0.03682, 0.00533, 0.08621, 0.99558],
       },
     },
   },
@@ -1834,95 +979,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-03-signs-five-r',
     name: '手势 · Five · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.33443, 0.07476, -0.36978, 0.86362],
+        rotation: [-0.19321, 0.1848, -0.30358, 0.91453],
       },
       mixamorigRightHandThumb2: {
-        rotation: [-0.0442, 0.01259, 0.18798, 0.9811],
+        rotation: [0.04109, -0.08578, 0.18868, 0.97742],
       },
       mixamorigRightHandThumb3: {
-        rotation: [0.11673, 0.00451, 0.14398, 0.98266],
+        rotation: [0.177, -0.03727, 0.05502, 0.98196],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.37416, 0, -0.14011, 0.91672],
+        rotation: [-0.06325, 0, -0.10422, 0.99254],
       },
       mixamorigRightHandIndex2: {
-        rotation: [-0.00598, 0.01204, 0.03174, 0.99941],
+        rotation: [0.01815, 0.0002, 0.02671, 0.99948],
       },
       mixamorigRightHandIndex3: {
-        rotation: [0.01762, 0.00752, 0.01368, 0.99972],
+        rotation: [0.02208, 0.00186, -0.00311, 0.99975],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.36304, 0, -0.0523, 0.93031],
+        rotation: [-0.01472, 0, -0.03613, 0.99924],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [-0.03231, -0.00097, 0.00217, 0.99948],
+        rotation: [-0.02013, -0.0011, 0.02536, 0.99948],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [0.01393, -0.00098, -0.00488, 0.99989],
+        rotation: [0.00578, 0.00054, -0.01359, 0.99989],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
+        rotation: [0.02796, 0, -0.00416, 0.9996],
       },
       mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
+        rotation: [-0.02663, 0.00086, 0.03472, 0.99904],
       },
       mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
+        rotation: [0.01998, -0.0007, -0.06388, 0.99776],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.3338, 0, 0.07793, 0.93942],
+        rotation: [0.05944, 0, 0.06525, 0.9961],
       },
       mixamorigRightHandPinky2: {
-        rotation: [-0.01008, -0.00992, -0.03029, 0.99944],
+        rotation: [-0.03011, 0.00134, -0.0106, 0.99949],
       },
       mixamorigRightHandPinky3: {
-        rotation: [0.09374, -0.00511, -0.00153, 0.99558],
+        rotation: [0.05705, -0.00532, -0.07438, 0.99558],
       },
     },
   },
@@ -1931,94 +1031,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '手势 · Four · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
+        rotation: [-0.02605, 0, -0.01095, -0.9996],
       },
       mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
+        rotation: [-0.01719, -0.00086, -0.04024, 0.99904],
       },
       mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
+        rotation: [0.00352, 0.0007, 0.06684, 0.99776],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.36312, 0, -0.0523, -0.93027],
+        rotation: [0.02323, 0, -0.03134, -0.99924],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [-0.03231, 0.00097, -0.00217, 0.99948],
+        rotation: [-0.01321, 0.0011, -0.02956, 0.99948],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [0.01393, 0.00098, 0.00488, 0.99989],
+        rotation: [0.00224, -0.00054, 0.0146, 0.99989],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.49581, -0.01358, -0.1859, -0.84819],
+        rotation: [0.0182, 0.12715, -0.23081, -0.96448],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [0.24929, -0.08858, -0.36338, 0.89329],
+        rotation: [0.43481, 0.00415, -0.07162, 0.89766],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [-0.59003, -0.48866, -0.28433, 0.5764],
+        rotation: [0.2317, -0.09767, -0.61261, 0.74933],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.37424, 0, -0.14011, -0.91668],
+        rotation: [0.08713, 0, -0.08526, -0.99254],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [-0.00598, -0.01205, -0.03174, 0.99941],
+        rotation: [0.02421, -0.0002, -0.02137, 0.99948],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [0.01762, -0.00752, -0.01368, 0.99972],
+        rotation: [0.02062, -0.00186, 0.0085, 0.99975],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.33389, -0.00005, 0.07792, -0.93939],
+        rotation: [-0.07377, -0.00001, 0.04847, -0.9961],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [-0.01007, 0.0098, 0.03029, 0.99944],
+        rotation: [-0.0318, -0.00136, 0.0028, 0.99949],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [0.09374, 0.00518, 0.00152, 0.99558],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [0.03682, 0.00533, 0.08621, 0.99558],
       },
     },
   },
@@ -2026,95 +1081,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-03-signs-four-r',
     name: '手势 · Four · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.49574, -0.01357, -0.18588, 0.84824],
+        rotation: [0.03645, 0.11377, -0.22865, 0.96615],
       },
       mixamorigRightHandThumb2: {
-        rotation: [0.24928, 0.08855, 0.36338, 0.89329],
+        rotation: [0.4118, -0.0241, 0.15687, 0.89735],
       },
       mixamorigRightHandThumb3: {
-        rotation: [-0.59001, 0.48863, 0.28436, 0.57642],
+        rotation: [0.09847, 0.12173, 0.64752, 0.74579],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.37416, 0, -0.14011, 0.91672],
+        rotation: [-0.06325, 0, -0.10422, 0.99254],
       },
       mixamorigRightHandIndex2: {
-        rotation: [-0.00598, 0.01204, 0.03174, 0.99941],
+        rotation: [0.01815, 0.0002, 0.02671, 0.99948],
       },
       mixamorigRightHandIndex3: {
-        rotation: [0.01762, 0.00752, 0.01368, 0.99972],
+        rotation: [0.02208, 0.00186, -0.00311, 0.99975],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.36304, 0, -0.0523, 0.93031],
+        rotation: [-0.01472, 0, -0.03613, 0.99924],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [-0.03231, -0.00097, 0.00217, 0.99948],
+        rotation: [-0.02013, -0.0011, 0.02536, 0.99948],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [0.01393, -0.00098, -0.00488, 0.99989],
+        rotation: [0.00578, 0.00054, -0.01359, 0.99989],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
+        rotation: [0.02796, 0, -0.00416, 0.9996],
       },
       mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
+        rotation: [-0.02663, 0.00086, 0.03472, 0.99904],
       },
       mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
+        rotation: [0.01998, -0.0007, -0.06388, 0.99776],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.3338, 0, 0.07793, 0.93942],
+        rotation: [0.05944, 0, 0.06525, 0.9961],
       },
       mixamorigRightHandPinky2: {
-        rotation: [-0.01008, -0.00992, -0.03029, 0.99944],
+        rotation: [-0.03011, 0.00134, -0.0106, 0.99949],
       },
       mixamorigRightHandPinky3: {
-        rotation: [0.09374, -0.00511, -0.00153, 0.99558],
+        rotation: [0.05705, -0.00532, -0.07438, 0.99558],
       },
     },
   },
@@ -2123,94 +1133,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '手势 · Four Ring · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.53003, 0, 0.04691, -0.84668],
+        rotation: [-0.13731, 0, -0.15966, -0.97757],
       },
       mixamorigLeftHandRing2: {
-        rotation: [0.60752, 0.03787, 0.00673, 0.79337],
+        rotation: [0.23574, 0.04015, 0.55996, 0.79326],
       },
       mixamorigLeftHandRing3: {
-        rotation: [-0.59852, 0.07425, 0.03506, -0.79689],
+        rotation: [-0.06953, 0.37561, 0.5955, 0.70672],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.33266, 0, -0.00271, -0.94304],
+        rotation: [-0.00354, 0, 0.01929, -0.99981],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00025, -0.00097, 0.99948],
+        rotation: [-0.01333, -0.00036, -0.02951, 0.99948],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [0.03714, 0.00132, 0.00439, 0.9993],
+        rotation: [0.01239, 0.00026, 0.03529, 0.9993],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
+        rotation: [0.13566, 0.19721, -0.40854, -0.8808],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
+        rotation: [-0.17502, 0.05603, -0.01927, 0.98278],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
+        rotation: [0.17093, 0.00406, -0.07171, 0.98266],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.27133, 0, -0.13405, -0.95311],
+        rotation: [0.13452, 0, 0.01331, -0.99082],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [-0.00466, -0.00844, -0.03195, 0.99944],
+        rotation: [0.02509, 0.0031, -0.02034, 0.99947],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [0.05585, -0.00803, -0.00763, 0.99838],
+        rotation: [0.03439, -0.00375, 0.04466, 0.9984],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.32243, -0.00005, 0.10113, -0.94118],
+        rotation: [-0.08938, -0.00001, 0.06718, -0.99373],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [-0.00955, 0.00928, 0.03046, 0.99945],
+        rotation: [-0.0318, -0.00192, 0.00284, 0.99949],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [0.01622, 0.00426, 0.00903, 0.99982],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [-0.00187, 0.00096, 0.01846, 0.99983],
       },
     },
   },
@@ -2218,95 +1183,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-03-signs-four-ring-r',
     name: '手势 · Four Ring · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
+        rotation: [-0.03848, 0.17992, -0.42876, 0.88449],
       },
       mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
+        rotation: [-0.17489, -0.04194, -0.02041, 0.98348],
       },
       mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
+        rotation: [0.14976, -0.01125, 0.10921, 0.98261],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.27125, 0, -0.13404, 0.95313],
+        rotation: [-0.13361, 0, -0.02047, 0.99082],
       },
       mixamorigRightHandIndex2: {
-        rotation: [-0.00466, 0.00844, 0.03195, 0.99944],
+        rotation: [0.01926, -0.0031, 0.02592, 0.99947],
       },
       mixamorigRightHandIndex3: {
-        rotation: [0.05585, 0.00803, 0.00763, 0.99838],
+        rotation: [0.0444, 0.00375, -0.03473, 0.9984],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.33258, 0, -0.00271, 0.94307],
+        rotation: [-0.00135, 0, 0.01956, 0.99981],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00025, 0.00097, 0.99948],
+        rotation: [-0.02023, 0.00036, 0.02528, 0.99948],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [0.03714, -0.00132, -0.00439, 0.9993],
+        rotation: [0.02076, -0.00026, -0.03112, 0.9993],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.52996, 0, 0.04691, 0.84672],
+        rotation: [0.17263, 0, -0.12062, 0.97757],
       },
       mixamorigRightHandRing2: {
-        rotation: [0.60752, -0.03787, -0.00674, 0.79337],
+        rotation: [0.36728, -0.04015, -0.48398, 0.79326],
       },
       mixamorigRightHandRing3: {
-        rotation: [-0.59852, -0.07427, -0.03508, -0.79689],
+        rotation: [0.08039, -0.37559, -0.59413, 0.70674],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.32234, 0, 0.10114, 0.9412],
+        rotation: [0.06993, 0, 0.08725, 0.99373],
       },
       mixamorigRightHandPinky2: {
-        rotation: [-0.00955, -0.0094, -0.03046, 0.99945],
+        rotation: [-0.0301, 0.00189, -0.01064, 0.99949],
       },
       mixamorigRightHandPinky3: {
-        rotation: [0.01621, -0.00419, -0.00903, 0.99982],
+        rotation: [0.00277, -0.00095, -0.01835, 0.99983],
       },
     },
   },
@@ -2315,94 +1235,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '其他 · Grip · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.63454, 0, -0.05776, -0.77073],
+        rotation: [-0.22973, 0, -0.45261, -0.86161],
       },
       mixamorigLeftHandRing2: {
-        rotation: [0.44873, -0.0028, 0.03745, 0.89288],
+        rotation: [0.14353, 0.0384, 0.42681, 0.89205],
       },
       mixamorigLeftHandRing3: {
-        rotation: [-0.53865, -0.0293, -0.05931, -0.83993],
+        rotation: [-0.5093, 0.83883, 0.18511, 0.052],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.63207, 0, -0.06008, -0.77258],
+        rotation: [-0.22683, 0, -0.45108, -0.86318],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [0.46028, -0.04352, -0.00944, 0.88666],
+        rotation: [0.18329, 0.01519, 0.42231, 0.8876],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [-0.56168, -0.1945, -0.09485, -0.79855],
+        rotation: [-0.40149, 0.31076, -0.40408, -0.76089],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.48087, 0.03497, -0.3663, -0.79584],
+        rotation: [0.00645, 0.1827, -0.47265, -0.86208],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [-0.05389, -0.06426, -0.26052, 0.96182],
+        rotation: [0.13353, 0.01541, -0.2301, 0.96384],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [-0.20935, -0.19489, -0.76363, 0.57884],
+        rotation: [0.61335, 0.01003, -0.50077, 0.61068],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.60129, 0, -0.05842, -0.79689],
+        rotation: [-0.21466, 0, -0.41896, -0.88227],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [0.48119, -0.05249, -0.0228, 0.87475],
+        rotation: [0.20392, 0.00935, 0.43644, 0.87627],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [-0.58316, -0.04763, -0.02223, -0.81066],
+        rotation: [-0.55316, 0.6395, -0.18596, -0.50047],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.6416, -0.00009, -0.05748, -0.76488],
+        rotation: [-0.23305, -0.00003, -0.45974, -0.85693],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [0.46364, 0.09019, 0.1495, 0.86865],
+        rotation: [0.06474, 0.09649, 0.48283, 0.86797],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [-0.55258, 0.00924, -0.13151, -0.82297],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [-0.30373, 0.29843, -0.47999, -0.76701],
       },
     },
   },
@@ -2410,95 +1285,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-02-other-grip-r',
     name: '其他 · Grip · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.48082, 0.03498, -0.36628, 0.79588],
+        rotation: [0.09676, 0.156, -0.46269, 0.86731],
       },
       mixamorigRightHandThumb2: {
-        rotation: [-0.05392, 0.06424, 0.26052, 0.96182],
+        rotation: [0.08665, -0.01045, 0.25153, 0.96391],
       },
       mixamorigRightHandThumb3: {
-        rotation: [-0.2093, 0.19482, 0.76365, 0.57886],
+        rotation: [0.50963, -0.01756, 0.606, 0.61051],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.60122, 0, -0.05841, 0.79695],
+        rotation: [0.31187, 0, -0.35263, 0.88226],
       },
       mixamorigRightHandIndex2: {
-        rotation: [0.48119, 0.05248, 0.02281, 0.87475],
+        rotation: [0.3058, -0.00935, -0.37221, 0.87627],
       },
       mixamorigRightHandIndex3: {
-        rotation: [-0.58316, 0.04765, 0.02224, -0.81066],
+        rotation: [-0.58199, -0.63948, 0.04297, -0.50051],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.632, 0, -0.06008, 0.77263],
+        rotation: [0.33163, 0, -0.38072, 0.86317],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [0.46028, 0.04352, 0.00945, 0.88666],
+        rotation: [0.28232, -0.01518, -0.36364, 0.8876],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [-0.56167, 0.19458, 0.09491, -0.79853],
+        rotation: [-0.48915, -0.31066, 0.29192, -0.76093],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.63448, 0, -0.05776, 0.77078],
+        rotation: [0.33482, 0, -0.38149, 0.86161],
       },
       mixamorigRightHandRing2: {
-        rotation: [0.44873, 0.00281, -0.03744, 0.89288],
+        rotation: [0.24491, -0.03839, -0.37786, 0.89206],
       },
       mixamorigRightHandRing3: {
-        rotation: [-0.53864, 0.02937, 0.05934, -0.83993],
+        rotation: [-0.4475, -0.83884, -0.30561, 0.05189],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.64154, 0, -0.05741, 0.76494],
+        rotation: [0.33982, 0, -0.38756, 0.85692],
       },
       mixamorigRightHandPinky2: {
-        rotation: [0.46358, -0.09073, -0.14967, 0.86859],
+        rotation: [0.18247, -0.09659, -0.45168, 0.86796],
       },
       mixamorigRightHandPinky3: {
-        rotation: [-0.5525, -0.00958, 0.13183, -0.82296],
+        rotation: [-0.41325, -0.29846, 0.3897, -0.76699],
       },
     },
   },
@@ -2507,94 +1337,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '持握 · Grip Sword · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.32242, 0, -0.47654, -0.8179],
+        rotation: [-0.22006, 0, -0.42781, -0.87667],
       },
       mixamorigLeftHandRing2: {
-        rotation: [0.04721, 0.13812, 0.42016, 0.89563],
+        rotation: [0.13814, 0.0329, 0.3996, 0.90562],
       },
       mixamorigLeftHandRing3: {
-        rotation: [-0.51078, 0.84223, 0.07352, 0.15603],
+        rotation: [-0.04752, 0.32537, 0.51385, 0.79236],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.31881, 0, -0.47534, -0.82001],
+        rotation: [-0.21609, 0, -0.42672, -0.87819],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [0.08359, 0.11673, 0.42489, 0.89379],
+        rotation: [0.17409, 0.01297, 0.3965, 0.90129],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [-0.53892, 0.8212, -0.07603, -0.1715],
+        rotation: [0.05412, 0.24878, 0.54157, 0.80118],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.08568, 0.16467, -0.48881, -0.85241],
+        rotation: [0.00678, 0.18283, -0.4729, -0.86191],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [0.04913, 0.0051, -0.14027, 0.98888],
+        rotation: [0.02696, 0.02856, -0.14616, 0.98848],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [0.42728, -0.04901, -0.26019, 0.86448],
+        rotation: [0.40693, 0.00027, -0.29099, 0.86587],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.31903, 0, -0.46731, -0.82452],
+        rotation: [-0.21466, 0, -0.41896, -0.88227],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [0.09562, 0.12849, 0.47214, 0.86685],
+        rotation: [0.20392, 0.00935, 0.43644, 0.87627],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [-0.212, 0.55976, 0.279, 0.75092],
+        rotation: [0.08709, 0.10594, 0.33941, 0.93059],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.30909, -0.00004, -0.42653, -0.85002],
+        rotation: [-0.1967, -0.00003, -0.3796, -0.904],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [0.03323, 0.10116, 0.32438, 0.93991],
+        rotation: [0.08383, 0.03328, 0.31512, 0.94476],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [-0.03173, 0.22892, 0.45842, 0.85816],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [0.21106, -0.04947, 0.40818, 0.88679],
       },
     },
   },
@@ -2602,95 +1387,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-04-weapons-grip-sword-r',
     name: '持握 · Grip Sword · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.08564, 0.16468, -0.48882, 0.85241],
+        rotation: [0.0965, 0.15613, -0.463, 0.86714],
       },
       mixamorigRightHandThumb2: {
-        rotation: [0.04912, -0.00511, 0.14028, 0.98888],
+        rotation: [-0.00201, -0.02164, 0.14862, 0.98866],
       },
       mixamorigRightHandThumb3: {
-        rotation: [0.42726, 0.04899, 0.26023, 0.86448],
+        rotation: [0.34293, -0.00735, 0.36423, 0.86584],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.31898, 0, -0.46729, 0.82455],
+        rotation: [0.31187, 0, -0.35263, 0.88226],
       },
       mixamorigRightHandIndex2: {
-        rotation: [0.09572, -0.12839, -0.47212, 0.86687],
+        rotation: [0.3058, -0.00935, -0.37221, 0.87627],
       },
       mixamorigRightHandIndex3: {
-        rotation: [-0.21183, -0.55954, -0.27913, 0.75108],
+        rotation: [0.16857, -0.10593, -0.3072, 0.93059],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.31876, 0, -0.47532, 0.82004],
+        rotation: [0.31518, 0, -0.35979, 0.87819],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [0.08367, -0.11665, -0.42487, 0.8938],
+        rotation: [0.267, -0.01297, -0.34092, 0.90129],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [-0.53894, -0.82118, 0.07593, -0.17158],
+        rotation: [0.18682, -0.24871, -0.5112, 0.8012],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.32237, 0, -0.47652, 0.81793],
+        rotation: [0.31931, 0, -0.35985, 0.87667],
       },
       mixamorigRightHandRing2: {
-        rotation: [0.04729, -0.13804, -0.42015, 0.89564],
+        rotation: [0.23295, -0.0329, -0.35285, 0.90562],
       },
       mixamorigRightHandRing3: {
-        rotation: [-0.51075, -0.84222, -0.07371, 0.1561],
+        rotation: [0.08144, -0.32536, -0.50957, 0.79236],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.30905, 0, -0.4265, 0.85005],
+        rotation: [0.28473, 0, -0.31894, 0.904],
       },
       mixamorigRightHandPinky2: {
-        rotation: [0.03326, -0.10124, -0.32438, 0.9399],
+        rotation: [0.15936, -0.03337, -0.28448, 0.94475],
       },
       mixamorigRightHandPinky3: {
-        rotation: [-0.03157, -0.22862, -0.45843, 0.85824],
+        rotation: [0.3057, 0.04954, -0.34309, 0.88678],
       },
     },
   },
@@ -2699,94 +1439,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '持握 · Gun 01 · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.75876, 0, -0.00144, -0.65137],
+        rotation: [-0.21849, 0, -0.43319, -0.87442],
       },
       mixamorigLeftHandRing2: {
-        rotation: [0.42713, 0.01419, 0.013, 0.90399],
+        rotation: [0.16894, 0.01438, 0.39251, 0.90398],
       },
       mixamorigLeftHandRing3: {
-        rotation: [-0.51964, 0.02182, -0.00508, -0.85409],
+        rotation: [0.1244, 0.13581, 0.50455, 0.84351],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.75692, 0, -0.00083, -0.6535],
+        rotation: [-0.21787, 0, -0.43076, -0.87577],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [0.43749, 0.00899, 0.00825, 0.89914],
+        rotation: [0.17564, 0.01331, 0.40077, 0.89909],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [-0.54848, 0.01962, -0.00214, -0.83593],
+        rotation: [-0.0155, 0.34706, 0.54826, 0.76074],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.60373, 0.00336, -0.37884, -0.70141],
+        rotation: [0.00645, 0.1827, -0.47265, -0.86208],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [-0.00932, -0.12076, -0.26588, 0.95637],
+        rotation: [0.13353, 0.01541, -0.2301, 0.96384],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [-0.36519, -0.36797, -0.70257, 0.48748],
+        rotation: [0.61335, 0.01003, -0.50077, 0.61068],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
+        rotation: [0.00329, 0, 0.02148, -0.99976],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [0.45926, -0.00521, -0.00353, 0.88828],
+        rotation: [0.20241, 0.00299, 0.41226, 0.88829],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [0.54515, 0.145, 0.13935, 0.81386],
+        rotation: [0.17355, 0.04296, 0.53524, 0.82556],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.73738, -0.0001, 0.00054, -0.67548],
+        rotation: [-0.20812, -0.00003, -0.40665, -0.88956],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [0.43763, 0.13776, 0.12629, 0.87952],
+        rotation: [0.1146, 0.05065, 0.44083, 0.8888],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [-0.54681, 0.29027, -0.0243, -0.78496],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [-0.25314, 0.54928, 0.48529, 0.63143],
       },
     },
   },
@@ -2794,95 +1489,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-04-weapons-gun-01-r',
     name: '持握 · Gun 01 · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.60369, 0.00336, -0.37881, 0.70147],
+        rotation: [0.09676, 0.156, -0.46269, 0.86731],
       },
       mixamorigRightHandThumb2: {
-        rotation: [-0.00934, 0.12074, 0.26588, 0.95637],
+        rotation: [0.08665, -0.01045, 0.25153, 0.96391],
       },
       mixamorigRightHandThumb3: {
-        rotation: [-0.36514, 0.36791, 0.70259, 0.48753],
+        rotation: [0.50963, -0.01756, 0.606, 0.61051],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
+        rotation: [-0.00852, 0, 0.01998, 0.99976],
       },
       mixamorigRightHandIndex2: {
-        rotation: [0.45926, 0.00521, 0.00353, 0.88828],
+        rotation: [0.29834, -0.00299, -0.34917, 0.88829],
       },
       mixamorigRightHandIndex3: {
-        rotation: [0.54516, -0.14491, -0.13929, 0.81388],
+        rotation: [0.3009, -0.04296, -0.47547, 0.82556],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.75687, 0, -0.00083, 0.65357],
+        rotation: [0.31792, 0, -0.36326, 0.87577],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [0.43749, -0.00899, -0.00825, 0.89914],
+        rotation: [0.26957, -0.01331, -0.34467, 0.89909],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [-0.54847, -0.01961, 0.00214, -0.83594],
+        rotation: [0.12094, -0.34712, -0.53498, 0.76071],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.7587, 0, -0.00144, 0.65144],
+        rotation: [0.31912, 0, -0.36546, 0.87442],
       },
       mixamorigRightHandRing2: {
-        rotation: [0.42712, -0.0142, -0.01301, 0.90399],
+        rotation: [0.26103, -0.01438, -0.33834, 0.90398],
       },
       mixamorigRightHandRing3: {
-        rotation: [-0.51964, -0.02184, 0.00508, -0.85409],
+        rotation: [0.24568, -0.1358, -0.45793, 0.84351],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.73732, 0, 0.00065, 0.67554],
+        rotation: [0.3025, 0, -0.34231, 0.88956],
       },
       mixamorigRightHandPinky2: {
-        rotation: [0.43756, -0.13851, -0.12653, 0.8794],
+        rotation: [0.22036, -0.05076, -0.39864, 0.88879],
       },
       mixamorigRightHandPinky3: {
-        rotation: [-0.54679, -0.29085, 0.02466, -0.78474],
+        rotation: [-0.12493, -0.54926, -0.53289, 0.63145],
       },
     },
   },
@@ -2891,94 +1541,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '持握 · Gun 02 · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.75876, 0, -0.00144, -0.65137],
+        rotation: [-0.21849, 0, -0.43319, -0.87442],
       },
       mixamorigLeftHandRing2: {
-        rotation: [0.42713, 0.01419, 0.013, 0.90399],
+        rotation: [0.16894, 0.01438, 0.39251, 0.90398],
       },
       mixamorigLeftHandRing3: {
-        rotation: [-0.51964, 0.02182, -0.00508, -0.85409],
+        rotation: [0.1244, 0.13581, 0.50455, 0.84351],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.75692, 0, -0.00083, -0.6535],
+        rotation: [-0.21787, 0, -0.43076, -0.87577],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [0.43749, 0.00899, 0.00825, 0.89914],
+        rotation: [0.17564, 0.01331, 0.40077, 0.89909],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [-0.54848, 0.01962, -0.00214, -0.83593],
+        rotation: [-0.0155, 0.34706, 0.54826, 0.76074],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.60117, 0.01639, -0.43216, -0.67199],
+        rotation: [0.02088, 0.19652, -0.51866, -0.83183],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [-0.04261, -0.05454, -0.13783, 0.98803],
+        rotation: [0.01952, 0.03063, -0.14294, 0.98906],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [-0.04254, -0.29014, -0.69586, 0.65558],
+        rotation: [0.53076, -0.00855, -0.45203, 0.71687],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
+        rotation: [0.00329, 0, 0.02148, -0.99976],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [0.45926, -0.00521, -0.00353, 0.88828],
+        rotation: [0.20241, 0.00299, 0.41226, 0.88829],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [0.54515, 0.145, 0.13935, 0.81386],
+        rotation: [0.17355, 0.04296, 0.53524, 0.82556],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.73738, -0.0001, 0.00054, -0.67548],
+        rotation: [-0.20812, -0.00003, -0.40665, -0.88956],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [0.43763, 0.13776, 0.12629, 0.87952],
+        rotation: [0.1146, 0.05065, 0.44083, 0.8888],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [-0.54681, 0.29027, -0.0243, -0.78496],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [-0.25314, 0.54928, 0.48529, 0.63143],
       },
     },
   },
@@ -2986,287 +1591,152 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-04-weapons-gun-02-r',
     name: '持握 · Gun 02 · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.60114, 0.01639, -0.43212, 0.67204],
+        rotation: [0.09127, 0.16838, -0.511, 0.83797],
       },
       mixamorigRightHandThumb2: {
-        rotation: [-0.04262, 0.05453, 0.13783, 0.98804],
+        rotation: [-0.00794, -0.02321, 0.14406, 0.98927],
       },
       mixamorigRightHandThumb3: {
-        rotation: [-0.04254, 0.29008, 0.69586, 0.65561],
+        rotation: [0.43524, 0.00339, 0.5446, 0.71691],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
+        rotation: [-0.00852, 0, 0.01998, 0.99976],
       },
       mixamorigRightHandIndex2: {
-        rotation: [0.45926, 0.00521, 0.00353, 0.88828],
+        rotation: [0.29834, -0.00299, -0.34917, 0.88829],
       },
       mixamorigRightHandIndex3: {
-        rotation: [0.54516, -0.14491, -0.13929, 0.81388],
+        rotation: [0.3009, -0.04296, -0.47547, 0.82556],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.75687, 0, -0.00083, 0.65357],
+        rotation: [0.31792, 0, -0.36326, 0.87577],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [0.43749, -0.00899, -0.00825, 0.89914],
+        rotation: [0.26957, -0.01331, -0.34467, 0.89909],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [-0.54847, -0.01961, 0.00214, -0.83594],
+        rotation: [0.12094, -0.34712, -0.53498, 0.76071],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.7587, 0, -0.00144, 0.65144],
+        rotation: [0.31912, 0, -0.36546, 0.87442],
       },
       mixamorigRightHandRing2: {
-        rotation: [0.42712, -0.0142, -0.01301, 0.90399],
+        rotation: [0.26103, -0.01438, -0.33834, 0.90398],
       },
       mixamorigRightHandRing3: {
-        rotation: [-0.51964, -0.02184, 0.00508, -0.85409],
+        rotation: [0.24568, -0.1358, -0.45793, 0.84351],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.73732, 0, 0.00065, 0.67554],
+        rotation: [0.3025, 0, -0.34231, 0.88956],
       },
       mixamorigRightHandPinky2: {
-        rotation: [0.43756, -0.13851, -0.12653, 0.8794],
+        rotation: [0.22036, -0.05076, -0.39864, 0.88879],
       },
       mixamorigRightHandPinky3: {
-        rotation: [-0.54679, -0.29085, 0.02466, -0.78474],
+        rotation: [-0.12493, -0.54926, -0.53289, 0.63145],
       },
     },
   },
   {
     key: 'qbx-hands-04-weapons-gun-03-l-cock-the-hammer',
-    name: '持握 · Gun 03 L Cock the Hammer',
+    name: '持握 · Gun 03 L Cock the Hammer · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.75876, 0, -0.00144, -0.65137],
+        rotation: [-0.21849, 0, -0.43319, -0.87442],
       },
       mixamorigLeftHandRing2: {
-        rotation: [0.42713, 0.01419, 0.013, 0.90399],
+        rotation: [0.16894, 0.01438, 0.39251, 0.90398],
       },
       mixamorigLeftHandRing3: {
-        rotation: [-0.51964, 0.02182, -0.00508, -0.85409],
+        rotation: [0.1244, 0.13581, 0.50455, 0.84351],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.75692, 0, -0.00083, -0.6535],
+        rotation: [-0.21787, 0, -0.43076, -0.87577],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [0.43749, 0.00899, 0.00825, 0.89914],
+        rotation: [0.17564, 0.01331, 0.40077, 0.89909],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [-0.54848, 0.01962, -0.00214, -0.83593],
+        rotation: [-0.0155, 0.34706, 0.54826, 0.76074],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.47872, 0.05118, -0.43285, -0.76213],
+        rotation: [0.15528, 0.20506, -0.42345, -0.86864],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [-0.18682, 0.07181, 0.09438, 0.97521],
+        rotation: [-0.20905, 0.05839, 0.01051, 0.9761],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [0.22113, -0.12866, -0.66184, 0.70464],
+        rotation: [0.59489, 0.08142, -0.36474, 0.71165],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
+        rotation: [0.00329, 0, 0.02148, -0.99976],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [0.45926, -0.00521, -0.00353, 0.88828],
+        rotation: [0.20241, 0.00299, 0.41226, 0.88829],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [0.54515, 0.145, 0.13935, 0.81386],
+        rotation: [0.17355, 0.04296, 0.53524, 0.82556],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.73738, -0.0001, 0.00054, -0.67548],
+        rotation: [-0.20812, -0.00003, -0.40665, -0.88956],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [0.43763, 0.13776, 0.12629, 0.87952],
+        rotation: [0.1146, 0.05065, 0.44083, 0.8888],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [-0.54681, 0.29027, -0.0243, -0.78496],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [-0.25314, 0.54928, 0.48529, 0.63143],
       },
     },
   },
   {
     key: 'qbx-hands-04-weapons-gun-03-r-cock-the-hammer',
-    name: '持握 · Gun 03 R Cock the Hammer',
+    name: '持握 · Gun 03 R Cock the Hammer · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.47868, 0.05119, -0.43283, 0.76217],
+        rotation: [-0.0542, 0.18796, -0.44776, 0.87249],
       },
       mixamorigRightHandThumb2: {
-        rotation: [-0.18681, -0.0718, -0.09441, 0.97521],
+        rotation: [-0.20132, -0.04314, -0.05729, 0.9769],
       },
       mixamorigRightHandThumb3: {
-        rotation: [0.22109, 0.12861, 0.66185, 0.70465],
+        rotation: [0.49837, -0.09373, 0.48842, 0.71013],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
+        rotation: [-0.00852, 0, 0.01998, 0.99976],
       },
       mixamorigRightHandIndex2: {
-        rotation: [0.45926, 0.00521, 0.00353, 0.88828],
+        rotation: [0.29834, -0.00299, -0.34917, 0.88829],
       },
       mixamorigRightHandIndex3: {
-        rotation: [0.54516, -0.14491, -0.13929, 0.81388],
+        rotation: [0.3009, -0.04296, -0.47547, 0.82556],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.75687, 0, -0.00083, 0.65357],
+        rotation: [0.31792, 0, -0.36326, 0.87577],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [0.43749, -0.00899, -0.00825, 0.89914],
+        rotation: [0.26957, -0.01331, -0.34467, 0.89909],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [-0.54847, -0.01961, 0.00214, -0.83594],
+        rotation: [0.12094, -0.34712, -0.53498, 0.76071],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.7587, 0, -0.00144, 0.65144],
+        rotation: [0.31912, 0, -0.36546, 0.87442],
       },
       mixamorigRightHandRing2: {
-        rotation: [0.42712, -0.0142, -0.01301, 0.90399],
+        rotation: [0.26103, -0.01438, -0.33834, 0.90398],
       },
       mixamorigRightHandRing3: {
-        rotation: [-0.51964, -0.02184, 0.00508, -0.85409],
+        rotation: [0.24568, -0.1358, -0.45793, 0.84351],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.73732, 0, 0.00065, 0.67554],
+        rotation: [0.3025, 0, -0.34231, 0.88956],
       },
       mixamorigRightHandPinky2: {
-        rotation: [0.43756, -0.13851, -0.12653, 0.8794],
+        rotation: [0.22036, -0.05076, -0.39864, 0.88879],
       },
       mixamorigRightHandPinky3: {
-        rotation: [-0.54679, -0.29085, 0.02466, -0.78474],
+        rotation: [-0.12493, -0.54926, -0.53289, 0.63145],
       },
     },
   },
@@ -3275,94 +1745,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '持握 · Hadoken · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.20533, 0, 0.01736, -0.97854],
+        rotation: [0.0366, 0, 0.14618, -0.98858],
       },
       mixamorigLeftHandRing2: {
-        rotation: [0.71832, 0.01777, 0.02398, 0.69508],
+        rotation: [0.28651, 0.01796, 0.65914, 0.69507],
       },
       mixamorigLeftHandRing3: {
-        rotation: [-0.60647, 0.10025, 0.05238, -0.78702],
+        rotation: [0.20623, 0.04517, 0.57274, 0.79209],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.20243, 0, -0.02953, -0.97885],
+        rotation: [0.07949, 0, 0.12819, -0.98856],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [0.71089, -0.02609, -0.02244, 0.70246],
+        rotation: [0.32993, -0.00788, 0.63008, 0.70291],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [-0.64206, -0.19405, -0.12095, -0.73176],
+        rotation: [0.34297, -0.0414, 0.55609, 0.75592],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.45852, 0.05207, -0.41296, -0.78518],
+        rotation: [0.16916, 0.19981, -0.38807, -0.88366],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [-0.16057, 0.05259, 0.07225, 0.98297],
+        rotation: [-0.17591, 0.04895, -0.00764, 0.98316],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [0.16636, -0.103, -0.66067, 0.72473],
+        rotation: [0.57548, 0.11345, -0.36466, 0.72317],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.16949, 0, -0.07181, -0.98291],
+        rotation: [0.13154, 0, 0.13706, -0.98179],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [0.68356, -0.05811, -0.04737, 0.72604],
+        rotation: [0.35112, -0.02982, 0.58839, 0.72775],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [-0.65931, -0.36486, -0.27096, -0.59898],
+        rotation: [0.51155, -0.14848, 0.49641, 0.68545],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.17254, -0.00002, 0.05514, -0.98346],
+        rotation: [0.01641, 0, 0.19113, -0.98143],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [0.6954, 0.0471, 0.04741, 0.71551],
+        rotation: [0.2478, 0.03731, 0.65148, 0.71608],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [-0.51179, 0.54427, 0.38446, -0.54225],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [0.08221, 0.13258, 0.6348, 0.75677],
       },
     },
   },
@@ -3370,95 +1795,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-04-weapons-hadoken-r',
     name: '持握 · Hadoken · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.45848, 0.05208, -0.41294, 0.78522],
+        rotation: [-0.07443, 0.18533, -0.41675, 0.88681],
       },
       mixamorigRightHandThumb2: {
-        rotation: [-0.16056, -0.05259, -0.07227, 0.98297],
+        rotation: [-0.17295, -0.03521, -0.033, 0.98375],
       },
       mixamorigRightHandThumb3: {
-        rotation: [0.16632, 0.10295, 0.66068, 0.72473],
+        rotation: [0.47702, -0.12467, 0.48642, 0.72132],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.16941, 0, -0.07181, 0.98293],
+        rotation: [-0.16142, 0, 0.10013, 0.98179],
       },
       mixamorigRightHandIndex2: {
-        rotation: [0.68356, 0.05811, 0.04737, 0.72604],
+        rotation: [0.4861, 0.02982, -0.4829, 0.72775],
       },
       mixamorigRightHandIndex3: {
-        rotation: [-0.65924, 0.365, 0.27112, -0.59889],
+        rotation: [0.61871, 0.14849, -0.35399, 0.68545],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.20235, 0, -0.02953, 0.97887],
+        rotation: [-0.1088, 0, 0.10446, 0.98856],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [0.71089, 0.02608, 0.02244, 0.70247],
+        rotation: [0.47592, 0.00788, -0.52855, 0.70291],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [-0.64204, 0.19415, 0.12105, -0.73174],
+        rotation: [0.47019, 0.0414, -0.45364, 0.75592],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.20524, 0, 0.01736, 0.97856],
+        rotation: [-0.07172, 0, 0.13252, 0.98858],
       },
       mixamorigRightHandRing2: {
-        rotation: [0.71832, -0.01777, -0.02398, 0.69508],
+        rotation: [0.44106, -0.01796, -0.56747, 0.69507],
       },
       mixamorigRightHandRing3: {
-        rotation: [-0.60647, -0.10032, -0.05244, -0.787],
+        rotation: [0.34187, -0.04516, -0.50367, 0.79209],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.17245, 0, 0.05514, 0.98347],
+        rotation: [-0.0633, 0, 0.18108, 0.98143],
       },
       mixamorigRightHandPinky2: {
-        rotation: [0.69538, -0.04733, -0.04761, 0.7155],
+        rotation: [0.40162, -0.03735, -0.56968, 0.71608],
       },
       mixamorigRightHandPinky3: {
-        rotation: [-0.51166, -0.54477, -0.38463, -0.54175],
+        rotation: [0.23708, -0.13253, -0.59457, 0.75678],
       },
     },
   },
@@ -3467,94 +1847,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '手势 · Index · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.73528, 0, -0.02023, -0.67747],
+        rotation: [-0.27563, 0, -0.51325, -0.81278],
       },
       mixamorigLeftHandRing2: {
-        rotation: [0.52244, -0.09812, -0.07602, 0.84359],
+        rotation: [0.20433, 0.03605, 0.4868, 0.84851],
       },
       mixamorigLeftHandRing3: {
-        rotation: [-0.61303, -0.1843, 0.03126, -0.76763],
+        rotation: [-0.28164, 0.07521, -0.5454, -0.78585],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.73292, 0, -0.04443, -0.67886],
+        rotation: [-0.25661, 0, -0.51978, -0.81485],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [0.5332, -0.10869, -0.06835, 0.83619],
+        rotation: [0.20517, 0.0256, 0.49686, 0.84284],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [-0.63993, -0.16568, 0.02765, -0.74985],
+        rotation: [-0.28102, 0.06831, -0.57559, -0.76489],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.35393, 0.07911, -0.40942, -0.83717],
+        rotation: [0.16798, 0.19515, -0.36953, -0.89283],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [-0.02041, -0.04815, -0.39516, 0.91712],
+        rotation: [0.26796, 0.06942, -0.29115, 0.91576],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [0.10112, -0.05169, -0.66255, 0.74035],
+        rotation: [0.64002, 0.09223, -0.19895, 0.7364],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.17701, 0, -0.12021, -0.97684],
+        rotation: [0.06444, 0, -0.00933, -0.99788],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [-0.02567, -0.00303, -0.03416, 0.99908],
+        rotation: [0.01652, 0.00239, -0.0394, 0.99908],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [0.07298, -0.00734, -0.00615, 0.99729],
+        rotation: [0.04148, -0.00164, 0.06036, 0.99731],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.74094, -0.0001, -0.03893, -0.67044],
+        rotation: [-0.26411, -0.00004, -0.5267, -0.80798],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [0.52643, -0.22219, -0.17298, 0.80223],
+        rotation: [0.25025, -0.00168, 0.49439, 0.83243],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [-0.62823, -0.19957, 0.13181, -0.74036],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [-0.3395, 0.15552, -0.54478, -0.75085],
       },
     },
   },
@@ -3562,95 +1897,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-03-signs-index-r',
     name: '手势 · Index · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.35388, 0.07912, -0.40941, 0.83719],
+        rotation: [-0.07709, 0.18164, -0.39854, 0.89567],
       },
       mixamorigRightHandThumb2: {
-        rotation: [-0.02044, 0.04812, 0.39516, 0.91712],
+        rotation: [0.1975, -0.06859, 0.34288, 0.91582],
       },
       mixamorigRightHandThumb3: {
-        rotation: [0.10115, 0.05162, 0.66255, 0.74036],
+        rotation: [0.59156, -0.1174, 0.31507, 0.73281],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.17693, 0, -0.12021, 0.97685],
+        rotation: [-0.06011, 0, -0.02504, 0.99788],
       },
       mixamorigRightHandIndex2: {
-        rotation: [-0.02567, 0.00303, 0.03415, 0.99908],
+        rotation: [0.00623, -0.00239, 0.04227, 0.99908],
       },
       mixamorigRightHandIndex3: {
-        rotation: [0.07298, 0.00734, 0.00615, 0.99729],
+        rotation: [0.05515, 0.00165, -0.04818, 0.99731],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.73286, 0, -0.04443, 0.67892],
+        rotation: [0.37753, 0, -0.43989, 0.81484],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [0.5332, 0.10865, 0.06833, 0.8362],
+        rotation: [0.32201, -0.02559, -0.43043, 0.84284],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [-0.63993, 0.16566, -0.02761, -0.74985],
+        rotation: [-0.41502, -0.06829, 0.48789, -0.76489],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.73522, 0, -0.02023, 0.67753],
+        rotation: [0.39433, 0, -0.42884, 0.81277],
       },
       mixamorigRightHandRing2: {
-        rotation: [0.52245, 0.09807, 0.07599, 0.8436],
+        rotation: [0.3187, -0.03604, -0.42089, 0.84852],
       },
       mixamorigRightHandRing3: {
-        rotation: [-0.61303, 0.18428, -0.03122, -0.76764],
+        rotation: [-0.40812, -0.07519, 0.45849, -0.78585],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.74089, 0, -0.03882, 0.67051],
+        rotation: [0.38653, 0, -0.44471, 0.80798],
       },
       mixamorigRightHandPinky2: {
-        rotation: [0.19415, 0.65478, 0.5824, 0.44087],
+        rotation: [0.57575, 0.21497, -0.21306, 0.75954],
       },
       mixamorigRightHandPinky3: {
-        rotation: [-0.43801, 0.67213, -0.53676, -0.2613],
+        rotation: [-0.58086, 0.25196, 0.37759, -0.67568],
       },
     },
   },
@@ -3659,94 +1949,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '其他 · KO · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.43209, 0, 0.00428, -0.90182],
+        rotation: [-0.05612, 0, -0.07476, -0.99562],
       },
       mixamorigLeftHandRing2: {
-        rotation: [0.254, 0.00182, 0.00128, 0.9672],
+        rotation: [0.10769, 0.00488, 0.23004, 0.96719],
       },
       mixamorigLeftHandRing3: {
-        rotation: [0.35391, 0.01619, 0.01788, 0.93497],
+        rotation: [0.13575, 0.01256, 0.32732, 0.93503],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.38759, 0, -0.03542, -0.92115],
+        rotation: [-0.00237, 0, -0.0474, -0.99887],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [0.2649, -0.00751, 0.00637, 0.96423],
+        rotation: [0.11486, -0.00488, 0.23879, 0.96424],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [0.38558, -0.01788, 0.00043, 0.9225],
+        rotation: [0.17054, -0.00833, 0.34581, 0.92264],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.41945, 0.07817, -0.48039, -0.76627],
+        rotation: [0.22696, 0.22132, -0.42601, -0.84736],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [-0.03561, -0.05872, -0.30526, 0.94979],
+        rotation: [0.13411, 0.10249, -0.27652, 0.94607],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [0.14028, -0.05863, -0.33924, 0.92833],
+        rotation: [0.34769, 0.04797, -0.1178, 0.92894],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.31812, 0, -0.07126, -0.94537],
+        rotation: [0.06053, 0, 0.00238, -0.99816],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [0.28864, -0.02694, -0.01539, 0.95694],
+        rotation: [0.14925, -0.01466, 0.24753, 0.9572],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [0.40138, -0.0214, 0.00117, 0.91566],
+        rotation: [0.1793, -0.01178, 0.35911, 0.91584],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.45987, -0.00006, -0.00329, -0.88798],
+        rotation: [-0.06335, -0.00001, -0.10554, -0.99239],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [0.28465, 0.00485, 0.01189, 0.95855],
+        rotation: [0.11333, 0.00459, 0.26139, 0.95855],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [0.3816, -0.04785, -0.04114, 0.92217],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [0.1907, -0.01228, 0.33309, 0.92333],
       },
     },
   },
@@ -3754,95 +1999,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-02-other-ko-r',
     name: '其他 · KO · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.41942, 0.07818, -0.48037, 0.7663],
+        rotation: [-0.1217, 0.2077, -0.4671, 0.8508],
       },
       mixamorigRightHandThumb2: {
-        rotation: [-0.03564, 0.05869, 0.30525, 0.94979],
+        rotation: [0.06815, -0.09363, 0.29967, 0.94699],
       },
       mixamorigRightHandThumb3: {
-        rotation: [0.14027, 0.0586, 0.33925, 0.92833],
+        rotation: [0.31301, -0.06115, 0.19181, 0.92817],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.31804, 0, -0.07126, 0.9454],
+        rotation: [-0.05923, 0, -0.01271, 0.99816],
       },
       mixamorigRightHandIndex2: {
-        rotation: [0.28864, 0.02694, 0.01539, 0.95694],
+        rotation: [0.20598, 0.01466, -0.20278, 0.9572],
       },
       mixamorigRightHandIndex3: {
-        rotation: [0.40138, 0.0214, -0.00116, 0.91566],
+        rotation: [0.26278, 0.01179, -0.30341, 0.91583],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.38751, 0, -0.03542, 0.92119],
+        rotation: [0.01406, 0, -0.04534, 0.99887],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [0.2649, 0.00751, -0.00637, 0.96423],
+        rotation: [0.1705, 0.00488, -0.20283, 0.96424],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [0.38558, 0.01788, -0.00043, 0.9225],
+        rotation: [0.25099, 0.00833, -0.2927, 0.92264],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.43201, 0, 0.00428, 0.90186],
+        rotation: [0.07292, 0, -0.05851, 0.99562],
       },
       mixamorigRightHandRing2: {
-        rotation: [0.254, -0.00181, -0.00128, 0.9672],
+        rotation: [0.16139, -0.00488, -0.19614, 0.96719],
       },
       mixamorigRightHandRing3: {
-        rotation: [0.35391, -0.01619, -0.01788, 0.93497],
+        rotation: [0.21271, -0.01255, -0.28342, 0.93502],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.45979, 0, -0.00326, 0.88802],
+        rotation: [0.08755, 0, -0.08654, 0.99239],
       },
       mixamorigRightHandPinky2: {
-        rotation: [0.28465, -0.00512, -0.01192, 0.95854],
+        rotation: [0.17462, -0.00463, -0.22511, 0.95855],
       },
       mixamorigRightHandPinky3: {
-        rotation: [0.38161, 0.04803, 0.04106, 0.92216],
+        rotation: [0.26736, 0.01232, -0.27539, 0.92333],
       },
     },
   },
@@ -3851,94 +2051,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '手势 · Martian Reactor Switch · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.36649, 0, 0.04861, -0.92915],
+        rotation: [-0.0628, 0, 0.00655, -0.998],
       },
       mixamorigLeftHandRing2: {
-        rotation: [-0.04375, -0.00247, -0.00045, 0.99904],
+        rotation: [-0.01733, -0.00264, -0.04018, 0.99904],
       },
       mixamorigLeftHandRing3: {
-        rotation: [0.06239, 0.01165, 0.02425, 0.99769],
+        rotation: [0.00371, 0.00322, 0.06683, 0.99775],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.34939, 0, -0.16982, -0.92146],
+        rotation: [0.12267, 0, -0.07822, -0.98936],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [-0.03197, 0.00397, -0.00508, 0.99947],
+        rotation: [-0.01298, 0.0047, -0.02966, 0.99946],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [0.09391, -0.01137, 0.01574, 0.99539],
+        rotation: [0.03758, -0.01384, 0.0875, 0.99536],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
+        rotation: [0.13566, 0.19721, -0.40854, -0.8808],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
+        rotation: [-0.17502, 0.05603, -0.01927, 0.98278],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [0.0816, -0.02989, -0.06445, 0.99413],
+        rotation: [0.10218, -0.01291, -0.01925, 0.9945],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.31567, 0, -0.17478, -0.93263],
+        rotation: [0.14397, 0, -0.04991, -0.98832],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [-0.00426, -0.01004, -0.03201, 0.99943],
+        rotation: [0.02478, 0.00177, -0.0207, 0.99948],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [0.11303, -0.01682, 0.0007, 0.99345],
+        rotation: [0.05833, -0.01337, 0.09682, 0.9935],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.31127, -0.00004, 0.22676, -0.92287],
+        rotation: [-0.20013, -0.00003, 0.11003, -0.97357],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [-0.00684, 0.00871, 0.03118, 0.99945],
+        rotation: [-0.0318, -0.0031, 0.00275, 0.99949],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [0.09347, 0.01726, -0.00729, 0.99545],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [0.03566, 0.0189, 0.0867, 0.99542],
       },
     },
   },
@@ -3946,95 +2101,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-03-signs-martian-reactor-switch-r',
     name: '手势 · Martian Reactor Switch · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
+        rotation: [-0.03848, 0.17992, -0.42876, 0.88449],
       },
       mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
+        rotation: [-0.17489, -0.04194, -0.02041, 0.98348],
       },
       mixamorigRightHandThumb3: {
-        rotation: [0.08159, 0.02988, 0.06445, 0.99413],
+        rotation: [0.09494, 0.00666, 0.04241, 0.99456],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.31559, 0, -0.17477, 0.93266],
+        rotation: [-0.1271, 0, -0.08408, 0.98832],
       },
       mixamorigRightHandIndex2: {
-        rotation: [-0.00426, 0.01004, 0.03201, 0.99943],
+        rotation: [0.01888, -0.00176, 0.0262, 0.99948],
       },
       mixamorigRightHandIndex3: {
-        rotation: [0.11303, 0.01682, -0.00069, 0.99345],
+        rotation: [0.08052, 0.01337, -0.07933, 0.9935],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.34931, 0, -0.16981, 0.92149],
+        rotation: [-0.09943, 0, -0.10622, 0.98936],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [-0.03197, -0.00397, 0.00508, 0.99947],
+        rotation: [-0.01994, -0.0047, 0.02551, 0.99946],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [0.09391, 0.01137, -0.01574, 0.99539],
+        rotation: [0.05812, 0.01384, -0.07543, 0.99536],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.36641, 0, 0.04861, 0.92918],
+        rotation: [0.05922, 0, 0.02191, 0.998],
       },
       mixamorigRightHandRing2: {
-        rotation: [-0.04375, 0.00247, 0.00045, 0.99904],
+        rotation: [-0.02675, 0.00264, 0.03463, 0.99904],
       },
       mixamorigRightHandRing3: {
-        rotation: [0.06239, -0.01165, -0.02425, 0.99769],
+        rotation: [0.02017, -0.00322, -0.06383, 0.99775],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.31118, 0, 0.22677, 0.9229],
+        rotation: [0.16658, 0, 0.15623, 0.97357],
       },
       mixamorigRightHandPinky2: {
-        rotation: [-0.00684, -0.00883, -0.03118, 0.99945],
+        rotation: [-0.03012, 0.00303, -0.01055, 0.99949],
       },
       mixamorigRightHandPinky3: {
-        rotation: [0.09347, -0.01718, 0.00728, 0.99545],
+        rotation: [0.05605, -0.01886, -0.07514, 0.99542],
       },
     },
   },
@@ -4043,94 +2153,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '其他 · Nail Check 01 · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.62573, 0, 0.00171, -0.78004],
+        rotation: [-0.1498, 0, -0.27819, -0.94877],
       },
       mixamorigLeftHandRing2: {
-        rotation: [0.59974, 0.01777, 0.02052, 0.79973],
+        rotation: [0.23777, 0.01728, 0.55098, 0.79975],
       },
       mixamorigLeftHandRing3: {
-        rotation: [-0.68054, 0.01202, -0.01502, -0.73246],
+        rotation: [-0.32437, 0.06799, -0.59845, -0.72939],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.62352, 0, 0.00106, -0.7818],
+        rotation: [-0.14818, 0, -0.27599, -0.94967],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [0.60901, 0.01075, 0.01244, 0.79299],
+        rotation: [0.24559, 0.01561, 0.55744, 0.79291],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [-0.70525, 0.04358, -0.00054, -0.70762],
+        rotation: [-0.38213, 0.14475, -0.59274, -0.69403],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.46803, 0.05893, -0.45378, -0.75602],
+        rotation: [0.17171, 0.2116, -0.43593, -0.85773],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [0.01564, -0.10481, -0.35652, 0.92826],
+        rotation: [0.21096, 0.06306, -0.28784, 0.93202],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [-0.0883, -0.23953, -0.75732, 0.60107],
+        rotation: [0.6951, 0.07459, -0.31331, 0.64273],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.59242, 0, -0.00365, -0.80562],
+        rotation: [-0.12875, 0, -0.24378, -0.96125],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [0.62727, 0.01702, 0.02702, 0.77815],
+        rotation: [0.24836, 0.01425, 0.57664, 0.77821],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [-0.71708, 0.10892, 0.00302, -0.68842],
+        rotation: [-0.44891, 0.25583, -0.55918, -0.64834],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.60027, -0.00008, -0.00181, -0.7998],
+        rotation: [-0.13417, -0.00002, -0.25159, -0.95849],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [0.58018, 0.18457, 0.24813, 0.75349],
+        rotation: [0.13471, 0.05087, 0.61647, 0.7741],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [-0.64165, 0.20968, -0.15926, -0.72038],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [-0.18571, 0.01303, -0.6345, -0.75017],
       },
     },
   },
@@ -4138,95 +2203,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-02-other-nail-check-01-r',
     name: '其他 · Nail Check 01 · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.46799, 0.05893, -0.45376, 0.75605],
+        rotation: [-0.06736, 0.19465, -0.46366, 0.86174],
       },
       mixamorigRightHandThumb2: {
-        rotation: [0.01561, 0.10478, 0.35652, 0.92826],
+        rotation: [0.14451, -0.05902, 0.3263, 0.93229],
       },
       mixamorigRightHandThumb3: {
-        rotation: [-0.08825, 0.23946, 0.75733, 0.6011],
+        rotation: [0.62424, -0.09495, 0.43779, 0.64004],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.59235, 0, -0.00365, 0.80567],
+        rotation: [0.1852, 0, -0.20422, 0.96125],
       },
       mixamorigRightHandIndex2: {
-        rotation: [0.62727, -0.01701, -0.02701, 0.77815],
+        rotation: [0.38364, -0.01424, -0.497, 0.77821],
       },
       mixamorigRightHandIndex3: {
-        rotation: [-0.71708, -0.10892, -0.00304, -0.68842],
+        rotation: [-0.57359, -0.25582, 0.43036, -0.64834],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.62346, 0, 0.00106, 0.78186],
+        rotation: [0.21201, 0, -0.23061, 0.94967],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [0.60902, -0.01075, -0.01244, 0.79299],
+        rotation: [0.3762, -0.0156, -0.47909, 0.7929],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [-0.70524, -0.04358, 0.00053, -0.70762],
+        rotation: [-0.51721, -0.14472, 0.47944, -0.69404],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.62566, 0, 0.00171, 0.78009],
+        rotation: [0.21412, 0, -0.23234, 0.94877],
       },
       mixamorigRightHandRing2: {
-        rotation: [0.59974, -0.01776, -0.02051, 0.79973],
+        rotation: [0.36701, -0.01727, -0.47478, 0.79974],
       },
       mixamorigRightHandRing3: {
-        rotation: [-0.68054, -0.01201, 0.01501, -0.73246],
+        rotation: [-0.46267, -0.06797, 0.49929, -0.7294],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.6002, 0, -0.00175, 0.79985],
+        rotation: [0.19239, 0, -0.21044, 0.95849],
       },
       mixamorigRightHandPinky2: {
-        rotation: [0.58004, -0.18516, -0.24846, 0.75335],
+        rotation: [0.28339, -0.05094, -0.5638, 0.77409],
       },
       mixamorigRightHandPinky3: {
-        rotation: [-0.64154, -0.21016, 0.1597, -0.72024],
+        rotation: [-0.33726, -0.0131, 0.56863, -0.75016],
       },
     },
   },
@@ -4235,94 +2255,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '其他 · Nail Check 02 · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.26314, 0, 0.03973, -0.96394],
+        rotation: [-0.00888, 0, 0.10189, -0.99476],
       },
       mixamorigLeftHandRing2: {
-        rotation: [-0.15252, -0.00575, 0.00198, 0.98828],
+        rotation: [-0.06519, -0.00791, -0.13789, 0.98827],
       },
       mixamorigLeftHandRing3: {
-        rotation: [-0.04644, 0.00177, 0.03156, 0.99842],
+        rotation: [-0.04841, -0.01021, -0.02845, 0.99837],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.26062, 0, -0.02037, -0.96523],
+        rotation: [0.04487, 0, 0.07929, -0.99584],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [-0.14123, 0.00197, -0.00375, 0.98997],
+        rotation: [-0.06056, 0.00093, -0.12764, 0.98997],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [-0.01418, 0.00074, 0.00407, 0.99989],
+        rotation: [-0.01008, -0.00097, -0.01078, 0.99989],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
+        rotation: [0.13566, 0.19721, -0.40854, -0.8808],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [-0.18036, 0.0645, 0.0907, 0.97728],
+        rotation: [-0.20184, 0.05389, 0.00386, 0.97793],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [0.07773, -0.02908, -0.05209, 0.99519],
+        rotation: [0.09262, -0.01678, -0.01325, 0.99547],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.21765, 0, -0.12493, -0.968],
+        rotation: [0.15355, 0, 0.06646, -0.9859],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [-0.11339, 0.00463, -0.0445, 0.99254],
+        rotation: [-0.019, 0.01746, -0.12031, 0.9924],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [0.00499, -0.00198, -0.0147, 0.99988],
+        rotation: [0.01526, 0.00346, -0.00286, 0.99987],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.22498, -0.00003, 0.12684, -0.96607],
+        rotation: [-0.07211, -0.00001, 0.16787, -0.98317],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [-0.11693, -0.00488, 0.04523, 0.9921],
+        rotation: [-0.08558, -0.02134, -0.09162, 0.99188],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [-0.01426, 0.00029, 0.01321, 0.99981],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [-0.01774, -0.00461, -0.00793, 0.9998],
       },
     },
   },
@@ -4330,95 +2305,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-02-other-nail-check-02-r',
     name: '其他 · Nail Check 02 · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
+        rotation: [-0.03848, 0.17992, -0.42876, 0.88449],
       },
       mixamorigRightHandThumb2: {
-        rotation: [-0.18035, -0.06449, -0.09073, 0.97728],
+        rotation: [-0.19582, -0.03923, -0.04908, 0.97862],
       },
       mixamorigRightHandThumb3: {
-        rotation: [0.07772, 0.02908, 0.0521, 0.99519],
+        rotation: [0.08699, 0.01052, 0.03446, 0.99556],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.21757, 0, -0.12493, 0.96802],
+        rotation: [-0.16524, 0, 0.02629, 0.9859],
       },
       mixamorigRightHandIndex2: {
-        rotation: [-0.11339, -0.00463, 0.0445, 0.99254],
+        rotation: [-0.04825, -0.01746, 0.11184, 0.9924],
       },
       mixamorigRightHandIndex3: {
-        rotation: [0.00499, 0.00198, 0.0147, 0.99988],
+        rotation: [0.01408, -0.00346, 0.00656, 0.99987],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.26054, 0, -0.02037, 0.96525],
+        rotation: [-0.06314, 0, 0.06567, 0.99584],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [-0.14123, -0.00197, 0.00375, 0.98997],
+        rotation: [-0.09032, -0.00093, 0.10863, 0.98997],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [-0.01418, -0.00074, -0.00407, 0.99989],
+        rotation: [-0.01244, 0.00097, 0.00794, 0.99989],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.26306, 0, 0.03973, 0.96396],
+        rotation: [-0.01667, 0, 0.1009, 0.99476],
       },
       mixamorigRightHandRing2: {
-        rotation: [-0.15252, 0.00575, -0.00198, 0.98828],
+        rotation: [-0.09736, 0.00791, 0.11741, 0.98827],
       },
       mixamorigRightHandRing3: {
-        rotation: [-0.04644, -0.00177, -0.03156, 0.99842],
+        rotation: [-0.05395, 0.01021, 0.01555, 0.99837],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.22489, 0, 0.12685, 0.96609],
+        rotation: [0.02821, 0, 0.1805, 0.98317],
       },
       mixamorigRightHandPinky2: {
-        rotation: [-0.11693, 0.00482, -0.04523, 0.9921],
+        rotation: [-0.10564, 0.02133, 0.06753, 0.99188],
       },
       mixamorigRightHandPinky3: {
-        rotation: [-0.01426, -0.00026, -0.01321, 0.99981],
+        rotation: [-0.01915, 0.00461, 0.00327, 0.9998],
       },
     },
   },
@@ -4427,94 +2357,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '其他 · Offer · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.41767, 0, -0.01268, -0.90851],
+        rotation: [-0.08414, 0, -0.15157, -0.98486],
       },
       mixamorigLeftHandRing2: {
-        rotation: [0.06775, -0.00053, 0.00091, 0.9977],
+        rotation: [0.0296, 0.00065, 0.06095, 0.9977],
       },
       mixamorigLeftHandRing3: {
-        rotation: [0.17137, 0.0126, 0.02789, 0.98473],
+        rotation: [0.05258, 0.00781, 0.16547, 0.98478],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.4153, 0, 0.01074, -0.90962],
+        rotation: [-0.10232, 0, -0.13959, -0.98491],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [0.07907, 0.00074, -0.00041, 0.99687],
+        rotation: [0.03497, 0.00241, 0.07092, 0.99687],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [0.20532, 0.00507, 0.00457, 0.97867],
+        rotation: [0.08486, 0.00795, 0.18701, 0.97865],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.47171, 0.03523, -0.3569, -0.80553],
+        rotation: [0.08208, 0.18614, -0.41276, -0.88783],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [-0.32525, -0.02071, -0.2543, 0.91056],
+        rotation: [-0.05564, 0.15647, -0.4091, 0.89725],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [0.08232, 0.04513, -0.44611, 0.89004],
+        rotation: [0.43369, 0.15425, -0.13303, 0.87774],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.37855, 0, 0.01532, -0.92545],
+        rotation: [-0.08876, 0, -0.10215, -0.9908],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [0.10294, -0.01034, -0.02944, 0.9942],
+        rotation: [0.07078, -0.0001, 0.08034, 0.99425],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [0.22233, 0.00886, -0.00533, 0.97492],
+        rotation: [0.09701, 0.01455, 0.20013, 0.97485],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.37719, -0.00005, -0.0491, -0.92484],
+        rotation: [-0.03471, 0, -0.12851, -0.9911],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [0.05507, 0.00906, 0.02978, 0.998],
+        rotation: [-0.00011, 0.0022, 0.0626, 0.99804],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [0.16107, -0.00984, 0.00918, 0.98685],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [0.06905, -0.0083, 0.14582, 0.98686],
       },
     },
   },
@@ -4522,95 +2407,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-02-other-offer-r',
     name: '其他 · Offer · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.47165, 0.03524, -0.35688, 0.80556],
+        rotation: [0.01334, 0.16597, -0.42064, 0.89182],
       },
       mixamorigRightHandThumb2: {
-        rotation: [-0.32527, 0.02069, 0.25428, 0.91056],
+        rotation: [-0.14972, -0.12897, 0.38476, 0.90162],
       },
       mixamorigRightHandThumb3: {
-        rotation: [0.08231, -0.04517, 0.44611, 0.89004],
+        rotation: [0.38822, -0.17212, 0.23468, 0.87441],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.37847, 0, 0.01532, 0.92549],
+        rotation: [0.11133, 0, -0.07694, 0.9908],
       },
       mixamorigRightHandIndex2: {
-        rotation: [0.10294, 0.01034, 0.02944, 0.9942],
+        rotation: [0.08849, 0.0001, -0.06028, 0.99425],
       },
       mixamorigRightHandIndex3: {
-        rotation: [0.22233, -0.00886, 0.00532, 0.97492],
+        rotation: [0.14362, -0.01455, -0.1698, 0.97485],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.41522, 0, 0.01073, 0.90966],
+        rotation: [0.13375, 0, -0.10986, 0.98491],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [0.07907, -0.00074, 0.00041, 0.99687],
+        rotation: [0.05147, -0.00241, -0.06002, 0.99687],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [0.20532, -0.00507, -0.00457, 0.97867],
+        rotation: [0.1286, -0.00794, -0.16011, 0.97865],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.41759, 0, -0.01268, 0.90854],
+        rotation: [0.11911, 0, -0.12597, 0.98486],
       },
       mixamorigRightHandRing2: {
-        rotation: [0.06775, 0.00053, -0.00091, 0.9977],
+        rotation: [0.04379, -0.00065, -0.05171, 0.9977],
       },
       mixamorigRightHandRing3: {
-        rotation: [0.17137, -0.0126, -0.02789, 0.98473],
+        rotation: [0.09199, -0.00781, -0.14726, 0.98478],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.3771, 0, -0.04908, 0.92487],
+        rotation: [0.06551, 0, -0.11589, 0.9911],
       },
       mixamorigRightHandPinky2: {
-        rotation: [0.05507, -0.00921, -0.02978, 0.998],
+        rotation: [0.01542, -0.00221, -0.06068, 0.99804],
       },
       mixamorigRightHandPinky3: {
-        rotation: [0.16107, 0.00994, -0.00919, 0.98685],
+        rotation: [0.10306, 0.00831, -0.12413, 0.98686],
       },
     },
   },
@@ -4619,94 +2459,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '手势 · One does not simply... · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.61922, 0, 0.00183, -0.78522],
+        rotation: [-0.14654, 0, -0.27098, -0.95137],
       },
       mixamorigLeftHandRing2: {
-        rotation: [0.37515, 0.00536, 0.0057, 0.92693],
+        rotation: [0.15372, 0.00894, 0.34226, 0.9269],
       },
       mixamorigLeftHandRing3: {
-        rotation: [0.4617, 0.15144, 0.08965, 0.8694],
+        rotation: [0.17653, 0.0259, 0.43593, 0.88212],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.617, 0, 0.00113, -0.78696],
+        rotation: [-0.14489, 0, -0.26879, -0.95224],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [0.38568, 0.00342, 0.00366, 0.92262],
+        rotation: [0.15972, 0.00833, 0.35108, 0.92259],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [-0.48388, 0.22923, 0.12601, -0.83512],
+        rotation: [0.18768, 0.02877, 0.46346, 0.86554],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.53104, 0.00398, -0.2952, -0.79425],
+        rotation: [0.04943, 0.16201, -0.34298, -0.92394],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [-0.02164, -0.01385, -0.04634, 0.9986],
+        rotation: [0.0081, 0.01442, -0.0505, 0.99859],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [0.06569, -0.17011, -0.54405, 0.819],
+        rotation: [0.45953, 0.03803, -0.29858, 0.83561],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.58569, 0, -0.00383, -0.81052],
+        rotation: [-0.1252, 0, -0.2366, -0.96351],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [0.40792, -0.01192, -0.01383, 0.91284],
+        rotation: [0.18289, 0.0025, 0.36488, 0.91291],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [-0.27136, 0.74754, 0.43743, -0.41978],
+        rotation: [0.13874, 0.08428, 0.49571, 0.85318],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.59359, -0.00008, -0.0019, -0.80476],
+        rotation: [-0.13071, -0.00002, -0.24439, -0.96083],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [0.40425, -0.0028, -0.00204, 0.91464],
+        rotation: [0.17242, 0.0058, 0.36563, 0.91463],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [-0.16544, 0.83062, 0.47498, -0.23894],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [0.14333, 0.07091, 0.48211, 0.8614],
       },
     },
   },
@@ -4714,191 +2509,101 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-03-signs-one-does-not-simply-r',
     name: '手势 · One does not simply... · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.53099, 0.00399, -0.29518, 0.7943],
+        rotation: [0.03046, 0.14394, -0.34519, 0.92693],
       },
       mixamorigRightHandThumb2: {
-        rotation: [-0.02164, 0.01385, 0.04634, 0.9986],
+        rotation: [-0.00281, -0.0119, 0.05106, 0.99862],
       },
       mixamorigRightHandThumb3: {
-        rotation: [0.06568, 0.17006, 0.54405, 0.81901],
+        rotation: [0.38886, -0.0472, 0.38614, 0.83514],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.58562, 0, -0.00383, 0.81057],
+        rotation: [0.17998, 0, -0.19815, 0.96351],
       },
       mixamorigRightHandIndex2: {
-        rotation: [0.40792, 0.01192, 0.01383, 0.91284],
+        rotation: [0.26769, -0.0025, -0.30811, 0.91291],
       },
       mixamorigRightHandIndex3: {
-        rotation: [-0.27028, -0.74857, -0.43809, -0.41793],
+        rotation: [0.25737, -0.08429, -0.4458, 0.85318],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.61693, 0, 0.00113, 0.78702],
+        rotation: [0.20703, 0, -0.22446, 0.95224],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [0.38568, -0.00342, -0.00366, 0.92262],
+        rotation: [0.24182, -0.00833, -0.30048, 0.92258],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [-0.48368, -0.23056, -0.12678, -0.83476],
+        rotation: [0.29677, -0.02877, -0.40242, 0.86554],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.61915, 0, 0.00183, 0.78527],
+        rotation: [0.20918, 0, -0.22616, 0.95136],
       },
       mixamorigRightHandRing2: {
-        rotation: [0.37515, -0.00536, -0.0057, 0.92693],
+        rotation: [0.23381, -0.00893, -0.29343, 0.9269],
       },
       mixamorigRightHandRing3: {
-        rotation: [0.46175, -0.15096, -0.08939, 0.86949],
+        rotation: [0.27916, -0.02589, -0.37851, 0.88212],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.59352, 0, -0.00184, 0.80481],
+        rotation: [0.18725, 0, -0.20433, 0.96082],
       },
       mixamorigRightHandPinky2: {
-        rotation: [0.40425, 0.00236, 0.00193, 0.91465],
+        rotation: [0.25771, -0.00589, -0.31145, 0.91463],
       },
       mixamorigRightHandPinky3: {
-        rotation: [-0.16409, -0.83148, -0.47544, -0.23595],
+        rotation: [0.25841, -0.07084, -0.43151, 0.8614],
       },
     },
   },
   {
     key: 'qbx-hands-03-signs-peace-flipped',
-    name: '手势 · Peace Flipped',
+    name: '手势 · Peace Flipped · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.57928, 0, -0.41999, -0.6986],
+        rotation: [-0.30036, 0, -0.30143, -0.90494],
       },
       mixamorigLeftHandRing2: {
-        rotation: [-0.25936, 0.60276, 0.53887, 0.52824],
+        rotation: [0.13159, 0.1498, 0.58338, 0.78735],
       },
       mixamorigLeftHandRing3: {
-        rotation: [-0.14095, 0.74231, -0.65375, 0.04147],
+        rotation: [-0.53994, 0.63362, -0.39462, -0.38892],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.35912, 0, -0.1023, -0.92767],
+        rotation: [-0.03939, 0, 0.03966, -0.99844],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [0.00913, 0.01363, 0.03781, 0.99915],
+        rotation: [0.00411, 0.00169, 0.03868, 0.99924],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [0.02087, 0.01789, 0.05308, 0.99821],
+        rotation: [0.01526, 0.00241, 0.05495, 0.99837],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.28602, 0.097, -0.41095, -0.86018],
+        rotation: [0.0138, 0.14, -0.28661, -0.94766],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [0.42527, -0.08828, -0.00071, 0.90075],
+        rotation: [0.42193, -0.02714, -0.05321, 0.90466],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [0.14187, -0.38923, -0.63844, 0.64867],
+        rotation: [0.34663, -0.10889, -0.5546, 0.74861],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.20032, 0, -0.15783, -0.96693],
+        rotation: [0.12651, 0, 0.00837, -0.99193],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [0.0043, 0.01336, 0.0679, 0.99759],
+        rotation: [0.0018, -0.00866, 0.06801, 0.99765],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [0.00289, 0.0015, 0.01032, 0.99994],
+        rotation: [0.00276, -0.00147, 0.01035, 0.99994],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.56487, -0.00008, -0.40013, -0.72168],
+        rotation: [-0.27896, -0.00004, -0.27995, -0.91859],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [-0.29449, 0.5849, 0.53867, 0.5301],
+        rotation: [0.07607, 0.16173, 0.60918, 0.77263],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [-0.14935, 0.71576, -0.67651, 0.08788],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [-0.53538, 0.64469, -0.4397, -0.32312],
       },
     },
   },
@@ -4906,95 +2611,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-03-signs-peace-flipped-r',
     name: '手势 · Peace Flipped · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.28596, 0.09702, -0.41094, 0.8602],
+        rotation: [0.05275, 0.12321, -0.28206, 0.94999],
       },
       mixamorigRightHandThumb2: {
-        rotation: [0.42527, 0.08828, 0.00076, 0.90075],
+        rotation: [0.40392, 0.00673, 0.13305, 0.90504],
       },
       mixamorigRightHandThumb3: {
-        rotation: [0.14186, 0.38917, 0.63844, 0.64871],
+        rotation: [0.23857, 0.12013, 0.60894, 0.74689],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.20023, 0, -0.15783, 0.96695],
+        rotation: [-0.12463, 0, -0.02328, 0.99193],
       },
       mixamorigRightHandIndex2: {
-        rotation: [0.0043, -0.01336, -0.0679, 0.99759],
+        rotation: [0.01862, 0.00866, -0.06544, 0.99765],
       },
       mixamorigRightHandIndex3: {
-        rotation: [0.00289, -0.0015, -0.01032, 0.99994],
+        rotation: [0.00525, 0.00147, -0.00934, 0.99994],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.35904, 0, -0.1023, 0.9277],
+        rotation: [0.02832, 0, 0.04819, 0.99844],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [0.00913, -0.01363, -0.03781, 0.99915],
+        rotation: [0.01358, -0.00169, -0.03645, 0.99924],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [0.02087, -0.01789, -0.05308, 0.99821],
+        rotation: [0.02842, -0.00241, -0.04945, 0.99837],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.57924, 0, -0.41996, 0.69865],
+        rotation: [0.36575, 0, -0.21751, 0.90494],
       },
       mixamorigRightHandRing2: {
-        rotation: [-0.25918, -0.60263, -0.53896, 0.52838],
+        rotation: [0.27219, -0.14979, -0.5325, 0.78735],
       },
       mixamorigRightHandRing3: {
-        rotation: [-0.14112, -0.74232, 0.65372, 0.04123],
+        rotation: [-0.62095, -0.63361, 0.24837, -0.38894],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.56487, 0, -0.40004, 0.72173],
+        rotation: [0.3397, 0, -0.202, 0.91859],
       },
       mixamorigRightHandPinky2: {
-        rotation: [-0.03056, -0.00973, 0.0092, 0.99944],
+        rotation: [0.22478, -0.16183, -0.57128, 0.77261],
       },
       mixamorigRightHandPinky3: {
-        rotation: [-0.00499, -0.07061, -0.09362, 0.99309],
+        rotation: [-0.62769, -0.64472, 0.29322, -0.32307],
       },
     },
   },
@@ -5003,94 +2663,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '手势 · Peace · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.53339, 0, 0.11688, -0.83776],
+        rotation: [-0.30036, 0, -0.30143, -0.90494],
       },
       mixamorigLeftHandRing2: {
-        rotation: [0.58283, 0.16664, 0.13402, 0.78395],
+        rotation: [0.13159, 0.1498, 0.58338, 0.78735],
       },
       mixamorigLeftHandRing3: {
-        rotation: [-0.65906, 0.49059, 0.1136, -0.55863],
+        rotation: [-0.53994, 0.63362, -0.39462, -0.38892],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.16846, 0, 0.06037, -0.98386],
+        rotation: [-0.08339, 0, 0.01976, -0.99632],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.0022, -0.00126, 0.99947],
+        rotation: [-0.01345, -0.00273, -0.02945, 0.99947],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [0.01408, 0.0015, 0.00445, 0.99989],
+        rotation: [0.00238, 0.00114, 0.01457, 0.99989],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.31643, 0.03722, -0.19888, -0.92679],
+        rotation: [0.04506, 0.13741, -0.24691, -0.95819],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [0.25166, -0.01613, -0.34282, 0.90492],
+        rotation: [0.42281, -0.01082, -0.04572, 0.905],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [-0.35265, -0.34436, -0.55079, 0.67356],
+        rotation: [0.39079, -0.07432, -0.52441, 0.75283],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.17376, 0, -0.20151, -0.96395],
+        rotation: [0.13865, 0, -0.11274, -0.9839],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [-0.00574, -0.00453, -0.03178, 0.99947],
+        rotation: [0.0243, 0.00021, -0.02127, 0.99948],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [0.01785, -0.00545, -0.01338, 0.99974],
+        rotation: [0.02059, -0.0029, 0.00858, 0.99975],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.50732, -0.00007, 0.10554, -0.85527],
+        rotation: [-0.27896, -0.00004, -0.27995, -0.91859],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [0.57579, 0.19707, 0.21296, 0.76438],
+        rotation: [0.07607, 0.16173, 0.60918, 0.77263],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [-0.68818, 0.54789, 0.07985, -0.46888],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [-0.53538, 0.64469, -0.4397, -0.32312],
       },
     },
   },
@@ -5098,95 +2713,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-03-signs-peace-r',
     name: '手势 · Peace · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.31636, 0.03723, -0.19888, 0.92681],
+        rotation: [0.01423, 0.12451, -0.25059, 0.95995],
       },
       mixamorigRightHandThumb2: {
-        rotation: [0.25164, 0.0161, 0.34283, 0.90492],
+        rotation: [0.40519, -0.00995, 0.12914, 0.90501],
       },
       mixamorigRightHandThumb3: {
-        rotation: [-0.35261, 0.3443, 0.55082, 0.67359],
+        rotation: [0.28672, 0.08089, 0.5878, 0.75215],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.17368, 0, -0.20151, 0.96396],
+        rotation: [-0.10635, 0, -0.14362, 0.9839],
       },
       mixamorigRightHandIndex2: {
-        rotation: [-0.00574, 0.00453, 0.03178, 0.99947],
+        rotation: [0.01826, -0.00021, 0.02664, 0.99948],
       },
       mixamorigRightHandIndex3: {
-        rotation: [0.01784, 0.00545, 0.01338, 0.99974],
+        rotation: [0.02208, 0.0029, -0.0032, 0.99975],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.16838, 0, 0.06037, 0.98387],
+        rotation: [0.07588, 0, 0.03982, 0.99632],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.0022, 0.00126, 0.99947],
+        rotation: [-0.02033, 0.00273, 0.02519, 0.99947],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [0.01408, -0.0015, -0.00445, 0.99989],
+        rotation: [0.00592, -0.00114, -0.01353, 0.99989],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.53332, 0, 0.11687, 0.8378],
+        rotation: [0.36575, 0, -0.21751, 0.90494],
       },
       mixamorigRightHandRing2: {
-        rotation: [0.58283, -0.1666, -0.13401, 0.78396],
+        rotation: [0.27219, -0.14979, -0.5325, 0.78735],
       },
       mixamorigRightHandRing3: {
-        rotation: [-0.65904, -0.49063, -0.11368, -0.55859],
+        rotation: [-0.62095, -0.63361, 0.24837, -0.38894],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.50724, 0, 0.10558, 0.85531],
+        rotation: [0.3397, 0, -0.202, 0.91859],
       },
       mixamorigRightHandPinky2: {
-        rotation: [0.57571, -0.19748, -0.21318, 0.76427],
+        rotation: [0.22478, -0.16183, -0.57128, 0.77261],
       },
       mixamorigRightHandPinky3: {
-        rotation: [-0.68821, -0.54815, -0.07959, -0.46857],
+        rotation: [-0.62769, -0.64472, 0.29322, -0.32307],
       },
     },
   },
@@ -5195,94 +2765,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '手势 · Perfect · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.27706, 0, -0.09909, -0.95573],
+        rotation: [-0.0503, 0, -0.15025, -0.98737],
       },
       mixamorigLeftHandRing2: {
-        rotation: [0.16639, -0.00904, 0.02833, 0.98561],
+        rotation: [0.05656, -0.0005, 0.15903, 0.98565],
       },
       mixamorigLeftHandRing3: {
-        rotation: [0.28353, -0.01743, 0.04409, 0.95779],
+        rotation: [0.09267, 0.0004, 0.27155, 0.95795],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.23763, 0, -0.10687, -0.96546],
+        rotation: [-0.02446, 0, -0.11888, -0.99261],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [0.1787, -0.01572, 0.01649, 0.98364],
+        rotation: [0.07375, -0.0048, 0.16361, 0.98375],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [0.31762, -0.03932, 0.00407, 0.94739],
+        rotation: [0.1419, -0.01237, 0.28418, 0.94813],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.50314, 0.0148, -0.30791, -0.80736],
+        rotation: [-0.06666, 0.16357, -0.4643, -0.86789],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [0.05841, -0.0384, -0.11156, 0.9913],
+        rotation: [0.11667, -0.02644, -0.0474, 0.99169],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [-0.2633, -0.1273, -0.3242, 0.89964],
+        rotation: [0.07261, 0.00147, -0.41129, 0.90861],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.5907, 0, -0.07262, -0.80362],
+        rotation: [-0.21651, 0, -0.43382, -0.8746],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [0.31057, -0.05145, -0.03181, 0.94862],
+        rotation: [0.15457, -0.00953, 0.27124, 0.94997],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [0.44154, -0.23659, -0.16197, 0.8502],
+        rotation: [0.18354, 0.04501, 0.43302, 0.88135],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.25377, -0.00004, -0.04117, -0.96639],
+        rotation: [-0.08772, -0.00001, -0.10051, -0.99106],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [0.19295, 0.01881, 0.10348, 0.97556],
+        rotation: [0.00337, 0.019, 0.21892, 0.97555],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [0.31314, -0.03075, 0.04139, 0.94831],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [0.10934, -0.00934, 0.29634, 0.94876],
       },
     },
   },
@@ -5290,95 +2815,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-03-signs-perfect-r',
     name: '手势 · Perfect · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.50308, 0.01481, -0.30789, 0.8074],
+        rotation: [0.16491, 0.13395, -0.43912, 0.87295],
       },
       mixamorigRightHandThumb2: {
-        rotation: [0.0584, 0.03839, 0.11156, 0.9913],
+        rotation: [0.10642, 0.02197, 0.06732, 0.9918],
       },
       mixamorigRightHandThumb3: {
-        rotation: [-0.26331, 0.12727, 0.32419, 0.89965],
+        rotation: [-0.00747, 0.0158, 0.41758, 0.90847],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.59063, 0, -0.07262, 0.80367],
+        rotation: [0.31736, 0, -0.36656, 0.87459],
       },
       mixamorigRightHandIndex2: {
-        rotation: [0.31057, 0.05145, 0.03181, 0.94863],
+        rotation: [0.21703, 0.00953, -0.22442, 0.94997],
       },
       mixamorigRightHandIndex3: {
-        rotation: [0.44156, 0.23644, 0.1619, 0.85024],
+        rotation: [0.28522, -0.04501, -0.37396, 0.88135],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.23755, 0, -0.10686, 0.96548],
+        rotation: [0.05319, 0, -0.10911, 0.99261],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [0.1787, 0.01572, -0.01649, 0.98364],
+        rotation: [0.11203, 0.0048, -0.1402, 0.98375],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [0.31762, 0.03932, -0.00406, 0.94739],
+        rotation: [0.20796, 0.01238, -0.2401, 0.94813],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.27698, 0, -0.09908, 0.95575],
+        rotation: [0.086, 0, -0.13308, 0.98737],
       },
       mixamorigRightHandRing2: {
-        rotation: [0.16639, 0.00904, -0.02833, 0.98561],
+        rotation: [0.09424, 0.00051, -0.14003, 0.98565],
       },
       mixamorigRightHandRing3: {
-        rotation: [0.28353, 0.01744, -0.04408, 0.95779],
+        rotation: [0.15713, -0.0004, -0.24008, 0.95795],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.25369, 0, -0.04116, 0.96641],
+        rotation: [0.10991, 0, -0.07562, 0.99106],
       },
       mixamorigRightHandPinky2: {
-        rotation: [0.19295, -0.01894, -0.10349, 0.97555],
+        rotation: [0.05757, -0.01903, -0.21124, 0.97555],
       },
       mixamorigRightHandPinky3: {
-        rotation: [0.31314, 0.03086, -0.04141, 0.9483],
+        rotation: [0.17942, 0.00936, -0.25996, 0.94876],
       },
     },
   },
@@ -5387,94 +2867,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '手势 · Pinky Swear · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.75508, 0, 0.02873, -0.655],
+        rotation: [-0.237, 0, -0.41948, -0.87628],
       },
       mixamorigLeftHandRing2: {
-        rotation: [0.57044, 0.02854, 0.00306, 0.82084],
+        rotation: [0.22144, 0.03618, 0.52571, 0.82054],
       },
       mixamorigLeftHandRing3: {
-        rotation: [-0.73916, 0.03518, 0.00381, -0.6726],
+        rotation: [-0.3535, 0.10134, -0.64916, -0.66586],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.75644, 0, 0.02914, -0.65341],
+        rotation: [-0.23801, 0, -0.42104, -0.87526],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [0.5538, 0.00692, -0.01535, 0.83248],
+        rotation: [0.22129, 0.03167, 0.50789, 0.83191],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [-0.75291, 0.02287, 0.02493, -0.65726],
+        rotation: [-0.37048, 0.10632, -0.65592, -0.649],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.52763, 0.00783, -0.30711, -0.79198],
+        rotation: [0.05846, 0.16575, -0.34986, -0.92017],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [-0.26362, 0.00122, -0.06666, 0.96232],
+        rotation: [-0.16766, 0.09948, -0.21407, 0.95717],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [0.17882, -0.03492, -0.61257, 0.76913],
+        rotation: [0.61104, 0.14384, -0.18399, 0.75637],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.70508, 0, 0.04078, -0.70795],
+        rotation: [-0.21925, 0, -0.35587, -0.90845],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [0.60335, 0.02928, -0.00549, 0.79692],
+        rotation: [0.23543, 0.04185, 0.55554, 0.79636],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [-0.68632, 0.02173, 0.01395, -0.72684],
+        rotation: [-0.34872, 0.12049, -0.59128, -0.71712],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
+        rotation: [-0.00445, 0, 0.0144, -0.99989],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
+        rotation: [-0.03179, -0.00044, 0.00283, 0.99949],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [0.03744, -0.00192, 0.08594, 0.99559],
       },
     },
   },
@@ -5482,95 +2917,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-03-signs-pinky-swear-r',
     name: '手势 · Pinky Swear · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.52757, 0.00784, -0.30709, 0.79203],
+        rotation: [0.02325, 0.14775, -0.35395, 0.92323],
       },
       mixamorigRightHandThumb2: {
-        rotation: [-0.26362, -0.00123, 0.06664, 0.96232],
+        rotation: [-0.2132, -0.07537, 0.16877, 0.95936],
       },
       mixamorigRightHandThumb3: {
-        rotation: [0.17881, 0.03487, 0.61258, 0.76913],
+        rotation: [0.55222, -0.16607, 0.31981, 0.7518],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.70502, 0, 0.04078, 0.70801],
+        rotation: [0.30067, 0, -0.29037, 0.90845],
       },
       mixamorigRightHandIndex2: {
-        rotation: [0.60335, -0.02929, 0.00548, 0.79692],
+        rotation: [0.36588, -0.04185, -0.47978, 0.79636],
       },
       mixamorigRightHandIndex3: {
-        rotation: [-0.68632, -0.02174, -0.01395, -0.72684],
+        rotation: [-0.48449, -0.12047, 0.48631, -0.71712],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.75639, 0, 0.02914, 0.65347],
+        rotation: [0.33502, 0, -0.34884, 0.87526],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [0.5538, -0.00694, 0.01534, 0.83248],
+        rotation: [0.34036, -0.03166, -0.43713, 0.83191],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [-0.75291, -0.02289, -0.02492, -0.65726],
+        rotation: [-0.5216, -0.10631, 0.54352, -0.64901],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.75502, 0, 0.02873, 0.65507],
+        rotation: [0.33365, 0, -0.34759, 0.87628],
       },
       mixamorigRightHandRing2: {
-        rotation: [0.57044, -0.02854, -0.00306, 0.82084],
+        rotation: [0.34494, -0.03617, -0.45435, 0.82053],
       },
       mixamorigRightHandRing3: {
-        rotation: [-0.73916, -0.03518, -0.00381, -0.6726],
+        rotation: [-0.50347, -0.10132, 0.54118, -0.66586],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
+        rotation: [0.00075, 0, 0.01505, 0.99989],
       },
       mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
+        rotation: [-0.0301, 0.00044, -0.01063, 0.99949],
       },
       mixamorigRightHandPinky3: {
-        rotation: [0.09353, 0.00137, -0.00626, 0.9956],
+        rotation: [0.05759, 0.00192, -0.07397, 0.99559],
       },
     },
   },
@@ -5579,94 +2969,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '持握 · Pistol Double · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.8544, 0, -0.01221, -0.51947],
+        rotation: [-0.26732, 0, -0.56009, -0.78412],
       },
       mixamorigLeftHandRing2: {
-        rotation: [-0.46762, 0.51532, 0.30662, -0.64943],
+        rotation: [0.13363, 0.08966, 0.54298, 0.82418],
       },
       mixamorigLeftHandRing3: {
-        rotation: [0.5021, 0.43746, -0.40124, 0.62891],
+        rotation: [-0.23395, 0.1588, -0.59864, -0.74945],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
+        rotation: [-0.02324, 0, -0.00918, -0.99969],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
+        rotation: [-0.01332, -0.00056, -0.02951, 0.99948],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [0.07223, 0.00177, 0.00414, 0.99738],
+        rotation: [0.02768, 0.00123, 0.06685, 0.99738],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
+        rotation: [0.13566, 0.19721, -0.40854, -0.8808],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [-0.22994, 0.10248, 0.18301, 0.95033],
+        rotation: [-0.28284, 0.0449, 0.07978, 0.95479],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [0.10622, -0.04802, -0.1038, 0.98774],
+        rotation: [0.1371, -0.00623, -0.05711, 0.98889],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
+        rotation: [0.00329, 0, 0.02148, -0.99976],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
+        rotation: [0.0249, 0.0006, -0.02057, 0.99948],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [0.07101, -0.00227, -0.01223, 0.9974],
+        rotation: [0.04071, 0.003, 0.05947, 0.9974],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.83107, -0.00012, 0.00326, -0.55615],
+        rotation: [-0.2628, -0.00004, -0.52387, -0.81024],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [-0.52123, -0.39832, -0.26485, -0.70676],
+        rotation: [0.26962, -0.00621, 0.51878, 0.81126],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [0.58086, -0.37124, 0.33113, 0.64431],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [-0.3225, 0.05489, -0.5857, -0.74158],
       },
     },
   },
@@ -5674,95 +3019,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-04-weapons-pistol-double-r',
     name: '持握 · Pistol Double · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
+        rotation: [-0.03848, 0.17992, -0.42876, 0.88449],
       },
       mixamorigRightHandThumb2: {
-        rotation: [-0.22992, -0.10247, -0.18304, 0.95033],
+        rotation: [-0.25745, -0.02882, -0.14173, 0.95541],
       },
       mixamorigRightHandThumb3: {
-        rotation: [0.10621, 0.04801, 0.10382, 0.98774],
+        rotation: [0.11977, -0.00083, 0.08783, 0.98891],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
+        rotation: [-0.00852, 0, 0.01998, 0.99976],
       },
       mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
+        rotation: [0.01902, -0.0006, 0.0261, 0.99948],
       },
       mixamorigRightHandIndex3: {
-        rotation: [0.07101, 0.00227, 0.01223, 0.9974],
+        rotation: [0.05419, -0.003, -0.04751, 0.9974],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
+        rotation: [0.02479, 0, -0.00314, 0.99969],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
+        rotation: [-0.02022, 0.00056, 0.02529, 0.99948],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [0.07223, -0.00177, -0.00414, 0.99738],
+        rotation: [0.0434, -0.00123, -0.05789, 0.99738],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.85436, 0, -0.01221, 0.51954],
+        rotation: [0.3979, 0, -0.47628, 0.78411],
       },
       mixamorigRightHandRing2: {
-        rotation: [-0.46734, -0.51591, -0.30704, -0.64896],
+        rotation: [0.26415, -0.08965, -0.49286, 0.82418],
       },
       mixamorigRightHandRing3: {
-        rotation: [0.50174, -0.43803, 0.40169, 0.62852],
+        rotation: [-0.37514, -0.15877, 0.5219, -0.74946],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.83103, 0, 0.00343, 0.55622],
+        rotation: [0.38456, 0, -0.4423, 0.81024],
       },
       mixamorigRightHandPinky2: {
-        rotation: [-0.52229, 0.39577, 0.26275, -0.7082],
+        rotation: [0.38978, 0.00595, -0.43578, 0.81126],
       },
       mixamorigRightHandPinky3: {
-        rotation: [0.58212, 0.36879, -0.32892, 0.64572],
+        rotation: [-0.45756, -0.05508, 0.48753, -0.74157],
       },
     },
   },
@@ -5771,94 +3071,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '持握 · Pistol · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.8544, 0, -0.01221, -0.51947],
+        rotation: [-0.26732, 0, -0.56009, -0.78412],
       },
       mixamorigLeftHandRing2: {
-        rotation: [-0.46762, 0.51532, 0.30662, -0.64943],
+        rotation: [0.13363, 0.08966, 0.54298, 0.82418],
       },
       mixamorigLeftHandRing3: {
-        rotation: [0.5021, 0.43746, -0.40124, 0.62891],
+        rotation: [-0.23395, 0.1588, -0.59864, -0.74945],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.84707, 0, -0.00306, -0.53147],
+        rotation: [-0.26834, 0, -0.54734, -0.79273],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [-0.5665, 0.08044, 0.04842, -0.81869],
+        rotation: [0.21046, 0.03348, 0.52818, 0.82196],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [0.611, 0.07078, -0.05929, 0.78623],
+        rotation: [-0.2602, 0.0756, -0.556, -0.78578],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
+        rotation: [0.13566, 0.19721, -0.40854, -0.8808],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [-0.22994, 0.10248, 0.18301, 0.95033],
+        rotation: [-0.28284, 0.0449, 0.07978, 0.95479],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [0.10622, -0.04802, -0.1038, 0.98774],
+        rotation: [0.1371, -0.00623, -0.05711, 0.98889],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
+        rotation: [0.00329, 0, 0.02148, -0.99976],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
+        rotation: [0.0249, 0.0006, -0.02057, 0.99948],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [0.07101, -0.00227, -0.01223, 0.9974],
+        rotation: [0.04071, 0.003, 0.05947, 0.9974],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.83107, -0.00012, 0.00326, -0.55615],
+        rotation: [-0.2628, -0.00004, -0.52387, -0.81024],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [-0.52123, -0.39832, -0.26485, -0.70676],
+        rotation: [0.26962, -0.00621, 0.51878, 0.81126],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [0.58086, -0.37124, 0.33113, 0.64431],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [-0.3225, 0.05489, -0.5857, -0.74158],
       },
     },
   },
@@ -5866,95 +3121,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-04-weapons-pistol-r',
     name: '持握 · Pistol · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
+        rotation: [-0.03848, 0.17992, -0.42876, 0.88449],
       },
       mixamorigRightHandThumb2: {
-        rotation: [-0.22992, -0.10247, -0.18304, 0.95033],
+        rotation: [-0.25745, -0.02882, -0.14173, 0.95541],
       },
       mixamorigRightHandThumb3: {
-        rotation: [0.10621, 0.04801, 0.10382, 0.98774],
+        rotation: [0.11977, -0.00083, 0.08783, 0.98891],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
+        rotation: [-0.00852, 0, 0.01998, 0.99976],
       },
       mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
+        rotation: [0.01902, -0.0006, 0.0261, 0.99948],
       },
       mixamorigRightHandIndex3: {
-        rotation: [0.07101, 0.00227, 0.01223, 0.9974],
+        rotation: [0.05419, -0.003, -0.04751, 0.9974],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.84702, 0, -0.00306, 0.53155],
+        rotation: [0.39572, 0, -0.46368, 0.79272],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [-0.5665, -0.08058, -0.04852, -0.81868],
+        rotation: [0.3349, -0.03348, -0.45947, 0.82196],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [0.61099, -0.07092, 0.0594, 0.78622],
+        rotation: [-0.38998, -0.07559, 0.47408, -0.78578],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.85436, 0, -0.01221, 0.51954],
+        rotation: [0.3979, 0, -0.47628, 0.78411],
       },
       mixamorigRightHandRing2: {
-        rotation: [-0.46734, -0.51591, -0.30704, -0.64896],
+        rotation: [0.26415, -0.08965, -0.49286, 0.82418],
       },
       mixamorigRightHandRing3: {
-        rotation: [0.50174, -0.43803, 0.40169, 0.62852],
+        rotation: [-0.37514, -0.15877, 0.5219, -0.74946],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.83103, 0, 0.00343, 0.55622],
+        rotation: [0.38456, 0, -0.4423, 0.81024],
       },
       mixamorigRightHandPinky2: {
-        rotation: [-0.52229, 0.39577, 0.26275, -0.7082],
+        rotation: [0.38978, 0.00595, -0.43578, 0.81126],
       },
       mixamorigRightHandPinky3: {
-        rotation: [0.58212, 0.36879, -0.32892, 0.64572],
+        rotation: [-0.45756, -0.05508, 0.48753, -0.74157],
       },
     },
   },
@@ -5963,94 +3173,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '基础 · Point Relaxed · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.51514, 0, 0.00337, -0.8571],
+        rotation: [-0.09556, 0, -0.15948, -0.98257],
       },
       mixamorigLeftHandRing2: {
-        rotation: [0.121, 0.00029, -0.00029, 0.99265],
+        rotation: [0.05202, 0.00218, 0.10925, 0.99265],
       },
       mixamorigLeftHandRing3: {
-        rotation: [0.2243, 0.01896, 0.02305, 0.97406],
+        rotation: [0.07643, 0.01109, 0.21213, 0.97419],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.51272, 0, 0.00206, -0.85855],
+        rotation: [-0.09333, 0, -0.15747, -0.9831],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [0.13226, 0.0004, 0.00013, 0.99122],
+        rotation: [0.05658, 0.00229, 0.11955, 0.99121],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [0.25735, 0.00455, 0.00502, 0.9663],
+        rotation: [0.10491, 0.00632, 0.23504, 0.96629],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.54167, -0.00944, -0.25275, -0.80164],
+        rotation: [0.01744, 0.14867, -0.31853, -0.93602],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [-0.10897, -0.02114, -0.07007, 0.99135],
+        rotation: [-0.04213, 0.03989, -0.12252, 0.99077],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [0.09236, -0.06926, -0.32839, 0.93746],
+        rotation: [0.3082, 0.0471, -0.14623, 0.93884],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
+        rotation: [0.00329, 0, 0.02148, -0.99976],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
+        rotation: [0.0249, 0.0006, -0.02057, 0.99948],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
+        rotation: [0.05616, 0.00449, 0.0981, 0.99358],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.48726, -0.00007, -0.00305, -0.87325],
+        rotation: [-0.07685, -0.00001, -0.13323, -0.9881],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [0.15259, 0.01139, 0.02179, 0.98798],
+        rotation: [0.04765, 0.00494, 0.14659, 0.98804],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [0.25547, -0.01558, -0.00875, 0.96665],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [0.11952, -0.00568, 0.22596, 0.96676],
       },
     },
   },
@@ -6058,95 +3223,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-01-base-point-relaxed-r',
     name: '基础 · Point Relaxed · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.54161, -0.00943, -0.25273, 0.80169],
+        rotation: [0.05598, 0.13032, -0.31406, 0.93875],
       },
       mixamorigRightHandThumb2: {
-        rotation: [-0.10898, 0.02114, 0.07006, 0.99135],
+        rotation: [-0.068, -0.0301, 0.11027, 0.99112],
       },
       mixamorigRightHandThumb3: {
-        rotation: [0.09235, 0.06923, 0.3284, 0.93746],
+        rotation: [0.2686, -0.05652, 0.21029, 0.93831],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
+        rotation: [-0.00852, 0, 0.01998, 0.99976],
       },
       mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
+        rotation: [0.01902, -0.0006, 0.0261, 0.99948],
       },
       mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
+        rotation: [0.07874, -0.00449, -0.0811, 0.99358],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.51265, 0, 0.00206, 0.8586],
+        rotation: [0.12948, 0, -0.1294, 0.9831],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [0.13226, -0.0004, -0.00013, 0.99122],
+        rotation: [0.08446, -0.00229, -0.10178, 0.99121],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [0.25735, -0.00455, -0.00502, 0.9663],
+        rotation: [0.15994, -0.00632, -0.20167, 0.96629],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.51507, 0, 0.00337, 0.85714],
+        rotation: [0.13213, 0, -0.1308, 0.98256],
       },
       mixamorigRightHandRing2: {
-        rotation: [0.121, -0.00029, 0.00029, 0.99265],
+        rotation: [0.07749, -0.00218, -0.09293, 0.99265],
       },
       mixamorigRightHandRing3: {
-        rotation: [0.2243, -0.01896, -0.02305, 0.97406],
+        rotation: [0.12666, -0.01109, -0.18654, 0.97419],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.48718, 0, -0.00301, 0.87329],
+        rotation: [0.1075, 0, -0.11001, 0.9881],
       },
       mixamorigRightHandPinky2: {
-        rotation: [0.15259, -0.01163, -0.0218, 0.98798],
+        rotation: [0.08251, -0.00498, -0.13019, 0.98804],
       },
       mixamorigRightHandPinky3: {
-        rotation: [0.25547, 0.01574, 0.0087, 0.96665],
+        rotation: [0.17184, 0.00571, -0.18925, 0.96676],
       },
     },
   },
@@ -6155,94 +3275,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '基础 · Point Straight · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.71823, 0, -0.00028, -0.69581],
+        rotation: [-0.19708, 0, -0.38418, -0.90198],
       },
       mixamorigLeftHandRing2: {
-        rotation: [0.37211, 0.00783, 0.00774, 0.92812],
+        rotation: [0.14991, 0.01058, 0.34066, 0.9281],
       },
       mixamorigLeftHandRing3: {
-        rotation: [-0.46705, 0.06219, 0.01974, -0.88182],
+        rotation: [0.16249, 0.04353, 0.43832, 0.88294],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.71626, 0, -0.00014, -0.69783],
+        rotation: [-0.19611, 0, -0.38182, -0.90319],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [0.38268, 0.00503, 0.00498, 0.92385],
+        rotation: [0.15607, 0.0099, 0.34945, 0.92381],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [-0.49714, 0.03063, 0.00836, -0.86709],
+        rotation: [0.17059, 0.05122, 0.46703, 0.86611],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.54167, -0.00944, -0.25275, -0.80164],
+        rotation: [0.01744, 0.14867, -0.31853, -0.93602],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [-0.10174, -0.03028, -0.09613, 0.98969],
+        rotation: [-0.01883, 0.04123, -0.1387, 0.9893],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [0.04662, -0.13531, -0.59816, 0.78849],
+        rotation: [0.5372, 0.08818, -0.26719, 0.79514],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
+        rotation: [0.00329, 0, 0.02148, -0.99976],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
+        rotation: [0.0249, 0.0006, -0.02057, 0.99948],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
+        rotation: [0.05616, 0.00449, 0.0981, 0.99358],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.69528, -0.0001, -0.01914, -0.71849],
+        rotation: [-0.17154, -0.00002, -0.36392, -0.9155],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [0.40123, -0.00402, 0.00733, 0.91594],
+        rotation: [0.16699, 0.00189, 0.36489, 0.91595],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [-0.45609, 0.52066, 0.2036, -0.69242],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [-0.05957, 0.28537, 0.49591, 0.81798],
       },
     },
   },
@@ -6250,95 +3325,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-01-base-point-straight-r',
     name: '基础 · Point Straight · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.54161, -0.00943, -0.25273, 0.80169],
+        rotation: [0.05598, 0.13032, -0.31406, 0.93875],
       },
       mixamorigRightHandThumb2: {
-        rotation: [-0.10175, 0.03027, 0.09612, 0.98969],
+        rotation: [-0.04875, -0.03197, 0.1312, 0.98964],
       },
       mixamorigRightHandThumb3: {
-        rotation: [0.04662, 0.13525, 0.59816, 0.7885],
+        rotation: [0.46908, -0.10293, 0.37408, 0.79337],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
+        rotation: [-0.00852, 0, 0.01998, 0.99976],
       },
       mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
+        rotation: [0.01902, -0.0006, 0.0261, 0.99948],
       },
       mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
+        rotation: [0.07874, -0.00449, -0.0811, 0.99358],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.7162, 0, -0.00014, 0.69789],
+        rotation: [0.2847, 0, -0.32125, 0.90319],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [0.38268, -0.00503, -0.00498, 0.92385],
+        rotation: [0.23787, -0.0099, -0.29981, 0.92381],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [-0.49714, -0.03064, -0.00837, -0.86709],
+        rotation: [0.28112, -0.05121, -0.41012, 0.86611],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.71817, 0, -0.00028, 0.69587],
+        rotation: [0.28622, 0, -0.3233, 0.90197],
       },
       mixamorigRightHandRing2: {
-        rotation: [0.37211, -0.00783, -0.00774, 0.92812],
+        rotation: [0.22973, -0.01058, -0.29283, 0.9281],
       },
       mixamorigRightHandRing3: {
-        rotation: [-0.46705, -0.06223, -0.01977, -0.88182],
+        rotation: [0.26614, -0.04353, -0.38432, 0.88294],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.69522, 0, -0.01905, 0.71855],
+        rotation: [0.25646, 0, -0.31, 0.91549],
       },
       mixamorigRightHandPinky2: {
-        rotation: [0.40123, 0.00341, -0.00748, 0.91594],
+        rotation: [0.25227, -0.002, -0.31209, 0.91595],
       },
       mixamorigRightHandPinky3: {
-        rotation: [-0.45613, -0.52124, -0.2035, -0.69199],
+        rotation: [0.06525, -0.2853, -0.49518, 0.81801],
       },
     },
   },
@@ -6347,94 +3377,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '其他 · Push · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.25669, 0, 0.03184, -0.96597],
+        rotation: [0.00097, 0, 0.10481, -0.99449],
       },
       mixamorigLeftHandRing2: {
-        rotation: [-0.04372, -0.00192, -0.00181, 0.99904],
+        rotation: [-0.01666, -0.00172, -0.04046, 0.99904],
       },
       mixamorigLeftHandRing3: {
-        rotation: [0.06169, 0.00785, 0.02597, 0.99773],
+        rotation: [0.0028, -0.00079, 0.06688, 0.99776],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.25682, 0, -0.05881, -0.96467],
+        rotation: [0.07948, 0, 0.06506, -0.99471],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [-0.03228, 0.0013, -0.0025, 0.99947],
+        rotation: [-0.01314, 0.0015, -0.02959, 0.99947],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [0.09482, -0.00352, 0.00868, 0.99545],
+        rotation: [0.0375, -0.00458, 0.08753, 0.99545],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.31237, 0.10989, -0.49581, -0.80282],
+        rotation: [0.3326, 0.2285, -0.3613, -0.84062],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [-0.2001, 0.06266, 0.00093, 0.97777],
+        rotation: [-0.17763, 0.11489, -0.09213, 0.97302],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [0.16193, -0.03992, -0.0902, 0.98186],
+        rotation: [0.18521, -0.03011, 0.00712, 0.98221],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.23084, 0, -0.14689, -0.96184],
+        rotation: [0.16501, 0, 0.04254, -0.98537],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [-0.00856, -0.00617, -0.03114, 0.99946],
+        rotation: [0.02213, 0.0049, -0.02352, 0.99947],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [0.11214, -0.01665, -0.01418, 0.99345],
+        rotation: [0.06877, -0.00835, 0.08971, 0.99356],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.21994, -0.00003, 0.17141, -0.96034],
+        rotation: [-0.1122, -0.00002, 0.18535, -0.97625],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [-0.0119, 0.00458, 0.02962, 0.99948],
+        rotation: [-0.03189, -0.00623, -0.00121, 0.99947],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [0.09343, 0.01541, 0.0077, 0.99548],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [0.02553, 0.01226, 0.09021, 0.99552],
       },
     },
   },
@@ -6442,95 +3427,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-02-other-push-r',
     name: '其他 · Push · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.2274, 0.13696, -0.51979, 0.812],
+        rotation: [-0.23477, 0.22424, -0.43132, 0.84176],
       },
       mixamorigRightHandThumb2: {
-        rotation: [-0.19614, -0.06884, -0.03963, 0.97735],
+        rotation: [-0.1956, -0.09014, 0.04221, 0.97562],
       },
       mixamorigRightHandThumb3: {
-        rotation: [0.14324, 0.03098, 0.11763, 0.98218],
+        rotation: [0.18024, 0.0128, 0.04322, 0.98259],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.07817, 0, -0.18099, 0.98037],
+        rotation: [-0.1704, 0, 0.00027, 0.98537],
       },
       mixamorigRightHandIndex2: {
-        rotation: [-0.008, 0.00102, 0.03129, 0.99948],
+        rotation: [0.0156, -0.0049, 0.02828, 0.99947],
       },
       mixamorigRightHandIndex3: {
-        rotation: [0.11242, 0.01796, 0.01174, 0.99343],
+        rotation: [0.08887, 0.00835, -0.06985, 0.99356],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.10593, 0, -0.09653, 0.98968],
+        rotation: [-0.09313, 0, 0.04331, 0.99471],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [-0.03215, -0.00273, 0.00378, 0.99947],
+        rotation: [-0.02007, -0.0015, 0.02541, 0.99947],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [0.09445, 0.00795, -0.01213, 0.99542],
+        rotation: [0.05805, 0.00458, -0.07549, 0.99545],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.11048, 0, -0.00859, 0.99384],
+        rotation: [-0.02694, 0, 0.10129, 0.99449],
       },
       mixamorigRightHandRing2: {
-        rotation: [-0.0435, 0.00015, 0.00472, 0.99904],
+        rotation: [-0.02618, 0.00172, 0.03507, 0.99904],
       },
       mixamorigRightHandRing3: {
-        rotation: [0.05995, -0.00177, -0.02977, 0.99776],
+        rotation: [0.0193, 0.00079, -0.06409, 0.99776],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.08749, 0, 0.12977, 0.98768],
+        rotation: [0.06272, 0, 0.20739, 0.97625],
       },
       mixamorigRightHandPinky2: {
-        rotation: [-0.01495, -0.00053, -0.0282, 0.99949],
+        rotation: [-0.03121, 0.0062, -0.00674, 0.99947],
       },
       mixamorigRightHandPinky3: {
-        rotation: [0.09225, -0.01069, -0.01667, 0.99554],
+        rotation: [0.04711, -0.01224, -0.08105, 0.99552],
       },
     },
   },
@@ -6539,94 +3479,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '其他 · Push the Button · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.82792, 0, 0.02665, -0.56021],
+        rotation: [-0.27563, 0, -0.51325, -0.81278],
       },
       mixamorigLeftHandRing2: {
-        rotation: [0.52782, 0.00858, -0.01118, 0.84924],
+        rotation: [0.20433, 0.03605, 0.4868, 0.84851],
       },
       mixamorigLeftHandRing3: {
-        rotation: [-0.61369, -0.01293, 0.01289, -0.78934],
+        rotation: [-0.28164, 0.07521, -0.5454, -0.78585],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.82671, 0, -0.00244, -0.56263],
+        rotation: [-0.25661, 0, -0.51978, -0.81485],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [0.53235, 0.10736, 0.07463, 0.83636],
+        rotation: [0.20517, 0.0256, 0.49686, 0.84284],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [-0.63526, 0.10313, -0.08199, -0.76098],
+        rotation: [-0.28102, 0.06831, -0.57559, -0.76489],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.45394, 0.04968, -0.39742, -0.79595],
+        rotation: [0.16798, 0.19515, -0.36953, -0.89283],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [0.02469, -0.10362, -0.39491, 0.91252],
+        rotation: [0.26796, 0.06942, -0.29115, 0.91576],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [0.01823, -0.18173, -0.66998, 0.71956],
+        rotation: [0.64002, 0.09223, -0.19895, 0.7364],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.3258, 0, -0.08062, -0.94199],
+        rotation: [0.06444, 0, -0.00933, -0.99788],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [0.50266, -0.04199, 0.00298, 0.86346],
+        rotation: [0.2364, -0.03086, 0.44361, 0.86393],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [0.13648, -0.02543, -0.01121, 0.99025],
+        rotation: [0.07183, -0.01314, 0.11658, 0.99049],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.83321, -0.00012, 0.00334, -0.55295],
+        rotation: [-0.26411, -0.00004, -0.5267, -0.80798],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [-0.05992, -0.83039, -0.55087, -0.0583],
+        rotation: [0.25025, -0.00168, 0.49439, 0.83243],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [0.04209, -0.76677, 0.64053, -0.00362],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [-0.3395, 0.15552, -0.54478, -0.75085],
       },
     },
   },
@@ -6634,95 +3529,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-02-other-push-the-button-r',
     name: '其他 · Push the Button · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.45389, 0.04968, -0.3974, 0.79598],
+        rotation: [-0.07709, 0.18164, -0.39854, 0.89567],
       },
       mixamorigRightHandThumb2: {
-        rotation: [0.02466, 0.10359, 0.39491, 0.91253],
+        rotation: [0.1975, -0.06859, 0.34288, 0.91582],
       },
       mixamorigRightHandThumb3: {
-        rotation: [0.01828, 0.18165, 0.66998, 0.71958],
+        rotation: [0.59156, -0.1174, 0.31507, 0.73281],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.32572, 0, -0.08062, 0.94202],
+        rotation: [-0.06011, 0, -0.02504, 0.99788],
       },
       mixamorigRightHandIndex2: {
-        rotation: [0.50266, 0.04199, -0.00297, 0.86346],
+        rotation: [0.33905, 0.03086, -0.3711, 0.86393],
       },
       mixamorigRightHandIndex3: {
-        rotation: [0.13648, 0.02543, 0.01121, 0.99025],
+        rotation: [0.09851, 0.01315, -0.09512, 0.99049],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.82666, 0, -0.00244, 0.5627],
+        rotation: [0.37753, 0, -0.43989, 0.81484],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [0.53238, -0.10704, -0.07443, 0.8364],
+        rotation: [0.32201, -0.02559, -0.43043, 0.84284],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [-0.63529, -0.10283, 0.08175, -0.76102],
+        rotation: [-0.41502, -0.06829, 0.48789, -0.76489],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.82787, 0, 0.02665, 0.56028],
+        rotation: [0.39433, 0, -0.42884, 0.81277],
       },
       mixamorigRightHandRing2: {
-        rotation: [0.52783, -0.00862, 0.01115, 0.84924],
+        rotation: [0.3187, -0.03604, -0.42089, 0.84852],
       },
       mixamorigRightHandRing3: {
-        rotation: [-0.61369, 0.01289, -0.01286, -0.78934],
+        rotation: [-0.40812, -0.07519, 0.45849, -0.78585],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.83316, 0, 0.00351, 0.55302],
+        rotation: [0.38653, 0, -0.44471, 0.80798],
       },
       mixamorigRightHandPinky2: {
-        rotation: [-0.05754, 0.83066, 0.55112, -0.05438],
+        rotation: [0.36498, 0.00143, -0.41695, 0.83243],
       },
       mixamorigRightHandPinky3: {
-        rotation: [0.0392, 0.76675, -0.64071, -0.00709],
+        rotation: [-0.46391, -0.15571, 0.44365, -0.75081],
       },
     },
   },
@@ -6731,94 +3581,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '基础 · Relaxed 01 · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.42394, 0, 0.00497, -0.90568],
+        rotation: [-0.0528, 0, -0.06639, -0.9964],
       },
       mixamorigLeftHandRing2: {
-        rotation: [0.0179, -0.00094, -0.0022, 0.99984],
+        rotation: [0.00969, 0.00016, 0.01521, 0.99984],
       },
       mixamorigLeftHandRing3: {
-        rotation: [0.12282, 0.01422, 0.02695, 0.99196],
+        rotation: [0.02948, 0.00526, 0.12223, 0.99205],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.42138, 0, 0.00302, -0.90688],
+        rotation: [-0.05, 0, -0.06462, -0.99666],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [0.02926, -0.00036, -0.00099, 0.99957],
+        rotation: [0.01353, 0.00043, 0.02596, 0.99957],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [0.15628, 0.00268, 0.00393, 0.9877],
+        rotation: [0.06373, 0.00331, 0.14274, 0.9877],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.42471, 0.02917, -0.2799, -0.86048],
+        rotation: [0.1367, 0.157, -0.24177, -0.94774],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [-0.13588, -0.0072, -0.07489, 0.98787],
+        rotation: [-0.05257, 0.06524, -0.14597, 0.98573],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [0.11368, -0.01053, -0.22426, 0.96782],
+        rotation: [0.24428, 0.05504, -0.05954, 0.96631],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.38552, 0, -0.00839, -0.92266],
+        rotation: [-0.02357, 0, -0.03398, -0.99914],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [0.05371, -0.01377, -0.03178, 0.99796],
+        rotation: [0.05175, -0.00094, 0.03488, 0.99805],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [0.17332, -0.00141, -0.0134, 0.98477],
+        rotation: [0.08342, 0.00577, 0.15251, 0.98476],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.39453, -0.00006, -0.00424, -0.91887],
+        rotation: [-0.0313, 0, -0.04107, -0.99867],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [0.04965, 0.01278, 0.0307, 0.99821],
+        rotation: [-0.00523, 0.00203, 0.05814, 0.99829],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [0.15438, -0.00137, 0.01013, 0.98796],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [0.06172, -0.00244, 0.14187, 0.98796],
       },
     },
   },
@@ -6826,95 +3631,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-01-base-relaxed-01-r',
     name: '基础 · Relaxed 01 · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.42464, 0.02918, -0.27989, 0.86052],
+        rotation: [-0.07462, 0.14933, -0.26753, 0.94898],
       },
       mixamorigRightHandThumb2: {
-        rotation: [-0.13588, 0.0072, 0.07488, 0.98787],
+        rotation: [-0.08675, -0.05223, 0.12862, 0.98651],
       },
       mixamorigRightHandThumb3: {
-        rotation: [0.11366, 0.01051, 0.22427, 0.96782],
+        rotation: [0.22207, -0.06652, 0.1179, 0.96559],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.38544, 0, -0.00839, 0.92269],
+        rotation: [0.03126, 0, -0.02707, 0.99914],
       },
       mixamorigRightHandIndex2: {
-        rotation: [0.05371, 0.01377, 0.03178, 0.99796],
+        rotation: [0.05879, 0.00094, -0.02096, 0.99805],
       },
       mixamorigRightHandIndex3: {
-        rotation: [0.17332, 0.00141, 0.0134, 0.98477],
+        rotation: [0.11865, -0.00577, -0.12706, 0.98476],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.4213, 0, 0.00302, 0.90692],
+        rotation: [0.06446, 0, -0.0502, 0.99666],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [0.02926, 0.00036, 0.00099, 0.99957],
+        rotation: [0.01954, -0.00043, -0.02179, 0.99957],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [0.15628, -0.00268, -0.00393, 0.9877],
+        rotation: [0.09715, -0.00331, -0.12247, 0.9877],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.42386, 0, 0.00497, 0.90572],
+        rotation: [0.06763, 0, -0.05122, 0.99639],
       },
       mixamorigRightHandRing2: {
-        rotation: [0.0179, 0.00094, 0.0022, 0.99984],
+        rotation: [0.01316, -0.00016, -0.01233, 0.99984],
       },
       mixamorigRightHandRing3: {
-        rotation: [0.12282, -0.01421, -0.02695, 0.99196],
+        rotation: [0.05888, -0.00526, -0.1111, 0.99205],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.39445, 0, -0.00421, 0.91891],
+        rotation: [0.04051, 0, -0.03203, 0.99867],
       },
       mixamorigRightHandPinky2: {
-        rotation: [0.04965, -0.01295, -0.0307, 0.99821],
+        rotation: [0.00935, -0.00204, -0.05762, 0.99829],
       },
       mixamorigRightHandPinky3: {
-        rotation: [0.15438, 0.00148, -0.01015, 0.98796],
+        rotation: [0.09498, 0.00245, -0.12212, 0.98796],
       },
     },
   },
@@ -6923,94 +3683,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '基础 · Relaxed 02 · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.50684, 0, 0.00347, -0.86204],
+        rotation: [-0.09157, 0, -0.15085, -0.98431],
       },
       mixamorigLeftHandRing2: {
-        rotation: [0.11139, 0.00019, -0.00043, 0.99378],
+        rotation: [0.04807, 0.00198, 0.10049, 0.99377],
       },
       mixamorigLeftHandRing3: {
-        rotation: [0.21489, 0.01833, 0.02313, 0.97619],
+        rotation: [0.07235, 0.01053, 0.20366, 0.97631],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.47922, 0, 0.0023, -0.87769],
+        rotation: [-0.07718, 0, -0.12299, -0.9894],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [0.09393, 0.00015, -0.00017, 0.99558],
+        rotation: [0.04054, 0.00157, 0.08473, 0.99558],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [0.21989, 0.00371, 0.00457, 0.97551],
+        rotation: [0.08987, 0.00503, 0.20073, 0.9755],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.42471, 0.02917, -0.2799, -0.86048],
+        rotation: [0.1367, 0.157, -0.24177, -0.94774],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [-0.13588, -0.0072, -0.07489, 0.98787],
+        rotation: [-0.05257, 0.06524, -0.14597, 0.98573],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [0.11368, -0.01053, -0.22426, 0.96782],
+        rotation: [0.24428, 0.05504, -0.05954, 0.96631],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.3497, 0, -0.00795, -0.93683],
+        rotation: [-0.00707, 0, 0.00082, -0.99997],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [0.01527, -0.01156, -0.03062, 0.99935],
+        rotation: [0.03421, 0.00003, 0.00058, 0.99941],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [0.13549, 0.00008, -0.00903, 0.99074],
+        rotation: [0.06457, 0.00495, 0.11945, 0.99073],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.47879, -0.00007, -0.00313, -0.87792],
+        rotation: [-0.07267, -0.00001, -0.12464, -0.98954],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [0.14303, 0.01144, 0.02233, 0.9894],
+        rotation: [0.04303, 0.0047, 0.13822, 0.98946],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [0.24616, -0.01404, -0.0074, 0.9691],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [0.11469, -0.00524, 0.21794, 0.96919],
       },
     },
   },
@@ -7018,95 +3733,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-01-base-relaxed-02-r',
     name: '基础 · Relaxed 02 · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.42464, 0.02918, -0.27989, 0.86052],
+        rotation: [-0.07462, 0.14933, -0.26753, 0.94898],
       },
       mixamorigRightHandThumb2: {
-        rotation: [-0.13588, 0.0072, 0.07488, 0.98787],
+        rotation: [-0.08675, -0.05223, 0.12862, 0.98651],
       },
       mixamorigRightHandThumb3: {
-        rotation: [0.11366, 0.01051, 0.22427, 0.96782],
+        rotation: [0.22207, -0.06652, 0.1179, 0.96559],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.34962, 0, -0.00795, 0.93686],
+        rotation: [0.00665, 0, 0.00254, 0.99997],
       },
       mixamorigRightHandIndex2: {
-        rotation: [0.01527, 0.01156, 0.03062, 0.99935],
+        rotation: [0.03329, -0.00003, 0.00792, 0.99941],
       },
       mixamorigRightHandIndex3: {
-        rotation: [0.13549, -0.00008, 0.00903, 0.99074],
+        rotation: [0.09218, -0.00495, -0.0997, 0.99073],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.47915, 0, 0.0023, 0.87773],
+        rotation: [0.10528, 0, -0.10001, 0.9894],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [0.09393, -0.00015, 0.00017, 0.99558],
+        rotation: [0.0603, -0.00157, -0.07202, 0.99558],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [0.21989, -0.00371, -0.00457, 0.97551],
+        rotation: [0.13685, -0.00503, -0.17217, 0.9755],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.50676, 0, 0.00347, 0.86208],
+        rotation: [0.12612, 0, -0.12343, 0.98431],
       },
       mixamorigRightHandRing2: {
-        rotation: [0.11139, -0.00019, 0.00043, 0.99378],
+        rotation: [0.0715, -0.00198, -0.08542, 0.99377],
       },
       mixamorigRightHandRing3: {
-        rotation: [0.21489, -0.01833, -0.02313, 0.97619],
+        rotation: [0.12061, -0.01053, -0.17935, 0.97631],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.47872, 0, -0.00309, 0.87796],
+        rotation: [0.10131, 0, -0.10272, 0.98954],
       },
       mixamorigRightHandPinky2: {
-        rotation: [0.14303, -0.01167, -0.02235, 0.9894],
+        rotation: [0.07596, -0.00473, -0.12323, 0.98946],
       },
       mixamorigRightHandPinky3: {
-        rotation: [0.24616, 0.0142, 0.00736, 0.9691],
+        rotation: [0.16516, 0.00526, -0.18268, 0.96919],
       },
     },
   },
@@ -7115,94 +3785,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '基础 · Relaxed 03 · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.50684, 0, 0.00347, -0.86204],
+        rotation: [-0.09157, 0, -0.15085, -0.98431],
       },
       mixamorigLeftHandRing2: {
-        rotation: [0.11139, 0.00019, -0.00043, 0.99378],
+        rotation: [0.04807, 0.00198, 0.10049, 0.99377],
       },
       mixamorigLeftHandRing3: {
-        rotation: [0.21489, 0.01833, 0.02313, 0.97619],
+        rotation: [0.07235, 0.01053, 0.20366, 0.97631],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.47922, 0, 0.0023, -0.87769],
+        rotation: [-0.07718, 0, -0.12299, -0.9894],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [0.09393, 0.00015, -0.00017, 0.99558],
+        rotation: [0.04054, 0.00157, 0.08473, 0.99558],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [0.21989, 0.00371, 0.00457, 0.97551],
+        rotation: [0.08987, 0.00503, 0.20073, 0.9755],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
+        rotation: [0.13566, 0.19721, -0.40854, -0.8808],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [-0.07932, -0.0229, -0.1307, 0.98798],
+        rotation: [-0.00012, 0.06295, -0.15288, 0.98624],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [0.10993, -0.05024, -0.20189, 0.97192],
+        rotation: [0.21405, 0.0153, -0.08382, 0.9731],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.3497, 0, -0.00795, -0.93683],
+        rotation: [-0.00707, 0, 0.00082, -0.99997],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [0.01527, -0.01156, -0.03062, 0.99935],
+        rotation: [0.03421, 0.00003, 0.00058, 0.99941],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [0.13549, 0.00008, -0.00903, 0.99074],
+        rotation: [0.06457, 0.00495, 0.11945, 0.99073],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.47879, -0.00007, -0.00313, -0.87792],
+        rotation: [-0.07267, -0.00001, -0.12464, -0.98954],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [0.14303, 0.01144, 0.02233, 0.9894],
+        rotation: [0.04303, 0.0047, 0.13822, 0.98946],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [0.24616, -0.01404, -0.0074, 0.9691],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [0.11469, -0.00524, 0.21794, 0.96919],
       },
     },
   },
@@ -7210,95 +3835,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-01-base-relaxed-03-r',
     name: '基础 · Relaxed 03 · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
+        rotation: [-0.03848, 0.17992, -0.42876, 0.88449],
       },
       mixamorigRightHandThumb2: {
-        rotation: [-0.07933, 0.02289, 0.13069, 0.98798],
+        rotation: [-0.03369, -0.05319, 0.14913, 0.98681],
       },
       mixamorigRightHandThumb3: {
-        rotation: [0.10992, 0.05022, 0.2019, 0.97192],
+        rotation: [0.19019, -0.02325, 0.12911, 0.97294],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.34962, 0, -0.00795, 0.93686],
+        rotation: [0.00665, 0, 0.00254, 0.99997],
       },
       mixamorigRightHandIndex2: {
-        rotation: [0.01527, 0.01156, 0.03062, 0.99935],
+        rotation: [0.03329, -0.00003, 0.00792, 0.99941],
       },
       mixamorigRightHandIndex3: {
-        rotation: [0.13549, -0.00008, 0.00903, 0.99074],
+        rotation: [0.09218, -0.00495, -0.0997, 0.99073],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.47915, 0, 0.0023, 0.87773],
+        rotation: [0.10528, 0, -0.10001, 0.9894],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [0.09393, -0.00015, 0.00017, 0.99558],
+        rotation: [0.0603, -0.00157, -0.07202, 0.99558],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [0.21989, -0.00371, -0.00457, 0.97551],
+        rotation: [0.13685, -0.00503, -0.17217, 0.9755],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.50676, 0, 0.00347, 0.86208],
+        rotation: [0.12612, 0, -0.12343, 0.98431],
       },
       mixamorigRightHandRing2: {
-        rotation: [0.11139, -0.00019, 0.00043, 0.99378],
+        rotation: [0.0715, -0.00198, -0.08542, 0.99377],
       },
       mixamorigRightHandRing3: {
-        rotation: [0.21489, -0.01833, -0.02313, 0.97619],
+        rotation: [0.12061, -0.01053, -0.17935, 0.97631],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.47872, 0, -0.00309, 0.87796],
+        rotation: [0.10131, 0, -0.10272, 0.98954],
       },
       mixamorigRightHandPinky2: {
-        rotation: [0.14303, -0.01167, -0.02235, 0.9894],
+        rotation: [0.07596, -0.00473, -0.12323, 0.98946],
       },
       mixamorigRightHandPinky3: {
-        rotation: [0.24616, 0.0142, 0.00736, 0.9691],
+        rotation: [0.16516, 0.00526, -0.18268, 0.96919],
       },
     },
   },
@@ -7307,94 +3887,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '基础 · Relaxed 04 · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.43395, 0, 0.00499, -0.90092],
+        rotation: [-0.07887, 0, -0.12072, -0.98955],
       },
       mixamorigLeftHandRing2: {
-        rotation: [0.18569, -0.0006, -0.00338, 0.9826],
+        rotation: [0.08225, 0.00324, 0.16652, 0.9826],
       },
       mixamorigLeftHandRing3: {
-        rotation: [0.28752, 0.02576, 0.03094, 0.95693],
+        rotation: [0.09612, 0.01688, 0.27274, 0.95713],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.4314, 0, 0.00304, -0.90215],
+        rotation: [-0.07606, 0, -0.11896, -0.98998],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [0.19685, -0.00014, -0.00168, 0.98043],
+        rotation: [0.08577, 0.00331, 0.1772, 0.98043],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [0.32007, 0.00435, 0.00337, 0.94738],
+        rotation: [0.13168, 0.0084, 0.29174, 0.94735],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.40265, 0.03374, -0.27467, -0.87252],
+        rotation: [0.12703, 0.15845, -0.25633, -0.94501],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [-0.13791, -0.00521, -0.07107, 0.98788],
+        rotation: [-0.05164, 0.06424, -0.14629, 0.9858],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [0.10928, -0.00436, -0.22644, 0.96787],
+        rotation: [0.24429, 0.05014, -0.05949, 0.96658],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.37426, 0, -0.00835, -0.92729],
+        rotation: [-0.03976, 0, -0.0676, -0.99692],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [0.17272, -0.01484, -0.03292, 0.98431],
+        rotation: [0.10345, -0.00135, 0.14216, 0.98442],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [0.3356, -0.00482, -0.02542, 0.94165],
+        rotation: [0.15752, 0.00986, 0.29743, 0.94161],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.40469, -0.00006, -0.00426, -0.91444],
+        rotation: [-0.05747, -0.00001, -0.09555, -0.99376],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [0.2164, 0.01421, 0.03486, 0.97558],
+        rotation: [0.06478, 0.00585, 0.20939, 0.97567],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [0.31687, 0.00447, 0.02819, 0.94804],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [0.11949, -0.00071, 0.29483, 0.94805],
       },
     },
   },
@@ -7402,95 +3937,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-01-base-relaxed-04-r',
     name: '基础 · Relaxed 04 · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.40259, 0.03375, -0.27466, 0.87255],
+        rotation: [-0.06216, 0.14937, -0.27925, 0.94649],
       },
       mixamorigRightHandThumb2: {
-        rotation: [-0.13792, 0.00521, 0.07106, 0.98788],
+        rotation: [-0.08552, -0.05142, 0.12945, 0.98655],
       },
       mixamorigRightHandThumb3: {
-        rotation: [0.10927, 0.00434, 0.22644, 0.96787],
+        rotation: [0.22249, -0.06152, 0.11712, 0.96592],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.37418, 0, -0.00835, 0.92732],
+        rotation: [0.05529, 0, -0.05563, 0.99692],
       },
       mixamorigRightHandIndex2: {
-        rotation: [0.17272, 0.01484, 0.03292, 0.98431],
+        rotation: [0.13548, 0.00135, -0.11206, 0.98442],
       },
       mixamorigRightHandIndex3: {
-        rotation: [0.3356, 0.00481, 0.02541, 0.94165],
+        rotation: [0.22638, -0.00986, -0.24905, 0.94161],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.43133, 0, 0.00304, 0.90219],
+        rotation: [0.1032, 0, -0.09639, 0.98998],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [0.19685, 0.00014, 0.00168, 0.98043],
+        rotation: [0.12704, -0.00331, -0.15038, 0.98043],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [0.32007, -0.00435, -0.00337, 0.94738],
+        rotation: [0.19993, -0.0084, -0.24996, 0.94735],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.43387, 0, 0.00499, 0.90096],
+        rotation: [0.10636, 0, -0.09739, 0.98955],
       },
       mixamorigRightHandRing2: {
-        rotation: [0.18569, 0.0006, 0.00338, 0.9826],
+        rotation: [0.12098, -0.00324, -0.14091, 0.9826],
       },
       mixamorigRightHandRing3: {
-        rotation: [0.28752, -0.02575, -0.03093, 0.95693],
+        rotation: [0.16076, -0.01688, -0.24037, 0.95713],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.40461, 0, -0.00423, 0.91448],
+        rotation: [0.07938, 0, -0.07831, 0.99376],
       },
       mixamorigRightHandPinky2: {
-        rotation: [0.21639, -0.01443, -0.03488, 0.97558],
+        rotation: [0.11469, -0.00588, -0.18678, 0.97567],
       },
       mixamorigRightHandPinky3: {
-        rotation: [0.31687, -0.00431, -0.02823, 0.94804],
+        rotation: [0.18888, 0.00073, -0.25598, 0.94805],
       },
     },
   },
@@ -7499,94 +3989,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '基础 · Relaxed 05 · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.61476, 0, 0.00191, -0.78872],
+        rotation: [-0.14432, 0, -0.26605, -0.95309],
       },
       mixamorigLeftHandRing2: {
-        rotation: [0.25662, 0.00253, 0.00246, 0.96651],
+        rotation: [0.10664, 0.00558, 0.23342, 0.96649],
       },
       mixamorigLeftHandRing3: {
-        rotation: [0.35592, 0.03364, 0.02627, 0.93354],
+        rotation: [0.13117, 0.01958, 0.33191, 0.93394],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.57982, 0, 0.0015, -0.81474],
+        rotation: [-0.12627, 0, -0.22834, -0.96536],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [0.2112, 0.00109, 0.00098, 0.97744],
+        rotation: [0.08907, 0.00398, 0.1915, 0.97744],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [0.38775, 0.00839, 0.00763, 0.9217],
+        rotation: [0.15595, 0.01161, 0.35509, 0.92166],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
+        rotation: [0.13566, 0.19721, -0.40854, -0.8808],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [-0.16337, 0.0508, 0.05677, 0.98362],
+        rotation: [-0.17151, 0.05629, -0.02222, 0.98332],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [0.13569, -0.06258, -0.21813, 0.96441],
+        rotation: [0.2299, 0.01754, -0.11461, 0.96628],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.37836, 0, -0.00761, -0.92563],
+        rotation: [-0.02084, 0, -0.0267, -0.99943],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [0.13028, -0.01191, -0.02652, 0.99105],
+        rotation: [0.0799, 0.00008, 0.10626, 0.99112],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [0.02702, -0.0074, -0.01414, 0.99951],
+        rotation: [0.02404, -0.00132, 0.01877, 0.99953],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.62652, -0.00009, 0.02819, -0.7789],
+        rotation: [-0.17004, -0.00002, -0.27003, -0.94772],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [0.24235, 0.02961, 0.02634, 0.96938],
+        rotation: [0.07762, 0.01927, 0.23109, 0.96964],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [0.30247, 0.01027, 0.01201, 0.95303],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [0.11931, 0.00851, 0.2782, 0.95305],
       },
     },
   },
@@ -7594,95 +4039,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-01-base-relaxed-05-r',
     name: '基础 · Relaxed 05 · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.46423, 0.04633, -0.39507, 0.79137],
+        rotation: [-0.03848, 0.17992, -0.42876, 0.88449],
       },
       mixamorigRightHandThumb2: {
-        rotation: [-0.15934, -0.04781, -0.06726, 0.98377],
+        rotation: [-0.17214, -0.04227, -0.01673, 0.98402],
       },
       mixamorigRightHandThumb3: {
-        rotation: [0.12294, 0.0524, 0.22556, 0.96502],
+        rotation: [0.19744, -0.02556, 0.16434, 0.9661],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.33196, 0, -0.00746, 0.94326],
+        rotation: [0.02681, 0, -0.0207, 0.99943],
       },
       mixamorigRightHandIndex2: {
-        rotation: [0.1303, 0.01033, 0.02641, 0.99107],
+        rotation: [0.10376, -0.00008, -0.08312, 0.99112],
       },
       mixamorigRightHandIndex3: {
-        rotation: [0.02707, 0.00648, 0.01405, 0.99951],
+        rotation: [0.02794, 0.00132, -0.01222, 0.99953],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.53867, 0, 0.00145, 0.84252],
+        rotation: [0.17897, 0, -0.18989, 0.96536],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [0.2112, -0.001, -0.001, 0.97744],
+        rotation: [0.13379, -0.00398, -0.16342, 0.97743],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [0.38776, -0.00703, -0.00706, 0.92171],
+        rotation: [0.23916, -0.01161, -0.3053, 0.92166],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.57485, 0, 0.00184, 0.81825],
+        rotation: [0.20581, 0, -0.22195, 0.95309],
       },
       mixamorigRightHandRing2: {
-        rotation: [0.25662, -0.00229, -0.00246, 0.96651],
+        rotation: [0.16121, -0.00557, -0.19967, 0.9665],
       },
       mixamorigRightHandRing3: {
-        rotation: [0.35609, -0.02751, -0.02384, 0.93374],
+        rotation: [0.2094, -0.01958, -0.289, 0.93394],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.58714, 0, 0.0272, 0.80903],
+        rotation: [0.23172, 0, -0.21941, 0.94772],
       },
       mixamorigRightHandPinky2: {
-        rotation: [0.24232, -0.02743, -0.02658, 0.96945],
+        rotation: [0.13251, -0.01935, -0.20462, 0.96964],
       },
       mixamorigRightHandPinky3: {
-        rotation: [0.30251, -0.00756, -0.01077, 0.95305],
+        rotation: [0.18458, -0.00846, -0.23992, 0.95305],
       },
     },
   },
@@ -7691,94 +4091,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '基础 · Relaxed 06 · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.38264, 0, 0.07533, -0.92082],
+        rotation: [-0.09304, 0, -0.00006, -0.99566],
       },
       mixamorigLeftHandRing2: {
-        rotation: [0.06919, 0.00376, -0.00457, 0.99759],
+        rotation: [0.03089, 0.0058, 0.06208, 0.99758],
       },
       mixamorigLeftHandRing3: {
-        rotation: [0.17438, 0.02358, 0.0167, 0.98425],
+        rotation: [0.05253, 0.01754, 0.16711, 0.98438],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.36824, 0, 0.00293, -0.92973],
+        rotation: [-0.02486, 0, -0.01259, -0.99961],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [0.02276, -0.00017, -0.00061, 0.99974],
+        rotation: [0.01042, 0.00037, 0.02025, 0.99974],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [0.05389, 0.002, 0.00424, 0.99854],
+        rotation: [0.01956, 0.00114, 0.05039, 0.99854],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
+        rotation: [0.13566, 0.19721, -0.40854, -0.8808],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [-0.09046, -0.01249, -0.10373, 0.99041],
+        rotation: [-0.02513, 0.0626, -0.13531, 0.9885],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [0.13691, -0.08047, -0.33526, 0.92864],
+        rotation: [0.32602, 0.03424, -0.15768, 0.93149],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.32683, 0, -0.11266, -0.93834],
+        rotation: [0.08973, 0, -0.02636, -0.99562],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [0.04914, -0.01508, -0.02635, 0.99833],
+        rotation: [0.04727, -0.00392, 0.02956, 0.99844],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [0.07199, -0.00974, -0.00812, 0.99732],
+        rotation: [0.04186, -0.00487, 0.05914, 0.99736],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.34764, -0.00005, 0.11758, -0.93023],
+        rotation: [-0.11483, -0.00002, 0.04767, -0.99224],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [0.10275, 0.01903, 0.01661, 0.99439],
+        rotation: [0.02224, 0.01279, 0.10168, 0.99449],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [0.20485, 0.01608, -0.01172, 0.97859],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [0.08627, 0.021, 0.18616, 0.9785],
       },
     },
   },
@@ -7786,95 +4141,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-01-base-relaxed-06-r',
     name: '基础 · Relaxed 06 · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
+        rotation: [-0.03848, 0.17992, -0.42876, 0.88449],
       },
       mixamorigRightHandThumb2: {
-        rotation: [-0.09047, 0.01248, 0.10372, 0.99041],
+        rotation: [-0.05431, -0.05216, 0.12646, 0.98911],
       },
       mixamorigRightHandThumb3: {
-        rotation: [0.13689, 0.08044, 0.33527, 0.92865],
+        rotation: [0.28333, -0.04422, 0.22556, 0.93107],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.32675, 0, -0.11266, 0.93837],
+        rotation: [-0.08038, 0, -0.0478, 0.99562],
       },
       mixamorigRightHandIndex2: {
-        rotation: [0.04914, 0.01508, 0.02636, 0.99833],
+        rotation: [0.05313, 0.00392, -0.01691, 0.99844],
       },
       mixamorigRightHandIndex3: {
-        rotation: [0.07199, 0.00974, 0.00812, 0.99732],
+        rotation: [0.05522, 0.00487, -0.04691, 0.99736],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.36816, 0, 0.00293, 0.92976],
+        rotation: [0.02721, 0, -0.00604, 0.99961],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [0.02276, 0.00017, 0.00061, 0.99974],
+        rotation: [0.01511, -0.00037, -0.01703, 0.99974],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [0.05389, -0.002, -0.00424, 0.99854],
+        rotation: [0.03145, -0.00114, -0.04397, 0.99854],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.38256, 0, 0.07533, 0.92085],
+        rotation: [0.09015, 0, 0.02301, 0.99566],
       },
       mixamorigRightHandRing2: {
-        rotation: [0.06919, -0.00376, 0.00456, 0.99759],
+        rotation: [0.04533, -0.0058, -0.05247, 0.99758],
       },
       mixamorigRightHandRing3: {
-        rotation: [0.17438, -0.02358, -0.0167, 0.98426],
+        rotation: [0.09234, -0.01754, -0.14886, 0.98438],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.34756, 0, 0.11759, 0.93026],
+        rotation: [0.09942, 0, 0.07466, 0.99224],
       },
       mixamorigRightHandPinky2: {
-        rotation: [0.10274, -0.01919, -0.01662, 0.99438],
+        rotation: [0.04677, -0.01283, -0.09298, 0.99449],
       },
       mixamorigRightHandPinky3: {
-        rotation: [0.20485, -0.01598, 0.0117, 0.97859],
+        rotation: [0.12975, -0.02097, -0.15895, 0.9785],
       },
     },
   },
@@ -7883,94 +4193,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '手势 · Rock Out · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.56667, 0, 0.09067, -0.81894],
+        rotation: [-0.28059, 0, -0.33337, -0.90007],
       },
       mixamorigLeftHandRing2: {
-        rotation: [0.67617, 0.07382, -0.0015, 0.73304],
+        rotation: [0.26297, 0.09679, 0.62293, 0.73037],
       },
       mixamorigLeftHandRing3: {
-        rotation: [-0.67935, 0.24936, 0.07346, -0.68623],
+        rotation: [-0.43646, 0.39268, -0.52576, -0.61554],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.58645, 0, 0.02966, -0.80944],
+        rotation: [-0.2398, 0, -0.37636, -0.8949],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [0.66366, -0.02985, -0.07477, 0.74369],
+        rotation: [0.31175, 0.02716, 0.59064, 0.74379],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [-0.68211, -0.12548, 0.04304, -0.71912],
+        rotation: [-0.3151, -0.03898, -0.60649, -0.72895],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.35965, 0.02353, -0.18906, -0.91343],
+        rotation: [0.0208, 0.13651, -0.2659, -0.95406],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [0.22881, -0.03523, -0.38781, 0.89219],
+        rotation: [0.44054, -0.00729, -0.09314, 0.89286],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [-0.45768, -0.41182, -0.46718, 0.63457],
+        rotation: [0.33403, -0.09446, -0.56227, 0.75057],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.23839, 0, -0.17564, -0.95516],
+        rotation: [0.09807, 0, -0.14286, -0.98487],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [-0.02119, 0.00194, -0.00784, 0.99974],
+        rotation: [-0.00406, 0.0028, -0.02223, 0.99974],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [0.01779, -0.00617, -0.01346, 0.99973],
+        rotation: [0.02061, -0.0034, 0.00852, 0.99975],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.1475, -0.00002, 0.06842, -0.98669],
+        rotation: [-0.06827, -0.00001, 0.05514, -0.99614],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [0.06494, 0.00582, 0.00927, 0.99783],
+        rotation: [0.02037, 0.00537, 0.06236, 0.99783],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [0.02232, 0.00523, 0.01774, 0.99958],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [-0.00597, 0.00255, 0.02787, 0.99959],
       },
     },
   },
@@ -7978,95 +4243,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-03-signs-rock-out-r',
     name: '手势 · Rock Out · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.35958, 0.02355, -0.18905, 0.91346],
+        rotation: [0.04161, 0.12125, -0.26346, 0.95612],
       },
       mixamorigRightHandThumb2: {
-        rotation: [0.2288, 0.0352, 0.38782, 0.89219],
+        rotation: [0.41374, -0.01184, 0.17769, 0.89281],
       },
       mixamorigRightHandThumb3: {
-        rotation: [-0.45763, 0.41176, 0.46723, 0.63461],
+        rotation: [0.21935, 0.10807, 0.61613, 0.74873],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.23831, 0, -0.17563, 0.95518],
+        rotation: [-0.05956, 0, -0.16272, 0.98487],
       },
       mixamorigRightHandIndex2: {
-        rotation: [-0.0212, -0.00194, 0.00784, 0.99974],
+        rotation: [-0.00945, -0.0028, 0.02053, 0.99974],
       },
       mixamorigRightHandIndex3: {
-        rotation: [0.01779, 0.00617, 0.01346, 0.99973],
+        rotation: [0.02208, 0.0034, -0.00315, 0.99975],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.58638, 0, 0.02966, 0.80949],
+        rotation: [0.32567, 0, -0.30512, 0.8949],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [0.66366, 0.02983, 0.07474, 0.74369],
+        rotation: [0.44852, -0.02716, -0.49485, 0.74379],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [-0.68211, 0.12545, -0.04301, -0.71912],
+        rotation: [-0.45569, 0.03899, 0.50937, -0.72895],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.5666, 0, 0.09066, 0.81899],
+        rotation: [0.35451, 0, -0.25336, 0.90007],
       },
       mixamorigRightHandRing2: {
-        rotation: [0.67617, -0.07382, 0.00149, 0.73304],
+        rotation: [0.40928, -0.09679, -0.53823, 0.73036],
       },
       mixamorigRightHandRing3: {
-        rotation: [-0.67935, -0.2494, -0.07349, -0.68621],
+        rotation: [-0.55323, -0.39267, 0.40106, -0.61555],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.14741, 0, 0.06842, 0.98671],
+        rotation: [0.05246, 0, 0.07034, 0.99614],
       },
       mixamorigRightHandPinky2: {
-        rotation: [0.06494, -0.00589, -0.00928, 0.99783],
+        rotation: [0.03521, -0.0054, -0.05536, 0.99783],
       },
       mixamorigRightHandPinky3: {
-        rotation: [0.02231, -0.00518, -0.01774, 0.99958],
+        rotation: [0.00113, -0.00253, -0.02848, 0.99959],
       },
     },
   },
@@ -8075,94 +4295,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '手势 · Scout Salute · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.36688, 0, -0.02318, -0.92998],
+        rotation: [-0.00249, 0, -0.02212, -0.99975],
       },
       mixamorigLeftHandRing2: {
-        rotation: [-0.04366, -0.00004, -0.00286, 0.99904],
+        rotation: [-0.01709, 0.00028, -0.04028, 0.99904],
       },
       mixamorigLeftHandRing3: {
-        rotation: [0.06098, 0.00819, 0.02759, 0.99772],
+        rotation: [0.0034, -0.00091, 0.06685, 0.99776],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.36417, 0, -0.02869, -0.93089],
+        rotation: [0.00335, 0, -0.02188, -0.99976],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [-0.03234, 0.00037, -0.00159, 0.99948],
+        rotation: [-0.01326, 0.00039, -0.02954, 0.99948],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [0.01402, 0.00123, 0.00463, 0.99989],
+        rotation: [0.00226, -0.00023, 0.0146, 0.99989],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.48765, -0.00298, -0.21901, -0.84512],
+        rotation: [0.04627, 0.13787, -0.24764, -0.95788],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [0.25111, -0.09481, -0.36426, 0.89178],
+        rotation: [0.43472, -0.00038, -0.08223, 0.8968],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [-0.463, -0.48296, -0.43068, 0.60572],
+        rotation: [0.38583, -0.06274, -0.50098, 0.77215],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.32771, 0, -0.0355, -0.94411],
+        rotation: [0.02636, 0, 0.00989, -0.9996],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [-0.00723, -0.01065, -0.03147, 0.99942],
+        rotation: [0.02488, 0.00079, -0.02059, 0.99948],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [0.01712, -0.00489, -0.0143, 0.99974],
+        rotation: [0.02031, 0.00061, 0.00923, 0.99975],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.67169, -0.00009, 0.01272, -0.74072],
+        rotation: [-0.18171, -0.00002, -0.32592, -0.92777],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [0.36065, 0.45641, 0.49681, 0.64406],
+        rotation: [-0.04071, 0.13424, 0.61256, 0.77788],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [-0.39992, 0.90947, -0.06692, 0.09191],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [-0.3887, 0.63433, 0.11543, 0.65819],
       },
     },
   },
@@ -8170,95 +4345,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-03-signs-scout-salute-r',
     name: '手势 · Scout Salute · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.48758, -0.00296, -0.21899, 0.84516],
+        rotation: [0.01323, 0.12499, -0.25159, 0.95964],
       },
       mixamorigRightHandThumb2: {
-        rotation: [0.25109, 0.09477, 0.36427, 0.89179],
+        rotation: [0.40935, -0.01902, 0.16785, 0.8966],
       },
       mixamorigRightHandThumb3: {
-        rotation: [-0.46297, 0.48291, 0.43071, 0.60576],
+        rotation: [0.28545, 0.06844, 0.56424, 0.77166],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.32763, 0, -0.0355, 0.94414],
+        rotation: [-0.02798, 0, 0.00304, 0.9996],
       },
       mixamorigRightHandIndex2: {
-        rotation: [-0.00723, 0.01065, 0.03147, 0.99942],
+        rotation: [0.01899, -0.00079, 0.02612, 0.99948],
       },
       mixamorigRightHandIndex3: {
-        rotation: [0.01712, 0.00489, 0.0143, 0.99974],
+        rotation: [0.02196, -0.00061, -0.0039, 0.99975],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.36409, 0, -0.02869, 0.93092],
+        rotation: [0.00218, 0, -0.02203, 0.99975],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [-0.03234, -0.00037, 0.00159, 0.99948],
+        rotation: [-0.02017, -0.00039, 0.02533, 0.99948],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [0.01402, -0.00123, -0.00463, 0.99989],
+        rotation: [0.00581, 0.00023, -0.01358, 0.99989],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.3668, 0, -0.02318, 0.93001],
+        rotation: [0.0079, 0, -0.02082, 0.99975],
       },
       mixamorigRightHandRing2: {
-        rotation: [-0.04366, 0.00004, 0.00286, 0.99904],
+        rotation: [-0.02655, -0.00028, 0.03478, 0.99904],
       },
       mixamorigRightHandRing3: {
-        rotation: [0.06098, -0.00819, -0.02759, 0.99772],
+        rotation: [0.01987, 0.00091, -0.06392, 0.99776],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.67163, 0, 0.0128, 0.74078],
+        rotation: [0.25688, 0, -0.27066, 0.92777],
       },
       mixamorigRightHandPinky2: {
-        rotation: [0.36052, -0.45674, -0.4969, 0.64382],
+        rotation: [0.11252, -0.13427, -0.60351, 0.77787],
       },
       mixamorigRightHandPinky3: {
-        rotation: [-0.3999, -0.90942, 0.06701, 0.09241],
+        rotation: [-0.34793, -0.63434, -0.20823, 0.65818],
       },
     },
   },
@@ -8267,94 +4397,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '其他 · Scratch · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.2645, 0, 0.0055, -0.96437],
+        rotation: [0.02065, 0, 0.08684, -0.99601],
       },
       mixamorigLeftHandRing2: {
-        rotation: [0.12338, 0.0005, -0.00074, 0.99236],
+        rotation: [0.05415, 0.00242, 0.11087, 0.99236],
       },
       mixamorigLeftHandRing3: {
-        rotation: [0.47401, 0.00418, 0.00264, 0.88051],
+        rotation: [0.19961, 0.00965, 0.42994, 0.88046],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.26156, 0, -0.01978, -0.96499],
+        rotation: [0.04392, 0, 0.07869, -0.99593],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [0.13464, -0.00247, 0.00106, 0.99089],
+        rotation: [0.05957, -0.00062, 0.12075, 0.99089],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [0.50365, -0.01209, -0.00277, 0.86382],
+        rotation: [0.2229, -0.00232, 0.45164, 0.8639],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.41387, 0.06872, -0.43271, -0.79797],
+        rotation: [0.21887, 0.20691, -0.37211, -0.87796],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [-0.08007, -0.00337, -0.10588, 0.99114],
+        rotation: [-0.01355, 0.07224, -0.13205, 0.98851],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [0.23305, -0.08338, -0.45015, 0.85796],
+        rotation: [0.48118, 0.04711, -0.1594, 0.86072],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.22336, 0, -0.04778, -0.97356],
+        rotation: [0.08572, 0, 0.10076, -0.99121],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [0.15933, -0.0129, -0.02215, 0.98689],
+        rotation: [0.09292, -0.00191, 0.13132, 0.98697],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [0.51769, -0.002, 0.02632, 0.85516],
+        rotation: [0.20993, -0.00302, 0.47395, 0.85516],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.23242, -0.00003, 0.04433, -0.9716],
+        rotation: [0.00048, 0, 0.13221, -0.99122],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [0.15536, 0.01142, 0.0186, 0.98762],
+        rotation: [0.04775, 0.00629, 0.14901, 0.98766],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [0.50092, -0.00078, -0.03243, 0.86489],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [0.23097, 0.01733, 0.44567, 0.86471],
       },
     },
   },
@@ -8362,95 +4447,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-02-other-scratch-r',
     name: '其他 · Scratch · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.41382, 0.06873, -0.43269, 0.798],
+        rotation: [-0.1249, 0.19591, -0.41324, 0.88048],
       },
       mixamorigRightHandThumb2: {
-        rotation: [-0.08008, 0.00336, 0.10587, 0.99114],
+        rotation: [-0.04404, -0.06208, 0.12523, 0.9892],
       },
       mixamorigRightHandThumb3: {
-        rotation: [0.23303, 0.08335, 0.45016, 0.85797],
+        rotation: [0.43342, -0.06511, 0.26286, 0.85954],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.22328, 0, -0.04778, 0.97358],
+        rotation: [-0.10803, 0, 0.07634, 0.99121],
       },
       mixamorigRightHandIndex2: {
-        rotation: [0.15933, 0.0129, 0.02215, 0.98689],
+        rotation: [0.12259, 0.00191, -0.10416, 0.98697],
       },
       mixamorigRightHandIndex3: {
-        rotation: [0.51769, 0.00201, -0.02632, 0.85516],
+        rotation: [0.32093, 0.00302, -0.40706, 0.85516],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.26147, 0, -0.01978, 0.96501],
+        rotation: [-0.06206, 0, 0.06533, 0.99593],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [0.13464, 0.00247, -0.00106, 0.99089],
+        rotation: [0.08766, 0.00062, -0.1022, 0.99089],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [0.50365, 0.01209, 0.00277, 0.86382],
+        rotation: [0.32797, 0.00232, -0.38224, 0.8639],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.26442, 0, 0.0055, 0.96439],
+        rotation: [-0.04154, 0, 0.07899, 0.99601],
       },
       mixamorigRightHandRing2: {
-        rotation: [0.12338, -0.0005, 0.00074, 0.99236],
+        rotation: [0.07996, -0.00242, -0.09397, 0.99236],
       },
       mixamorigRightHandRing3: {
-        rotation: [0.47401, -0.00418, -0.00264, 0.88051],
+        rotation: [0.30002, -0.00964, -0.36699, 0.88046],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.23234, 0, 0.04433, 0.97162],
+        rotation: [-0.03325, 0, 0.12795, 0.99122],
       },
       mixamorigRightHandPinky2: {
-        rotation: [0.15536, -0.01153, -0.0186, 0.98762],
+        rotation: [0.08323, -0.0063, -0.13251, 0.98766],
       },
       mixamorigRightHandPinky3: {
-        rotation: [0.50092, 0.00086, 0.03238, 0.86489],
+        rotation: [0.3343, -0.01732, -0.37444, 0.86472],
       },
     },
   },
@@ -8459,94 +4499,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '手势 · Spock · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.19298, 0, 0.07164, -0.97858],
+        rotation: [-0.11699, 0, 0.04336, -0.99219],
       },
       mixamorigLeftHandRing2: {
-        rotation: [-0.0437, -0.00361, -0.00209, 0.99904],
+        rotation: [-0.01781, -0.00549, -0.03997, 0.99903],
       },
       mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00864, 0.02631, 0.99772],
+        rotation: [0.00443, 0.00704, 0.06679, 0.99773],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.1718, 0, -0.1904, -0.96656],
+        rotation: [0.11673, 0, -0.06689, -0.99091],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [-0.03201, 0.00544, -0.00486, 0.99946],
+        rotation: [-0.01294, 0.00437, -0.02968, 0.99947],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [0.01347, -0.00171, 0.00606, 0.99989],
+        rotation: [0.00208, -0.00199, 0.01462, 0.99989],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.37821, 0.07251, -0.40845, -0.82756],
+        rotation: [0.13566, 0.19721, -0.40854, -0.8808],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [-0.14885, 0.04523, 0.09405, 0.98334],
+        rotation: [-0.17502, 0.05603, -0.01927, 0.98278],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [0.08226, -0.02496, -0.1661, 0.98235],
+        rotation: [0.17093, 0.00406, -0.07171, 0.98266],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.14047, 0, -0.21994, -0.96535],
+        rotation: [0.15696, 0, -0.05659, -0.98598],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [-0.00409, -0.00373, -0.03204, 0.99947],
+        rotation: [0.02478, 0.00188, -0.02071, 0.99948],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [0.01852, -0.00534, -0.01242, 0.99974],
+        rotation: [0.02037, -0.00195, 0.00909, 0.99975],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.18174, -0.00003, 0.06001, -0.98151],
+        rotation: [-0.10147, -0.00001, 0.04857, -0.99365],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [-0.01187, 0.0047, 0.02963, 0.99948],
+        rotation: [-0.03177, -0.00127, 0.00303, 0.99949],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [0.09351, 0.00403, 0.00656, 0.99559],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [0.03723, 0.00775, 0.08604, 0.99557],
       },
     },
   },
@@ -8554,95 +4549,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-03-signs-spock-r',
     name: '手势 · Spock · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.37816, 0.07252, -0.40844, 0.82759],
+        rotation: [-0.03848, 0.17992, -0.42876, 0.88449],
       },
       mixamorigRightHandThumb2: {
-        rotation: [-0.14884, -0.04522, -0.09407, 0.98334],
+        rotation: [-0.17489, -0.04194, -0.02041, 0.98348],
       },
       mixamorigRightHandThumb3: {
-        rotation: [0.08224, 0.02495, 0.16611, 0.98236],
+        rotation: [0.14976, -0.01125, 0.10921, 0.98261],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.14039, 0, -0.21994, 0.96536],
+        rotation: [-0.13801, 0, -0.09376, 0.98598],
       },
       mixamorigRightHandIndex2: {
-        rotation: [-0.00409, 0.00373, 0.03204, 0.99947],
+        rotation: [0.01886, -0.00188, 0.02621, 0.99948],
       },
       mixamorigRightHandIndex3: {
-        rotation: [0.01852, 0.00534, 0.01242, 0.99974],
+        rotation: [0.02199, 0.00195, -0.00375, 0.99975],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.17172, 0, -0.1904, 0.96657],
+        rotation: [-0.09649, 0, -0.09376, 0.99091],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [-0.03201, -0.00544, 0.00486, 0.99946],
+        rotation: [-0.0199, -0.00437, 0.02555, 0.99947],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [0.01347, 0.00171, -0.00606, 0.99989],
+        rotation: [0.00563, 0.00199, -0.01365, 0.99989],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.19289, 0, 0.07164, 0.9786],
+        rotation: [0.10257, 0, 0.07102, 0.99219],
       },
       mixamorigRightHandRing2: {
-        rotation: [-0.0437, 0.00361, 0.00209, 0.99904],
+        rotation: [-0.02716, 0.00549, 0.0343, 0.99903],
       },
       mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00863, -0.02631, 0.99772],
+        rotation: [0.02086, -0.00704, -0.0636, 0.99773],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.18166, 0, 0.06001, 0.98153],
+        rotation: [0.08626, 0, 0.07221, 0.99365],
       },
       mixamorigRightHandPinky2: {
-        rotation: [-0.01188, -0.00476, -0.02963, 0.99948],
+        rotation: [-0.03003, 0.00124, -0.01082, 0.99949],
       },
       mixamorigRightHandPinky3: {
-        rotation: [0.09351, -0.00399, -0.00657, 0.99559],
+        rotation: [0.05741, -0.00773, -0.07412, 0.99557],
       },
     },
   },
@@ -8651,94 +4601,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '其他 · Spread · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.36248, 0, 0.10553, -0.926],
+        rotation: [-0.11052, 0, 0.02945, -0.99344],
       },
       mixamorigLeftHandRing2: {
-        rotation: [-0.04373, -0.00441, 0.00148, 0.99903],
+        rotation: [-0.01751, -0.00498, -0.0401, 0.99903],
       },
       mixamorigLeftHandRing3: {
-        rotation: [0.06337, 0.01446, 0.02153, 0.99765],
+        rotation: [0.00395, 0.00653, 0.06682, 0.99774],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.36321, 0, -0.05063, -0.93033],
+        rotation: [0.02182, 0, -0.03067, -0.99929],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [-0.03231, 0.00093, -0.00213, 0.99948],
+        rotation: [-0.01321, 0.00105, -0.02955, 0.99948],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [0.09491, -0.00222, 0.00767, 0.99545],
+        rotation: [0.03764, -0.00311, 0.08746, 0.99545],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
+        rotation: [0.13566, 0.19721, -0.40854, -0.8808],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [-0.18521, 0.06835, 0.10017, 0.97519],
+        rotation: [-0.21026, 0.05314, 0.01129, 0.97614],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [0.09458, -0.03858, -0.09076, 0.99062],
+        rotation: [0.12493, -0.00826, -0.03969, 0.99134],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.30261, 0, -0.24419, -0.9213],
+        rotation: [0.20277, 0, -0.08028, -0.97593],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [-0.0027, -0.00986, -0.03218, 0.99943],
+        rotation: [0.02474, 0.00228, -0.02076, 0.99948],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [0.11291, -0.02392, 0.00541, 0.9933],
+        rotation: [0.05926, -0.02111, 0.09626, 0.99337],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.30173, -0.00004, 0.26502, -0.91582],
+        rotation: [-0.23286, -0.00003, 0.12585, -0.96433],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [-0.00595, 0.00849, 0.03136, 0.99945],
+        rotation: [-0.03181, -0.00357, 0.00274, 0.99948],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [0.09325, 0.0205, -0.00965, 0.99539],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [0.03535, 0.02258, 0.08683, 0.99534],
       },
     },
   },
@@ -8746,95 +4651,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-02-other-spread-r',
     name: '其他 · Spread · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
+        rotation: [-0.03848, 0.17992, -0.42876, 0.88449],
       },
       mixamorigRightHandThumb2: {
-        rotation: [-0.1852, -0.06834, -0.10019, 0.97519],
+        rotation: [-0.20234, -0.03832, -0.05826, 0.97683],
       },
       mixamorigRightHandThumb3: {
-        rotation: [0.09457, 0.03857, 0.09077, 0.99062],
+        rotation: [0.11225, 0.0016, 0.0677, 0.99137],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.30254, 0, -0.24419, 0.92133],
+        rotation: [-0.17652, 0, -0.12808, 0.97593],
       },
       mixamorigRightHandIndex2: {
-        rotation: [-0.0027, 0.00985, 0.03218, 0.99943],
+        rotation: [0.01882, -0.00228, 0.02625, 0.99948],
       },
       mixamorigRightHandIndex3: {
-        rotation: [0.11291, 0.02392, -0.00541, 0.9933],
+        rotation: [0.08128, 0.02111, -0.07855, 0.99337],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.36313, 0, -0.05063, 0.93036],
+        rotation: [-0.01352, 0, -0.03512, 0.99929],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [-0.03231, -0.00093, 0.00213, 0.99948],
+        rotation: [-0.02013, -0.00105, 0.02535, 0.99948],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [0.09491, 0.00222, -0.00767, 0.99545],
+        rotation: [0.05816, 0.00311, -0.0754, 0.99545],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.3624, 0, 0.10553, 0.92603],
+        rotation: [0.09976, 0, 0.05594, 0.99344],
       },
       mixamorigRightHandRing2: {
-        rotation: [-0.04373, 0.00441, -0.00148, 0.99903],
+        rotation: [-0.0269, 0.00498, 0.03451, 0.99903],
       },
       mixamorigRightHandRing3: {
-        rotation: [0.06337, -0.01446, -0.02153, 0.99765],
+        rotation: [0.02039, -0.00653, -0.06375, 0.99774],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.30165, 0, 0.26503, 0.91584],
+        rotation: [0.19437, 0, 0.17968, 0.96433],
       },
       mixamorigRightHandPinky2: {
-        rotation: [-0.00596, -0.0086, -0.03136, 0.99945],
+        rotation: [-0.03014, 0.00349, -0.01055, 0.99948],
       },
       mixamorigRightHandPinky3: {
-        rotation: [0.09325, -0.02043, 0.00964, 0.99539],
+        rotation: [0.05579, -0.02253, -0.07535, 0.99534],
       },
     },
   },
@@ -8843,94 +4703,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '手势 · Stop · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.34339, 0, -0.02574, -0.93884],
+        rotation: [0.01079, 0, -0.0007, -0.99994],
       },
       mixamorigLeftHandRing2: {
-        rotation: [-0.06868, 0.00055, -0.00362, 0.99763],
+        rotation: [-0.02784, 0.0007, -0.06289, 0.99763],
       },
       mixamorigLeftHandRing3: {
-        rotation: [0.03591, 0.00724, 0.0279, 0.99894],
+        rotation: [-0.00821, -0.00224, 0.04473, 0.99896],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.34077, 0, -0.02767, -0.93974],
+        rotation: [0.01364, 0, 0.00096, -0.99991],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [-0.05738, 0.0009, -0.00218, 0.99835],
+        rotation: [-0.02411, 0.00069, -0.05211, 0.99835],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [0.07004, -0.00021, 0.00565, 0.99753],
+        rotation: [0.02683, -0.00103, 0.06494, 0.99753],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.41189, 0.05789, -0.38436, -0.82418],
+        rotation: [0.20187, 0.19148, -0.32325, -0.90448],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [-0.0734, -0.01406, -0.13696, 0.98775],
+        rotation: [0.02009, 0.07325, -0.15408, 0.98513],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [0.10847, -0.02139, -0.15031, 0.98244],
+        rotation: [0.18185, 0.01851, -0.03591, 0.9825],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.30387, 0, -0.03875, -0.95192],
+        rotation: [0.04035, 0, 0.03087, -0.99871],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [-0.0322, -0.00915, -0.03275, 0.9989],
+        rotation: [0.01468, 0.00221, -0.04352, 0.99894],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [0.08784, -0.0032, -0.00974, 0.99608],
+        rotation: [0.04716, 0.0016, 0.07475, 0.99609],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.31312, -0.00004, -0.03466, -0.94908],
+        rotation: [0.03254, 0, 0.02404, -0.99918],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [-0.03742, 0.01112, 0.02991, 0.99879],
+        rotation: [-0.04397, -0.00042, -0.01901, 0.99885],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [0.0684, -0.00209, 0.00896, 0.99762],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [0.02503, -0.00387, 0.06428, 0.99761],
       },
     },
   },
@@ -8938,95 +4753,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-03-signs-stop-r',
     name: '手势 · Stop · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.41183, 0.0579, -0.38434, 0.82421],
+        rotation: [-0.119, 0.18243, -0.36206, 0.90635],
       },
       mixamorigRightHandThumb2: {
-        rotation: [-0.07341, 0.01405, 0.13695, 0.98775],
+        rotation: [-0.01706, -0.06433, 0.15445, 0.98576],
       },
       mixamorigRightHandThumb3: {
-        rotation: [0.10846, 0.02138, 0.15031, 0.98244],
+        rotation: [0.16813, -0.02764, 0.07802, 0.98228],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.30379, 0, -0.03875, 0.95195],
+        rotation: [-0.04675, 0, 0.01989, 0.99871],
       },
       mixamorigRightHandIndex2: {
-        rotation: [-0.0322, 0.00914, 0.03275, 0.9989],
+        rotation: [0.00343, -0.00221, 0.0458, 0.99894],
       },
       mixamorigRightHandIndex3: {
-        rotation: [0.08784, 0.0032, 0.00974, 0.99608],
+        rotation: [0.06423, -0.0016, -0.06072, 0.99609],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.34069, 0, -0.02767, 0.93977],
+        rotation: [-0.01344, 0, -0.00247, 0.99991],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [-0.05738, -0.0009, 0.00218, 0.99835],
+        rotation: [-0.03628, -0.00069, 0.04451, 0.99835],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [0.07004, 0.00021, -0.00565, 0.99753],
+        rotation: [0.0421, 0.00103, -0.05626, 0.99753],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.34331, 0, -0.02574, 0.93887],
+        rotation: [-0.01027, 0, -0.00336, 0.99994],
       },
       mixamorigRightHandRing2: {
-        rotation: [-0.06868, -0.00055, 0.00362, 0.99763],
+        rotation: [-0.04258, -0.0007, 0.05402, 0.99763],
       },
       mixamorigRightHandRing3: {
-        rotation: [0.03591, -0.00724, -0.0279, 0.99894],
+        rotation: [0.00314, 0.00224, -0.04538, 0.99896],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.31304, 0, -0.03465, 0.94911],
+        rotation: [-0.03749, 0, 0.01521, 0.99918],
       },
       mixamorigRightHandPinky2: {
-        rotation: [-0.03742, -0.01123, -0.02991, 0.99879],
+        rotation: [-0.04731, 0.00044, 0.00751, 0.99885],
       },
       mixamorigRightHandPinky3: {
-        rotation: [0.0684, 0.00215, -0.00897, 0.99762],
+        rotation: [0.0402, 0.00385, -0.05606, 0.99761],
       },
     },
   },
@@ -9035,94 +4805,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: "手势 · Surf's Up Flipped · 左手",
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.55228, 0, -0.53549, -0.63893],
+        rotation: [-0.29136, 0, -0.5161, -0.80545],
       },
       mixamorigLeftHandRing2: {
-        rotation: [-0.18842, 0.59388, 0.50436, 0.59785],
+        rotation: [0.18531, 0.06412, 0.50551, 0.84024],
       },
       mixamorigLeftHandRing3: {
-        rotation: [-0.10069, 0.75851, -0.61076, -0.20371],
+        rotation: [-0.30747, 0.19434, -0.53725, -0.76096],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.5532, 0, -0.53228, -0.64081],
+        rotation: [-0.29142, 0, -0.51339, -0.80716],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [-0.20344, 0.60815, 0.50871, 0.57444],
+        rotation: [0.19195, 0.06318, 0.51316, 0.83417],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [-0.07093, 0.7426, -0.63961, -0.18549],
+        rotation: [-0.31684, 0.19209, -0.56013, -0.74092],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.09994, 0.12226, -0.32416, -0.93273],
+        rotation: [0.19761, 0.17559, -0.26213, -0.92812],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [-0.17555, 0.024, -0.01362, 0.98408],
+        rotation: [-0.17586, 0.02325, -0.00851, 0.9841],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [0.11477, -0.00119, -0.03353, 0.99283],
+        rotation: [0.11431, 0.01508, -0.03508, 0.99271],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.55395, 0, -0.4967, -0.66815],
+        rotation: [-0.28219, 0, -0.4813, -0.82989],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [-0.17554, 0.57942, 0.54148, 0.58331],
+        rotation: [0.19927, 0.06574, 0.5332, 0.81955],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [-0.14105, 0.81943, -0.50616, -0.22903],
+        rotation: [-0.25327, 0.13242, -0.46038, -0.84046],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.38546, -0.00005, 0.02972, -0.92225],
+        rotation: [-0.14116, -0.00002, 0.04849, -0.9888],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [-0.02889, 0.0046, 0.01358, 0.99948],
+        rotation: [-0.03173, -0.00111, 0.00347, 0.99949],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [0.06227, 0.02805, 0.07008, 0.9952],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [0.03812, 0.01122, 0.08565, 0.99553],
       },
     },
   },
@@ -9130,95 +4855,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-03-signs-surf-s-up-flipped-r',
     name: "手势 · Surf's Up Flipped · 右手",
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.09988, 0.12228, -0.32417, 0.93273],
+        rotation: [-0.12823, 0.17002, -0.3022, 0.92915],
       },
       mixamorigRightHandThumb2: {
-        rotation: [-0.17555, -0.024, 0.01361, 0.98408],
+        rotation: [-0.17241, -0.00954, -0.03571, 0.98433],
       },
       mixamorigRightHandThumb3: {
-        rotation: [0.11477, 0.00118, 0.03354, 0.99283],
+        rotation: [0.10143, -0.02115, 0.06332, 0.9926],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.55393, 0, -0.49666, 0.6682],
+        rotation: [0.39277, 0, -0.39626, 0.82989],
       },
       mixamorigRightHandIndex2: {
-        rotation: [-0.1753, -0.57923, -0.54156, 0.5835],
+        rotation: [0.32531, -0.06574, -0.4671, 0.81955],
       },
       mixamorigRightHandIndex3: {
-        rotation: [-0.14121, -0.81932, 0.50611, -0.22941],
+        rotation: [-0.35954, -0.13237, 0.38317, -0.84047],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.55319, 0, -0.53224, 0.64086],
+        rotation: [0.40966, 0, -0.42507, 0.80715],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [-0.2032, -0.60796, -0.50881, 0.57464],
+        rotation: [0.31325, -0.06317, -0.4495, 0.83417],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [-0.07115, -0.74252, 0.63959, -0.18584],
+        rotation: [-0.44588, -0.19208, 0.46403, -0.74093],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.55226, 0, -0.53545, 0.63898],
+        rotation: [0.41027, 0, -0.4277, 0.80545],
       },
       mixamorigRightHandRing2: {
-        rotation: [-0.18818, -0.59368, -0.50445, 0.59805],
+        rotation: [0.30492, -0.06411, -0.44374, 0.84024],
       },
       mixamorigRightHandRing3: {
-        rotation: [-0.10089, -0.75841, 0.61073, -0.20406],
+        rotation: [-0.43112, -0.19433, 0.44419, -0.76096],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.38537, 0, 0.02974, 0.92228],
+        rotation: [0.12473, 0, 0.08199, 0.9888],
       },
       mixamorigRightHandPinky2: {
-        rotation: [-0.02889, -0.00474, -0.01358, 0.99948],
+        rotation: [-0.02988, 0.00106, -0.01124, 0.99949],
       },
       mixamorigRightHandPinky3: {
-        rotation: [0.06227, -0.02796, -0.07008, 0.9952],
+        rotation: [0.05817, -0.01119, -0.07351, 0.99553],
       },
     },
   },
@@ -9227,94 +4907,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: "手势 · Surf's Up · 左手",
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.74174, 0, 0.08876, -0.66478],
+        rotation: [-0.29136, 0, -0.5161, -0.80545],
       },
       mixamorigLeftHandRing2: {
-        rotation: [0.49983, -0.15657, -0.20013, 0.82801],
+        rotation: [0.18531, 0.06412, 0.50551, 0.84024],
       },
       mixamorigLeftHandRing3: {
-        rotation: [-0.59594, -0.22339, 0.16741, -0.75295],
+        rotation: [-0.30747, 0.19434, -0.53725, -0.76096],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.73963, 0, 0.08947, -0.66704],
+        rotation: [-0.29142, 0, -0.51339, -0.80716],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [0.5023, -0.17522, -0.21879, 0.818],
+        rotation: [0.19195, 0.06318, 0.51316, 0.83417],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [-0.61348, -0.2216, 0.19438, -0.73264],
+        rotation: [-0.31684, 0.19209, -0.56013, -0.74092],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.32074, 0.0725, -0.34569, -0.87885],
+        rotation: [0.19761, 0.17559, -0.26213, -0.92812],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [-0.1235, 0.02689, 0.1255, 0.98401],
+        rotation: [-0.17587, 0.02326, -0.00851, 0.9841],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [0.04788, -0.00776, -0.10957, 0.9928],
+        rotation: [0.11431, 0.01507, -0.03507, 0.99271],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.71246, 0, 0.08621, -0.6964],
+        rotation: [-0.28219, 0, -0.4813, -0.82989],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [0.5294, -0.14846, -0.20916, 0.80867],
+        rotation: [0.19927, 0.06574, 0.5332, 0.81955],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [-0.5124, -0.33417, 0.11634, -0.78246],
+        rotation: [-0.25327, 0.13242, -0.46038, -0.84046],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.21695, -0.00003, 0.09989, -0.97106],
+        rotation: [-0.14116, -0.00002, 0.04849, -0.9888],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [-0.00667, 0.00621, 0.03122, 0.99947],
+        rotation: [-0.03173, -0.00111, 0.00347, 0.99949],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [0.09329, 0.00458, -0.0092, 0.99559],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [0.03812, 0.01122, 0.08565, 0.99553],
       },
     },
   },
@@ -9322,95 +4957,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-03-signs-surf-s-up-r',
     name: "手势 · Surf's Up · 右手",
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.32068, 0.07252, -0.34568, 0.87887],
+        rotation: [-0.12823, 0.17002, -0.3022, 0.92915],
       },
       mixamorigRightHandThumb2: {
-        rotation: [-0.12349, -0.02688, -0.12552, 0.98401],
+        rotation: [-0.17241, -0.00954, -0.03571, 0.98433],
       },
       mixamorigRightHandThumb3: {
-        rotation: [0.04786, 0.00775, 0.10957, 0.9928],
+        rotation: [0.10143, -0.02115, 0.06332, 0.9926],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.7124, 0, 0.0862, 0.69646],
+        rotation: [0.39277, 0, -0.39626, 0.82989],
       },
       mixamorigRightHandIndex2: {
-        rotation: [0.52944, 0.14833, 0.20907, 0.80869],
+        rotation: [0.32531, -0.06574, -0.4671, 0.81955],
       },
       mixamorigRightHandIndex3: {
-        rotation: [-0.51242, 0.33405, -0.11625, -0.78251],
+        rotation: [-0.35954, -0.13237, 0.38317, -0.84047],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.73957, 0, 0.08946, 0.6671],
+        rotation: [0.40966, 0, -0.42507, 0.80715],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [0.50235, 0.17507, 0.21868, 0.81803],
+        rotation: [0.31325, -0.06317, -0.4495, 0.83417],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [-0.61351, 0.22144, -0.19427, -0.73268],
+        rotation: [-0.44588, -0.19208, 0.46403, -0.74093],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.74169, 0, 0.08875, 0.66485],
+        rotation: [0.41027, 0, -0.4277, 0.80545],
       },
       mixamorigRightHandRing2: {
-        rotation: [0.49987, 0.15643, 0.20003, 0.82804],
+        rotation: [0.30492, -0.06411, -0.44374, 0.84024],
       },
       mixamorigRightHandRing3: {
-        rotation: [-0.59597, 0.22325, -0.16731, -0.75299],
+        rotation: [-0.43112, -0.19433, 0.44419, -0.76096],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.21687, 0, 0.09989, 0.97108],
+        rotation: [0.12473, 0, 0.08199, 0.9888],
       },
       mixamorigRightHandPinky2: {
-        rotation: [-0.00668, -0.00628, -0.03122, 0.99947],
+        rotation: [-0.02988, 0.00106, -0.01124, 0.99949],
       },
       mixamorigRightHandPinky3: {
-        rotation: [0.09329, -0.00454, 0.00919, 0.99559],
+        rotation: [0.05817, -0.01119, -0.07351, 0.99553],
       },
     },
   },
@@ -9419,94 +5009,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '手势 · Three Hicox · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
+        rotation: [-0.02605, 0, -0.01095, -0.9996],
       },
       mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
+        rotation: [-0.01719, -0.00086, -0.04024, 0.99904],
       },
       mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
+        rotation: [0.00352, 0.0007, 0.06684, 0.99776],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.36312, 0, -0.0523, -0.93027],
+        rotation: [0.02323, 0, -0.03134, -0.99924],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [-0.03231, 0.00097, -0.00217, 0.99948],
+        rotation: [-0.01321, 0.0011, -0.02956, 0.99948],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [0.01393, 0.00098, 0.00488, 0.99989],
+        rotation: [0.00224, -0.00054, 0.0146, 0.99989],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.49581, -0.01358, -0.1859, -0.84819],
+        rotation: [0.0182, 0.12715, -0.23081, -0.96448],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [0.24929, -0.08858, -0.36338, 0.89329],
+        rotation: [0.43481, 0.00415, -0.07162, 0.89766],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [-0.59003, -0.48866, -0.28433, 0.5764],
+        rotation: [0.2317, -0.09767, -0.61261, 0.74933],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.37424, 0, -0.14011, -0.91668],
+        rotation: [0.08713, 0, -0.08526, -0.99254],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [-0.00598, -0.01205, -0.03174, 0.99941],
+        rotation: [0.02421, -0.0002, -0.02137, 0.99948],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [0.01762, -0.00752, -0.01368, 0.99972],
+        rotation: [0.02062, -0.00186, 0.0085, 0.99975],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.67524, -0.0001, 0.13991, -0.7242],
+        rotation: [-0.27883, -0.00004, -0.29665, -0.91338],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [0.32921, 0.54646, 0.51818, 0.56964],
+        rotation: [-0.11702, 0.22194, 0.60266, 0.75753],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [-0.51168, 0.83809, -0.17137, 0.08015],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [-0.51475, 0.77808, -0.16191, 0.32157],
       },
     },
   },
@@ -9514,95 +5059,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-03-signs-three-hicox-r',
     name: '手势 · Three Hicox · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.49574, -0.01357, -0.18588, 0.84824],
+        rotation: [0.03645, 0.11377, -0.22865, 0.96615],
       },
       mixamorigRightHandThumb2: {
-        rotation: [0.24928, 0.08855, 0.36338, 0.89329],
+        rotation: [0.4118, -0.0241, 0.15687, 0.89735],
       },
       mixamorigRightHandThumb3: {
-        rotation: [-0.59001, 0.48863, 0.28436, 0.57642],
+        rotation: [0.09847, 0.12173, 0.64752, 0.74579],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.37416, 0, -0.14011, 0.91672],
+        rotation: [-0.06325, 0, -0.10422, 0.99254],
       },
       mixamorigRightHandIndex2: {
-        rotation: [-0.00598, 0.01204, 0.03174, 0.99941],
+        rotation: [0.01815, 0.0002, 0.02671, 0.99948],
       },
       mixamorigRightHandIndex3: {
-        rotation: [0.01762, 0.00752, 0.01368, 0.99972],
+        rotation: [0.02208, 0.00186, -0.00311, 0.99975],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.36304, 0, -0.0523, 0.93031],
+        rotation: [-0.01472, 0, -0.03613, 0.99924],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [-0.03231, -0.00097, 0.00217, 0.99948],
+        rotation: [-0.02013, -0.0011, 0.02536, 0.99948],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [0.01393, -0.00098, -0.00488, 0.99989],
+        rotation: [0.00578, 0.00054, -0.01359, 0.99989],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
+        rotation: [0.02796, 0, -0.00416, 0.9996],
       },
       mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
+        rotation: [-0.02663, 0.00086, 0.03472, 0.99904],
       },
       mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
+        rotation: [0.01998, -0.0007, -0.06388, 0.99776],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.67517, 0, 0.13998, 0.72426],
+        rotation: [0.34371, 0, -0.2182, 0.91337],
       },
       mixamorigRightHandPinky2: {
-        rotation: [0.32908, -0.54672, -0.51826, 0.56939],
+        rotation: [0.03615, -0.22198, -0.61285, 0.75752],
       },
       mixamorigRightHandPinky3: {
-        rotation: [-0.51164, -0.83805, 0.1715, 0.08053],
+        rotation: [-0.53882, -0.77808, 0.02917, 0.32157],
       },
     },
   },
@@ -9611,94 +5111,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '手势 · Three · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.6827, 0, 0.16345, -0.71218],
+        rotation: [-0.30036, 0, -0.30143, -0.90494],
       },
       mixamorigLeftHandRing2: {
-        rotation: [0.57755, 0.2813, 0.15518, 0.75048],
+        rotation: [0.13159, 0.1498, 0.58338, 0.78735],
       },
       mixamorigLeftHandRing3: {
-        rotation: [-0.66725, 0.46052, -0.04517, -0.58367],
+        rotation: [-0.53994, 0.63362, -0.39462, -0.38892],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.36312, 0, -0.0523, -0.93027],
+        rotation: [0.02323, 0, -0.03134, -0.99924],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [-0.03231, 0.00097, -0.00217, 0.99948],
+        rotation: [-0.01321, 0.0011, -0.02956, 0.99948],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [0.01393, 0.00098, 0.00488, 0.99989],
+        rotation: [0.00224, -0.00054, 0.0146, 0.99989],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
+        rotation: [0.13566, 0.19721, -0.40854, -0.8808],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
+        rotation: [-0.17502, 0.05603, -0.01927, 0.98278],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
+        rotation: [0.17093, 0.00406, -0.07171, 0.98266],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.37424, 0, -0.14011, -0.91668],
+        rotation: [0.08713, 0, -0.08526, -0.99254],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [-0.00598, -0.01205, -0.03174, 0.99941],
+        rotation: [0.02421, -0.0002, -0.02137, 0.99948],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [0.01762, -0.00752, -0.01368, 0.99972],
+        rotation: [0.02062, -0.00186, 0.0085, 0.99975],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.66233, -0.00009, 0.14769, -0.73451],
+        rotation: [-0.27896, -0.00004, -0.27995, -0.91859],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [0.54571, 0.36295, 0.28123, 0.70098],
+        rotation: [0.07607, 0.16173, 0.60918, 0.77263],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [-0.67969, 0.56475, -0.13409, -0.44843],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [-0.53538, 0.64469, -0.4397, -0.32312],
       },
     },
   },
@@ -9706,95 +5161,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-03-signs-three-r',
     name: '手势 · Three · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
+        rotation: [-0.03848, 0.17992, -0.42876, 0.88449],
       },
       mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
+        rotation: [-0.17489, -0.04194, -0.02041, 0.98348],
       },
       mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
+        rotation: [0.14976, -0.01125, 0.10921, 0.98261],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.37416, 0, -0.14011, 0.91672],
+        rotation: [-0.06325, 0, -0.10422, 0.99254],
       },
       mixamorigRightHandIndex2: {
-        rotation: [-0.00598, 0.01204, 0.03174, 0.99941],
+        rotation: [0.01815, 0.0002, 0.02671, 0.99948],
       },
       mixamorigRightHandIndex3: {
-        rotation: [0.01762, 0.00752, 0.01368, 0.99972],
+        rotation: [0.02208, 0.00186, -0.00311, 0.99975],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.36304, 0, -0.0523, 0.93031],
+        rotation: [-0.01472, 0, -0.03613, 0.99924],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [-0.03231, -0.00097, 0.00217, 0.99948],
+        rotation: [-0.02013, -0.0011, 0.02536, 0.99948],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [0.01393, -0.00098, -0.00488, 0.99989],
+        rotation: [0.00578, 0.00054, -0.01359, 0.99989],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.68264, 0, 0.16344, 0.71224],
+        rotation: [0.36575, 0, -0.21751, 0.90494],
       },
       mixamorigRightHandRing2: {
-        rotation: [0.57756, -0.28122, -0.15514, 0.75051],
+        rotation: [0.27219, -0.14979, -0.5325, 0.78735],
       },
       mixamorigRightHandRing3: {
-        rotation: [-0.66725, -0.46049, 0.04507, -0.58369],
+        rotation: [-0.62095, -0.63361, 0.24837, -0.38894],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.66225, 0, 0.14776, 0.73457],
+        rotation: [0.3397, 0, -0.202, 0.91859],
       },
       mixamorigRightHandPinky2: {
-        rotation: [0.5455, -0.36364, -0.28165, 0.70063],
+        rotation: [0.22478, -0.16183, -0.57128, 0.77261],
       },
       mixamorigRightHandPinky3: {
-        rotation: [-0.67958, -0.56517, 0.13465, -0.44791],
+        rotation: [-0.62769, -0.64472, 0.29322, -0.32307],
       },
     },
   },
@@ -9803,94 +5213,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '手势 · Three Ring · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.53003, 0, 0.04691, -0.84668],
+        rotation: [-0.13731, 0, -0.15966, -0.97757],
       },
       mixamorigLeftHandRing2: {
-        rotation: [0.60752, 0.03787, 0.00673, 0.79337],
+        rotation: [0.23574, 0.04015, 0.55996, 0.79326],
       },
       mixamorigLeftHandRing3: {
-        rotation: [-0.59852, 0.07425, 0.03506, -0.79689],
+        rotation: [-0.06953, 0.37561, 0.5955, 0.70672],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.33266, 0, -0.00271, -0.94304],
+        rotation: [-0.00354, 0, 0.01929, -0.99981],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00025, -0.00097, 0.99948],
+        rotation: [-0.01333, -0.00036, -0.02951, 0.99948],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [0.03714, 0.00132, 0.00439, 0.9993],
+        rotation: [0.01239, 0.00026, 0.03529, 0.9993],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.51768, -0.00012, -0.26347, -0.814],
+        rotation: [0.04553, 0.15228, -0.30666, -0.93846],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [-0.04376, -0.11664, -0.37964, 0.91671],
+        rotation: [0.24265, 0.06081, -0.29522, 0.9221],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [-0.05113, -0.16978, -0.57205, 0.80083],
+        rotation: [0.54552, 0.11246, -0.17961, 0.81087],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.27133, 0, -0.13405, -0.95311],
+        rotation: [0.13452, 0, 0.01331, -0.99082],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [-0.00466, -0.00844, -0.03195, 0.99944],
+        rotation: [0.02509, 0.0031, -0.02034, 0.99947],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [0.05585, -0.00803, -0.00763, 0.99838],
+        rotation: [0.03439, -0.00375, 0.04466, 0.9984],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.32243, -0.00005, 0.10113, -0.94118],
+        rotation: [-0.08938, -0.00001, 0.06718, -0.99373],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [-0.00955, 0.00928, 0.03046, 0.99945],
+        rotation: [-0.0318, -0.00192, 0.00284, 0.99949],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [0.01622, 0.00426, 0.00903, 0.99982],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [-0.00187, 0.00096, 0.01846, 0.99983],
       },
     },
   },
@@ -9898,95 +5263,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-03-signs-three-ring-r',
     name: '手势 · Three Ring · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.51762, -0.00011, -0.26345, 0.81404],
+        rotation: [0.02661, 0.136, -0.30888, 0.94095],
       },
       mixamorigRightHandThumb2: {
-        rotation: [-0.04378, 0.11661, 0.37963, 0.91671],
+        rotation: [0.17284, -0.05841, 0.34083, 0.92225],
       },
       mixamorigRightHandThumb3: {
-        rotation: [-0.05108, 0.1697, 0.57205, 0.80084],
+        rotation: [0.50118, -0.13597, 0.28049, 0.80725],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.27125, 0, -0.13404, 0.95313],
+        rotation: [-0.13361, 0, -0.02047, 0.99082],
       },
       mixamorigRightHandIndex2: {
-        rotation: [-0.00466, 0.00844, 0.03195, 0.99944],
+        rotation: [0.01926, -0.0031, 0.02592, 0.99947],
       },
       mixamorigRightHandIndex3: {
-        rotation: [0.05585, 0.00803, 0.00763, 0.99838],
+        rotation: [0.0444, 0.00375, -0.03473, 0.9984],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.33258, 0, -0.00271, 0.94307],
+        rotation: [-0.00135, 0, 0.01956, 0.99981],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00025, 0.00097, 0.99948],
+        rotation: [-0.02023, 0.00036, 0.02528, 0.99948],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [0.03714, -0.00132, -0.00439, 0.9993],
+        rotation: [0.02076, -0.00026, -0.03112, 0.9993],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.52996, 0, 0.04691, 0.84672],
+        rotation: [0.17263, 0, -0.12062, 0.97757],
       },
       mixamorigRightHandRing2: {
-        rotation: [0.60752, -0.03787, -0.00674, 0.79337],
+        rotation: [0.36728, -0.04015, -0.48398, 0.79326],
       },
       mixamorigRightHandRing3: {
-        rotation: [-0.59852, -0.07427, -0.03508, -0.79689],
+        rotation: [0.08039, -0.37559, -0.59413, 0.70674],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.32234, 0, 0.10114, 0.9412],
+        rotation: [0.06993, 0, 0.08725, 0.99373],
       },
       mixamorigRightHandPinky2: {
-        rotation: [-0.00955, -0.0094, -0.03046, 0.99945],
+        rotation: [-0.0301, 0.00189, -0.01064, 0.99949],
       },
       mixamorigRightHandPinky3: {
-        rotation: [0.01621, -0.00419, -0.00903, 0.99982],
+        rotation: [0.00277, -0.00095, -0.01835, 0.99983],
       },
     },
   },
@@ -9995,94 +5315,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '持握 · Throw · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.3768, 0, -0.2597, -0.88915],
+        rotation: [-0.08608, 0, -0.11021, -0.99017],
       },
       mixamorigLeftHandRing2: {
-        rotation: [0.03463, 0.02123, 0.07398, 0.99643],
+        rotation: [0.02746, 0.00363, 0.07692, 0.99665],
       },
       mixamorigLeftHandRing3: {
-        rotation: [0.02655, 0.05054, 0.1297, 0.98991],
+        rotation: [0.02171, 0.01092, 0.1306, 0.99114],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.29644, 0, -0.14445, -0.94406],
+        rotation: [-0.01028, 0, 0.01789, -0.99979],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [0.00805, 0.0021, 0.0106, 0.99991],
+        rotation: [0.00636, 0.00023, 0.01169, 0.99991],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [0.02449, 0.01024, 0.0442, 0.99867],
+        rotation: [0.0181, 0.0009, 0.04717, 0.99872],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.00398, 0.2185, -0.64639, -0.73104],
+        rotation: [0.16105, 0.2419, -0.5815, -0.75987],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [-0.30566, 0.19361, -0.05591, 0.93057],
+        rotation: [-0.29425, 0.11728, 0.09985, 0.94323],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [0.18019, -0.11226, 0.03029, 0.97673],
+        rotation: [0.17042, -0.05962, -0.06594, 0.98135],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.17624, 0, -0.16674, -0.97012],
+        rotation: [0.11223, 0, 0.01592, -0.99355],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [-0.00109, -0.01107, -0.06195, 0.99802],
+        rotation: [0.00623, 0.00706, -0.06165, 0.99805],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [0.04697, 0.00411, 0.05054, 0.99761],
+        rotation: [0.04006, -0.00284, 0.05618, 0.99761],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.54932, -0.00008, -0.11939, -0.82704],
+        rotation: [-0.27906, -0.00004, -0.03159, -0.95975],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [-0.01299, 0.09283, 0.13728, 0.98609],
+        rotation: [-0.04018, 0.03958, 0.13192, 0.98965],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [0.03142, 0.09044, 0.15711, 0.98293],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [0.01676, 0.03646, 0.15934, 0.98641],
       },
     },
   },
@@ -10090,95 +5365,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-04-weapons-throw-r',
     name: '持握 · Throw · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.00397, 0.21851, -0.64641, 0.73102],
+        rotation: [-0.03116, 0.21735, -0.60259, 0.76725],
       },
       mixamorigRightHandThumb2: {
-        rotation: [-0.30567, -0.19362, 0.05586, 0.93057],
+        rotation: [-0.2674, -0.09754, -0.15827, 0.94548],
       },
       mixamorigRightHandThumb3: {
-        rotation: [0.1802, 0.11227, -0.03026, 0.97673],
+        rotation: [0.15232, 0.04768, 0.10093, 0.98201],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.17616, 0, -0.16673, 0.97014],
+        rotation: [-0.11267, 0, -0.01243, 0.99355],
       },
       mixamorigRightHandIndex2: {
-        rotation: [-0.00109, 0.01106, 0.06195, 0.99802],
+        rotation: [-0.00926, -0.00706, 0.06127, 0.99805],
       },
       mixamorigRightHandIndex3: {
-        rotation: [0.04698, -0.00411, -0.05054, 0.99761],
+        rotation: [0.05275, 0.00284, -0.04449, 0.99761],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.29636, 0, -0.14445, 0.94409],
+        rotation: [0.00552, 0, 0.01987, 0.99979],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [0.00805, -0.0021, -0.0106, 0.99991],
+        rotation: [0.00906, -0.00023, -0.00975, 0.99991],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [0.02449, -0.01023, -0.04419, 0.99867],
+        rotation: [0.02924, -0.0009, -0.04121, 0.99872],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.37672, 0, -0.25969, 0.88918],
+        rotation: [0.11073, 0, -0.08542, 0.99017],
       },
       mixamorigRightHandRing2: {
-        rotation: [0.03463, -0.02122, -0.07398, 0.99643],
+        rotation: [0.04568, -0.00363, -0.0677, 0.99665],
       },
       mixamorigRightHandRing3: {
-        rotation: [0.02656, -0.05052, -0.1297, 0.98991],
+        rotation: [0.05343, -0.01092, -0.12113, 0.99114],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.54926, 0, -0.11934, 0.82709],
+        rotation: [0.27817, 0, 0.03862, 0.95975],
       },
       mixamorigRightHandPinky2: {
-        rotation: [-0.01299, -0.09304, -0.13728, 0.98607],
+        rotation: [-0.0062, -0.03967, -0.13776, 0.98965],
       },
       mixamorigRightHandPinky3: {
-        rotation: [0.03142, -0.09028, -0.15711, 0.98294],
+        rotation: [0.05575, -0.03641, -0.15021, 0.98641],
       },
     },
   },
@@ -10187,94 +5417,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '手势 · Thumbs Up · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.70615, 0, -0.29568, -0.64337],
+        rotation: [-0.2578, 0, -0.50483, -0.82383],
       },
       mixamorigLeftHandRing2: {
-        rotation: [-0.00949, 0.56618, 0.51187, 0.64603],
+        rotation: [0.21439, 0.01411, 0.4649, 0.8589],
       },
       mixamorigLeftHandRing3: {
-        rotation: [-0.37742, 0.79517, -0.46627, -0.08862],
+        rotation: [-0.31614, 0.14371, -0.50981, -0.78708],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.70403, 0, -0.29519, -0.64591],
+        rotation: [-0.25492, 0, -0.50362, -0.82546],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [-0.02732, 0.58034, 0.52097, 0.62533],
+        rotation: [0.21362, 0.01665, 0.47594, 0.85297],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [-0.36141, 0.77047, -0.51121, -0.12006],
+        rotation: [-0.28891, 0.06045, -0.55542, -0.77742],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.31519, 0.07285, -0.34122, -0.88256],
+        rotation: [0.13566, 0.19721, -0.40854, -0.8808],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [-0.17603, 0.02185, -0.00396, 0.98413],
+        rotation: [-0.17502, 0.05603, -0.01927, 0.98278],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [0.1596, -0.00991, -0.09424, 0.98262],
+        rotation: [0.17093, 0.00406, -0.07171, 0.98266],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.68491, 0, -0.27288, -0.6756],
+        rotation: [-0.23028, 0, -0.47899, -0.84708],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [0.04738, 0.52947, 0.54114, 0.6516],
+        rotation: [0.26365, -0.01997, 0.47494, 0.83936],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [-0.39435, 0.72839, -0.50279, -0.24726],
+        rotation: [-0.25838, -0.10038, -0.58443, -0.76264],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.69079, -0.0001, -0.27708, -0.66786],
+        rotation: [-0.23776, -0.00003, -0.48461, -0.8418],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [-0.06755, 0.5817, 0.53545, 0.60857],
+        rotation: [0.15426, 0.05715, 0.51718, 0.83992],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [-0.37211, 0.78179, -0.50033, -0.00329],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [-0.32428, 0.27816, -0.53258, -0.73064],
       },
     },
   },
@@ -10282,95 +5467,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-03-signs-thumbs-up-r',
     name: '手势 · Thumbs Up · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.31513, 0.07286, -0.34121, 0.88259],
+        rotation: [-0.03848, 0.17992, -0.42876, 0.88449],
       },
       mixamorigRightHandThumb2: {
-        rotation: [-0.17603, -0.02185, 0.00394, 0.98413],
+        rotation: [-0.17489, -0.04194, -0.02041, 0.98348],
       },
       mixamorigRightHandThumb3: {
-        rotation: [0.15959, 0.0099, 0.09425, 0.98262],
+        rotation: [0.14976, -0.01125, 0.10921, 0.98261],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.68486, 0, -0.27286, 0.67566],
+        rotation: [0.34191, 0, -0.4069, 0.84707],
       },
       mixamorigRightHandIndex2: {
-        rotation: [0.04756, -0.52929, -0.54113, 0.65175],
+        rotation: [0.37322, 0.01997, -0.39469, 0.83936],
       },
       mixamorigRightHandIndex3: {
-        rotation: [-0.39449, -0.72831, 0.50268, -0.24749],
+        rotation: [-0.39527, 0.10038, 0.50207, -0.76264],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.70399, 0, -0.29517, 0.64597],
+        rotation: [0.37188, 0, -0.42465, 0.82546],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [-0.02715, -0.58018, -0.52098, 0.62549],
+        rotation: [0.32501, -0.01664, -0.40808, 0.85297],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [-0.36156, -0.77044, 0.5111, -0.1203],
+        rotation: [-0.41765, -0.06045, 0.46639, -0.77743],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.70611, 0, -0.29565, 0.64343],
+        rotation: [0.37497, 0, -0.4251, 0.82382],
       },
       mixamorigRightHandRing2: {
-        rotation: [-0.00932, -0.566, -0.51187, 0.64617],
+        rotation: [0.32301, -0.0141, -0.39719, 0.8589],
       },
       mixamorigRightHandRing3: {
-        rotation: [-0.37756, -0.79514, 0.46616, -0.08886],
+        rotation: [-0.43272, -0.14368, 0.41547, -0.78708],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.69078, 0, -0.27696, 0.66792],
+        rotation: [0.35055, 0, -0.41048, 0.8418],
       },
       mixamorigRightHandPinky2: {
-        rotation: [-0.06739, -0.58174, -0.53547, 0.60853],
+        rotation: [0.27769, -0.0573, -0.46278, 0.83991],
       },
       mixamorigRightHandPinky3: {
-        rotation: [-0.37217, -0.78179, 0.50028, -0.00338],
+        rotation: [-0.44618, -0.27825, 0.43556, -0.7306],
       },
     },
   },
@@ -10379,94 +5519,49 @@ export const seedPosesQbx: SeedPose[] = [
     name: '其他 · Write · 左手',
     bones: {
       mixamorigLeftHandRing1: {
-        rotation: [-0.81263, 0, -0.00339, -0.58277],
+        rotation: [-0.24779, 0, -0.50161, -0.82885],
       },
       mixamorigLeftHandRing2: {
-        rotation: [0.50284, 0.05387, 0.04074, 0.86174],
+        rotation: [0.19169, 0.0235, 0.46665, 0.8631],
       },
       mixamorigLeftHandRing3: {
-        rotation: [-0.59082, 0.04581, -0.0376, -0.80463],
+        rotation: [-0.26445, 0.06252, -0.52966, -0.8035],
       },
       mixamorigLeftHandMiddle1: {
-        rotation: [-0.78606, 0, -0.00142, -0.61815],
+        rotation: [-0.23381, 0, -0.46705, -0.85276],
       },
       mixamorigLeftHandMiddle2: {
-        rotation: [0.55944, 0.043, 0.03483, 0.82702],
+        rotation: [0.21711, 0.02278, 0.51678, 0.82782],
       },
       mixamorigLeftHandMiddle3: {
-        rotation: [-0.58084, 0.04959, -0.0294, -0.81197],
+        rotation: [-0.27462, 0.09658, -0.51267, -0.80773],
       },
       mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
+        rotation: [0.13566, 0.19721, -0.40854, -0.8808],
       },
       mixamorigLeftHandThumb2: {
-        rotation: [-0.07249, -0.03966, -0.18177, 0.97986],
+        rotation: [0.0368, 0.06899, -0.1922, 0.97824],
       },
       mixamorigLeftHandThumb3: {
-        rotation: [0.08061, -0.11863, -0.5326, 0.83413],
+        rotation: [0.46996, 0.07513, -0.26324, 0.83917],
       },
       mixamorigLeftHandIndex1: {
-        rotation: [-0.67652, 0, -0.00114, -0.73643],
+        rotation: [-0.17419, 0, -0.33612, -0.92557],
       },
       mixamorigLeftHandIndex2: {
-        rotation: [0.37087, -0.01944, -0.02053, 0.92825],
+        rotation: [0.16979, 0.00051, 0.33036, 0.92846],
       },
       mixamorigLeftHandIndex3: {
-        rotation: [0.27229, 0.02467, 0.00362, 0.96189],
+        rotation: [0.1024, 0.02386, 0.25233, 0.96191],
       },
       mixamorigLeftHandPinky1: {
-        rotation: [-0.82829, -0.00012, -0.01865, -0.55999],
+        rotation: [-0.24763, -0.00003, -0.52681, -0.81311],
       },
       mixamorigLeftHandPinky2: {
-        rotation: [-0.17662, 0.80464, 0.53993, -0.17272],
+        rotation: [0.14029, 0.07665, 0.55049, 0.81939],
       },
       mixamorigLeftHandPinky3: {
-        rotation: [0.13966, 0.72797, -0.63664, 0.21272],
-      },
-      mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
-      },
-      mixamorigRightHandThumb2: {
-        rotation: [-0.16529, -0.05236, -0.0607, 0.98298],
-      },
-      mixamorigRightHandThumb3: {
-        rotation: [0.11293, 0.04811, 0.14698, 0.98149],
-      },
-      mixamorigRightHandIndex1: {
-        rotation: [0.32788, 0, -0.0082, 0.94469],
-      },
-      mixamorigRightHandIndex2: {
-        rotation: [-0.0078, 0.01081, 0.03134, 0.99942],
-      },
-      mixamorigRightHandIndex3: {
-        rotation: [0.11258, 0.00046, 0.01014, 0.99359],
-      },
-      mixamorigRightHandMiddle1: {
-        rotation: [0.36464, 0, 0.00294, 0.93115],
-      },
-      mixamorigRightHandMiddle2: {
-        rotation: [-0.03236, 0.00042, 0.00082, 0.99948],
-      },
-      mixamorigRightHandMiddle3: {
-        rotation: [0.09513, -0.00184, -0.00408, 0.99545],
-      },
-      mixamorigRightHandRing1: {
-        rotation: [0.36726, 0, 0.00484, 0.9301],
-      },
-      mixamorigRightHandRing2: {
-        rotation: [-0.04371, 0.00099, 0.00193, 0.99904],
-      },
-      mixamorigRightHandRing3: {
-        rotation: [0.06155, -0.00953, -0.0263, 0.99771],
-      },
-      mixamorigRightHandPinky1: {
-        rotation: [0.3371, 0, -0.00411, 0.94146],
-      },
-      mixamorigRightHandPinky2: {
-        rotation: [-0.01176, -0.01067, -0.02968, 0.99943],
-      },
-      mixamorigRightHandPinky3: {
-        rotation: [0.09354, 0.00137, -0.00626, 0.9956],
+        rotation: [-0.24321, 0.14977, -0.6047, -0.74347],
       },
     },
   },
@@ -10474,95 +5569,50 @@ export const seedPosesQbx: SeedPose[] = [
     key: 'qbx-hands-02-other-write-r',
     name: '其他 · Write · 右手',
     bones: {
-      mixamorigLeftHandRing1: {
-        rotation: [-0.36734, 0, 0.00484, -0.93007],
-      },
-      mixamorigLeftHandRing2: {
-        rotation: [-0.04371, -0.00099, -0.00193, 0.99904],
-      },
-      mixamorigLeftHandRing3: {
-        rotation: [0.06155, 0.00953, 0.0263, 0.99771],
-      },
-      mixamorigLeftHandMiddle1: {
-        rotation: [-0.36472, 0, 0.00294, -0.93111],
-      },
-      mixamorigLeftHandMiddle2: {
-        rotation: [-0.03236, -0.00042, -0.00082, 0.99948],
-      },
-      mixamorigLeftHandMiddle3: {
-        rotation: [0.09513, 0.00184, 0.00408, 0.99545],
-      },
-      mixamorigLeftHandThumb1: {
-        rotation: [-0.49054, 0.04208, -0.40767, -0.76903],
-      },
-      mixamorigLeftHandThumb2: {
-        rotation: [-0.16529, 0.05237, 0.06068, 0.98298],
-      },
-      mixamorigLeftHandThumb3: {
-        rotation: [0.11295, -0.04812, -0.14696, 0.98149],
-      },
-      mixamorigLeftHandIndex1: {
-        rotation: [-0.32796, 0, -0.0082, -0.94466],
-      },
-      mixamorigLeftHandIndex2: {
-        rotation: [-0.0078, -0.01082, -0.03134, 0.99942],
-      },
-      mixamorigLeftHandIndex3: {
-        rotation: [0.11258, -0.00046, -0.01014, 0.99359],
-      },
-      mixamorigLeftHandPinky1: {
-        rotation: [-0.33718, -0.00005, -0.00413, -0.94143],
-      },
-      mixamorigLeftHandPinky2: {
-        rotation: [-0.01176, 0.01055, 0.02968, 0.99943],
-      },
-      mixamorigLeftHandPinky3: {
-        rotation: [0.09354, -0.00129, 0.00625, 0.9956],
-      },
       mixamorigRightHandThumb1: {
-        rotation: [0.49049, 0.04209, -0.40765, 0.76907],
+        rotation: [-0.03848, 0.17992, -0.42876, 0.88449],
       },
       mixamorigRightHandThumb2: {
-        rotation: [-0.07251, 0.03964, 0.18177, 0.97986],
+        rotation: [-0.0063, -0.05937, 0.1956, 0.97887],
       },
       mixamorigRightHandThumb3: {
-        rotation: [0.08059, 0.11859, 0.5326, 0.83413],
+        rotation: [0.40209, -0.0866, 0.35844, 0.83806],
       },
       mixamorigRightHandIndex1: {
-        rotation: [0.67645, 0, -0.00114, 0.73649],
+        rotation: [0.25212, 0, -0.28242, 0.92557],
       },
       mixamorigRightHandIndex2: {
-        rotation: [0.37087, 0.01943, 0.02053, 0.92825],
+        rotation: [0.24643, -0.00051, -0.27792, 0.92846],
       },
       mixamorigRightHandIndex3: {
-        rotation: [0.27229, -0.02467, -0.00363, 0.96189],
+        rotation: [0.16178, -0.02386, -0.21905, 0.96191],
       },
       mixamorigRightHandMiddle1: {
-        rotation: [0.78601, 0, -0.00142, 0.61822],
+        rotation: [0.34236, 0, -0.39446, 0.85276],
       },
       mixamorigRightHandMiddle2: {
-        rotation: [0.55945, -0.04294, -0.03479, 0.82702],
+        rotation: [0.33852, -0.02278, -0.44677, 0.82782],
       },
       mixamorigRightHandMiddle3: {
-        rotation: [-0.58085, -0.04953, 0.02936, -0.81197],
+        rotation: [-0.3932, -0.09657, 0.42853, -0.80773],
       },
       mixamorigRightHandRing1: {
-        rotation: [0.81258, 0, -0.00339, 0.58284],
+        rotation: [0.36447, 0, -0.42447, 0.82885],
       },
       mixamorigRightHandRing2: {
-        rotation: [0.50284, -0.05381, -0.04071, 0.86174],
+        rotation: [0.30146, -0.02349, -0.40451, 0.8631],
       },
       mixamorigRightHandRing3: {
-        rotation: [-0.59082, -0.04575, 0.03756, -0.80463],
+        rotation: [-0.38755, -0.06248, 0.44752, -0.80351],
       },
       mixamorigRightHandPinky1: {
-        rotation: [0.82824, 0, -0.01847, 0.56006],
+        rotation: [0.37059, 0, -0.44891, 0.81311],
       },
       mixamorigRightHandPinky2: {
-        rotation: [-0.17453, -0.80523, -0.54061, -0.16994],
+        rotation: [0.27241, -0.07681, -0.49851, 0.81938],
       },
       mixamorigRightHandPinky3: {
-        rotation: [0.13733, -0.72874, 0.63715, 0.21006],
+        rotation: [-0.38553, -0.14989, 0.52553, -0.74345],
       },
     },
   },
