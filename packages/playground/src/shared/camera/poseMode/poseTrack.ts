@@ -48,23 +48,31 @@ function internalRoot(
   return root as InternalSheetObject
 }
 
-export function getPoseTrackId(
+export function getTrackIdForProp(
   sheetObject: ISheetObject<$IntentionalAny>,
+  propName: string,
 ): string | undefined {
   const tree = internalRoot(sheetObject)
     .template.getMapOfValidSequenceTracks_forStudio()
     .getValue()
-  const trackId = (tree as {pose?: unknown}).pose
+  const trackId = (tree as Record<string, unknown>)[propName]
   return typeof trackId === 'string' ? trackId : undefined
 }
 
-/** 轨道 BasicKeyframedTrack 的帧数据;无轨道回 undefined */
-function poseTrackData(
+export function getPoseTrackId(
   sheetObject: ISheetObject<$IntentionalAny>,
+): string | undefined {
+  return getTrackIdForProp(sheetObject, 'pose')
+}
+
+/** 轨道 BasicKeyframedTrack 的帧数据;无轨道回 undefined */
+function propTrackData(
+  sheetObject: ISheetObject<$IntentionalAny>,
+  propName: string,
 ):
   | {keyframes: {byId: Record<string, {position: number; value: unknown}>}}
   | undefined {
-  const trackId = getPoseTrackId(sheetObject)
+  const trackId = getTrackIdForProp(sheetObject, propName)
   if (!trackId) return undefined
   const root = internalRoot(sheetObject) as $IntentionalAny
   const {sheetId, objectKey} = sheetObject.address
@@ -73,6 +81,14 @@ function poseTrackData(
     root.template.project.pointers.historic.sheetsById[sheetId].sequence
       .tracksByObject[objectKey].trackData[trackId],
   )
+}
+
+function poseTrackData(
+  sheetObject: ISheetObject<$IntentionalAny>,
+):
+  | {keyframes: {byId: Record<string, {position: number; value: unknown}>}}
+  | undefined {
+  return propTrackData(sheetObject, 'pose')
 }
 
 export function getPoseKeyframePositions(
@@ -93,16 +109,26 @@ export function getPoseKeyframeCount(
 export function collectLibPoseIds(
   sheetObject: ISheetObject<$IntentionalAny>,
 ): string[] {
+  return collectLibPoseIdsForProps(sheetObject, ['pose'])
+}
+
+/** 多属性版(姿势 + 左手势/右手势):一并收集,预取一次全覆盖 */
+export function collectLibPoseIdsForProps(
+  sheetObject: ISheetObject<$IntentionalAny>,
+  propNames: string[],
+): string[] {
   const ids = new Set<string>()
-  const current = parsePoseValue(
-    (val(sheetObject.props.pose as $IntentionalAny) as string) ?? '',
-  )
-  if (current?.kind === 'lib') ids.add(current.id)
-  const track = poseTrackData(sheetObject)
-  if (track) {
-    for (const kf of Object.values(track.keyframes.byId)) {
-      const v = parsePoseValue(typeof kf.value === 'string' ? kf.value : '')
-      if (v?.kind === 'lib') ids.add(v.id)
+  for (const propName of propNames) {
+    const current = parsePoseValue(
+      (val(sheetObject.props[propName] as $IntentionalAny) as string) ?? '',
+    )
+    if (current?.kind === 'lib') ids.add(current.id)
+    const track = propTrackData(sheetObject, propName)
+    if (track) {
+      for (const kf of Object.values(track.keyframes.byId)) {
+        const v = parsePoseValue(typeof kf.value === 'string' ? kf.value : '')
+        if (v?.kind === 'lib') ids.add(v.id)
+      }
     }
   }
   return [...ids]

@@ -6,6 +6,10 @@
  *   npx tsx scripts/pose-pipeline/build_seed_poses.ts [输入.json] [输出.ts] [导出名]
  * 默认(无参):poses_directions.json → seedPoses.ts(export seedPoses)
  * DPL 批:poses_directions_dpl.json → seedPosesDpl.ts(export seedPosesDpl)
+ * QBX 批:poses_directions_qbx.json → seedPosesQbx.ts(export seedPosesQbx)
+ *   追加 --only-dirs:产物只保留 dirs 覆盖的骨。retargetPose 默认给未覆盖骨
+ *   写「随父(rest)」旋转——全身姿势要这个(末端骨归位),叠加片段(纯手势)
+ *   要裁掉,否则应用时把身体刷回 rest
  *
  * 输入:
  *   - scripts/pose-pipeline/*.json(blender_dump*.py 产物,
@@ -34,12 +38,14 @@ const fbxPath = path.join(
   pkgRoot,
   'src/shared/camera/assetLibrary/seedModels/Y Bot.fbx',
 )
-// 可选参数:输入 JSON / 输出 ts / 导出变量名
+// 可选参数:输入 JSON / 输出 ts / 导出名 / --only-dirs(只保留 dirs 覆盖骨)
+const argv = process.argv.slice(2)
+const onlyDirs = argv.includes('--only-dirs')
 const [
   inName = 'poses_directions.json',
   outName = 'seedPoses.ts',
   exportName = 'seedPoses',
-] = process.argv.slice(2)
+] = argv.filter((a) => a !== '--only-dirs')
 const dirsPath = path.join(here, inName)
 const outPath = path.join(pkgRoot, 'src/shared/camera/assetLibrary', outName)
 
@@ -98,16 +104,25 @@ const roundBones = (
       },
     ]),
   )
-const seedPoses = dirsDoc.poses.map((p) => ({
-  key: p.key,
-  name: p.name,
-  bones: roundBones(retargetPose(restBones, p.dirs)),
-}))
+const seedPoses = dirsDoc.poses.map((p) => {
+  const bones = retargetPose(restBones, p.dirs)
+  return {
+    key: p.key,
+    name: p.name,
+    bones: roundBones(
+      onlyDirs
+        ? Object.fromEntries(Object.entries(bones).filter(([k]) => k in p.dirs))
+        : bones,
+    ),
+  }
+})
 console.log(`换算姿势: ${seedPoses.map((p) => p.key).join(', ')}`)
 
 // ---------- 3. 写产物 ts ----------
 const body = `// 本文件由 scripts/pose-pipeline/build_seed_poses.ts 生成,勿手改。
-// 重新生成:npx tsx scripts/pose-pipeline/build_seed_poses.ts ${inName} ${outName} ${exportName}
+// 重新生成:npx tsx scripts/pose-pipeline/build_seed_poses.ts ${inName} ${outName} ${exportName}${
+  onlyDirs ? ' --only-dirs' : ''
+}
 // 骨向来源:${dirsDoc.source ?? inName}
 import type {PoseBones} from '../poseMode/poseOverride'
 

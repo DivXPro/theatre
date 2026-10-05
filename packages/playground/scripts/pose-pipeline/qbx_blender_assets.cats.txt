@@ -1,0 +1,47 @@
+# This is an Asset Catalog Definition file for Blender.
+#
+# Empty lines and lines starting with `#` will be ignored.
+# The first non-ignored line should be the version indicator.
+# Other lines are of the format "UUID:catalog/path/for/assets:simple catalog name"
+
+VERSION 1
+
+32458fba-bd45-4a4e-b13a-2b9ab710811c:Female:Female
+0613cdbd-f68c-436e-a45a-020807716e3c:Female/01_Body:Female-01_Body
+7fdadce8-63cd-42dc-9066-fabc1d889de0:Female/01_Body/01_Base:Female-01_Body-01_Base
+6ab5ed18-17c0-489c-9e8d-c2b83861e4be:Female/01_Body/02_Walk:Female-01_Body-02_Walk
+1c899acc-67a4-4d00-a829-664f1d951b7d:Female/01_Body/03_Jump:Female-01_Body-03_Jump
+f5d55ce9-aa0e-466f-96b0-6d20bafb1df1:Female/01_Body/04_Fall:Female-01_Body-04_Fall
+7a8e0297-de93-4daa-b8c7-57dd735b8118:Female/01_Body/05_Sit:Female-01_Body-05_Sit
+a8a186ba-4be8-48d5-a80f-68b0f7de0155:Female/01_Body/06_Lounge:Female-01_Body-06_Lounge
+2607c279-8dcb-4d57-a32c-e3d3301090e7:Female/01_Body/07_Fight:Female-01_Body-07_Fight
+df068285-a8e4-41a6-9514-736e2d7902f7:Female/01_Body/08_Action:Female-01_Body-08_Action
+cfe66115-b43d-454c-875f-ef801f397e6c:Female/01_Body/09_Medieval:Female-01_Body-09_Medieval
+6fccce40-5d9a-4779-ae03-e17c49504021:Female/01_Body/10_Sport:Female-01_Body-10_Sport
+4484b609-4cc7-4498-8b98-6d3c859438dd:Female/01_Body/11_Drive:Female-01_Body-11_Drive
+26104979-a4ba-48f5-86d8-9abb8c2704c1:Female/01_Body/12_Thanks:Female-01_Body-12_Thanks
+79b787c8-ff44-4056-aef4-cea9b93dbb68:Female/02_Arms:Female-02_Arms
+eacd9f4f-fab0-440e-b300-8fda97de81be:Female/03_Hands:Female-03_Hands
+37f3a4a4-b905-40dd-a18f-e926c00f7c52:Female/03_Hands/01_Base:Female-03_Hands-01_Base
+d6ee7c34-c2a2-47c6-ae96-19222702c6e0:Female/03_Hands/02_Other:Female-03_Hands-02_Other
+378b82f4-3e8b-4cd5-b9c6-ac111c9314e4:Female/03_Hands/03_Signs:Female-03_Hands-03_Signs
+e0cbe6f0-36cf-4517-9c2a-4fb78186f641:Female/03_Hands/04_Weapons:Female-03_Hands-04_Weapons
+49a45930-cbc0-45b4-84d4-d1009f01147e:Male:Male
+529185b9-aaef-4bdc-95e4-0c97409d2999:Male/01_Body:Male-01_Body
+3ce27b22-6c52-48bc-849f-ed0819d8f489:Male/01_Body/01_Base:Male-01_Body-01_Base
+471fc701-4bc9-44b4-8654-8bf316d0965d:Male/01_Body/02_Walk:Male-01_Body-02_Walk
+a7987d68-77c2-4562-9860-f212cc2814b9:Male/01_Body/03_Jump:Male-01_Body-03_Jump
+1d9373de-3462-4822-9e06-ef013fdcdfc2:Male/01_Body/04_Fall:Male-01_Body-04_Fall
+90fbe26c-ea47-4e39-b60c-bbce3e4f9736:Male/01_Body/05_Sit:Male-01_Body-05_Sit
+45f666cd-4ea0-4e6a-86a9-f002926f9eba:Male/01_Body/06_Lounge:Male-01_Body-06_Lounge
+095d087f-6a92-48f7-b7c8-fd19c586ee10:Male/01_Body/07_Fight:Male-01_Body-07_Fight
+a42d4b84-fc70-4dd8-959b-d58b00a8a3bf:Male/01_Body/08_Action:Male-01_Body-08_Action
+b936c37e-c3ad-4359-a867-d7e0584f73eb:Male/01_Body/09_Medieval:Male-01_Body-09_Medieval
+9a0cb3d2-409c-49c7-9e57-98060cdb5359:Male/01_Body/10_Sport:Male-01_Body-10_Sport
+b76df202-7331-49cb-a18c-1f625e6cbb1a:Male/01_Body/11_Drive:Male-01_Body-11_Drive
+047380cf-fa69-4ff7-af94-0ecf6a0fce6b:Male/02_Arms:Male-02_Arms
+75f0480a-238c-4f02-a203-a61f6167fed0:Male/03_Hands:Male-03_Hands
+1743b087-3cc6-4e94-8846-e075febcd781:Male/03_Hands/01_Base:Male-03_Hands-01_Base
+d3c580a3-d741-4a22-8e1c-1cfcdd958776:Male/03_Hands/02_Other:Male-03_Hands-02_Other
+ad432617-0260-4ec3-ac09-5e5ebc73f6a2:Male/03_Hands/03_Signs:Male-03_Hands-03_Signs
+55b42c9e-83a2-41f3-bcc2-257e58b51e48:Male/03_Hands/04_Weapons:Male-03_Hands-04_Weapons

@@ -57,7 +57,12 @@ import {
 } from './poseMode/poseSession'
 import {resolveControlSpec} from './poseMode/controlSpec'
 import {prefetchLibPoses, resolvePoseBones} from './poseMode/poseLibResolve'
-import {collectLibPoseIds, getPoseTrackId} from './poseMode/poseTrack'
+import {
+  collectLibPoseIdsForProps,
+  getPoseTrackId,
+  getTrackIdForProp,
+} from './poseMode/poseTrack'
+import {gesturePropConfigShape, resolveGestureBones} from './gestureProps'
 import {computeLegacyPoseMigration} from './poseMode/poseMigration'
 import {parsePoseValue} from './poseMode/poseValue'
 import type {ModelEntry, PoseEntry} from './assetLibrary/types'
@@ -1087,6 +1092,10 @@ function PlacedModelCore({
       // JSON(lib 引用|custom 快照),面板显示为属性行,值区域走注册表
       // 的 pose 编辑器(弹框选预设);自定义插值器让它可打帧且平滑混合
       pose: t.string('', posePropConfigShape().opts),
+      // 手势(2026-10-05):姿势的纯选择叠加层,左右手各一行;值是库手势
+      // 引用(或 ''=无手势),应用只写本侧手指骨,可打帧(同姿势插值器)
+      gestureL: t.string('', gesturePropConfigShape('left').opts),
+      gestureR: t.string('', gesturePropConfigShape('right').opts),
       // 迁移过渡(spec §9):读取/清理旧值用,面板隐藏;下个大版本删 key
       poseOverride: t.string('', {
         label: () => translate('pg.props.poseOverride'),
@@ -1178,6 +1187,10 @@ function PlacedModelCore({
   }, [instance])
   const animationId = useVal(sheetObject?.props.animation) ?? ''
   const poseJson = (useVal(sheetObject?.props.pose) as string | undefined) ?? ''
+  const gestureLJson =
+    (useVal(sheetObject?.props.gestureL) as string | undefined) ?? ''
+  const gestureRJson =
+    (useVal(sheetObject?.props.gestureR) as string | undefined) ?? ''
   const poseSessionKey = usePoseSessionKey()
   // 本模型正处于姿势模式会话:期间骨骼归 IK 骨架每帧重解算
   const poseModeActive = poseSessionKey === entry.key
@@ -1263,11 +1276,24 @@ function PlacedModelCore({
     // (r3f invalidate 只排帧不重渲染 React,spec §5 的「重求值」需要这一跳)
     [poseJson, libResolveTick],
   )
+  // 手势层(叠加):本侧手指骨;解析不出 = null(跳过应用,保持姿势层)
+  const gestureLBones = useMemo(
+    () => resolveGestureBones(gestureLJson, 'left'),
+    [gestureLJson, libResolveTick],
+  )
+  const gestureRBones = useMemo(
+    () => resolveGestureBones(gestureRJson, 'right'),
+    [gestureRJson, libResolveTick],
+  )
   // 库姿势引用预取(spec §5):当前值与轨道全部帧值里的 lib id 异步进缓存,
   // 到手 invalidate 触发重求值,阶跃变平滑
   useEffect(() => {
     if (!sheetObject) return
-    const ids = collectLibPoseIds(sheetObject)
+    const ids = collectLibPoseIdsForProps(sheetObject, [
+      'pose',
+      'gestureL',
+      'gestureR',
+    ])
     if (ids.length === 0) return
     let cancelled = false
     prefetchLibPoses(ids, () => {
@@ -1278,7 +1304,7 @@ function PlacedModelCore({
     return () => {
       cancelled = true
     }
-  }, [sheetObject, poseJson, invalidate])
+  }, [sheetObject, poseJson, gestureLJson, gestureRJson, invalidate])
 
   // 动画片段切换:0.2s 淡入淡出
   useEffect(() => {
@@ -1341,10 +1367,13 @@ function PlacedModelCore({
         invalidate()
       } else {
         applyPose(instance, poseBones ?? bindPoseRef.current)
+        // 手势叠加层:姿势层整写之后,只补本侧手指骨(顺序不能反)
+        if (gestureLBones) applyPose(instance, gestureLBones)
+        if (gestureRBones) applyPose(instance, gestureRBones)
         invalidate()
       }
     })
-  }, [sheet, invalidate, instance, poseBones])
+  }, [sheet, invalidate, instance, poseBones, gestureLBones, gestureRBones])
   // pose 数据变化且当前未播放时立即应用,覆盖 pose 值切换与撤销/重做路径。
   // poseModeActive 进 deps:姿势模式期间不抢骨骼(IK 骨架每帧重解算,应用了
   // 也会被压回);会话退出(true→false)时本 effect 重跑,把当前值补刷回骨骼——
@@ -1359,24 +1388,59 @@ function PlacedModelCore({
     )
       return
     applyPose(instance, poseBones ?? bindPoseRef.current)
+    // 手势叠加层:姿势层整写之后,只补本侧手指骨(顺序不能反)
+    if (gestureLBones) applyPose(instance, gestureLBones)
+    if (gestureRBones) applyPose(instance, gestureRBones)
     invalidate()
-  }, [instance, poseBones, invalidate, sheet, poseModeActive])
+  }, [
+    instance,
+    poseBones,
+    gestureLBones,
+    gestureRBones,
+    invalidate,
+    sheet,
+    poseModeActive,
+  ])
   useFrame((_, delta) => {
     if (!val(sheet.sequence.pointer.playing)) return
     if (!sheetObject) return
     mixer.update(delta)
-    // 有姿势轨道:求值姿势逐骨压过动作片段(spec §7.1);
+    // 有姿势/手势轨道:求值姿势逐骨压过动作片段(spec §7.1);
     // 每帧重读求值值(拖针/播放求值产物),resolvePoseBones 有 LRU/缓存兜底。
     // 轨道有无也现场读——两步撤销首帧(撤关键帧→撤空轨)删轨不改求值值,
     // 缓存的布尔会滞留 true 让播放被绑定姿势盖住(终审 F2)
+    const hasPoseTrack = getPoseTrackId(sheetObject) !== undefined
+    const hasGestureLTrack =
+      getTrackIdForProp(sheetObject, 'gestureL') !== undefined
+    const hasGestureRTrack =
+      getTrackIdForProp(sheetObject, 'gestureR') !== undefined
     if (
-      shouldApplyPoseDuringPlayback(getPoseTrackId(sheetObject) !== undefined)
-    ) {
-      const evaluated = (val(sheetObject.props.pose) as string) ?? ''
-      applyPose(
-        instance,
-        resolvePoseBones(parsePoseValue(evaluated)) ?? bindPoseRef.current,
+      shouldApplyPoseDuringPlayback(
+        hasPoseTrack || hasGestureLTrack || hasGestureRTrack,
       )
+    ) {
+      if (hasPoseTrack) {
+        const evaluated = (val(sheetObject.props.pose) as string) ?? ''
+        applyPose(
+          instance,
+          resolvePoseBones(parsePoseValue(evaluated)) ?? bindPoseRef.current,
+        )
+      }
+      // 手势轨道:求值值裁到本侧手指骨压上;无姿势轨道时身体仍归 mixer
+      if (hasGestureLTrack) {
+        const g = resolveGestureBones(
+          (val(sheetObject.props.gestureL) as string) ?? '',
+          'left',
+        )
+        if (g) applyPose(instance, g)
+      }
+      if (hasGestureRTrack) {
+        const g = resolveGestureBones(
+          (val(sheetObject.props.gestureR) as string) ?? '',
+          'right',
+        )
+        if (g) applyPose(instance, g)
+      }
     }
     invalidate()
   })
