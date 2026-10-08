@@ -73,3 +73,18 @@ test('当前库条目已被删除:追加置灰缺失项作为当前显示', () =
   expect(missing.disabled).toBe(true)
   expect(missing.hint).toBeTruthy()
 })
+
+test('「T 姿势」项挂 bindThumbUrl(模型自己的图);不传则无图', () => {
+  const withThumb = buildPoseOptions({
+    poseJson: '',
+    libEntries,
+    bindThumbUrl: 'blob:model-thumb',
+    t,
+  })
+  expect(withThumb.options[0]).toMatchObject({
+    key: 'bind',
+    thumbUrl: 'blob:model-thumb',
+  })
+  const without = buildPoseOptions({poseJson: '', libEntries, t})
+  expect(without.options[0]!.thumbUrl).toBeUndefined()
+})

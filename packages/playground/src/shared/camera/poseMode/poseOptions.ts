@@ -30,11 +30,22 @@ export function buildPoseOptions(args: {
   selectedRig?: string
   /** 缩略图 URL 解析(懒加载 hook 的 getThumbUrl);缺省=无图 */
   thumbUrlOf?: (entry: {id: string; thumbnailId?: string}) => string | undefined
+  /** 「T 姿势」项的缩略图(2026-10-05):调用方传当前选中模型自己的
+      缩略图——模型图就是按绑定/T 姿势渲染的,语义正好 */
+  bindThumbUrl?: string
   /** 显示名解析(poseEntryName:种子条目查 i18n 词典);缺省=条目名原文 */
   nameOf?: (entry: {id: string; name: string}) => string
   t: (k: string) => string
 }): {options: PoseOption[]; current: PoseCurrentKey} {
-  const {poseJson, libEntries, selectedRig, thumbUrlOf, nameOf, t} = args
+  const {
+    poseJson,
+    libEntries,
+    selectedRig,
+    thumbUrlOf,
+    bindThumbUrl,
+    nameOf,
+    t,
+  } = args
   const currentValue = parsePoseValue(poseJson)
   const current: PoseCurrentKey = !currentValue
     ? 'bind'
@@ -42,7 +53,13 @@ export function buildPoseOptions(args: {
       ? 'custom'
       : `lib:${currentValue.id}`
 
-  const options: PoseOption[] = [{key: 'bind', label: t('pg.pose.tPose')}]
+  const options: PoseOption[] = [
+    {
+      key: 'bind',
+      label: t('pg.pose.tPose'),
+      ...(bindThumbUrl ? {thumbUrl: bindThumbUrl} : {}),
+    },
+  ]
 
   for (const entry of libEntries) {
     const rigMismatch = selectedRig !== undefined && entry.rig !== selectedRig

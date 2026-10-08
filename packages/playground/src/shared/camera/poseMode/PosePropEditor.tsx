@@ -66,8 +66,13 @@ const PosePropEditor: React.FC<
     const held = parentPopoverLock.takeFocus()
     return () => held.releaseFocus()
   }, [pickerOpen, parentPopoverLock])
-  // 编辑器所属对象的骨架族(obj → placement → 模型库条目),用于过滤异族预设
+  // 编辑器所属对象的骨架族(obj → placement → 模型库条目),用于过滤异族预设;
+  // 条目本体也留一份——「T 姿势」项的缩略图就用模型自己的图(模型图就是
+  // 按绑定/T 姿势渲染的,语义正好)
   const [rig, setRig] = useState<string | undefined>(undefined)
+  const [modelEntry, setModelEntry] = useState<
+    {id: string; thumbnailId?: string} | undefined
+  >(undefined)
   useEffect(() => {
     let cancelled = false
     const entry = obj
@@ -75,12 +80,19 @@ const PosePropEditor: React.FC<
       : undefined
     if (!entry?.libraryEntryId) {
       setRig(undefined)
+      setModelEntry(undefined)
       return
     }
     void getLibrary()
       .backend.getEntry(entry.libraryEntryId)
       .then((libEntry) => {
-        if (!cancelled) setRig(libEntry?.rig)
+        if (cancelled) return
+        setRig(libEntry?.rig)
+        setModelEntry(
+          libEntry && 'thumbnailId' in libEntry
+            ? {id: libEntry.id, thumbnailId: libEntry.thumbnailId}
+            : undefined,
+        )
       })
     return () => {
       cancelled = true
@@ -103,6 +115,7 @@ const PosePropEditor: React.FC<
     libEntries: bodyPoseEntries,
     selectedRig: rig,
     thumbUrlOf: getThumbUrl,
+    bindThumbUrl: modelEntry ? getThumbUrl(modelEntry) : undefined,
     nameOf,
     t,
   })

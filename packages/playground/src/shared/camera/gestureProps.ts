@@ -124,12 +124,23 @@ export function buildGestureOptions(args: {
   selectedRig?: string
   /** 缩略图 URL 解析(懒加载 hook 的 getThumbUrl);缺省=无图 */
   thumbUrlOf?: (entry: {id: string; thumbnailId?: string}) => string | undefined
+  /** 「无手势」项的缩略图(2026-10-05):调用方传本侧「基础·放松」条目的
+      预览图——放松手就是无叠加手势的样子,语义正好 */
+  noneThumbUrl?: string
   /** 显示名解析(poseEntryName:种子条目查 i18n 词典);缺省=条目名原文 */
   nameOf?: (entry: {id: string; name: string}) => string
   t: (k: string) => string
 }): {options: GestureOption[]; current: GestureOptionKey | 'custom'} {
-  const {gestureJson, libEntries, side, selectedRig, thumbUrlOf, nameOf, t} =
-    args
+  const {
+    gestureJson,
+    libEntries,
+    side,
+    selectedRig,
+    thumbUrlOf,
+    noneThumbUrl,
+    nameOf,
+    t,
+  } = args
   const currentValue = parsePoseValue(gestureJson)
   const current: GestureOptionKey | 'custom' = !currentValue
     ? 'none'
@@ -137,7 +148,13 @@ export function buildGestureOptions(args: {
       ? 'custom'
       : `lib:${currentValue.id}`
 
-  const options: GestureOption[] = [{key: 'none', label: t('pg.gesture.none')}]
+  const options: GestureOption[] = [
+    {
+      key: 'none',
+      label: t('pg.gesture.none'),
+      ...(noneThumbUrl ? {thumbUrl: noneThumbUrl} : {}),
+    },
+  ]
   const listed = new Set<string>()
   for (const entry of libEntries) {
     if (!isHandPoseEntry(entry)) continue

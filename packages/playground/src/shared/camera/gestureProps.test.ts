@@ -171,6 +171,27 @@ test('buildGestureOptions:thumbUrlOf 注入时透传缩略图;无图条目不带
   expect(plain.options.every((o) => !('thumbUrl' in o))).toBe(true)
 })
 
+test('buildGestureOptions:「无手势」项挂 noneThumbUrl(放松手预览);不传则无图', () => {
+  const withThumb = buildGestureOptions({
+    gestureJson: '',
+    libEntries: LIB,
+    side: 'left',
+    noneThumbUrl: 'url:base-l',
+    t,
+  })
+  expect(withThumb.options[0]).toMatchObject({
+    key: 'none',
+    thumbUrl: 'url:base-l',
+  })
+  const plain = buildGestureOptions({
+    gestureJson: '',
+    libEntries: LIB,
+    side: 'left',
+    t,
+  })
+  expect(plain.options[0]!.thumbUrl).toBeUndefined()
+})
+
 test('gestureDisplayText:空值无手势;库引用显名;缺失带标记;custom 报自定义', () => {
   expect(gestureDisplayText({gestureJson: '', libEntries: LIB, t})).toBe(
     'pg.gesture.none',

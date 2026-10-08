@@ -78,6 +78,14 @@ export function GesturePropEditor({
   const gestureJson = (value as string) ?? ''
   // 缩略图懒加载(QBX 预览图):命中缓存直接给 URL,未命中触发加载后重渲
   const {getThumbUrl} = useModelThumbUrl()
+  // 「无手势」项配图(2026-10-05):用本侧「基础·放松」条目的预览图——
+  // 放松手就是无叠加手势的样子。种子条目 id 稳定(seed-pose-<key>)
+  const baseEntry = poseEntries.find(
+    (e) =>
+      e.id ===
+      `seed-pose-qbx-hands-01-base-base-${side === 'left' ? 'l' : 'r'}`,
+  )
+  const noneThumbUrl = baseEntry ? getThumbUrl(baseEntry) : undefined
   // 显示名:种子条目查 i18n 词典(纯姿势名),用户自存姿势回退条目名原文
   const nameOf = (e: {id: string; name: string}) => poseEntryName(e, t)
   const {options, current} = buildGestureOptions({
@@ -86,6 +94,7 @@ export function GesturePropEditor({
     side,
     selectedRig: rig,
     thumbUrlOf: getThumbUrl,
+    noneThumbUrl,
     nameOf,
     t,
   })
