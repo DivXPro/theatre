@@ -5248,6 +5248,18 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@dreamerbird/camera-studio@workspace:packages/camera-studio":
+  version: 0.0.0-use.local
+  resolution: "@dreamerbird/camera-studio@workspace:packages/camera-studio"
+  peerDependencies:
+    "@dreamerbird/core": "*"
+    "@dreamerbird/studio": "*"
+    react: ">=19"
+    react-dom: ">=19"
+    three: ">=0.185"
+  languageName: unknown
+  linkType: soft
+
 "@dreamerbird/compat-tests@workspace:compat-tests":
   version: 0.0.0-use.local
   resolution: "@dreamerbird/compat-tests@workspace:compat-tests"

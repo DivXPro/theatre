@@ -1,0 +1,28 @@
+{
+  "name": "@dreamerbird/camera-studio",
+  "version": "0.1.0",
+  "license": "Apache-2.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist/**/*",
+    "assets/**/*"
+  ],
+  "scripts": {
+    "build:ts": "tsc -b tsconfig.json",
+    "clean": "rimraf dist tsconfig.tsbuildinfo"
+  },
+  "peerDependencies": {
+    "@dreamerbird/core": "*",
+    "@dreamerbird/studio": "*",
+    "react": ">=19",
+    "react-dom": ">=19",
+    "three": ">=0.185"
+  }
+}
