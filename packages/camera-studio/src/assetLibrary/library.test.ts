@@ -15,6 +15,7 @@ function memoryBackend(): LibraryBackend & {
   const entries = new Map<string, LibraryEntry>()
   const aliases = new Map<string, string>()
   return {
+    id: 'mock',
     entries,
     aliases,
     listEntries: async (kind) =>
@@ -97,7 +98,7 @@ describe('blob 生命周期', () => {
     await lib.putEntry(model('m2'))
     await lib.deleteEntryDeep('m1')
     // 共享缩略图仍在;m1 自己的模型 blob 不在本次放入(不影响断言)
-    expect(await lib.backend.listBlobIds()).toContain(thumbId)
+    expect(await lib.backend.listBlobIds?.()).toContain(thumbId)
   })
 
   test('deleteEntryDeep: 独占 blob 随条目删除', async () => {
@@ -115,7 +116,7 @@ describe('blob 生命周期', () => {
       createdAt: 1,
     })
     await lib.deleteEntryDeep('m1')
-    expect(await lib.backend.listBlobIds()).not.toContain(blobId)
+    expect(await lib.backend.listBlobIds?.()).not.toContain(blobId)
   })
 
   test('sweepOrphanBlobs: 清掉无引用 blob,保留有引用的', async () => {
@@ -133,7 +134,7 @@ describe('blob 生命周期', () => {
       createdAt: 1,
     })
     expect(await lib.sweepOrphanBlobs()).toBe(1)
-    const ids = await lib.backend.listBlobIds()
+    const ids = await lib.backend.listBlobIds?.()
     expect(ids).toContain(used)
     expect(ids).not.toContain(orphan)
   })
@@ -158,7 +159,7 @@ describe('blob 生命周期', () => {
         }
       }),
     ])
-    expect(await lib.backend.listBlobIds()).toContain(importedBlobId)
+    expect(await lib.backend.listBlobIds?.()).toContain(importedBlobId)
     const entry = await lib.backend.getEntry('a-concurrent-sweep')
     expect(entry).toBeTruthy()
     expect(entry?.kind).toBe('animation')
@@ -196,7 +197,7 @@ describe('blob 生命周期', () => {
         createdAt: 1,
       })),
     ])
-    expect(await lib.backend.listBlobIds()).toContain(blobId)
+    expect(await lib.backend.listBlobIds?.()).toContain(blobId)
     expect(await lib.backend.getEntry('m-delete-reimport')).toBeTruthy()
   })
 })

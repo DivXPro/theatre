@@ -46,6 +46,7 @@ function memoryBackend(existing: LibraryEntry[] = []): LibraryBackend & {
   const entries = new Map(existing.map((e) => [e.id, e]))
   const aliases: RigAlias[] = []
   return {
+    id: 'mock',
     aliases,
     listEntries: async (kind) =>
       [...entries.values()].filter((e) => !kind || e.kind === kind),

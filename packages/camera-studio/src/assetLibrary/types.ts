@@ -1,3 +1,5 @@
+import type {WritableLibrarySource} from './source'
+
 /** 骨架族 id(rigIdOf 生成);无骨架模型为 'static' */
 export type RigId = string
 
@@ -53,19 +55,7 @@ export type LibraryEntry = ModelEntry | PoseEntry | AnimationEntry
  * 库的存储适配接口:playground 用 IndexedDB 实现,应用层可换 HTTP
  * 实现。大二进制以 URL 形式暴露(本地 blob: / 远程 CDN 地址),
  * blobId = 内容哈希,天然支持去重。
+ *
+ * @deprecated 统一数据源后的兼容别名,新代码用 WritableLibrarySource
  */
-export interface LibraryBackend {
-  listEntries(kind?: EntryKind): Promise<LibraryEntry[]>
-  getEntry(id: string): Promise<LibraryEntry | undefined>
-  putEntry(entry: LibraryEntry): Promise<void>
-  deleteEntry(id: string): Promise<void>
-  putBlob(data: Blob): Promise<string>
-  getBlobUrl(blobId: string): Promise<string>
-  deleteBlob(blobId: string): Promise<void>
-  /** 列出全部 blob id(孤儿清理用);HTTP 实现后续补 */
-  listBlobIds(): Promise<string[]>
-  /** 列出全部骨架族别名 */
-  getRigAliases(): Promise<RigAlias[]>
-  /** 设置/覆盖某骨架族的别名 */
-  putRigAlias(alias: RigAlias): Promise<void>
-}
+export type LibraryBackend = WritableLibrarySource

@@ -138,3 +138,24 @@ describe('骨架族别名', () => {
     ])
   })
 })
+
+describe('命名空间(dbName)', () => {
+  it('不同 dbName 数据隔离;缺省库名一字不变', async () => {
+    const openSpy = jest.spyOn(indexedDB, 'open')
+    const a = new IndexedDBBackend() // 缺省
+    const b = new IndexedDBBackend({dbName: 'toybox-asset-library-teamA'})
+    await a.putEntry({
+      id: 'e1',
+      kind: 'pose',
+      name: 'p',
+      rig: 'r',
+      bones: {},
+    } as any)
+    expect(await b.getEntry('e1')).toBeUndefined()
+    // R3:expect.anything() 不匹配单参数调用,断言第一个实参即可
+    const openedNames = openSpy.mock.calls.map((c) => c[0])
+    expect(openedNames).toContain('toybox-asset-library')
+    expect(openedNames).toContain('toybox-asset-library-teamA')
+    openSpy.mockRestore()
+  })
+})

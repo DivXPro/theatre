@@ -129,7 +129,7 @@ export class Library {
   async sweepOrphanBlobs(): Promise<number> {
     return this.enqueue(async () => {
       const referenced = await this.referencedBlobIds()
-      const all = await this.backend.listBlobIds()
+      const all = (await this.backend.listBlobIds?.()) ?? []
       let n = 0
       for (const id of all) {
         if (!referenced.has(id)) {

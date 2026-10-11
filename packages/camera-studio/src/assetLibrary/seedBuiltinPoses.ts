@@ -98,7 +98,7 @@ export async function seedBuiltinPosesInto(
       if (e.thumbnailId) existingThumbById.set(e.id, e.thumbnailId)
     }
     // 引用了不存在 blob 的条目视为无图(曾被孤儿清扫误删等),触发重补
-    existingBlobIds = new Set(await lib.backend.listBlobIds())
+    existingBlobIds = new Set((await lib.backend.listBlobIds?.()) ?? [])
   }
   const all = [...seedPoses, ...seedPosesDpl, ...seedPosesQbx]
   for (const p of all) {

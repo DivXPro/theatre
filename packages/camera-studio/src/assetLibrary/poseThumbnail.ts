@@ -47,7 +47,7 @@ export async function backfillPoseThumbnails(
 ): Promise<number> {
   const render = opts.renderBatch ?? renderRigBatch
   const poses = (await lib.backend.listEntries('pose')) as PoseEntry[]
-  const liveBlobIds = new Set(await lib.backend.listBlobIds())
+  const liveBlobIds = new Set((await lib.backend.listBlobIds?.()) ?? [])
   const pending = poses.filter(
     (e) =>
       !isHandPoseEntry(e) && !(e.thumbnailId && liveBlobIds.has(e.thumbnailId)),

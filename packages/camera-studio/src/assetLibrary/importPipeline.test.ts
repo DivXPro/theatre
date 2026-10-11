@@ -51,6 +51,7 @@ function depsFor(
 function memoryBackend(existing: LibraryEntry[] = []): LibraryBackend {
   const entries = new Map(existing.map((e) => [e.id, e]))
   return {
+    id: 'mock',
     listEntries: async (kind) =>
       [...entries.values()].filter((e) => !kind || e.kind === kind),
     getEntry: async (id) => entries.get(id),

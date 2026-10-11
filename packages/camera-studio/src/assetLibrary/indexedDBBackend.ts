@@ -1,27 +1,8 @@
 import {hashBytes} from './hash'
-import type {EntryKind, LibraryBackend, LibraryEntry, RigAlias} from './types'
+import type {WritableLibrarySource} from './source'
+import type {EntryKind, LibraryEntry, RigAlias} from './types'
 
-const DB_NAME = 'toybox-asset-library'
 const DB_VERSION = 2
-
-function openDB(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, DB_VERSION)
-    req.onupgradeneeded = () => {
-      const db = req.result
-      if (!db.objectStoreNames.contains('blobs')) db.createObjectStore('blobs')
-      if (!db.objectStoreNames.contains('entries')) {
-        const store = db.createObjectStore('entries', {keyPath: 'id'})
-        store.createIndex('kind', 'kind', {unique: false})
-      }
-      if (!db.objectStoreNames.contains('rigAliases')) {
-        db.createObjectStore('rigAliases', {keyPath: 'rig'})
-      }
-    }
-    req.onsuccess = () => resolve(req.result)
-    req.onerror = () => reject(req.error)
-  })
-}
 
 function requestToPromise<T>(req: IDBRequest<T>): Promise<T> {
   return new Promise((resolve, reject) => {
@@ -31,12 +12,40 @@ function requestToPromise<T>(req: IDBRequest<T>): Promise<T> {
 }
 
 /** IndexedDB 实现的库后端:blobs 表存大二进制,entries 表存元数据 */
-export class IndexedDBBackend implements LibraryBackend {
+export class IndexedDBBackend implements WritableLibrarySource {
+  readonly id = 'idb'
+  readonly capabilities = {writable: true} as const
+
+  private readonly dbName: string
   private dbPromise: Promise<IDBDatabase> | undefined
   private urlCache = new Map<string, string>()
 
+  constructor(opts: {dbName?: string} = {}) {
+    this.dbName = opts.dbName ?? 'toybox-asset-library'
+  }
+
+  private openDB(): Promise<IDBDatabase> {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(this.dbName, DB_VERSION)
+      req.onupgradeneeded = () => {
+        const db = req.result
+        if (!db.objectStoreNames.contains('blobs'))
+          db.createObjectStore('blobs')
+        if (!db.objectStoreNames.contains('entries')) {
+          const store = db.createObjectStore('entries', {keyPath: 'id'})
+          store.createIndex('kind', 'kind', {unique: false})
+        }
+        if (!db.objectStoreNames.contains('rigAliases')) {
+          db.createObjectStore('rigAliases', {keyPath: 'rig'})
+        }
+      }
+      req.onsuccess = () => resolve(req.result)
+      req.onerror = () => reject(req.error)
+    })
+  }
+
   private db(): Promise<IDBDatabase> {
-    return (this.dbPromise ??= openDB())
+    return (this.dbPromise ??= this.openDB())
   }
 
   async listEntries(kind?: EntryKind): Promise<LibraryEntry[]> {
@@ -73,7 +82,10 @@ export class IndexedDBBackend implements LibraryBackend {
     await requestToPromise(req)
   }
 
-  async putBlob(data: Blob): Promise<string> {
+  async putBlob(
+    data: Blob,
+    opts?: {onProgress?: (ratio: number) => void; signal?: AbortSignal},
+  ): Promise<string> {
     const id = hashBytes(new Uint8Array(await data.arrayBuffer()))
     const db = await this.db()
     const req = db
@@ -81,6 +93,8 @@ export class IndexedDBBackend implements LibraryBackend {
       .objectStore('blobs')
       .put(data, id)
     await requestToPromise(req)
+    // 本地 IDB 写入无进度概念;signal 对本地写同样忽略(不可中断)
+    opts?.onProgress?.(1)
     return id
   }
 
