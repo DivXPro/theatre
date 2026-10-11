@@ -59,7 +59,7 @@ function memoryBackend(existing: LibraryEntry[] = []): LibraryBackend {
 describe('importModelFile', () => {
   it('导入 FBX 后返回新建的 model 条目', async () => {
     const backend = memoryBackend()
-    const library = new Library(backend)
+    const library = new Library({sources: [backend]})
     const deps = depsFor({'robot.fbx': {root: skinnedModel('hips')}})
     const file = new File(['x'], 'robot.fbx')
     const entry = await importModelFile(file, library, deps)
@@ -70,7 +70,7 @@ describe('importModelFile', () => {
   })
   it('连续导入两个模型,各自返回各自的新条目', async () => {
     const backend = memoryBackend()
-    const library = new Library(backend)
+    const library = new Library({sources: [backend]})
     const deps = depsFor({
       'a.fbx': {root: skinnedModel('hips')},
       'b.fbx': {root: skinnedModel('spine')},

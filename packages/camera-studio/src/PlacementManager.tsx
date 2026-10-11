@@ -555,7 +555,7 @@ export function usePlacementController(project: IProject, sheet: ISheet) {
   const libraryGenRef = useRef(0)
   const startPlacingFromLibrary = useCallback(async (entry: ModelEntry) => {
     const gen = ++libraryGenRef.current
-    const url = await getLibrary().backend.getBlobUrl(entry.blobId)
+    const url = await getLibrary().getBlobUrl(entry.blobId)
     // 用户快速切换选择时,旧加载结果直接丢弃
     if (gen !== libraryGenRef.current) return
     setPlacing({
@@ -1017,13 +1017,11 @@ function LibraryPlacedModel({
     let cancelled = false
     const load = async () => {
       try {
-        const libEntry = await getLibrary().backend.getEntry(
-          entry.libraryEntryId!,
-        )
+        const libEntry = await getLibrary().getEntry(entry.libraryEntryId!)
         if (!libEntry || libEntry.kind !== 'model') {
           throw new Error('library model entry not found')
         }
-        const url = await getLibrary().backend.getBlobUrl(libEntry.blobId)
+        const url = await getLibrary().getBlobUrl(libEntry.blobId)
         const gltf = await createGLTFLoader().loadAsync(url)
         if (!cancelled) {
           setLoaded({
@@ -1226,12 +1224,12 @@ function PlacedModelCore({
     }
     let cancelled = false
     const load = async () => {
-      const animEntry = await getLibrary().backend.getEntry(animationId)
+      const animEntry = await getLibrary().getEntry(animationId)
       if (!animEntry || animEntry.kind !== 'animation') {
         if (!cancelled) setClip(null)
         return
       }
-      const url = await getLibrary().backend.getBlobUrl(animEntry.blobId)
+      const url = await getLibrary().getBlobUrl(animEntry.blobId)
       const gltf = await createGLTFLoader().loadAsync(url)
       if (!cancelled) {
         setClip(gltf.animations[0] ?? null)

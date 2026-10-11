@@ -39,7 +39,7 @@ export function useModelThumbUrl(): {
     if (loadingRef.current.has(entry.id)) return undefined
     loadingRef.current.add(entry.id)
     void getLibrary()
-      .backend.getBlobUrl(entry.thumbnailId)
+      .getBlobUrl(entry.thumbnailId)
       .then((url) => {
         loadingRef.current.delete(entry.id)
         if (!mountedRef.current) return

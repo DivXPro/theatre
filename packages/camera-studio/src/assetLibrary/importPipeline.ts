@@ -6,12 +6,7 @@ import {exportAnimationGLB, exportModelGLB} from './exportGLB'
 import {hashBytes} from './hash'
 import type {Library} from './library'
 import {collectBoneNames, meshStats, rigIdOf} from './rig'
-import type {
-  AnimationEntry,
-  LibraryBackend,
-  ModelEntry,
-  PoseEntry,
-} from './types'
+import type {AnimationEntry, ModelEntry, PoseEntry} from './types'
 
 export type LoadedModel = {root: Group; animations: AnimationClip[]}
 
@@ -127,11 +122,11 @@ function newId(): string {
  */
 export async function planImport(
   files: File[],
-  backend: LibraryBackend,
+  library: Pick<Library, 'listEntries'>,
   deps: ImportDeps,
   tr: TFunction = translate,
 ): Promise<ImportPlan> {
-  const existing = await backend.listEntries()
+  const existing = await library.listEntries()
   const items: ImportItem[] = []
   const similar: SimilarMatch[] = []
 

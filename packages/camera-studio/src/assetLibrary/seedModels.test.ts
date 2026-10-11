@@ -71,7 +71,7 @@ const SEED_NAMES = ['X Bot.fbx', 'Y Bot.fbx', 'Eve.fbx']
 describe('seedModels', () => {
   it('首次播种:全部入库,骨架族别名设为 Mixamo', async () => {
     const backend = memoryBackend()
-    const lib = new Library(backend)
+    const lib = new Library({sources: [backend]})
     await seedModels(SEED_NAMES.map(file), lib, depsFor(SEED_NAMES))
     const models = await backend.listEntries('model')
     expect(models.map((e) => e.name).sort()).toEqual(['Eve', 'X Bot', 'Y Bot'])
@@ -82,7 +82,7 @@ describe('seedModels', () => {
 
   it('名单齐全时直接跳过:不解析任何文件(省掉每次挂载重解析)', async () => {
     const backend = memoryBackend()
-    const lib = new Library(backend)
+    const lib = new Library({sources: [backend]})
     await seedModels(SEED_NAMES.map(file), lib, depsFor(SEED_NAMES))
     const deps = depsFor(SEED_NAMES)
     await seedModels(SEED_NAMES.map(file), lib, deps)
@@ -92,7 +92,7 @@ describe('seedModels', () => {
 
   it('删掉一个后再播种:只重解析缺失文件并补回', async () => {
     const backend = memoryBackend()
-    const lib = new Library(backend)
+    const lib = new Library({sources: [backend]})
     await seedModels(SEED_NAMES.map(file), lib, depsFor(SEED_NAMES))
     const models = await backend.listEntries('model')
     const eve = models.find((e) => e.name === 'Eve')!
@@ -107,7 +107,7 @@ describe('seedModels', () => {
 
   it('用户改过名的种子模型:按名字缺员会重解析,但哈希命中跳过不入库', async () => {
     const backend = memoryBackend()
-    const lib = new Library(backend)
+    const lib = new Library({sources: [backend]})
     await seedModels(SEED_NAMES.map(file), lib, depsFor(SEED_NAMES))
     const models = await backend.listEntries('model')
     const eve = models.find((e) => e.name === 'Eve')!
@@ -122,7 +122,7 @@ describe('seedModels', () => {
 
   it('similar 冲突自动 keep,不打扰用户', async () => {
     const backend = memoryBackend()
-    const lib = new Library(backend)
+    const lib = new Library({sources: [backend]})
     await seedModels([file('X Bot.fbx')], lib, depsFor(SEED_NAMES))
     const first = (await backend.listEntries('model'))[0]!
     await lib.renameEntry(first.id, '守卫甲')
@@ -135,7 +135,7 @@ describe('seedModels', () => {
 
   it('已有骨架别名时不覆盖', async () => {
     const backend = memoryBackend()
-    const lib = new Library(backend)
+    const lib = new Library({sources: [backend]})
     await seedModels([file('X Bot.fbx')], lib, depsFor(SEED_NAMES))
     await lib.setRigAlias(backend.aliases[0]!.rig, '自定义族')
     await seedModels([file('Y Bot.fbx')], lib, depsFor(SEED_NAMES))
@@ -146,7 +146,7 @@ describe('seedModels', () => {
 
   it('空文件列表:什么都不做', async () => {
     const backend = memoryBackend()
-    const lib = new Library(backend)
+    const lib = new Library({sources: [backend]})
     await seedModels([], lib, depsFor([]))
     expect((await backend.listEntries()).length).toBe(0)
   })

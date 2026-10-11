@@ -34,13 +34,12 @@ function fakeLib(args: {
   blobIds?: string[]
 }) {
   return {
-    backend: {
-      listEntries: async (kind?: string) =>
-        kind === 'model'
-          ? ([{blobId: 'glb-1', rig: 'rig-a'}, ...(args.models ?? [])] as never)
-          : args.poses ?? [],
-      listBlobIds: async () => args.blobIds ?? [],
-    },
+    listEntries: async (kind?: string) =>
+      kind === 'model'
+        ? ([{blobId: 'glb-1', rig: 'rig-a'}, ...(args.models ?? [])] as never)
+        : args.poses ?? [],
+    listBlobIds: async () => args.blobIds ?? [],
+    getBlobUrl: async (b: string) => 'blob:' + b,
     putBlobWithEntry: async () => {},
   }
 }

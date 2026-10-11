@@ -84,7 +84,7 @@ const PosePropEditor: React.FC<
       return
     }
     void getLibrary()
-      .backend.getEntry(entry.libraryEntryId)
+      .getEntry(entry.libraryEntryId)
       .then((libEntry) => {
         if (cancelled) return
         setRig(libEntry?.rig)

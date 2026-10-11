@@ -14,17 +14,15 @@ export async function importModelFile(
   library: Library = getLibrary(),
   deps: ImportDeps = realImportDeps(),
 ): Promise<ModelEntry> {
-  const before = new Set(
-    (await library.backend.listEntries('model')).map((e) => e.id),
-  )
-  const plan = await planImport([file], library.backend, deps)
+  const before = new Set((await library.listEntries('model')).map((e) => e.id))
+  const plan = await planImport([file], library, deps)
   // 宿主场景无"相似条目"交互,一律保留为新条目
   await executeImport(
     plan,
     plan.similar.map(() => 'keep'),
     library,
   )
-  const models = await library.backend.listEntries('model')
+  const models = await library.listEntries('model')
   const created = models.find((m) => !before.has(m.id))
   if (!created || created.kind !== 'model') {
     throw new Error('[hostFlows] 模型导入失败:未找到新建条目')

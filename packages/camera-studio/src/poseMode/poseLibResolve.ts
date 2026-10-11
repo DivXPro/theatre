@@ -38,7 +38,7 @@ export async function prefetchLibPoses(
   await Promise.all(
     missing.map(async (id) => {
       try {
-        const entry = await getLibrary().backend.getEntry(id)
+        const entry = await getLibrary().getEntry(id)
         if (entry?.kind === 'pose') cache.set(id, entry.bones)
       } catch (err) {
         console.warn('[pose] 库姿势加载失败', id, err)

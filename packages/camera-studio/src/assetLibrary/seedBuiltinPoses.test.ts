@@ -16,19 +16,17 @@ function fakeLib(
   const blobs: string[] = []
   let call = 0
   const lib = {
-    backend: {
-      listEntries: async (kind: string) => {
-        if (kind === 'pose') return existingPoses
-        expect(kind).toBe('model')
-        return models[Math.min(call++, models.length - 1)]
-      },
-      putBlob: async (data: Blob) => {
-        const id = 'blob-' + blobs.length
-        blobs.push(id)
-        return id
-      },
-      listBlobIds: async () => [...existingBlobIds, ...blobs],
+    listEntries: async (kind: string) => {
+      if (kind === 'pose') return existingPoses
+      expect(kind).toBe('model')
+      return models[Math.min(call++, models.length - 1)]
     },
+    putBlob: async (data: Blob) => {
+      const id = 'blob-' + blobs.length
+      blobs.push(id)
+      return id
+    },
+    listBlobIds: async () => [...existingBlobIds, ...blobs],
     putEntry: async (e: LibraryEntry) => {
       put.push(e)
     },

@@ -1,6 +1,7 @@
 import {indexedDB as fakeIndexedDB} from 'fake-indexeddb'
 import {Library} from './library'
 import {IndexedDBBackend} from './indexedDBBackend'
+import type {LibraryError, LibrarySource, WritableLibrarySource} from './source'
 import type {LibraryBackend, LibraryEntry, ModelEntry} from './types'
 
 // jsdom 没有 indexedDB,新测 IndexedDBBackend 前装好
@@ -47,7 +48,7 @@ const model = (id: string, name = id): ModelEntry => ({
 
 describe('Library', () => {
   it('putEntry/deleteEntry 触发订阅,renameEntry 只改名字', async () => {
-    const lib = new Library(memoryBackend())
+    const lib = new Library({sources: [memoryBackend()]})
     const seen: number[] = []
     const unsub = lib.subscribe(() => seen.push(1))
     await lib.putEntry(model('m1'))
@@ -60,7 +61,7 @@ describe('Library', () => {
   })
 
   it('setRigAlias 写入并触发订阅', async () => {
-    const lib = new Library(memoryBackend())
+    const lib = new Library({sources: [memoryBackend()]})
     const events: number[] = []
     const unsub = lib.subscribe(() => events.push(1))
     await lib.setRigAlias('rig-a', 'Mixamo')
@@ -71,17 +72,103 @@ describe('Library', () => {
 
   it('renameEntry 保留其它字段', async () => {
     const backend = memoryBackend()
-    const lib = new Library(backend)
+    const lib = new Library({sources: [backend]})
     await lib.putEntry(model('m1', '旧'))
     await lib.renameEntry('m1', '新')
     expect(backend.entries.get('m1')).toMatchObject({name: '新', rig: 'rig-x'})
   })
 })
 
+describe('聚合器(多数据源)', () => {
+  const fakeSource = (
+    id: string,
+    entries: LibraryEntry[],
+    writable = false,
+  ): LibrarySource => ({
+    id,
+    capabilities: {writable},
+    listEntries: async () => entries,
+    getEntry: async (eid) => entries.find((e) => e.id === eid),
+    getBlobUrl: async (b) => `${id}://${b}`,
+  })
+
+  test('聚合读:多源合并,id 冲突先注册者胜并告警', async () => {
+    const errors: LibraryError[] = []
+    const lib = new Library({
+      sources: [
+        fakeSource('a', [{id: 'x', name: 'A 的 x'} as any]),
+        fakeSource('b', [{id: 'x', name: 'B 的 x'} as any, {id: 'y'} as any]),
+      ],
+      onError: (e) => errors.push(e),
+    })
+    const entries = await lib.listEntries()
+    expect(entries.map((e) => e.id).sort()).toEqual(['x', 'y'])
+    expect((await lib.getEntry('x'))?.name).toBe('A 的 x')
+    expect(errors.some((e) => e.code === 'conflict')).toBe(true)
+  })
+
+  test('seed-* 前缀拒绝:可写源返回内置前缀条目被剔除并告警', async () => {
+    const errors: LibraryError[] = []
+    const writable: WritableLibrarySource = {
+      ...(fakeSource('idb', [{id: 'seed-pose-fake'} as any], true) as any),
+      putEntry: async () => {},
+      deleteEntry: async () => {},
+      putBlob: async () => 'h',
+      deleteBlob: async () => {},
+      getRigAliases: async () => [],
+      putRigAlias: async () => {},
+    }
+    const lib = new Library({
+      sources: [writable],
+      onError: (e) => errors.push(e),
+    })
+    expect(await lib.listEntries()).toEqual([])
+    expect(errors.some((e) => e.code === 'conflict')).toBe(true)
+  })
+
+  test('纯查看器模式:无可写源,写操作抛 auth;面板照常可读', async () => {
+    const lib = new Library({
+      sources: [fakeSource('catalog', [{id: 'seed-pose-a'} as any])],
+    })
+    expect(lib.canWrite).toBe(false)
+    expect(await lib.listEntries()).toHaveLength(1)
+    await expect(lib.putEntry({id: 'u1'} as any)).rejects.toMatchObject({
+      code: 'auth',
+    })
+  })
+
+  test('blobId 路由:带源前缀走该源,裸 hash 走可写源', async () => {
+    const writable = {
+      ...(fakeSource('idb', [], true) as any),
+      putEntry: async () => {},
+      deleteEntry: async () => {},
+      putBlob: async () => 'h',
+      deleteBlob: async () => {},
+      getRigAliases: async () => [],
+      putRigAlias: async () => {},
+    } as WritableLibrarySource
+    const lib = new Library({
+      sources: [fakeSource('catalog', []), writable],
+    })
+    expect(await lib.getBlobUrl('catalog:models/a.glb')).toBe(
+      'catalog://catalog:models/a.glb',
+    )
+    expect(await lib.getBlobUrl('abc123')).toBe('idb://abc123')
+  })
+
+  test('无 IndexedDB + 只给静态目录:降级只读可用,不白屏', async () => {
+    const lib = new Library({
+      sources: [fakeSource('catalog', [{id: 'p1'} as any])],
+    })
+    expect(lib.canWrite).toBe(false)
+    expect(await lib.listEntries()).toHaveLength(1) // 目录照常
+  })
+})
+
 describe('blob 生命周期', () => {
   test('deleteEntryDeep: 缩略图被两个模型共享时,删一个不删 blob', async () => {
-    const lib = new Library(new IndexedDBBackend())
-    const thumbId = await lib.backend.putBlob(new Blob(['thumb']))
+    const lib = new Library({sources: [new IndexedDBBackend()]})
+    const thumbId = await lib.putBlob(new Blob(['thumb']))
     const model = (id: string) => ({
       id,
       kind: 'model' as const,
@@ -98,12 +185,12 @@ describe('blob 生命周期', () => {
     await lib.putEntry(model('m2'))
     await lib.deleteEntryDeep('m1')
     // 共享缩略图仍在;m1 自己的模型 blob 不在本次放入(不影响断言)
-    expect(await lib.backend.listBlobIds?.()).toContain(thumbId)
+    expect(await lib.listBlobIds()).toContain(thumbId)
   })
 
   test('deleteEntryDeep: 独占 blob 随条目删除', async () => {
-    const lib = new Library(new IndexedDBBackend())
-    const blobId = await lib.backend.putBlob(new Blob(['glb']))
+    const lib = new Library({sources: [new IndexedDBBackend()]})
+    const blobId = await lib.putBlob(new Blob(['glb']))
     await lib.putEntry({
       id: 'm1',
       kind: 'model',
@@ -116,13 +203,13 @@ describe('blob 生命周期', () => {
       createdAt: 1,
     })
     await lib.deleteEntryDeep('m1')
-    expect(await lib.backend.listBlobIds?.()).not.toContain(blobId)
+    expect(await lib.listBlobIds()).not.toContain(blobId)
   })
 
   test('sweepOrphanBlobs: 清掉无引用 blob,保留有引用的', async () => {
-    const lib = new Library(new IndexedDBBackend())
-    const used = await lib.backend.putBlob(new Blob(['used']))
-    const orphan = await lib.backend.putBlob(new Blob(['orphan']))
+    const lib = new Library({sources: [new IndexedDBBackend()]})
+    const used = await lib.putBlob(new Blob(['used']))
+    const orphan = await lib.putBlob(new Blob(['orphan']))
     await lib.putEntry({
       id: 'a1',
       kind: 'animation',
@@ -134,13 +221,13 @@ describe('blob 生命周期', () => {
       createdAt: 1,
     })
     expect(await lib.sweepOrphanBlobs()).toBe(1)
-    const ids = await lib.backend.listBlobIds?.()
+    const ids = await lib.listBlobIds()
     expect(ids).toContain(used)
     expect(ids).not.toContain(orphan)
   })
 
   test('并发导入与孤儿清理: blob 与条目都保留', async () => {
-    const lib = new Library(new IndexedDBBackend())
+    const lib = new Library({sources: [new IndexedDBBackend()]})
     const data = new Blob(['concurrent-sweep-import'])
     let importedBlobId = ''
     await Promise.all([
@@ -159,14 +246,14 @@ describe('blob 生命周期', () => {
         }
       }),
     ])
-    expect(await lib.backend.listBlobIds?.()).toContain(importedBlobId)
-    const entry = await lib.backend.getEntry('a-concurrent-sweep')
+    expect(await lib.listBlobIds()).toContain(importedBlobId)
+    const entry = await lib.getEntry('a-concurrent-sweep')
     expect(entry).toBeTruthy()
     expect(entry?.kind).toBe('animation')
   })
 
   test('并发删除与同哈希导入: 新条目与新 blob 都保留', async () => {
-    const lib = new Library(new IndexedDBBackend())
+    const lib = new Library({sources: [new IndexedDBBackend()]})
     const data = new Blob(['shared-hash'])
     let blobId = ''
     await lib.putBlobWithEntry(data, (id) => {
@@ -197,7 +284,7 @@ describe('blob 生命周期', () => {
         createdAt: 1,
       })),
     ])
-    expect(await lib.backend.listBlobIds?.()).toContain(blobId)
-    expect(await lib.backend.getEntry('m-delete-reimport')).toBeTruthy()
+    expect(await lib.listBlobIds()).toContain(blobId)
+    expect(await lib.getEntry('m-delete-reimport')).toBeTruthy()
   })
 })

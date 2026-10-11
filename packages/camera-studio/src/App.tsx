@@ -1463,9 +1463,7 @@ function App({
     setRigLoading(true)
     const load = async () => {
       try {
-        const libEntry = await getLibrary().backend.getEntry(
-          entry.libraryEntryId!,
-        )
+        const libEntry = await getLibrary().getEntry(entry.libraryEntryId!)
         if (cancelled) return
         setSelectedRig(libEntry?.rig)
       } finally {
@@ -1517,14 +1515,12 @@ function App({
       // 本地 FBX 路径或条目缺失时回退到实例计算(legacy 路径,可能与库 rig 不一致但可接受)。
       let rig: string | undefined
       if (entry?.libraryEntryId) {
-        const libEntry = await getLibrary().backend.getEntry(
-          entry.libraryEntryId,
-        )
+        const libEntry = await getLibrary().getEntry(entry.libraryEntryId)
         if (libEntry?.kind === 'model') rig = libEntry.rig
       }
       if (!rig) rig = rigIdOf(instance)
       if (rig === 'static') return
-      const poseEntries = (await getLibrary().backend.listEntries(
+      const poseEntries = (await getLibrary().listEntries(
         'pose',
       )) as PoseEntry[]
       const defaultName = `姿势-${poseEntries.length + 1}`

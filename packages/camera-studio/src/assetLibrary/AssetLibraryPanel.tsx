@@ -471,12 +471,7 @@ export function AssetLibraryPanel({
     if (!files?.length) return
     setBusy(true)
     try {
-      const p = await planImport(
-        [...files],
-        getLibrary().backend,
-        realImportDeps(),
-        t,
-      )
+      const p = await planImport([...files], getLibrary(), realImportDeps(), t)
       if (!mountedRef.current) return
       setChoices(p.similar.map(() => 'reuse'))
       setPlan(p)
@@ -502,7 +497,7 @@ export function AssetLibraryPanel({
   }
 
   const removeEntry = async (id: string) => {
-    const entry = await getLibrary().backend.getEntry(id)
+    const entry = await getLibrary().getEntry(id)
     if (!entry) return
     const usage = countLibraryEntryUsage(id)
     const message =
@@ -517,7 +512,7 @@ export function AssetLibraryPanel({
   }
 
   const renameEntry = async (id: string) => {
-    const entry = await getLibrary().backend.getEntry(id)
+    const entry = await getLibrary().getEntry(id)
     if (!entry) return
     const name = window.prompt(t('pg.lib.renamePrompt'), entry.name)?.trim()
     if (name) await getLibrary().renameEntry(id, name)
@@ -633,11 +628,11 @@ export function AssetLibraryPanel({
 
   return (
     <Panel style={{left: KIND_OFFSET[kind]}}>
-      {/* 头部:类型标题 + 导入(路径框体没有)+ 关闭 */}
+      {/* 头部:类型标题 + 导入(路径框体没有;纯查看器模式隐藏)+ 关闭 */}
       <Head>
         <HeadTitle>{t(KIND_TITLE_KEYS[kind])}</HeadTitle>
         <HeadSpacer />
-        {kind !== 'path' && (
+        {kind !== 'path' && getLibrary().canWrite && (
           <HeadButton
             disabled={busy}
             onClick={() => fileRef.current?.click()}
@@ -667,8 +662,8 @@ export function AssetLibraryPanel({
         <HintBar>{t('pg.lib.filterHint')}</HintBar>
       )}
 
-      {/* 姿势框体顶部工具行:抽帧存姿势 */}
-      {kind === 'pose' && (
+      {/* 姿势框体顶部工具行:抽帧存姿势(纯查看器模式隐藏) */}
+      {kind === 'pose' && getLibrary().canWrite && (
         <ToolRow>
           <DetailPanelButton
             disabled={!canSavePose}
@@ -804,8 +799,9 @@ export function AssetLibraryPanel({
         </Overlay>
       )}
 
-      {/* 卡片右键菜单:studio 原生 ContextMenu(点外/Esc 关闭由它处理) */}
-      {menu && (
+      {/* 卡片右键菜单:studio 原生 ContextMenu(点外/Esc 关闭由它处理)。
+          纯查看器模式整体隐藏:菜单项全是写操作(重命名/删除) */}
+      {menu && getLibrary().canWrite && (
         <CanvasContextMenu
           position={{x: menu.x, y: menu.y}}
           onClose={() => setMenu(null)}

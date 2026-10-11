@@ -85,7 +85,7 @@ export async function backfillModelThumbnails(
     if (item.type !== 'model') continue
     const blob = await renderThumbnail(item.glb)
     if (!blob) continue
-    const list = (await library.backend.listEntries('model')) as ModelEntry[]
+    const list = (await library.listEntries('model')) as ModelEntry[]
     const entry = list.find(
       (e) => e.contentHash === item.contentHash && !e.thumbnailId,
     )

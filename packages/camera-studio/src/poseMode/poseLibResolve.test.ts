@@ -17,7 +17,7 @@ const getEntryMock = jest.fn(async (id: string) =>
 )
 
 jest.doMock('../assetLibrary/library', () => ({
-  getLibrary: () => ({backend: {getEntry: getEntryMock}}),
+  getLibrary: () => ({getEntry: getEntryMock}),
 }))
 
 let resolveLibPoseBones: typeof import('./poseLibResolve').resolveLibPoseBones

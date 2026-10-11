@@ -27,7 +27,10 @@ import type {Library} from './library'
 import type {ModelEntry, PoseEntry} from './types'
 import {isHandPoseEntry} from '../gestureProps'
 
-type Lib = Pick<Library, 'backend' | 'putBlobWithEntry'>
+type Lib = Pick<
+  Library,
+  'listEntries' | 'listBlobIds' | 'getBlobUrl' | 'putBlobWithEntry'
+>
 
 /**
  * 给缺图(或图引用已死)的身体姿势条目补缩略图,返回补图数量。
@@ -46,8 +49,8 @@ export async function backfillPoseThumbnails(
   } = {},
 ): Promise<number> {
   const render = opts.renderBatch ?? renderRigBatch
-  const poses = (await lib.backend.listEntries('pose')) as PoseEntry[]
-  const liveBlobIds = new Set((await lib.backend.listBlobIds?.()) ?? [])
+  const poses = (await lib.listEntries('pose')) as PoseEntry[]
+  const liveBlobIds = new Set(await lib.listBlobIds())
   const pending = poses.filter(
     (e) =>
       !isHandPoseEntry(e) && !(e.thumbnailId && liveBlobIds.has(e.thumbnailId)),
@@ -55,7 +58,7 @@ export async function backfillPoseThumbnails(
   if (pending.length === 0) return 0
   // 每个骨架族取第一个有 blob 的模型条目当「模特」
   const modelByRig = new Map<string, ModelEntry>()
-  for (const m of (await lib.backend.listEntries('model')) as ModelEntry[]) {
+  for (const m of (await lib.listEntries('model')) as ModelEntry[]) {
     if (m.blobId && !modelByRig.has(m.rig)) modelByRig.set(m.rig, m)
   }
   let rendered = 0
@@ -87,7 +90,7 @@ async function renderRigBatch(
   model: ModelEntry,
   entries: PoseEntry[],
 ): Promise<number> {
-  const glbUrl = await lib.backend.getBlobUrl(model.blobId)
+  const glbUrl = await lib.getBlobUrl(model.blobId)
   const glb = await (await fetch(glbUrl)).arrayBuffer()
 
   const canvas = document.createElement('canvas')

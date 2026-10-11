@@ -20,12 +20,12 @@ export async function seedModels(
   deps: ImportDeps,
 ): Promise<void> {
   if (!files.length) return
-  const existing = (await library.backend.listEntries('model')) as ModelEntry[]
+  const existing = (await library.listEntries('model')) as ModelEntry[]
   const existingNames = new Set(existing.map((e) => e.name))
   const todo = files.filter((f) => !existingNames.has(baseName(f.name)))
   if (!todo.length) return
 
-  const plan = await planImport(todo, library.backend, deps)
+  const plan = await planImport(todo, library, deps)
   await executeImport(
     plan,
     plan.similar.map(() => 'keep'),

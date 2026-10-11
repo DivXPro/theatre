@@ -66,7 +66,7 @@ export function GesturePropEditor({
       return
     }
     void getLibrary()
-      .backend.getEntry(entry.libraryEntryId)
+      .getEntry(entry.libraryEntryId)
       .then((libEntry) => {
         if (!cancelled) setRig(libEntry?.rig)
       })

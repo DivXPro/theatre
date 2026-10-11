@@ -26,7 +26,7 @@ const SEED_RIG_MODEL_NAME = 'Y Bot'
 const MAX_WAIT_MS = 15000
 const RETRY_MS = 500
 
-type Lib = Pick<Library, 'backend' | 'putEntry'>
+type Lib = Pick<Library, 'listEntries' | 'listBlobIds' | 'putBlob' | 'putEntry'>
 
 let started = false
 
@@ -79,7 +79,7 @@ export async function seedBuiltinPosesInto(
   const deadline = Date.now() + maxWaitMs
   let rig: string | undefined
   while (Date.now() <= deadline) {
-    const models = (await lib.backend.listEntries('model')) as ModelEntry[]
+    const models = (await lib.listEntries('model')) as ModelEntry[]
     rig = models.find((m) => m.name === SEED_RIG_MODEL_NAME)?.rig
     if (rig) break
     await sleep(retryMs)
@@ -94,11 +94,11 @@ export async function seedBuiltinPosesInto(
   const existingThumbById = new Map<string, string>()
   let existingBlobIds: Set<string> | undefined
   if (thumbs) {
-    for (const e of (await lib.backend.listEntries('pose')) as PoseEntry[]) {
+    for (const e of (await lib.listEntries('pose')) as PoseEntry[]) {
       if (e.thumbnailId) existingThumbById.set(e.id, e.thumbnailId)
     }
     // 引用了不存在 blob 的条目视为无图(曾被孤儿清扫误删等),触发重补
-    existingBlobIds = new Set((await lib.backend.listBlobIds?.()) ?? [])
+    existingBlobIds = new Set(await lib.listBlobIds())
   }
   const all = [...seedPoses, ...seedPosesDpl, ...seedPosesQbx]
   for (const p of all) {
@@ -112,7 +112,7 @@ export async function seedBuiltinPosesInto(
       try {
         const res = await fetch(thumbUrl)
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        thumbnailId = await lib.backend.putBlob(await res.blob())
+        thumbnailId = await lib.putBlob(await res.blob())
       } catch (err) {
         console.warn(`[assetLibrary] 姿势预览图入库失败: ${p.key}`, err)
       }

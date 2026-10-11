@@ -223,7 +223,7 @@ describe('planImport', () => {
 describe('executeImport', () => {
   it('按 choices 丢弃 similar 模型,其余落库并触发事件', async () => {
     const backend = memoryBackend()
-    const lib = new Library(backend)
+    const lib = new Library({sources: [backend]})
     let events = 0
     lib.subscribe(() => events++)
     const plan = await planImportZh(
@@ -242,7 +242,7 @@ describe('executeImport', () => {
 
   it('choices 选 keep 时模型照常入库', async () => {
     const backend = memoryBackend()
-    const lib = new Library(backend)
+    const lib = new Library({sources: [backend]})
     const plan = await planImportZh(
       [file('hero.fbx')],
       backend,
