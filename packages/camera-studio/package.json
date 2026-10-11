@@ -8,7 +8,8 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    }
+    },
+    "./contract-tests": {"types": "./dist/assetLibrary/contractTests.d.ts", "default": "./dist/assetLibrary/contractTests.js"}
   },
   "files": [
     "dist/**/*",
