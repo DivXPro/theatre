@@ -13,14 +13,14 @@ import {FBXLoader} from 'three-stdlib'
 import {Quaternion, Vector3} from 'three'
 import {seedPosesQbx} from './seedPosesQbx'
 
-const pkgRoot = path.resolve(__dirname, '../../../..')
+const pkgRoot = path.resolve(__dirname, '../..')
 const DOC_PATH = path.join(
   pkgRoot,
   'scripts/pose-pipeline/poses_directions_qbx.json',
 )
 const FBX_PATH = path.join(
   pkgRoot,
-  'src/shared/camera/assetLibrary/seedModels/Y Bot.fbx',
+  'src/assetLibrary/seedModels/Y Bot.fbx',
 )
 
 type RestInfo = {

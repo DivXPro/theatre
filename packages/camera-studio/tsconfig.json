@@ -5,8 +5,16 @@
     "lib": ["ESNext", "DOM"],
     "rootDir": "src",
     "types": ["jest", "node"],
-    "target": "es6",
+    "target": "es2020",
     "composite": true
   },
+  "references": [
+    {"path": "../core"},
+    {"path": "../dataverse"},
+    {"path": "../r3f"},
+    {"path": "../react"},
+    {"path": "../studio"},
+    {"path": "../utils"}
+  ],
   "include": ["src"]
 }

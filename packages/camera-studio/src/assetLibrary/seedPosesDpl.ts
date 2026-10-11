@@ -1,5 +1,5 @@
-// 本文件由 scripts/pose-pipeline/build_seed_poses.ts 生成,勿手改。
-// 重新生成:npx tsx scripts/pose-pipeline/build_seed_poses.ts poses_directions_dpl.json seedPosesDpl.ts seedPosesDpl
+// 本文件由 packages/camera-studio/scripts/pose-pipeline/build_seed_poses.ts 生成,勿手改。
+// 重新生成:npx tsx packages/camera-studio/scripts/pose-pipeline/build_seed_poses.ts poses_directions_dpl.json seedPosesDpl.ts seedPosesDpl
 // 骨向来源:dynamic-pose-library-free (BlendAtlas, gumroad)
 import type {PoseBones} from '../poseMode/poseOverride'
 

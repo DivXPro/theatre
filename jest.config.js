@@ -7,7 +7,7 @@ module.exports = {
   ],
   moduleNameMapper: {
     ...require('./devEnv/getAliasesFromTsConfig').getAliasesFromTsConfigForJest(),
-    '\\.(css|svg|png)$': 'identity-obj-proxy',
+    '\\.(css|svg|png|glb)$': 'identity-obj-proxy',
     'lodash-es/(.*)': 'lodash/$1',
     'react-use/esm/(.*)': 'react-use/lib/$1',
     'lodash-es': 'lodash',
@@ -26,6 +26,9 @@ module.exports = {
     oauth4webapi: 'identity-obj-proxy',
   },
   setupFiles: [
+    // 必须在最前:transform 段用 esbuild define 把 import.meta.glob 指到
+    // 本文件在 globalThis 上安装的 stub,setup 顺序保证测试模块求值前已就位
+    './devEnv/jestBrowserEnvStubs.js',
     './packages/studio/src/integration-tests/setupIntegrationTestEnv.ts',
   ],
   automock: false,
@@ -38,6 +41,11 @@ module.exports = {
         supported: {
           'dynamic-import': false,
         },
+        // vite 专属 import.meta.glob 在 jest 里求值即崩(camera-studio
+        // 顶层调用):换成 devEnv/jestBrowserEnvStubs.js 安装的 stub
+        define: {
+          'import.meta.glob': 'globalThis.__jestGlobStub',
+        },
       },
     ],
     '^.+\\.js$': [
@@ -47,6 +55,11 @@ module.exports = {
         target: 'es2020',
         supported: {
           'dynamic-import': false,
+        },
+        // 与上面 tsx? 段保持逐字一致:jest 的 transformer 缓存按模块路径
+        // 归并,两段指同一 jest-esbuild,选项不同会互相覆盖
+        define: {
+          'import.meta.glob': 'globalThis.__jestGlobStub',
         },
       },
     ],

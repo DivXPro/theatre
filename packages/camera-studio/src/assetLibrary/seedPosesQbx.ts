@@ -1,5 +1,5 @@
-// 本文件由 scripts/pose-pipeline/build_seed_poses.ts 生成,勿手改。
-// 重新生成:npx tsx scripts/pose-pipeline/build_seed_poses.ts poses_directions_qbx.json seedPosesQbx.ts seedPosesQbx --only-dirs
+// 本文件由 packages/camera-studio/scripts/pose-pipeline/build_seed_poses.ts 生成,勿手改。
+// 重新生成:npx tsx packages/camera-studio/scripts/pose-pipeline/build_seed_poses.ts poses_directions_qbx.json seedPosesQbx.ts seedPosesQbx --only-dirs
 // 骨向来源:QBX Pose Asset Pack v1.1 (qbx.gumroad.com, 免费包)
 import type {PoseBones} from '../poseMode/poseOverride'
 

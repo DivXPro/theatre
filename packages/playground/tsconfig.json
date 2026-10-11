@@ -10,6 +10,7 @@
     "resolveJsonModule": true
   },
   "references": [
+    {"path": "../camera-studio"},
     {"path": "../core"},
     {"path": "../studio"},
     {"path": "../dataverse"},

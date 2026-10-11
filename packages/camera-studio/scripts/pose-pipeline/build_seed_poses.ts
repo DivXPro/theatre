@@ -1,9 +1,9 @@
-// packages/playground/scripts/pose-pipeline/build_seed_poses.ts
+// packages/camera-studio/scripts/pose-pipeline/build_seed_poses.ts
 /**
  * 内置姿势管线第二步:骨向 JSON → 最终 PoseBones → seedPoses.ts
  *
- * 用法(仓库根或 playground 目录):
- *   npx tsx scripts/pose-pipeline/build_seed_poses.ts [输入.json] [输出.ts] [导出名]
+ * 用法(仓库根或 camera-studio 目录):
+ *   npx tsx packages/camera-studio/scripts/pose-pipeline/build_seed_poses.ts [输入.json] [输出.ts] [导出名]
  * 默认(无参):poses_directions.json → seedPoses.ts(export seedPoses)
  * DPL 批:poses_directions_dpl.json → seedPosesDpl.ts(export seedPosesDpl)
  * QBX 批:poses_directions_qbx.json → seedPosesQbx.ts(export seedPosesQbx)
@@ -12,12 +12,12 @@
  *   要裁掉,否则应用时把身体刷回 rest
  *
  * 输入:
- *   - scripts/pose-pipeline/*.json(blender_dump*.py 产物,
+ *   - packages/camera-studio/scripts/pose-pipeline/*.json(blender_dump*.py 产物,
  *     每姿势映射骨的世界 Y 目标方向,three 系)
- *   - src/shared/camera/assetLibrary/seedModels/Y Bot.fbx(族代表骨架,
+ *   - packages/camera-studio/src/assetLibrary/seedModels/Y Bot.fbx(族代表骨架,
  *     提 rest 基准:主套骨层级 + rest local/world 四元数)
  * 输出:
- *   - src/shared/camera/assetLibrary/seedPoses*.ts(内嵌姿势的
+ *   - packages/camera-studio/src/assetLibrary/seedPoses*.ts(内嵌姿势的
  *     PoseBones,随包播种;运行时不做换算)
  *
  * 重名骨处理:Y Bot.fbx 有两套同名骨骼(蒙皮分两层),traverse 先序
@@ -30,14 +30,14 @@ import path from 'path'
 import {fileURLToPath} from 'url'
 import {FBXLoader} from 'three-stdlib'
 import {Quaternion, Vector3} from 'three'
-import {retargetPose} from '../../src/shared/camera/poseMode/poseRetarget'
-import type {RestBone} from '../../src/shared/camera/poseMode/poseRetarget'
+import {retargetPose} from '../../src/poseMode/poseRetarget'
+import type {RestBone} from '../../src/poseMode/poseRetarget'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const pkgRoot = path.resolve(here, '../..')
 const fbxPath = path.join(
   pkgRoot,
-  'src/shared/camera/assetLibrary/seedModels/Y Bot.fbx',
+  'src/assetLibrary/seedModels/Y Bot.fbx',
 )
 // 可选参数:输入 JSON / 输出 ts / 导出名 / --only-dirs(只保留 dirs 覆盖骨)
 const argv = process.argv.slice(2)
@@ -48,7 +48,7 @@ const [
   exportName = 'seedPoses',
 ] = argv.filter((a) => a !== '--only-dirs')
 const dirsPath = path.join(here, inName)
-const outPath = path.join(pkgRoot, 'src/shared/camera/assetLibrary', outName)
+const outPath = path.join(pkgRoot, 'src/assetLibrary', outName)
 
 // ---------- 1. rest 基准(主套,每骨名取首次) ----------
 const buf = fs.readFileSync(fbxPath)
@@ -269,8 +269,8 @@ const seedPoses = dirsDoc.poses.map((p) => {
 console.log(`换算姿势: ${seedPoses.map((p) => p.key).join(', ')}`)
 
 // ---------- 3. 写产物 ts ----------
-const body = `// 本文件由 scripts/pose-pipeline/build_seed_poses.ts 生成,勿手改。
-// 重新生成:npx tsx scripts/pose-pipeline/build_seed_poses.ts ${inName} ${outName} ${exportName}${
+const body = `// 本文件由 packages/camera-studio/scripts/pose-pipeline/build_seed_poses.ts 生成,勿手改。
+// 重新生成:npx tsx packages/camera-studio/scripts/pose-pipeline/build_seed_poses.ts ${inName} ${outName} ${exportName}${
   onlyDirs ? ' --only-dirs' : ''
 }
 // 骨向来源:${dirsDoc.source ?? inName}

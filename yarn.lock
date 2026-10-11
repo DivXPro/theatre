@@ -5248,12 +5248,38 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@dreamerbird/camera-studio@workspace:packages/camera-studio":
+"@dreamerbird/camera-studio@workspace:*, @dreamerbird/camera-studio@workspace:packages/camera-studio":
   version: 0.0.0-use.local
   resolution: "@dreamerbird/camera-studio@workspace:packages/camera-studio"
+  dependencies:
+    "@dreamerbird/dataverse": "workspace:*"
+    "@dreamerbird/r3f": "workspace:*"
+    "@dreamerbird/react": "workspace:*"
+    "@dreamerbird/threeik": 0.2.1
+    "@dreamerbird/utils": "workspace:*"
+    "@gltf-transform/core": ^4.0.0
+    "@gltf-transform/extensions": ^4.0.0
+    "@gltf-transform/functions": ^4.0.0
+    "@phosphor-icons/react": ^2.1.10
+    "@react-three/drei": ^10.7.8
+    "@react-three/fiber": ^9.7.0
+    "@types/jest": ^26.0.23
+    "@types/node": ^15.6.2
+    "@types/react": ^19.2.18
+    "@types/react-dom": ^19.2.5
+    "@types/three": 0.185.4
+    draco3dgltf: ^1.5.7
+    fake-indexeddb: ^5
+    react: ^19.2.0
+    react-dom: ^19.2.0
+    styled-components: ^6.5.3
+    three: ^0.185.1
+    three-stdlib: ^2.36.1
+    typescript: 5.6.3
   peerDependencies:
     "@dreamerbird/core": "*"
     "@dreamerbird/studio": "*"
+    "@react-three/fiber": ^9.0.0
     react: ">=19"
     react-dom: ">=19"
     three: ">=0.185"
@@ -29881,6 +29907,7 @@ fsevents@^1.2.7:
   version: 0.0.0-use.local
   resolution: "playground@workspace:packages/playground"
   dependencies:
+    "@dreamerbird/camera-studio": "workspace:*"
     "@dreamerbird/core": "workspace:*"
     "@dreamerbird/dataverse": "workspace:*"
     "@dreamerbird/r3f": "workspace:*"

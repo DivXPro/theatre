@@ -1,6 +1,6 @@
-// 本文件由 scripts/pose-pipeline/build_seed_poses.ts 生成,勿手改。
-// 重新生成:npx tsx scripts/pose-pipeline/build_seed_poses.ts
-// (骨向来源:scripts/pose-pipeline/blender_dump.py → poses_directions.json)
+// 本文件由 packages/camera-studio/scripts/pose-pipeline/build_seed_poses.ts 生成,勿手改。
+// 重新生成:npx tsx packages/camera-studio/scripts/pose-pipeline/build_seed_poses.ts
+// (骨向来源:packages/camera-studio/scripts/pose-pipeline/blender_dump.py → poses_directions.json)
 import type {PoseBones} from '../poseMode/poseOverride'
 
 export type SeedPose = {key: string; name: string; bones: PoseBones}

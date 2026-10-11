@@ -51,6 +51,7 @@
   },
   "private": true,
   "dependencies": {
+    "@dreamerbird/camera-studio": "workspace:*",
     "@dreamerbird/threeik": "0.2.1",
     "@phosphor-icons/react": "^2.1.10"
   }
