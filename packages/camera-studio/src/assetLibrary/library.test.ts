@@ -164,6 +164,45 @@ describe('聚合器(多数据源)', () => {
     expect(await lib.listEntries()).toHaveLength(1) // 目录照常
   })
 
+  test('renameEntry 只读源守卫:内置条目不写影子副本,上告 conflict', async () => {
+    const errors: LibraryError[] = []
+    const stored = new Map<string, LibraryEntry>()
+    const putEntry = jest.fn(
+      async (e: LibraryEntry) => void stored.set(e.id, e),
+    )
+    const writable: WritableLibrarySource = {
+      id: 'idb',
+      capabilities: {writable: true},
+      listEntries: async () => [...stored.values()],
+      getEntry: async (id) => stored.get(id),
+      getBlobUrl: async (b) => `idb://${b}`,
+      putEntry,
+      deleteEntry: async (id) => void stored.delete(id),
+      putBlob: async () => 'h',
+      deleteBlob: async () => {},
+      getRigAliases: async () => [],
+      putRigAlias: async () => {},
+    }
+    const lib = new Library({
+      sources: [
+        fakeSource('catalog', [{id: 'seed-pose-a', name: '内置姿势'} as any]),
+        writable,
+      ],
+      onError: (e) => errors.push(e),
+    })
+    await lib.listEntries() // 建 id→源映射(守卫的依据)
+    await lib.renameEntry('seed-pose-a', '改名')
+    expect(putEntry).not.toHaveBeenCalled() // 可写源无影子副本
+    expect(errors.some((e) => e.code === 'conflict')).toBe(true)
+    expect(await writable.getEntry('seed-pose-a')).toBeUndefined()
+    // 可写源自己的条目照常可改(守卫不误伤)
+    errors.length = 0
+    await lib.putEntry({id: 'u1', name: '用户条目'} as any)
+    await lib.renameEntry('u1', '改名后')
+    expect(errors).toEqual([])
+    expect((await writable.getEntry('u1'))?.name).toBe('改名后')
+  })
+
   test('模型按 contentHash 去重:可写源副本优先,两个 id 都能 getEntry', async () => {
     // 场景:旧浏览器 IDB 里已播种 Y Bot(随机管线 id),目录源又提供
     // 同一模型(seed-model-<contentHash>)。列表只出一个且是可写源的 id

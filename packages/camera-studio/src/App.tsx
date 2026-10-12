@@ -155,15 +155,6 @@ import {
 import {parsePoseValue, serializeLibPose} from './poseMode/poseValue'
 import {isPoseExitGuardedTarget} from './poseMode/poseExitGuard'
 import {poseStatusText} from './poseStatusText'
-import PosePropEditor from './poseMode/PosePropEditor'
-import {
-  GesturePropEditorLeft,
-  GesturePropEditorRight,
-} from './gesturePropsEditor'
-import {
-  registerCustomPropEditor,
-  unregisterCustomPropEditor,
-} from '@dreamerbird/studio/propEditors/customPropEditors'
 
 document.body.style.backgroundColor = '#171717'
 
@@ -1602,21 +1593,6 @@ function App({
       }
     })
   }, [selectedPlacement])
-
-  // 姿势属性编辑器注册(2026-10-01 属性行化):pose 配置声明 editor:'pose',
-  // 面板属性行的值区域由它渲染(弹框选预设;显示 T 姿势/预设名/自定义)。
-  // 组件自给自足(i18n/库条目/骨架族都经模块级通路),无需闭包刷新
-  useEffect(() => {
-    registerCustomPropEditor('pose', PosePropEditor)
-    // 手势属性编辑器(2026-10-05):纯选择版姿势编辑器,左右手各一个 key
-    registerCustomPropEditor('gestureL', GesturePropEditorLeft)
-    registerCustomPropEditor('gestureR', GesturePropEditorRight)
-    return () => {
-      unregisterCustomPropEditor('pose')
-      unregisterCustomPropEditor('gestureL')
-      unregisterCustomPropEditor('gestureR')
-    }
-  }, [])
 
   // ── 宿主能力句柄(规格:host-picker-integration)────────────
   // 纯转发既有函数;宿主注入自己的选择框后,经 onFlows 拿到句柄,

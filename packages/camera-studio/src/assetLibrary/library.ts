@@ -227,6 +227,15 @@ export class Library {
     await this.enqueue(async () => {
       const entry = await this.getEntry(id)
       if (!entry) return
+      // 只读源(内置目录等)条目不写影子副本进可写源:重命名是用户库
+      // 行为,对内置条目上告 conflict 并原样保留(2026-10-12 T5 评审遗留)
+      const src = this.getEntrySource(id)
+      if (src !== undefined && src !== this.writable) {
+        this.reportError(
+          new LibraryError('conflict', `只读源条目不可重命名:${id}`),
+        )
+        return
+      }
       await this.requireWritable().putEntry({...entry, name})
       this.emit()
     })
