@@ -14,7 +14,7 @@
  * 输入:
  *   - packages/camera-studio/scripts/pose-pipeline/*.json(blender_dump*.py 产物,
  *     每姿势映射骨的世界 Y 目标方向,three 系)
- *   - packages/camera-studio/src/assetLibrary/seedModels/Y Bot.fbx(族代表骨架,
+ *   - packages/camera-studio/scripts/pose-pipeline/models/Y Bot.fbx(族代表骨架,
  *     提 rest 基准:主套骨层级 + rest local/world 四元数)
  * 输出:
  *   - packages/camera-studio/src/assetLibrary/seedPoses*.ts(内嵌姿势的
@@ -35,10 +35,7 @@ import type {RestBone} from '../../src/poseMode/poseRetarget'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const pkgRoot = path.resolve(here, '../..')
-const fbxPath = path.join(
-  pkgRoot,
-  'src/assetLibrary/seedModels/Y Bot.fbx',
-)
+const fbxPath = path.join(here, 'models/Y Bot.fbx')
 // 可选参数:输入 JSON / 输出 ts / 导出名 / --only-dirs(只保留 dirs 覆盖骨)
 const argv = process.argv.slice(2)
 const onlyDirs = argv.includes('--only-dirs')

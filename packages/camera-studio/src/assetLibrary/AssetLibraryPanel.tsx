@@ -20,7 +20,6 @@ import {getLibrary, useLibraryEntries, useRigAliases} from './library'
 import {planImport, executeImport, realImportDeps} from './importPipeline'
 import type {ImportPlan} from './importPipeline'
 import {backfillModelThumbnails} from './thumbnail'
-import {seedBuiltinModels} from './seedBuiltinModels'
 import {useModelThumbUrl} from './useModelThumbUrl'
 import type {AnimationEntry, ModelEntry, PoseEntry} from './types'
 
@@ -447,10 +446,8 @@ export function AssetLibraryPanel({
     }
   }, [])
 
-  // 内置模型播种:仅模型框体挂载时触发(模块内幂等,只跑一次)
-  useEffect(() => {
-    if (kind === 'model') seedBuiltinModels()
-  }, [kind])
+  // 内置模型不再随框体播种(2026-10-10 目录化):StaticCatalogSource
+  // 以只读目录并入聚合库,条目随 listEntries 自然在列
 
   const rigAliases = useRigAliases()
   /** 骨架标签文案:有别名显示别名,否则短哈希 */

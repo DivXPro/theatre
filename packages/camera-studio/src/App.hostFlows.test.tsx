@@ -21,11 +21,8 @@ jest.doMock('./scene.glb', () => 'scene.glb')
 jest.doMock('three/examples/jsm/environments/RoomEnvironment.js', () => ({
   RoomEnvironment: class RoomEnvironment {},
 }))
-// 播种模块用 vite 的 import.meta.glob,jest 没有该能力;接线测试不渲染
-// 库框体,种子内容无关紧要。
-jest.doMock('./assetLibrary/seedBuiltinModels', () => ({
-  seedBuiltinModels: () => undefined,
-}))
+// 内置资产 2026-10-10 目录化后不再经 vite 目录 glob 播种:条目来自入库
+// 清单 + StaticCatalogSource,jest 下静态 import 链无 vite 专属语法
 const {HostFlowsWiring} = require('./App') as {
   HostFlowsWiring: (props: {
     flows: CameraFlows

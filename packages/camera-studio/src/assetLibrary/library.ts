@@ -2,6 +2,8 @@ import {useEffect, useState} from 'react'
 import {IndexedDBBackend} from './indexedDBBackend'
 import {isWritableSource, LibraryError} from './source'
 import type {LibrarySource, WritableLibrarySource} from './source'
+import {StaticCatalogSource} from './staticCatalogSource'
+import {seedAssetsManifest} from './seedAssetsManifest'
 import type {EntryKind, LibraryEntry, RigAlias} from './types'
 
 export type LibraryOpts = {
@@ -41,6 +43,15 @@ export class Library {
   /** 纯查看器模式(无可写源)为 false:宿主应隐藏导入/删除/保存姿势入口 */
   get canWrite(): boolean {
     return this.writable !== undefined
+  }
+
+  /**
+   * 运行时错误上告通道(资产加载失败等非聚合错误):透传给构造时的
+   * onError;未配置则静默(调用方自己 console.warn)。聚合读失败
+   * (listEntries 单源出错)走内部直发,不经过这里。
+   */
+  reportError(err: LibraryError): void {
+    this.onError?.(err)
   }
 
   /**
@@ -285,14 +296,49 @@ function isBuiltinId(id: string): boolean {
 
 let singleton: Library | undefined
 
-/** 库单例:playground 固定用 IndexedDB 实现 */
+/** 内置骨架族(Mixamo 角色同一套骨骼命名)的默认别名 */
+export const SEED_RIG_ALIAS = 'Mixamo'
+
+/**
+ * 内置目录骨架族的默认别名保底:旧播种流程在 seedModels 里设置,
+ * 去播种(2026-10-10 目录化)后由这里补一次;用户已起过名的不覆盖。
+ */
+async function ensureBuiltinRigAlias(lib: Library): Promise<void> {
+  const aliased = new Set((await lib.getRigAliases()).map((a) => a.rig))
+  for (const m of seedAssetsManifest.models) {
+    if (aliased.has(m.rig)) continue
+    aliased.add(m.rig)
+    await lib.setRigAlias(m.rig, SEED_RIG_ALIAS)
+  }
+}
+
+/**
+ * 库单例:playground 缺省 = IndexedDB 可写源 + 内置目录只读源
+ * (StaticCatalogSource,随包 GLB/预览图;T8 起宿主可经 configureLibrary
+ * 覆盖整套源)。目录条目的运行时缩略图渲染器走 catalogThumbs——
+ * 动态 import 保持模块图轻(避免 library ⇄ poseThumbnail 环)且
+ * jest 下只有真实渲染路径才求值。
+ */
 export function getLibrary(): Library {
   if (!singleton) {
     const idb = new IndexedDBBackend()
-    singleton = new Library({sources: [idb]})
+    const catalog = new StaticCatalogSource({
+      renderPoseThumb: (entry): Promise<string | undefined> =>
+        import('./catalogThumbs').then((m) =>
+          m.renderCatalogPoseThumb(catalog, entry),
+        ),
+      renderModelThumb: (entry): Promise<string | undefined> =>
+        import('./catalogThumbs').then((m) =>
+          m.renderCatalogModelThumb(catalog, entry),
+        ),
+    })
+    singleton = new Library({sources: [idb, catalog]})
     // 启动时清理孤儿 blob(上次导入中断等留下的),失败不阻塞
     void singleton.sweepOrphanBlobs().catch((err) => {
       console.warn('[assetLibrary] 孤儿 blob 清理失败', err)
+    })
+    void ensureBuiltinRigAlias(singleton).catch((err) => {
+      console.warn('[assetLibrary] 内置骨架族别名设置失败', err)
     })
   }
   return singleton

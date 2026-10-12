@@ -1,0 +1,20 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "..",
+    "lib": ["ESNext", "DOM"],
+    "types": ["node"],
+    "target": "ESNext",
+    "module": "ESNext",
+    "noEmit": true,
+    "composite": false,
+    "skipLibCheck": true
+  },
+  "include": [
+    "./**/*",
+    "../src/assetLibrary/rig.ts",
+    "../src/assetLibrary/hash.ts",
+    "../src/assetLibrary/exportGLB.ts",
+    "../src/types/draco3dgltf.d.ts"
+  ]
+}

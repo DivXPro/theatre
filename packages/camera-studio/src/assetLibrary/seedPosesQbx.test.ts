@@ -18,10 +18,7 @@ const DOC_PATH = path.join(
   pkgRoot,
   'scripts/pose-pipeline/poses_directions_qbx.json',
 )
-const FBX_PATH = path.join(
-  pkgRoot,
-  'src/assetLibrary/seedModels/Y Bot.fbx',
-)
+const FBX_PATH = path.join(pkgRoot, 'scripts/pose-pipeline/models/Y Bot.fbx')
 
 type RestInfo = {
   parent: string | null

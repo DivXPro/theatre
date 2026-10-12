@@ -9,17 +9,15 @@
  *   onOpenModelPicker 存在 → 完全不弹这里(宿主全自控,App 已拦);
  *   否则注册组件优先,内置兜底。
  *
- * 宿主组件替换内置面板时,内置模型的播种不能丢:AssetLibraryPanel 的
- * 播种 effect 只在它自己挂载时跑,宿主组件接管后没人播种,故这里保底
- * 调一次(seedBuiltinModels 模块级幂等)。
+ * 内置模型不再播种(2026-10-10 目录化):随包 GLB 由 StaticCatalogSource
+ * 以只读目录并入聚合库,框体无论内置/宿主都能列到,无需挂载期触发。
  */
-import React, {useEffect} from 'react'
+import React from 'react'
 import {getRegisteredPicker} from '../pickerRegistry'
 import {useLibraryEntries} from './library'
 import type {ModelEntry} from './types'
 import {useModelThumbUrl} from './useModelThumbUrl'
 import {importModelFile} from './importModelFile'
-import {seedBuiltinModels} from './seedBuiltinModels'
 import {AssetLibraryPanel} from './AssetLibraryPanel'
 
 export type ModelPickerSlotProps = {
@@ -35,9 +33,6 @@ export function ModelPickerSlot({
   disabled,
   onClose,
 }: ModelPickerSlotProps): React.ReactElement {
-  useEffect(() => {
-    seedBuiltinModels()
-  }, [])
   // hooks 无条件调用:注册分派只换渲染分支,不换订阅
   const entries = useLibraryEntries('model') as ModelEntry[]
   const {getThumbUrl} = useModelThumbUrl()

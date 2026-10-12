@@ -31,6 +31,8 @@ import {registerBoneAnchors, unregisterBoneAnchors} from './boneAnchors'
 import {notifyTargetRegistryChange, sheetObjectExists} from './aimTargets'
 import {createGLTFLoader} from './assetLibrary/gltfLoader'
 import {getLibrary} from './assetLibrary/library'
+import type {Library} from './assetLibrary/library'
+import {LibraryError} from './assetLibrary/source'
 import {entryOptions} from './assetLibrary/options'
 import {computeDropPoint} from './dropPoint'
 import {registerEditorOnly} from './editorOnly'
@@ -693,6 +695,11 @@ function PlacementRigGLTF({
       })
       .catch((err) => {
         console.warn('[placement] 库模型预览加载失败', err)
+        // 资产 URL 不可达/解析失败:上告库 onError 通道(toast 条),
+        // 本地状态照走错误边界取消放置,不崩画布
+        getLibrary().reportError(
+          new LibraryError('network', '库模型预览加载失败', err),
+        )
         if (!cancelled) setFailed(true)
       })
     return () => {
@@ -992,6 +999,34 @@ function FBXPlacedModel({
   )
 }
 
+/**
+ * 库模型加载:条目解析 → blob URL → GLTFLoader。fetch/解析失败统一包成
+ * LibraryError('network') 并经库的 onError 通道上告(宿主错误条提示),
+ * 条目缺失是数据问题报 not-found;两种都继续抛给调用方走错误边界,
+ * 选择框/画布照常。
+ */
+export async function loadLibraryModel(
+  entryId: string,
+  lib: Library = getLibrary(),
+): Promise<{group: Group; animations: AnimationClip[]}> {
+  try {
+    const libEntry = await lib.getEntry(entryId)
+    if (!libEntry || libEntry.kind !== 'model') {
+      throw new LibraryError('not-found', `库模型条目不存在: ${entryId}`)
+    }
+    const url = await lib.getBlobUrl(libEntry.blobId)
+    const gltf = await createGLTFLoader().loadAsync(url)
+    return {group: gltf.scene as Group, animations: gltf.animations}
+  } catch (err) {
+    const wrapped =
+      err instanceof LibraryError
+        ? err
+        : new LibraryError('network', `库模型加载失败: ${entryId}`, err)
+    lib.reportError(wrapped)
+    throw wrapped
+  }
+}
+
 /** 资产库 GLB 路径:解析条目、取 blob URL、用 GLTFLoader 异步加载 */
 function LibraryPlacedModel({
   entry,
@@ -1015,26 +1050,14 @@ function LibraryPlacedModel({
   const [failed, setFailed] = useState(false)
   useEffect(() => {
     let cancelled = false
-    const load = async () => {
-      try {
-        const libEntry = await getLibrary().getEntry(entry.libraryEntryId!)
-        if (!libEntry || libEntry.kind !== 'model') {
-          throw new Error('library model entry not found')
-        }
-        const url = await getLibrary().getBlobUrl(libEntry.blobId)
-        const gltf = await createGLTFLoader().loadAsync(url)
-        if (!cancelled) {
-          setLoaded({
-            group: gltf.scene as Group,
-            animations: gltf.animations,
-          })
-        }
-      } catch (err) {
+    loadLibraryModel(entry.libraryEntryId!)
+      .then((result) => {
+        if (!cancelled) setLoaded(result)
+      })
+      .catch((err) => {
         console.warn('[placement] 库模型加载失败', err)
         if (!cancelled) setFailed(true)
-      }
-    }
-    load()
+      })
     return () => {
       cancelled = true
     }

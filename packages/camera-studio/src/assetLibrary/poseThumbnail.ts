@@ -29,12 +29,21 @@ import {isHandPoseEntry} from '../gestureProps'
 
 type Lib = Pick<
   Library,
-  'listEntries' | 'listBlobIds' | 'getBlobUrl' | 'putBlobWithEntry'
+  | 'listEntries'
+  | 'listBlobIds'
+  | 'getBlobUrl'
+  | 'putBlobWithEntry'
+  | 'getEntrySource'
+  | 'writable'
 >
 
 /**
  * 给缺图(或图引用已死)的身体姿势条目补缩略图,返回补图数量。
  * 串行执行:渲染与写库都轻量,避免与交互抢主线程。
+ *
+ * 只回填可写源的条目(用户自存姿势):内置目录(seed-pose-*)等只读源
+ * 条目的图由所属源自己提供(catalog 静态文件/运行时渲染),写库既
+ * 存不下也不该写。
  *
  * opts.renderBatch:渲染器注入(测试用;缺省 = 真实 WebGL 离屏渲染)。
  */
@@ -53,7 +62,9 @@ export async function backfillPoseThumbnails(
   const liveBlobIds = new Set(await lib.listBlobIds())
   const pending = poses.filter(
     (e) =>
-      !isHandPoseEntry(e) && !(e.thumbnailId && liveBlobIds.has(e.thumbnailId)),
+      !isHandPoseEntry(e) &&
+      !(e.thumbnailId && liveBlobIds.has(e.thumbnailId)) &&
+      lib.getEntrySource(e.id) === lib.writable,
   )
   if (pending.length === 0) return 0
   // 每个骨架族取第一个有 blob 的模型条目当「模特」
@@ -84,15 +95,21 @@ function groupByRig(entries: PoseEntry[]): Map<string, PoseEntry[]> {
   return out
 }
 
-/** 一个骨架族一批:解析 GLB 一次,逐姿势 重置绑定姿势→套用→渲染→写库 */
-async function renderRigBatch(
-  lib: Lib,
-  model: ModelEntry,
-  entries: PoseEntry[],
-): Promise<number> {
-  const glbUrl = await lib.getBlobUrl(model.blobId)
-  const glb = await (await fetch(glbUrl)).arrayBuffer()
+/** 一个模特 GLB 的姿势缩略图渲染会话:解析+布景一次,逐姿势渲染 128×128 PNG */
+export type PoseThumbSession = {
+  /** 重置绑定姿势→套用 bones→渲染,返回 PNG blob(toBlob 失败为 undefined) */
+  render(bones: PoseEntry['bones']): Promise<Blob | undefined>
+  dispose(): void
+}
 
+/**
+ * 创建姿势缩略图渲染会话。WebGL 不可用/GLB 解析失败会抛错,调用方
+ * (回填批/目录渲染器)各自降级:回填按族告警跳过,目录渲染器缓存 null
+ * 安静降级为占位图标。
+ */
+export async function createPoseThumbSession(
+  glb: ArrayBuffer,
+): Promise<PoseThumbSession> {
   const canvas = document.createElement('canvas')
   canvas.width = 128
   canvas.height = 128
@@ -129,15 +146,39 @@ async function renderRigBatch(
       .add(new Vector3(0.25, 0.15, 1).normalize().multiplyScalar(distance))
     camera.lookAt(sphere.center)
 
+    return {
+      async render(bones) {
+        applyPose(gltf.scene, bindPose)
+        applyPose(gltf.scene, bones)
+        scene.updateMatrixWorld(true)
+        renderer.render(scene, camera)
+        return new Promise<Blob | undefined>((resolve) =>
+          canvas.toBlob((b) => resolve(b ?? undefined), 'image/png'),
+        )
+      },
+      dispose() {
+        renderer.dispose()
+      },
+    }
+  } catch (err) {
+    renderer.dispose()
+    throw err
+  }
+}
+
+/** 一个骨架族一批:解析 GLB 一次,逐姿势 重置绑定姿势→套用→渲染→写库 */
+async function renderRigBatch(
+  lib: Lib,
+  model: ModelEntry,
+  entries: PoseEntry[],
+): Promise<number> {
+  const glbUrl = await lib.getBlobUrl(model.blobId)
+  const glb = await (await fetch(glbUrl)).arrayBuffer()
+  const session = await createPoseThumbSession(glb)
+  try {
     let rendered = 0
     for (const entry of entries) {
-      applyPose(gltf.scene, bindPose)
-      applyPose(gltf.scene, entry.bones)
-      scene.updateMatrixWorld(true)
-      renderer.render(scene, camera)
-      const blob = await new Promise<Blob | undefined>((resolve) =>
-        canvas.toBlob((b) => resolve(b ?? undefined), 'image/png'),
-      )
+      const blob = await session.render(entry.bones)
       if (!blob) continue
       await lib.putBlobWithEntry(blob, (thumbnailId) => ({
         ...entry,
@@ -147,6 +188,6 @@ async function renderRigBatch(
     }
     return rendered
   } finally {
-    renderer.dispose()
+    session.dispose()
   }
 }

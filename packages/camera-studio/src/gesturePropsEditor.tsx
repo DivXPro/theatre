@@ -21,7 +21,6 @@ import type {PropTypeConfig_AllSimples} from '@dreamerbird/core/types/public'
 import type {ISimplePropEditorReactProps} from '@dreamerbird/studio/propEditors/simpleEditors/ISimplePropEditorReactProps'
 import type {ISheetObject} from '@dreamerbird/core'
 import {getLibrary, useLibraryEntries} from './assetLibrary/library'
-import {seedBuiltinPoses} from './assetLibrary/seedBuiltinPoses'
 import {useModelThumbUrl} from './assetLibrary/useModelThumbUrl'
 import type {PoseEntry} from './assetLibrary/types'
 import {getPlacementEntryForObject} from './PlacementManager'
@@ -41,10 +40,7 @@ export function GesturePropEditor({
 }: EditorProps & {side: GestureSide}): React.ReactElement {
   const {t} = useI18n()
   const poseEntries = useLibraryEntries('pose') as PoseEntry[]
-  // 内置姿势播种保底:手势行首次出现时触发(模块级幂等,失败自动重试)
-  useEffect(() => {
-    seedBuiltinPoses()
-  }, [])
+  // 内置手势由 StaticCatalogSource 目录提供(2026-10-10 去播种),无需触发
   const [pickerOpen, setPickerOpen] = useState(false)
   const [valueHovered, setValueHovered] = useState(false)
   // 停靠框打开期间持父弹框锁(时间轴帧弹框嵌套场景,同 PosePropEditor)

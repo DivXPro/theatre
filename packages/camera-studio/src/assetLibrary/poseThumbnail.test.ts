@@ -32,8 +32,13 @@ function fakeLib(args: {
   poses?: PoseEntry[]
   models?: Partial<ModelEntry>[]
   blobIds?: string[]
+  /** 条目 id → 来源;未列出的归可写源(用户数据),内置目录条目归别的源 */
+  sourceById?: Record<string, unknown>
 }) {
+  const writable = {id: 'idb'}
+  const sourceById = args.sourceById ?? {}
   return {
+    writable,
     listEntries: async (kind?: string) =>
       kind === 'model'
         ? ([{blobId: 'glb-1', rig: 'rig-a'}, ...(args.models ?? [])] as never)
@@ -41,6 +46,7 @@ function fakeLib(args: {
     listBlobIds: async () => args.blobIds ?? [],
     getBlobUrl: async (b: string) => 'blob:' + b,
     putBlobWithEntry: async () => {},
+    getEntrySource: (id: string) => sourceById[id] ?? writable,
   }
 }
 
@@ -98,4 +104,21 @@ test('单族渲染失败只告警,不影响其他族', async () => {
   } finally {
     warn.mockRestore()
   }
+})
+
+test('内置目录条目不回填:来源不是可写源的条目跳过(目录图由 catalog 运行时渲染)', async () => {
+  const catalog = {id: 'catalog'}
+  const lib = fakeLib({
+    poses: [pose('seed-pose-dpl-x', 'rig-a'), pose('p-user', 'rig-a')],
+    sourceById: {'seed-pose-dpl-x': catalog},
+  })
+  const seen: string[][] = []
+  const n = await backfillPoseThumbnails(lib as never, {
+    renderBatch: async (_lib, _model, entries) => {
+      seen.push(entries.map((e) => e.id))
+      return entries.length
+    },
+  })
+  expect(seen).toEqual([['p-user']])
+  expect(n).toBe(1)
 })
