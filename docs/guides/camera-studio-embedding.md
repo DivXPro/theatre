@@ -5,7 +5,8 @@
 > 打包成一个模块,宿主给一个**整页/整路由**即可接入。
 >
 > 配套有一个可跑的最小宿主示例:`examples/camera-host-demo`(顶部导航条 + 整页
-> CameraScene),本文凡引用的示例代码都与它逐字一致。
+> CameraScene);其中 §3 的存储示例与它的 `src/memorySource.ts` 逐字一致,可直接拷
+> 贝。
 
 ## 1. 安装
 
@@ -147,18 +148,24 @@ interface WritableLibrarySource extends LibrarySource {
 }
 ```
 
-实现时必须满足的语义(契约套件逐条自检):
+实现时必须满足的语义。标注【契约覆盖】的两条由契约套件逐条自检(§3 末尾的
+`runLibrarySourceContractTests`);其余三条当前套件未覆盖,靠实现约定——想自验的话,
+照契约套件的写法在自己仓库里补用例即可。
 
-- **upsert**:`putEntry` 同 id 是覆盖,不是报错;`getEntry`(不存在)返回
+- **upsert**【契约覆盖】:`putEntry` 同 id 是覆盖,不是报错;`getEntry`(不存在)返回
   `undefined`,不抛。
-- **内容寻址**:`putBlob` 返回内容哈希 id,**同内容两次返回同一 id** (这是去重和孤
-  儿清扫的前提;生产请用 SHA-256)。
-- **错误码**:抛 `LibraryError`(code ∈ `auth` / `quota` / `network` / `conflict`
-  / `not-found` / `unknown`),门面按 code 出错误条,不要把业务错误混成 `unknown`。
-- **id 命名空间**:你的源**不得**返回 `seed-pose-*` / `seed-model-*` 前缀条目(内
-  置目录专属,聚合层会拒绝并报 conflict)。
-- **capabilities**:`writable: true` 必须显式给;`permanentUrls` 只有 URL长效(CDN/
-  预签名生命周期够长)才标 true,否则模块不会跨挂载缓存。
+- **内容寻址**【契约覆盖】:`putBlob` 返回内容哈希 id,**同内容两次返回同一 id**
+  (这是去重和孤儿清扫的前提;生产请用 SHA-256)。
+- **错误码**(契约未覆盖):抛 `LibraryError`(code ∈ `auth` / `quota` / `network` /
+  `conflict` / `not-found` / `unknown`),不要把业务错误混成 `unknown`。透出现
+  状:Library 聚合错误经 `onError` 回调上告,但模块 boot 当前未接 `onError`,失败只
+  在 console 留 warning; 按 code 的面板错误条是已知的未实施项(见 §8)。
+- **id 命名空间**(契约未覆盖):你的源**不得**返回 `seed-pose-*` / `seed-model-*`
+  前缀条目(内置目录专属,聚合层会拒绝并报 conflict)。
+- **capabilities**(契约未覆盖):写上 `writable: true` 是契约的一部分(供
+  capabilities查询与自描述);模块以 `putEntry` 方法存在性判别可写源,不读这个
+  flag。 `permanentUrls` 是预留 capability,当前模块未据此改变行为,标不标无实际差
+  异。
 
 ### 完整示例:内存版可写存储(与 examples/camera-host-demo 逐字一致)
 
@@ -381,8 +388,8 @@ const {ready, error, sceneProps} = useCameraStudio({
   它会被忽略(实例的状态由创建方负责),控制台有警告。
 - 节流是**尾部触发**:持续编辑期间每秒最多回调一次,停顿 1s 后必触发一次。
 - **冲突矩阵**:如果宿主在挂载模块**之前**已经自己调过 `theatre.init`, 模块检测到
-  init 配置不一致时**以先到的为准**(告警到 console,绝不悄悄重连)。所以要么把
-  init 交给模块,要么自己 init 且保持一致,不要两头都管。
+  init 配置不一致时**以先到的为准**(告警到 console,绝不悄悄重连)。所以要么把init
+  交给模块,要么自己 init 且保持一致,不要两头都管。
 
 ## 6. 协作
 
@@ -542,8 +549,12 @@ process.on('SIGTERM', () => {
 
 ## 8. 排错
 
-- **导入/保存姿势/删除入口整个消失了?** 先看 `storage`:`storage: false` 或未给可
-  写源时,模块进入**纯查看器模式**,这些入口是**整体隐藏**(不是置灰)——预期行为。
+- **导入/保存姿势/删除入口整个消失了?** 先看 `storage`:只有 `storage: false` 会
+  进入**纯查看器模式**(模块内即「无可写源」状态),这些入口是**整体隐藏**(不是置
+  灰)——预期行为。完全省略 `storage` 走的是内置 IndexedDB 可写源,入口都在。
+- **保存失败只在 console 留一行 warning?** 现状如此:库存储错误经 Library 的
+  `onError` 通道透出,模块 boot 未接该回调(写路径由调用方自行 console.warn), 按错
+  误码的面板错误条是已知未实施项——排查时以 console 为准。
 - **`seed-*` id 前缀的条目写不进/读不出?** `seed-pose-*` / `seed-model-*` 是内置
   目录专属前缀,可写源返回它们会被聚合层拒绝(conflict)。旧浏览器里历史播种留下的
   `seed-*` 条目,模块启动时会静默清理一次(仅内置 IDB缺省库名分支)。
@@ -556,6 +567,6 @@ process.on('SIGTERM', () => {
   FBX→GLB 转换的非确定性产物,内容哈希与出货文件不同, 内容寻址下视为另一份资产;旧
   场景对它的引用不受影响,两边都能用。新用户只见目录里的一个。无需处理。
 - **已知限制**:存储相关类型(`WritableLibrarySource`、`LibraryEntry`、
-  `EntryError` 等)尚未从包根转出口,§3 示例的「本地拷贝类型」是当前的权宜写
-  法;`@dreamerbird/camera-studio/contract-tests` 子路径导出稳定, 结构化校验不受
-  影响。类型转出口在后续打包核对任务里定。
+  `EntryKind`、`RigAlias`、`LibraryError` 等)尚未从包根转出口,§3 示例的「本地拷
+  贝类型」是当前的权宜写法;`@dreamerbird/camera-studio/contract-tests` 子路径导
+  出稳定,结构化校验不受影响。类型转出口在后续打包核对任务里定。
