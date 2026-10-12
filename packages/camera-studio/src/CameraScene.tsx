@@ -5,7 +5,7 @@ import {
   GizmoHelper,
   GizmoViewport,
 } from '@react-three/drei'
-import {getProject, getStudioSync, onChange, val} from '@dreamerbird/core'
+import {getStudioSync, onChange, val} from '@dreamerbird/core'
 // 诊断撤销栈用:模块级单例直达私有 Studio(getStudioSync 返回的是 publicApi,
 // 空构造不存 internals,摸不到 _store._saaz——TheatreStudio.ts:121)
 import getStudio from '@dreamerbird/studio/getStudio'
@@ -16,6 +16,7 @@ import type {IScrub, ISheet, ISheetObject} from '@dreamerbird/core'
 import React, {
   Suspense,
   useCallback,
+  useContext,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -25,6 +26,7 @@ import React, {
 import type {MutableRefObject} from 'react'
 import {Canvas, useFrame, useThree} from '@react-three/fiber'
 import {useT} from '@dreamerbird/studio/i18n'
+import {I18nContext, I18nProvider, setLanguage} from '@dreamerbird/studio/i18n'
 import type {ThreeEvent} from '@react-three/fiber'
 import {useGLTF} from '@react-three/drei'
 import sceneGLB from './scene.glb'
@@ -131,7 +133,6 @@ import {
 import {pruneObjectFromOutlineCollections} from '@dreamerbird/studio/panels/OutlinePanel/outlineOps/stateOps'
 import {
   createHostFlows,
-  pickerToggleHandler,
   setDropPointContext,
   setHostFlowsHandle,
   setPlacingSnapshot,
@@ -139,6 +140,8 @@ import {
 import type {CameraFlows, HostFlowDeps} from './hostFlows'
 import {importModelFile} from './assetLibrary/importModelFile'
 import {resolveControlSpec} from './poseMode/controlSpec'
+import type {CameraSceneProps} from './config'
+import {getUiConfig} from './uiConfig'
 import {
   enterPoseSession,
   getPoseSession,
@@ -639,18 +642,14 @@ function GroundGrid() {
   )
 }
 
-function App({
-  onFlows,
-  onOpenModelPicker,
-  onOpenPathPicker,
-}: {
-  /** 场景 mount 后一次性交付能力句柄;句柄生命周期内稳定 */
-  onFlows?: (flows: CameraFlows) => void
-  /** 点了顶栏"添加模型"按钮;不传 = 打开内置模型框体(现状) */
-  onOpenModelPicker?: () => void
-  /** 点了顶栏"添加路径"按钮;不传 = 打开内置路径框体(现状) */
-  onOpenPathPicker?: () => void
-} = {}) {
+/**
+ * 相机场景组件(spec §3 宿主唯一渲染面,2026-10-12 由 App 改名而来):
+ * project 由宿主经 useCameraStudio 的 sceneProps 注入(bootstrap 内解析,
+ * 字符串/IProject 实例皆由配置侧处理),组件内不再 getProject。
+ * UI 装配可配见 ./uiConfig:停靠框 portal 容器 / z-index 基准 / 语言
+ * (宿主已包 I18nProvider 时语言以宿主为准,ui.locale 仅自包时生效)。
+ */
+export function CameraScene({project, onFlows}: CameraSceneProps) {
   const t = useT()
   const cameraTargetRef = useRef<Mesh>(null!)
   const cameraObjRef = useRef<ISheetObject<any> | undefined>(undefined)
@@ -668,7 +667,7 @@ function App({
     return refs
   }
   // 每个锚点一个 objRef(多锚点:单对 ref 会被 map 里的实例互相覆盖)。
-  // App 持有而非组件自持:右键删除时要经它取到对象传给 removeAnchor
+  // CameraScene 持有而非组件自持:右键删除时要经它取到对象传给 removeAnchor
   // 做真删(forgetObject 清持久数据,对齐相机)
   const anchorRefsMapRef = useRef(
     new Map<string, MutableRefObject<ISheetObject<any> | undefined>>(),
@@ -717,9 +716,8 @@ function App({
   const prevShotViewRef = useRef(false)
   const pendingExportSinkRef = useRef<ExportSink | null>(null)
 
-  const project = getProject('Space')
+  // project 来自 props(T9):宿主经 sceneProps 注入,bootstrap 已解析
   const sheet = project.sheet('Scene')
-
   // 「瞄准目标」下拉的动态选项(aimTargetOptions)在 studio 面板渲染时
   // 调用,不在 React 上下文里——把当前 sheet 喂给模块级 optionsSheet,
   // 选项函数经它读 Anchors 注册表
@@ -818,7 +816,7 @@ function App({
   }, [])
 
   // 每渲染刷新菜单上下文:注册表清单 + 删除处理器(含集合名单清理)。
-  // App 不卸载;卸载时清 ctx,防止悬空 sheet 引用
+  // CameraScene 不卸载;卸载时清 ctx,防止悬空 sheet 引用
   useEffect(() => {
     const {projectId, sheetId, sheetInstanceId} = sheet.address
     setCameraOutlineMenuCtx({
@@ -1552,7 +1550,7 @@ function App({
     rigIdOf(selectedPlacementInstance) !== 'static'
 
   // 姿势状态行(spec §6.2):来源文案 + 帧数 + 打帧/清除姿势。
-  // poseKeyframeCount 是命令式读取(非响应式),App 已随 selectedPoseJson
+  // poseKeyframeCount 是命令式读取(非响应式),CameraScene 已随 selectedPoseJson
   // (useVal)与选中变化重渲,覆盖写帧/撤销/切换对象的刷新路径;轨道刚建立
   // 的那一瞬由随后的写帧值变化带动,一个渲染周期内跟上。
   const poseEntries = useLibraryEntries('pose') as PoseEntry[]
@@ -1620,448 +1618,479 @@ function App({
   useEffect(() => {
     setPlacingSnapshot(placing)
   }, [placing])
+  // 顶栏库按钮:打开内置框体。宿主换框体走 pickerRegistry 注册
+  // (picker-frames-registry 机制),不再经组件 props 覆盖(T9 随
+  // CameraScene props 收紧为 {project, onFlows} 移除)
   const handleToggleModel = useMemo(
-    () => pickerToggleHandler(onOpenModelPicker, toggleFrame, 'model'),
-    [onOpenModelPicker, toggleFrame],
+    () => () => toggleFrame('model'),
+    [toggleFrame],
   )
   const handleTogglePath = useMemo(
-    () => pickerToggleHandler(onOpenPathPicker, toggleFrame, 'path'),
-    [onOpenPathPicker, toggleFrame],
+    () => () => toggleFrame('path'),
+    [toggleFrame],
   )
 
   return (
-    <div
-      style={{
-        height: '100vh',
-        position: 'relative',
-      }}
-    >
-      <HostFlowsWiring flows={flows} onFlows={onFlows} />
-      <TopToolbar
-        gizmoMode={gizmoMode}
-        onSelectGizmoMode={setGizmoMode}
-        onToggleModelLibrary={handleToggleModel}
-        onTogglePathLibrary={handleTogglePath}
-        onAddCamera={addCamera}
-        onAddAnchor={addAnchor}
-        exportSinks={exportSinks}
-        exporting={exporting}
-        onPickExportSink={handlePickExportSink}
-        onStopExport={handleStopExport}
-        exportDisabled={!activeCamera}
-        pipVisible={pipVisible}
-        onTogglePip={() => setPipVisible((v) => !v)}
-        pipDisabled={!activeCamera}
-        libraryDisabled={!!placing || modelDragging || presetDrag !== null}
-      />
-      {!shotView && activeCamera && pipVisible && (
-        <div
-          style={{
-            // 画中画边框:与 ShotCamera 渲染的右下角小窗同位置同尺寸
-            position: 'absolute',
-            right: 16,
-            bottom: pipBottom,
-            width: '28%',
-            aspectRatio: '16 / 9',
-            border: '1px solid rgba(255,255,255,0.14)',
-            borderRadius: 2,
-            background: 'rgba(24,24,28,0.4)',
-            pointerEvents: 'none',
-            zIndex: 5,
-          }}
-        >
-          {/* 左上角:相机选择器(hover 到画中画才显示,点选 = 设为活动相机) */}
-          <PipCameraSelector
-            cameras={cameras}
-            activeKey={activeCamera.cameraKey}
-            onSelect={setActiveCameraKey}
-            visible={pipHovered}
-          />
-        </div>
-      )}
-      {(modelDragging || presetDrag) && (
-        <div
-          style={{
-            position: 'absolute',
-            bottom: 24,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 10,
-            padding: '6px 12px',
-            borderRadius: 6,
-            background: 'rgba(24,24,28,0.9)',
-            border: '1px solid rgba(255,255,255,0.15)',
-            color: '#eee',
-            fontSize: 12,
-            pointerEvents: 'none',
-          }}
-        >
-          松开鼠标落点,Esc/右键取消
-        </div>
-      )}
-      {shotView && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 12,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            padding: '4px 10px',
-            borderRadius: 6,
-            background: 'rgba(0,0,0,0.55)',
-            color: 'rgba(255,255,255,0.85)',
-            fontSize: 12,
-            pointerEvents: 'none',
-            userSelect: 'none',
-            zIndex: 10,
-          }}
-        >
-          镜头视角 · Esc 返回导演视角
-        </div>
-      )}
-      {!onOpenModelPicker && frameOpen.model && (
-        <ModelPickerSlot
-          onPlaceModel={placeModelAtDefault}
-          onDragStartModel={startModelDrag}
-          disabled={rigLoading}
-          onClose={() => closeFrame('model')}
-        />
-      )}
-      {!onOpenPathPicker && frameOpen.path && (
-        <AssetLibraryPanel
-          kind="path"
-          onPlacePreset={(preset: PathPreset) => placePresetPath(preset)}
-          onDragStartPreset={(preset: PathPreset) => setPresetDrag(preset)}
-          onClose={() => closeFrame('path')}
-        />
-      )}
-      {frameOpen.pose && (
-        <AssetLibraryPanel
-          kind="pose"
-          onApplyPose={applyPose}
-          onSavePose={onSavePose}
-          canSavePose={canSavePose}
-          applyDisabled={!canApplyPose}
-          disabled={rigLoading}
-          filterRig={selectedRig}
-          poseStatus={poseStatus}
-          poseKeyframeCount={poseKeyframeCount}
-          onWritePoseKeyframe={onWritePoseKeyframe}
-          onClearPose={onClearPose}
-          onClose={() => closeFrame('pose')}
-        />
-      )}
-      {frameOpen.animation && (
-        <AssetLibraryPanel
-          kind="animation"
-          onApplyAnimation={applyAnimation}
-          applyDisabled={!canApplyAnimation}
-          disabled={rigLoading}
-          filterRig={selectedRig}
-          onClose={() => closeFrame('animation')}
-        />
-      )}
-      {objectMenu && (
-        <CanvasContextMenu
-          position={{x: objectMenu.x, y: objectMenu.y}}
-          items={buildObjectMenuItems(
-            {
-              mode: gizmoMode,
-              onSelectMode: setGizmoMode,
-              onDelete: () => {
-                deletePlacement(sheet, objectMenu.key)
-                // 被删的对象留在选中列表里没意义，顺带清掉
-                getStudioSync()?.setSelection([])
-              },
-              // 库来源模型才有姿势/动作可套(本地遗留放置体没有库 id);
-              // 骨架不匹配的置灰由框体自己兜
-              ...(readPlacementEntries(sheet).find(
-                (e) => e.key === objectMenu.key,
-              )?.libraryEntryId !== undefined
-                ? {
-                    onChangePose: () => openFrame('pose'),
-                    onPlayAnimation: () => openFrame('animation'),
-                  }
-                : {}),
-              // 摆姿势:有骨骼就显示;映射不出人形关键骨的置灰带原因
-              // (独立于 libraryEntryId:本地人形模型也能摆)
-              ...(() => {
-                const inst = selectedPlacement
-                  ? getPlacementInstanceForObject(selectedPlacement)
-                  : undefined
-                const entry = selectedPlacement
-                  ? getPlacementEntryForObject(selectedPlacement)
-                  : undefined
-                if (!inst || !entry || entry.key !== objectMenu.key) return {}
-                if (collectBoneNames(inst.instance).length === 0) return {}
-                const supported = resolveControlSpec(inst.instance) !== null
-                return {
-                  onPoseMode: () => enterPoseSession(objectMenu.key),
-                  poseModeEnabled: supported,
-                  poseModeHint: t('pg.menu.poseModeUnsupported'),
-                  // 清除姿势(删轨道+回 T 姿势):有骨骼的模型都可能有
-                  // 姿势值/轨道;对无姿势者点击=空事务,saaz 不入栈
-                  onClearPose,
-                }
-              })(),
-            },
-            t,
-          )}
-          onClose={closeObjectMenu}
-        />
-      )}
-      {pathMenu && (
-        <CanvasContextMenu
-          position={{x: pathMenu.x, y: pathMenu.y}}
-          items={buildPathMenuItems(
-            {
-              metaKey: pathMenu.metaKey,
-              editing: editingPath === pathMenu.metaKey,
-              onToggleEdit: () => {
-                if (editingPath === pathMenu.metaKey) {
-                  exitPathEdit()
-                } else {
-                  enterPathEdit(pathMenu.metaKey)
-                }
-              },
-              // 有活动相机且它没绑这条时才出「绑定到活动相机」
-              onBindToActiveCamera: (() => {
-                const cam = activeCamera
-                  ? shotRefsMapRef.current.get(activeCamera.cameraKey)?.camera
-                      .current
-                  : undefined
-                if (!cam) return undefined
-                if (val(cam.props.pathKey) === pathMenu.metaKey)
-                  return undefined
-                return () => bindPathToActiveCamera(pathMenu.metaKey)
-              })(),
-              onDelete: () => removePath(pathMenu.metaKey),
-            },
-            t,
-          )}
-          onClose={closePathMenu}
-        />
-      )}
-      {cameraMenu && (
-        <CanvasContextMenu
-          position={cameraMenu}
-          items={buildCameraMenuItems(
-            {
-              // 查看此镜头 = 设为活动 + 进镜头视角
-              onViewShot: () => {
-                setActiveCameraKey(cameraMenu.cameraKey)
-                setShotView(true)
-              },
-              onDeleteCamera: () => {
-                const entry = cameras.find(
-                  (e) => e.cameraKey === cameraMenu.cameraKey,
-                )
-                if (entry) deleteCamera(entry)
-              },
-            },
-            t,
-          )}
-          onClose={closeCameraMenu}
-        />
-      )}
-      {anchorMenu && (
-        <CanvasContextMenu
-          position={{x: anchorMenu.x, y: anchorMenu.y}}
-          items={buildAnchorMenuItems({
-            onDeleteAnchor: () => {
-              // 真删:forgetObject 清持久数据(静态覆盖/时间轴轨道),再移除
-              // 注册表(对齐相机;不传对象会残留持久态,同名重加时旧数据复活)
-              removeAnchor(
-                sheet,
-                anchorMenu.key,
-                anchorRefsMapRef.current.get(anchorMenu.key)?.current,
-              )
-              // 被删的锚点留在选中列表里没意义,顺带清掉
-              getStudioSync()?.setSelection([])
-            },
-          })}
-          onClose={closeAnchorMenu}
-        />
-      )}
-      {editingPath && !shotView && (
-        <PathEditBar
-          hasSelection={
-            !!selectedPathPoint && selectedPathPoint.metaKey === editingPath
-          }
-          onAddPoint={() => {
-            if (editingPath) addPathPoint(sheet, editingPath, undefined)
-          }}
-          onDeleteSelected={deleteSelectedPathPoint}
-        />
-      )}
-      {editingPath &&
-        selectedPathPoint &&
-        selectedPathPoint.metaKey === editingPath &&
-        !shotView && (
-          <PathPointEditor
-            sheet={sheet}
-            metaKey={editingPath}
-            pointKey={selectedPathPoint.key}
-            onPinAtPlayhead={pinPathPointAtPlayhead}
-            progressKeyframes={progressKeyframes}
-          />
-        )}
-      <Canvas
-        dpr={[1.5, 2]}
-        linear
-        shadows="percentage"
-        gl={{preserveDrawingBuffer: true}}
-        frameloop="demand"
-        // 点到空处取消选中,gizmo 随之消失;放置模式下点空处是确认落点,不动选中
-        onPointerMissed={() => {
-          if (!placing && !getPoseSession()) getStudioSync()?.setSelection([])
-          // 控制点也取消选中,但路径编辑模式保持(编辑态是"粘"的)
-          setSelectedPathPoint(null)
+    <SceneI18nRoot>
+      <div
+        style={{
+          height: '100vh',
+          position: 'relative',
         }}
       >
-        <SheetProvider sheet={sheet}>
-          <HostFlowsDropPointCapture />
-          <MainOrbitControls
-            targetRef={cameraTargetRef}
-            cameraObjRef={cameraObjRef}
-            targetObjRef={targetObjRef}
-            enabled={!shotView}
+        <HostFlowsWiring flows={flows} onFlows={onFlows} />
+        <TopToolbar
+          gizmoMode={gizmoMode}
+          onSelectGizmoMode={setGizmoMode}
+          onToggleModelLibrary={handleToggleModel}
+          onTogglePathLibrary={handleTogglePath}
+          onAddCamera={addCamera}
+          onAddAnchor={addAnchor}
+          exportSinks={exportSinks}
+          exporting={exporting}
+          onPickExportSink={handlePickExportSink}
+          onStopExport={handleStopExport}
+          exportDisabled={!activeCamera}
+          pipVisible={pipVisible}
+          onTogglePip={() => setPipVisible((v) => !v)}
+          pipDisabled={!activeCamera}
+          libraryDisabled={!!placing || modelDragging || presetDrag !== null}
+        />
+        {!shotView && activeCamera && pipVisible && (
+          <div
+            style={{
+              // 画中画边框:与 ShotCamera 渲染的右下角小窗同位置同尺寸
+              position: 'absolute',
+              right: 16,
+              bottom: pipBottom,
+              width: '28%',
+              aspectRatio: '16 / 9',
+              border: '1px solid rgba(255,255,255,0.14)',
+              borderRadius: 2,
+              background: 'rgba(24,24,28,0.4)',
+              pointerEvents: 'none',
+              zIndex: 5,
+            }}
+          >
+            {/* 左上角:相机选择器(hover 到画中画才显示,点选 = 设为活动相机) */}
+            <PipCameraSelector
+              cameras={cameras}
+              activeKey={activeCamera.cameraKey}
+              onSelect={setActiveCameraKey}
+              visible={pipHovered}
+            />
+          </div>
+        )}
+        {(modelDragging || presetDrag) && (
+          <div
+            style={{
+              position: 'absolute',
+              bottom: 24,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              zIndex: 10,
+              padding: '6px 12px',
+              borderRadius: 6,
+              background: 'rgba(24,24,28,0.9)',
+              border: '1px solid rgba(255,255,255,0.15)',
+              color: '#eee',
+              fontSize: 12,
+              pointerEvents: 'none',
+            }}
+          >
+            松开鼠标落点,Esc/右键取消
+          </div>
+        )}
+        {shotView && (
+          <div
+            style={{
+              position: 'absolute',
+              top: 12,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              padding: '4px 10px',
+              borderRadius: 6,
+              background: 'rgba(0,0,0,0.55)',
+              color: 'rgba(255,255,255,0.85)',
+              fontSize: 12,
+              pointerEvents: 'none',
+              userSelect: 'none',
+              zIndex: 10,
+            }}
+          >
+            镜头视角 · Esc 返回导演视角
+          </div>
+        )}
+        {frameOpen.model && (
+          <ModelPickerSlot
+            onPlaceModel={placeModelAtDefault}
+            onDragStartModel={startModelDrag}
+            disabled={rigLoading}
+            onClose={() => closeFrame('model')}
           />
-          {!shotView && <GizmoNav cameraObjRef={cameraObjRef} />}
-          <ExitPathEditOnEmptyClick
-            isEditing={isPathEditing}
-            onExit={exitPathEditOnBlur}
+        )}
+        {frameOpen.path && (
+          <AssetLibraryPanel
+            kind="path"
+            onPlacePreset={(preset: PathPreset) => placePresetPath(preset)}
+            onDragStartPreset={(preset: PathPreset) => setPresetDrag(preset)}
+            onClose={() => closeFrame('path')}
           />
-          {cameras.map((entry) => (
-            <ShotCamera
-              key={entry.cameraKey}
-              cameraKey={entry.cameraKey}
-              isActive={entry.cameraKey === activeCamera?.cameraKey}
+        )}
+        {frameOpen.pose && (
+          <AssetLibraryPanel
+            kind="pose"
+            onApplyPose={applyPose}
+            onSavePose={onSavePose}
+            canSavePose={canSavePose}
+            applyDisabled={!canApplyPose}
+            disabled={rigLoading}
+            filterRig={selectedRig}
+            poseStatus={poseStatus}
+            poseKeyframeCount={poseKeyframeCount}
+            onWritePoseKeyframe={onWritePoseKeyframe}
+            onClearPose={onClearPose}
+            onClose={() => closeFrame('pose')}
+          />
+        )}
+        {frameOpen.animation && (
+          <AssetLibraryPanel
+            kind="animation"
+            onApplyAnimation={applyAnimation}
+            applyDisabled={!canApplyAnimation}
+            disabled={rigLoading}
+            filterRig={selectedRig}
+            onClose={() => closeFrame('animation')}
+          />
+        )}
+        {objectMenu && (
+          <CanvasContextMenu
+            position={{x: objectMenu.x, y: objectMenu.y}}
+            items={buildObjectMenuItems(
+              {
+                mode: gizmoMode,
+                onSelectMode: setGizmoMode,
+                onDelete: () => {
+                  deletePlacement(sheet, objectMenu.key)
+                  // 被删的对象留在选中列表里没意义，顺带清掉
+                  getStudioSync()?.setSelection([])
+                },
+                // 库来源模型才有姿势/动作可套(本地遗留放置体没有库 id);
+                // 骨架不匹配的置灰由框体自己兜
+                ...(readPlacementEntries(sheet).find(
+                  (e) => e.key === objectMenu.key,
+                )?.libraryEntryId !== undefined
+                  ? {
+                      onChangePose: () => openFrame('pose'),
+                      onPlayAnimation: () => openFrame('animation'),
+                    }
+                  : {}),
+                // 摆姿势:有骨骼就显示;映射不出人形关键骨的置灰带原因
+                // (独立于 libraryEntryId:本地人形模型也能摆)
+                ...(() => {
+                  const inst = selectedPlacement
+                    ? getPlacementInstanceForObject(selectedPlacement)
+                    : undefined
+                  const entry = selectedPlacement
+                    ? getPlacementEntryForObject(selectedPlacement)
+                    : undefined
+                  if (!inst || !entry || entry.key !== objectMenu.key) return {}
+                  if (collectBoneNames(inst.instance).length === 0) return {}
+                  const supported = resolveControlSpec(inst.instance) !== null
+                  return {
+                    onPoseMode: () => enterPoseSession(objectMenu.key),
+                    poseModeEnabled: supported,
+                    poseModeHint: t('pg.menu.poseModeUnsupported'),
+                    // 清除姿势(删轨道+回 T 姿势):有骨骼的模型都可能有
+                    // 姿势值/轨道;对无姿势者点击=空事务,saaz 不入栈
+                    onClearPose,
+                  }
+                })(),
+              },
+              t,
+            )}
+            onClose={closeObjectMenu}
+          />
+        )}
+        {pathMenu && (
+          <CanvasContextMenu
+            position={{x: pathMenu.x, y: pathMenu.y}}
+            items={buildPathMenuItems(
+              {
+                metaKey: pathMenu.metaKey,
+                editing: editingPath === pathMenu.metaKey,
+                onToggleEdit: () => {
+                  if (editingPath === pathMenu.metaKey) {
+                    exitPathEdit()
+                  } else {
+                    enterPathEdit(pathMenu.metaKey)
+                  }
+                },
+                // 有活动相机且它没绑这条时才出「绑定到活动相机」
+                onBindToActiveCamera: (() => {
+                  const cam = activeCamera
+                    ? shotRefsMapRef.current.get(activeCamera.cameraKey)?.camera
+                        .current
+                    : undefined
+                  if (!cam) return undefined
+                  if (val(cam.props.pathKey) === pathMenu.metaKey)
+                    return undefined
+                  return () => bindPathToActiveCamera(pathMenu.metaKey)
+                })(),
+                onDelete: () => removePath(pathMenu.metaKey),
+              },
+              t,
+            )}
+            onClose={closePathMenu}
+          />
+        )}
+        {cameraMenu && (
+          <CanvasContextMenu
+            position={cameraMenu}
+            items={buildCameraMenuItems(
+              {
+                // 查看此镜头 = 设为活动 + 进镜头视角
+                onViewShot: () => {
+                  setActiveCameraKey(cameraMenu.cameraKey)
+                  setShotView(true)
+                },
+                onDeleteCamera: () => {
+                  const entry = cameras.find(
+                    (e) => e.cameraKey === cameraMenu.cameraKey,
+                  )
+                  if (entry) deleteCamera(entry)
+                },
+              },
+              t,
+            )}
+            onClose={closeCameraMenu}
+          />
+        )}
+        {anchorMenu && (
+          <CanvasContextMenu
+            position={{x: anchorMenu.x, y: anchorMenu.y}}
+            items={buildAnchorMenuItems({
+              onDeleteAnchor: () => {
+                // 真删:forgetObject 清持久数据(静态覆盖/时间轴轨道),再移除
+                // 注册表(对齐相机;不传对象会残留持久态,同名重加时旧数据复活)
+                removeAnchor(
+                  sheet,
+                  anchorMenu.key,
+                  anchorRefsMapRef.current.get(anchorMenu.key)?.current,
+                )
+                // 被删的锚点留在选中列表里没意义,顺带清掉
+                getStudioSync()?.setSelection([])
+              },
+            })}
+            onClose={closeAnchorMenu}
+          />
+        )}
+        {editingPath && !shotView && (
+          <PathEditBar
+            hasSelection={
+              !!selectedPathPoint && selectedPathPoint.metaKey === editingPath
+            }
+            onAddPoint={() => {
+              if (editingPath) addPathPoint(sheet, editingPath, undefined)
+            }}
+            onDeleteSelected={deleteSelectedPathPoint}
+          />
+        )}
+        {editingPath &&
+          selectedPathPoint &&
+          selectedPathPoint.metaKey === editingPath &&
+          !shotView && (
+            <PathPointEditor
+              sheet={sheet}
+              metaKey={editingPath}
+              pointKey={selectedPathPoint.key}
+              onPinAtPlayhead={pinPathPointAtPlayhead}
+              progressKeyframes={progressKeyframes}
+            />
+          )}
+        <Canvas
+          dpr={[1.5, 2]}
+          linear
+          shadows="percentage"
+          gl={{preserveDrawingBuffer: true}}
+          frameloop="demand"
+          // 点到空处取消选中,gizmo 随之消失;放置模式下点空处是确认落点,不动选中
+          onPointerMissed={() => {
+            if (!placing && !getPoseSession()) getStudioSync()?.setSelection([])
+            // 控制点也取消选中,但路径编辑模式保持(编辑态是"粘"的)
+            setSelectedPathPoint(null)
+          }}
+        >
+          <SheetProvider sheet={sheet}>
+            <HostFlowsDropPointCapture />
+            <MainOrbitControls
+              targetRef={cameraTargetRef}
+              cameraObjRef={cameraObjRef}
+              targetObjRef={targetObjRef}
+              enabled={!shotView}
+            />
+            {!shotView && <GizmoNav cameraObjRef={cameraObjRef} />}
+            <ExitPathEditOnEmptyClick
+              isEditing={isPathEditing}
+              onExit={exitPathEditOnBlur}
+            />
+            {cameras.map((entry) => (
+              <ShotCamera
+                key={entry.cameraKey}
+                cameraKey={entry.cameraKey}
+                isActive={entry.cameraKey === activeCamera?.cameraKey}
+                shotView={shotView}
+                pipVisible={pipVisible}
+                pipBottom={pipBottom}
+                cameraObjRef={getShotRefs(entry.cameraKey).camera}
+                onCameraContextMenu={(x, y) =>
+                  setCameraMenu({cameraKey: entry.cameraKey, x, y})
+                }
+              />
+            ))}
+            <Anchors
+              sheet={sheet}
               shotView={shotView}
-              pipVisible={pipVisible}
-              pipBottom={pipBottom}
-              cameraObjRef={getShotRefs(entry.cameraKey).camera}
-              onCameraContextMenu={(x, y) =>
-                setCameraMenu({cameraKey: entry.cameraKey, x, y})
-              }
+              getAnchorRef={getAnchorRef}
             />
-          ))}
-          <Anchors
-            sheet={sheet}
-            shotView={shotView}
-            getAnchorRef={getAnchorRef}
-          />
-          {paths.map((entry) => (
-            <CameraPath
-              key={entry.pathKey}
-              metaKey={entry.pathKey}
-              // 普通态亮紫(与预设卡片的动画轨迹同色);选中/编辑的黄色档位在 CameraPath 内部
-              color={0xa78bfa}
-              hidden={shotView}
-              editing={editingPath === entry.pathKey}
-              selectedKey={
-                selectedPathPoint?.metaKey === entry.pathKey
-                  ? selectedPathPoint.key
-                  : null
-              }
-              onSelectPoint={(key) =>
-                setSelectedPathPoint(key ? {metaKey: entry.pathKey, key} : null)
-              }
-              onContextMenu={(metaKey, x, y) => setPathMenu({metaKey, x, y})}
-              progressOf={pathProgressOf(entry.pathKey)}
-            />
-          ))}
-          {/* 背景:Blender 4.x 默认视口背景色(linear 原值构造,见 BACKGROUND) */}
-          <primitive object={BACKGROUND} attach="background" />
-          {/* 布光定位=布局演示:半球光兜底(任何机位不死黑)+ 一盏主光给
+            {paths.map((entry) => (
+              <CameraPath
+                key={entry.pathKey}
+                metaKey={entry.pathKey}
+                // 普通态亮紫(与预设卡片的动画轨迹同色);选中/编辑的黄色档位在 CameraPath 内部
+                color={0xa78bfa}
+                hidden={shotView}
+                editing={editingPath === entry.pathKey}
+                selectedKey={
+                  selectedPathPoint?.metaKey === entry.pathKey
+                    ? selectedPathPoint.key
+                    : null
+                }
+                onSelectPoint={(key) =>
+                  setSelectedPathPoint(
+                    key ? {metaKey: entry.pathKey, key} : null,
+                  )
+                }
+                onContextMenu={(metaKey, x, y) => setPathMenu({metaKey, x, y})}
+                progressOf={pathProgressOf(entry.pathKey)}
+              />
+            ))}
+            {/* 背景:Blender 4.x 默认视口背景色(linear 原值构造,见 BACKGROUND) */}
+            <primitive object={BACKGROUND} attach="background" />
+            {/* 布光定位=布局演示:半球光兜底(任何机位不死黑)+ 一盏主光给
               明暗面和投影(形态可读);灯固定在世界坐标、不跟相机走,
               编辑预览和录制成片一致。主光可编辑,角度在 studio 里调 */}
-          <ambientLight intensity={0.3} />
-          <hemisphereLight args={['#ffffff', '#444444', 1.1]} />
-          <EnvLighting />
-          <e.directionalLight
-            theatreKey="Key Light"
-            castShadow
-            intensity={1.4}
-            position={[10, 20, 10]}
-            shadow-mapSize={[2048, 2048]}
-            shadow-bias={-0.0001}
-            shadow-camera-left={-30}
-            shadow-camera-right={30}
-            shadow-camera-top={30}
-            shadow-camera-bottom={-30}
-            shadow-camera-far={80}
-          />
-          <PerspectiveCamera
-            theatreKey="Camera / Camera"
-            objRef={cameraObjRef}
-            hideFromOutline
-            makeDefault={!shotView}
-            position={[0, 0, 16]}
-            fov={75}
-            lookAt={cameraTargetRef}
-          />
-          <e.mesh
-            ref={cameraTargetRef}
-            theatreKey="Camera / Target"
-            objRef={targetObjRef}
-            hideFromOutline
-            position={[0, 0, 0]}
-            visible="editor"
-          >
-            <boxGeometry attach="geometry" />
-            <meshPhongMaterial attach="material" color="red" />
-          </e.mesh>
-          <Suspense fallback={null}>
-            <Model url={sceneGLB} selectLocked={!!placing} />
-          </Suspense>
-          {placing && (
+            <ambientLight intensity={0.3} />
+            <hemisphereLight args={['#ffffff', '#444444', 1.1]} />
+            <EnvLighting />
+            <e.directionalLight
+              theatreKey="Key Light"
+              castShadow
+              intensity={1.4}
+              position={[10, 20, 10]}
+              shadow-mapSize={[2048, 2048]}
+              shadow-bias={-0.0001}
+              shadow-camera-left={-30}
+              shadow-camera-right={30}
+              shadow-camera-top={30}
+              shadow-camera-bottom={-30}
+              shadow-camera-far={80}
+            />
+            <PerspectiveCamera
+              theatreKey="Camera / Camera"
+              objRef={cameraObjRef}
+              hideFromOutline
+              makeDefault={!shotView}
+              position={[0, 0, 16]}
+              fov={75}
+              lookAt={cameraTargetRef}
+            />
+            <e.mesh
+              ref={cameraTargetRef}
+              theatreKey="Camera / Target"
+              objRef={targetObjRef}
+              hideFromOutline
+              position={[0, 0, 0]}
+              visible="editor"
+            >
+              <boxGeometry attach="geometry" />
+              <meshPhongMaterial attach="material" color="red" />
+            </e.mesh>
             <Suspense fallback={null}>
-              <PlacementRigErrorBoundary
-                onCancel={() => {
-                  cancelPlacing()
-                  setModelDragging(false)
-                }}
-              >
-                <PlacementRig
-                  placing={placing}
-                  confirmOnPointerUp={modelDragging}
-                  onConfirm={(p) => {
-                    confirmPlacing(p)
-                    setModelDragging(false)
-                  }}
+              <Model url={sceneGLB} selectLocked={!!placing} />
+            </Suspense>
+            {placing && (
+              <Suspense fallback={null}>
+                <PlacementRigErrorBoundary
                   onCancel={() => {
                     cancelPlacing()
                     setModelDragging(false)
                   }}
-                />
-              </PlacementRigErrorBoundary>
-            </Suspense>
-          )}
-          <PlacedModels
-            sheet={sheet}
-            project={project}
-            pendingEntry={pendingEntry}
-            onPersisted={clearPending}
-            selectLocked={!!placing}
-            onObjectMenu={(key, x, y) => setObjectMenu({key, x, y})}
-          />
-          <SelectionGizmo hidden={!!placing || shotView} mode={gizmoMode} />
-          {presetDrag && (
-            <PathPresetDropRig
-              heightY={pathPresetHeight()}
-              onConfirm={(p) => {
-                placePresetPath(presetDrag, p)
-                setPresetDrag(null)
-              }}
-              onCancel={() => setPresetDrag(null)}
+                >
+                  <PlacementRig
+                    placing={placing}
+                    confirmOnPointerUp={modelDragging}
+                    onConfirm={(p) => {
+                      confirmPlacing(p)
+                      setModelDragging(false)
+                    }}
+                    onCancel={() => {
+                      cancelPlacing()
+                      setModelDragging(false)
+                    }}
+                  />
+                </PlacementRigErrorBoundary>
+              </Suspense>
+            )}
+            <PlacedModels
+              sheet={sheet}
+              project={project}
+              pendingEntry={pendingEntry}
+              onPersisted={clearPending}
+              selectLocked={!!placing}
+              onObjectMenu={(key, x, y) => setObjectMenu({key, x, y})}
             />
-          )}
-          <GroundGrid />
-        </SheetProvider>
-      </Canvas>
-    </div>
+            <SelectionGizmo hidden={!!placing || shotView} mode={gizmoMode} />
+            {presetDrag && (
+              <PathPresetDropRig
+                heightY={pathPresetHeight()}
+                onConfirm={(p) => {
+                  placePresetPath(presetDrag, p)
+                  setPresetDrag(null)
+                }}
+                onCancel={() => setPresetDrag(null)}
+              />
+            )}
+            <GroundGrid />
+          </SheetProvider>
+        </Canvas>
+      </div>
+    </SceneI18nRoot>
   )
+}
+
+/**
+ * i18n 嵌套判定(spec §7):宿主树已包 studio 的 I18nProvider →
+ * 原样渲染,语言以宿主为准(ui.locale 不生效);否则自包一层,
+ * ui.locale 仅在这个自包分支生效(经 setLanguage 应用到 studio
+ * i18n 单例——t/translate 读本单例,子树级隔离无从谈起,自包场景
+ * = 无宿主 i18n 的独立挂载,全局应用即预期行为)。
+ * 抽出成组件便于脱离整树做单测(HostFlowsWiring 先例)。
+ */
+export function SceneI18nRoot({children}: {children: React.ReactNode}) {
+  const hostI18n = useContext(I18nContext)
+  if (hostI18n) return <>{children}</>
+  return <SceneI18n>{children}</SceneI18n>
+}
+
+/** 自包分支:I18nProvider 订阅 studio 单例语言变化;locale 一次性应用 */
+function SceneI18n({children}: {children: React.ReactNode}) {
+  const locale = getUiConfig().locale
+  useEffect(() => {
+    if (!locale) return
+    setLanguage(locale)
+  }, [locale])
+  return <I18nProvider>{children}</I18nProvider>
 }
 
 /**
@@ -2154,5 +2183,3 @@ export function HostFlowsWiring({
   }, [flows, onFlows])
   return null
 }
-
-export default App

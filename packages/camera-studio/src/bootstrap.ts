@@ -21,12 +21,14 @@ import {
 import type {CameraSceneProps, CameraStudioConfig} from './config'
 import {registerCameraMessages} from './i18n'
 import {configureLibrary} from './assetLibrary/library'
+import {ensureBuiltinRigAlias} from './assetLibrary/library'
 import type {Library} from './assetLibrary/library'
 import {IndexedDBBackend} from './assetLibrary/indexedDBBackend'
 import {StaticCatalogSource} from './assetLibrary/staticCatalogSource'
 import {isWritableSource} from './assetLibrary/source'
 import type {LibrarySource} from './assetLibrary/source'
 import {cleanupLegacySeeds} from './assetLibrary/legacySeedCleanup'
+import {setUiConfig} from './uiConfig'
 import PosePropEditor from './poseMode/PosePropEditor'
 import {
   GesturePropEditorLeft,
@@ -169,6 +171,10 @@ function resolveSources(config: CameraStudioConfig): {
 }
 
 async function boot(config: CameraStudioConfig): Promise<BootCtx> {
+  // 0. UI 装配可配(T9:portal 容器 / z-index 基准 / 语言):boot 级一次
+  // 写入,dispose 不复位——与 R14 boot 级保留语义一致,重挂幂等复用
+  setUiConfig(config.ui ?? {})
+
   // 1. 数据源:可写源(若有) + 内置目录,聚合进 Library 单例
   const {sources, idbName} = resolveSources(config)
   const catalog = new StaticCatalogSource({
@@ -195,6 +201,15 @@ async function boot(config: CameraStudioConfig): Promise<BootCtx> {
   if (idbName === DEFAULT_IDB_NAME) {
     void cleanupLegacySeeds(library).catch((err) => {
       console.warn('[camera-studio] 旧播种条目清理失败', err)
+    })
+    // 两个启动清理(T8 评审遗留)并列进缺省分支,失败不阻断 boot。
+    // 时序:清扫调度在 cleanupLegacySeeds 之后——旧种子条目先被删,
+    // 它们的孤儿 blob 本轮即可被收走(并发竞态下留待下次启动,无害)
+    void library.sweepOrphanBlobs().catch((err) => {
+      console.warn('[camera-studio] 孤儿 blob 清扫失败', err)
+    })
+    void ensureBuiltinRigAlias(library).catch((err) => {
+      console.warn('[camera-studio] 内置骨架族别名保底失败', err)
     })
   }
 

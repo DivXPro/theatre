@@ -15,10 +15,21 @@ import {
 
 export type TFunction = (key: string, vars?: InterpolationVars) => string
 
-const I18nContext = createContext<{t: TFunction; language: string}>({
-  t: translate,
+export type I18nContextValue = {t: TFunction; language: string}
+
+/**
+ * 无 provider 时 useContext 返回 null:嵌套检测靠这个 null 判定
+ * (camera-studio 的 SceneI18nRoot 检测宿主是否已包 I18nProvider,
+ * spec §7 i18n 嵌套)。hooks 侧用模块级兜底值保持"无 provider 也
+ * 可用"(t = 全局单例 translate,语言不订阅,与历史默认行为一致)。
+ */
+export const I18nContext = createContext<I18nContextValue | null>(null)
+
+/** 无 provider 兜底:与历史默认 context 值同语义(单例 t,语言不订阅) */
+const fallbackValue: I18nContextValue = {
+  t: translate as TFunction,
   language: 'en',
-})
+}
 
 export function I18nProvider({children}: {children: ReactNode}) {
   const [language, setLanguage] = useState(getLanguage())
@@ -31,13 +42,13 @@ export function I18nProvider({children}: {children: ReactNode}) {
 }
 
 /** 翻译函数 + 当前语言(需要按语言做逻辑分支时用 language) */
-export function useI18n(): {t: TFunction; language: string} {
-  return useContext(I18nContext)
+export function useI18n(): I18nContextValue {
+  return useContext(I18nContext) ?? fallbackValue
 }
 
 /** 只要翻译函数的简写:const t = useT() */
 export function useT(): TFunction {
-  return useContext(I18nContext).t
+  return useContext(I18nContext)?.t ?? (translate as TFunction)
 }
 
 /**
@@ -47,7 +58,9 @@ export function useT(): TFunction {
  * 不用重新打开面板。非 React 环境(测试/脚本)继续用 resolvePropLabel。
  */
 export function usePropLabel(label: PropLabel | undefined): string | undefined {
-  const {language} = useContext(I18nContext)
-  void language // 仅订阅:语言变化触发重渲染,resolvePropLabel 重新求值
+  // 仅订阅:语言变化触发重渲染,resolvePropLabel 重新求值
+  // (无 provider 时兜底值不订阅,与历史默认行为一致)
+  const language = useContext(I18nContext)?.language
+  void language
   return resolvePropLabel(label)
 }

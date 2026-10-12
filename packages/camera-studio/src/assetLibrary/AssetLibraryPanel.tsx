@@ -22,6 +22,7 @@ import type {ImportPlan} from './importPipeline'
 import {backfillModelThumbnails} from './thumbnail'
 import {useModelThumbUrl} from './useModelThumbUrl'
 import type {AnimationEntry, ModelEntry, PoseEntry} from './types'
+import {getUiConfig} from '../uiConfig'
 
 export type AssetKind = 'model' | 'pose' | 'animation' | 'path'
 
@@ -58,8 +59,9 @@ const Panel = styled.div`
   top: 0;
   bottom: 0;
   width: 260px;
-  /* studio 大纲面板的层级是 100,面板必须盖过它 */
-  z-index: 1000;
+  /* studio 大纲面板的层级是 100,面板必须盖过它;基准可配(ui.zIndexBase)。
+     函数插值:渲染期现读,setUiConfig(boot 时)之后挂的首帧即生效 */
+  z-index: ${() => getUiConfig().zIndexBase};
   display: flex;
   flex-direction: column;
   background: var(--theatre-panel-bg, #282b2f);

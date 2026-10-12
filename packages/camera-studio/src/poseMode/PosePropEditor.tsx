@@ -40,6 +40,7 @@ import {serializeLibPose} from './poseValue'
 import {isHandPoseEntry} from '../gestureProps'
 import {getRegisteredPicker} from '../pickerRegistry'
 import {PosePickerFrame} from './PosePickerFrame'
+import {getUiConfig} from '../uiConfig'
 
 // 注册表组件按 AllSimples 声明(注册表对任意 simple 类型开放);
 // pose 属性实为 string,值在使用处收窄
@@ -166,7 +167,8 @@ const PosePropEditor: React.FC<
             onPick={handlePick}
             onClose={() => setPickerOpen(false)}
           />,
-          document.body,
+          // 宿主可配 portal 容器(ui.portalContainer),缺省挂 document.body
+          getUiConfig().portalContainer ?? document.body,
         )}
     </>
   )

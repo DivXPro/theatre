@@ -20,6 +20,7 @@ export {
   type InterpolationVars,
 } from './core'
 export {
+  I18nContext,
   I18nProvider,
   useI18n,
   useT,

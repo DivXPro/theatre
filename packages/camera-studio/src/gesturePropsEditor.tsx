@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/gesturePropsEditor.tsx
+// packages/camera-studio/src/gesturePropsEditor.tsx
 /**
  * 手势属性编辑器(2026-10-05,左手势/右手势):姿势属性编辑器的「纯选择」版——
  * 值区域显示 无手势/手势名,点开左侧停靠选择框(PosePickerFrame 复用,
@@ -29,6 +29,7 @@ import type {GestureSide} from './gestureProps'
 import {poseEntryName} from './poseNames'
 import {serializeLibPose} from './poseMode/poseValue'
 import {PosePickerFrame} from './poseMode/PosePickerFrame'
+import {getUiConfig} from './uiConfig'
 
 type EditorProps = ISimplePropEditorReactProps<PropTypeConfig_AllSimples>
 
@@ -152,7 +153,8 @@ export function GesturePropEditor({
             onPick={handlePick}
             onClose={() => setPickerOpen(false)}
           />,
-          document.body,
+          // 宿主可配 portal 容器(ui.portalContainer),缺省挂 document.body
+          getUiConfig().portalContainer ?? document.body,
         )}
     </>
   )

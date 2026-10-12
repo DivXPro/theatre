@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/poseMode/PosePickerFrame.tsx
+// packages/camera-studio/src/poseMode/PosePickerFrame.tsx
 /**
  * 内置姿势选择框体(2026-10-01):左侧停靠卡片框,与模型选择框体同形态
  * (视觉常量对齐 AssetLibraryPanel)。这是 PosePickerProps 的参考实现——
@@ -19,6 +19,7 @@
  */
 import React from 'react'
 import {useI18n} from '@dreamerbird/studio/i18n'
+import {getUiConfig} from '../uiConfig'
 
 /**
  * 框体的宽松 props:姿势(PosePickerProps)与手势(GestureOption 组装)
@@ -68,8 +69,8 @@ export function PosePickerFrame({
         bottom: 0,
         left: 0,
         width: 260,
-        // studio 大纲面板的层级是 100,框体必须盖过它
-        zIndex: 1000,
+        // studio 大纲面板的层级是 100,框体必须盖过它;基准可配(ui.zIndexBase)
+        zIndex: getUiConfig().zIndexBase,
         display: 'flex',
         flexDirection: 'column',
         background: 'var(--theatre-panel-bg, #282b2f)',
