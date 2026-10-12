@@ -201,6 +201,13 @@ describe('聚合器(多数据源)', () => {
     a.contentHash = 'h1'
     const b = model('m-b')
     b.contentHash = 'h2' // 不同 hash → 并存
+    // 两个无 contentHash 的模型条目:哈希去重以 contentHash 为键,缺
+    // undefined 守卫会在 'undefined' 键上相撞、第二个被静默丢弃——护栏
+    // 须名副其实:两者都该照常列出。
+    const noHash1 = model('m-nohash-1')
+    delete (noHash1 as {contentHash?: string}).contentHash
+    const noHash2 = model('m-nohash-2')
+    delete (noHash2 as {contentHash?: string}).contentHash
     const pose = {
       id: 'seed-pose-x',
       kind: 'pose' as const,
@@ -210,10 +217,16 @@ describe('聚合器(多数据源)', () => {
       createdAt: 1,
     }
     const lib = new Library({
-      sources: [fakeSource('catalog', [a, b, pose])],
+      sources: [fakeSource('catalog', [a, b, noHash1, noHash2, pose])],
     })
     const ids = (await lib.listEntries()).map((e) => e.id).sort()
-    expect(ids).toEqual(['m-a', 'm-b', 'seed-pose-x'])
+    expect(ids).toEqual([
+      'm-a',
+      'm-b',
+      'm-nohash-1',
+      'm-nohash-2',
+      'seed-pose-x',
+    ])
   })
 })
 

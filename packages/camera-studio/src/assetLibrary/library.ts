@@ -145,7 +145,9 @@ export class Library {
         }
         // 模型按 contentHash 去重:已收同哈希条目时,可写源副本顶替
         // (保留可写源 id),否则丢弃当前副本;姿势/动画不进此分支。
-        if (entry.kind === 'model') {
+        // 无 contentHash 的模型条目跳过哈希去重——否则两个无哈希条目会
+        // 在 'undefined' 键上相撞、第二个被静默丢弃;它们照常各列各的。
+        if (entry.kind === 'model' && entry.contentHash) {
           const heldId = modelIdByHash.get(entry.contentHash)
           if (heldId !== undefined) {
             const heldSrc = srcById.get(heldId)
