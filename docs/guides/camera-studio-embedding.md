@@ -78,6 +78,7 @@ import {useCameraStudio, CameraScene} from '@dreamerbird/camera-studio'
 export function CameraPage() {
   const {ready, error, sceneProps} = useCameraStudio({
     project: 'Space', // 场景 id;全部用缺省则与 playground 现状行为一致
+    // (sync 除外:缺省为关,playground 是显式开启的特例)
   })
   if (error) return <div>加载失败:{error.message}</div>
   if (!ready) return null // 或你的 Splash
@@ -157,7 +158,9 @@ interface WritableLibrarySource extends LibrarySource {
   状:Library 聚合错误经 `onError` 回调上告,但模块 boot 当前未接 `onError`,失败只
   在 console 留 warning; 按 code 的面板错误条是已知的未实施项(见 §8)。
 - **id 命名空间**(契约未覆盖):你的源**不得**返回 `seed-pose-*` / `seed-model-*`
-  前缀条目(内置目录专属,聚合层会拒绝并报 conflict)。
+  前缀条目(内置目录专属,聚合层会拒绝并报 conflict)。源 id 同样占用命名空
+  间:`catalog`(内置目录)与 `idb`(内置 IndexedDB)是保留名,宿主源自定义id 勿用——撞
+  名会上告 conflict 且以先注册者胜,blobId 前缀路由可能走错源。
 - **capabilities**(契约未覆盖):写上 `writable: true` 是契约的一部分(供
   capabilities查询与自描述);模块以 `putEntry` 方法存在性判别可写源,不读这个
   flag。 `permanentUrls` 是预留 capability,当前模块未据此改变行为,标不标无实际差
@@ -474,16 +477,19 @@ process.on('SIGTERM', () => {
 - **嵌入单位 = 整页/整路由**。studio 覆盖层 `position: fixed` 铺满视口 (挂
   document.body,shadow DOM),「嵌进页面局部区域」不是支持形态——局部容器装不下编辑
   器的面板体系。
-- **z-index 层级地图**(宿主自己的全局浮层请避开这三档):
+- **z-index 层级地图**(宿主自己的全局浮层请避开这几档;按代码实测):
 
-  | 层         | 谁                                  | 能否调                                       |
-  | ---------- | ----------------------------------- | -------------------------------------------- |
-  | 100        | studio 覆盖层(大纲/属性面板/时间轴) | 否(studio 体系)                              |
-  | 1000(基准) | 模块停靠框(模型库/姿势库等)         | 能:`ui.zIndexBase`                           |
-  | 10000      | 模块顶栏 / 姿势模式条               | 否(模块内部体系,盖在 studio 之上,目前不收编) |
+  | 层         | 谁                                  | 能否调             |
+  | ---------- | ----------------------------------- | ------------------ |
+  | 100        | studio 覆盖层(大纲/属性面板/时间轴) | 否(studio 体系)    |
+  | 1000(基准) | 模块停靠框(模型库/姿势库等)         | 能:`ui.zIndexBase` |
+  | 15         | 姿势模式条(画布内横条)              | 否(模块内部体系)   |
+  | 10         | 模块顶栏                            | 否(模块内部体系)   |
 
-  宿主全局浮层建议用 100 以下的档(如顶栏 50);要盖过编辑器全貌属于特例,自行评估与
-  上面三档的相对关系。
+  注意:顶栏与姿势模式条本体都在 studio 覆盖层(100)**之下**,并非盖在studio 之上;
+  它俩按钮的 tooltip 气泡用 10000——那仅是气泡自身的层级, 不代表这两条栏。宿主全
+  局浮层建议用 10 以下的档(如顶栏 5);要盖过编辑器全貌属于特例,自行评估与上面几档
+  的相对关系。
 
 - **i18n 嵌套**:宿主树已包 studio 的 `I18nProvider`
   (`@dreamerbird/studio/i18n`)→ 模块检测后原样渲染,**语言以宿主为准**,
@@ -497,8 +503,9 @@ process.on('SIGTERM', () => {
   ```
 
 - **config 首帧锁定,不热更**:`useCameraStudio` 只在首帧取一次 config (与
-  theatre.init 的一次性语义对齐),后续渲染传新对象不会生效。配置要变,请重挂页面/
-  路由。
+  theatre.init 的一次性语义对齐),后续渲染传新对象不会生效。配置要变需 **整页刷
+  新**:React 重挂(SPA 路由切换)传新 config 不会生效——模块会console.warn 点名差异
+  键并沿用首次 boot 的配置(sceneProps/存储/状态/ sync 全部按首次 boot)。
 
 ## 8. 排错
 
