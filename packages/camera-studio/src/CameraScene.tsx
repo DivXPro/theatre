@@ -159,8 +159,6 @@ import {parsePoseValue, serializeLibPose} from './poseMode/poseValue'
 import {isPoseExitGuardedTarget} from './poseMode/poseExitGuard'
 import {poseStatusText} from './poseStatusText'
 
-document.body.style.backgroundColor = '#171717'
-
 function Model({url, selectLocked}: {url: string; selectLocked?: boolean}) {
   const {nodes} = useGLTF(url) as any
   const thingyObjRef = useRef<ISheetObject<any> | undefined>(undefined)

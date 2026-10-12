@@ -25,6 +25,7 @@
  */
 import {IDBFactory} from 'fake-indexeddb'
 import type {CameraStudioConfig, CameraStudioHandle} from './config'
+import type {WritableLibrarySource} from './assetLibrary/source'
 
 // React 19 act 的环境开关(testing-library 会自动置,手写 harness 自己置)
 ;(globalThis as any).IS_REACT_ACT_ENVIRONMENT = true
@@ -396,6 +397,40 @@ test('10c. storage:false 纯查看器:无可写源,清扫与别名保底都不�
   const aliasSpy = jest.spyOn(libModule.Library.prototype, 'getRigAliases')
   try {
     const h = hookHost({storage: false})
+    await h.mount()
+    expect(sweepSpy).not.toHaveBeenCalled()
+    expect(aliasSpy).not.toHaveBeenCalled()
+    await h.unmount()
+  } finally {
+    sweepSpy.mockRestore()
+    aliasSpy.mockRestore()
+  }
+})
+
+// T9 评审 F2:宿主可写源实例分支(idbName 同为 undefined)此前无负面用例。
+// 三个清理(cleanupLegacySeeds/sweepOrphanBlobs/ensureBuiltinRigAlias)同在
+// boot 的 idbName === DEFAULT_IDB_NAME 守卫块内:sweep 未调即整块未进,
+// 三者一并兜住(与 10b/10c 同一断言策略)
+test('10d. 宿主可写源实例:缺省库名清理三项都不调', async () => {
+  const libModule = await import('./assetLibrary/library')
+  const sweepSpy = jest.spyOn(libModule.Library.prototype, 'sweepOrphanBlobs')
+  // ensureBuiltinRigAlias 是独立导出函数(不可 spy 模块导出),改 spy 它
+  // 触达的 Library 方法:getRigAliases 只被它调用,调用即代表保底跑了
+  const aliasSpy = jest.spyOn(libModule.Library.prototype, 'getRigAliases')
+  try {
+    const hostSource: WritableLibrarySource = {
+      id: 'host-src',
+      listEntries: async () => [],
+      getEntry: async () => undefined,
+      getBlobUrl: async () => '',
+      putEntry: async () => {},
+      deleteEntry: async () => {},
+      putBlob: async () => 'blob:x',
+      deleteBlob: async () => {},
+      getRigAliases: async () => [],
+      putRigAlias: async () => {},
+    }
+    const h = hookHost({storage: hostSource})
     await h.mount()
     expect(sweepSpy).not.toHaveBeenCalled()
     expect(aliasSpy).not.toHaveBeenCalled()

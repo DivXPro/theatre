@@ -276,7 +276,8 @@ test('无宿主 provider 时自包一层并应用 ui.locale', async () => {
       </React.Fragment>,
     )
   })
-  // 与裸 context 默认值不同引用 = 自包了一层 provider
+  // 外层裸 useI18n() 拿的是模块级 fallbackValue(context 默认 null,
+  // T9 改 i18n 嵌套检测后如此);内层不同引用 = SceneI18nRoot 自包了一层 provider
   expect(probeValue).not.toBe(rootValue)
   expect(probeValue).toBeTruthy()
   // ui.locale 在自包分支生效(studio i18n 单例,全局应用)
