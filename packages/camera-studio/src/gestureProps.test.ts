@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/gestureProps.test.ts
+// packages/camera-studio/src/gestureProps.test.ts
 /**
  * 手势属性纯件:条目判定/侧过滤/选项构建/显示文本/注册形态。
  * QBX 手势条目左右手骨都带(未动侧 rest),侧过滤是叠加语义的关键。

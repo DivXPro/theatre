@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/aimTargets.ts
+// packages/camera-studio/src/aimTargets.ts
 /**
  * 瞄准/父级绑定的目标 id 方案与解析。
  * id 取值:''(无)| anchor:<key>(独立锚点)| bone:<placement>#<part>(骨骼锚点)

@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/poseNames.test.ts
+// packages/camera-studio/src/poseNames.test.ts
 /**
  * 姿势显示名:词典完整性(种子条目全覆盖,管线新增姿势会红这里提醒
  * 补词条)+ poseEntryName 解析(种子查词典,未命中/用户姿势回退原文)。

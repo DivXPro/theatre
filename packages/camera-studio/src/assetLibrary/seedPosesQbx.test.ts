@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/assetLibrary/seedPosesQbx.test.ts
+// packages/camera-studio/src/assetLibrary/seedPosesQbx.test.ts
 /**
  * QBX 手势种子数据的不变量(2026-10-05 拇指偏差根治):
  * 手势方向必须是「手腕相对」的——源包(QBX)的模型手臂下垂,若按世界方向

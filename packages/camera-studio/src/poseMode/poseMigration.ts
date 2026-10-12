@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/poseMode/poseMigration.ts
+// packages/camera-studio/src/poseMode/poseMigration.ts
 /**
  * 旧两字段(props.pose 裸 id / props.poseOverride 骨骼 JSON)迁移为新 pose
  * 值(spec §9)。覆盖优先;新值已存在不碰;旧值原样搬——读取侧

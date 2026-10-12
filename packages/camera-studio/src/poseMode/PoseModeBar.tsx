@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/poseMode/PoseModeBar.tsx
+// packages/camera-studio/src/poseMode/PoseModeBar.tsx
 /**
  * 摆姿势浮动小条:挂在被摆模型头顶(Head 骨骼世界位置 + 等比偏移),
  * 跟着模型/相机走(drei Html 把 DOM 钉到 3D 位置,屏幕恒定大小)。

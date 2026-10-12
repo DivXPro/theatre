@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/Anchors.tsx
+// packages/camera-studio/src/Anchors.tsx
 /**
  * 独立锚点(空物体):顶栏按钮添加,浅蓝轴线交叉(Blender Plain
  * Axes 式:过原点的 ±X/±Y/±Z 三根线)+ 轴心小圆点。线条恒定普通色

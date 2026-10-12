@@ -353,3 +353,55 @@ test('9c. 宿主已 init 且一致 → 静默复用:不告警、不再 init', as
     warnSpy.mockRestore()
   }
 })
+
+// 10. 缺省库名启动清理(T9 顺带,T8 评审遗留):sweepOrphanBlobs 与
+// ensureBuiltinRigAlias 并入 boot 的内置 IDB 缺省库名分支
+test('10a. 缺省内置 IDB:孤儿清扫与骨架族别名保底都被调用', async () => {
+  const libModule = await import('./assetLibrary/library')
+  const sweepSpy = jest.spyOn(libModule.Library.prototype, 'sweepOrphanBlobs')
+  // ensureBuiltinRigAlias 是独立导出函数(不可 spy 模块导出),改 spy 它
+  // 触达的 Library 方法:getRigAliases 只被它调用,调用即代表保底跑了
+  const aliasSpy = jest.spyOn(libModule.Library.prototype, 'getRigAliases')
+  try {
+    const h = hookHost({}) // storage 缺省 = 缺省库名
+    await h.mount()
+    expect(sweepSpy).toHaveBeenCalled()
+    expect(aliasSpy).toHaveBeenCalled()
+    await h.unmount()
+  } finally {
+    sweepSpy.mockRestore()
+    aliasSpy.mockRestore()
+  }
+})
+
+test('10b. namespace 分支:清扫与别名保底都不调', async () => {
+  const libModule = await import('./assetLibrary/library')
+  const sweepSpy = jest.spyOn(libModule.Library.prototype, 'sweepOrphanBlobs')
+  const aliasSpy = jest.spyOn(libModule.Library.prototype, 'getRigAliases')
+  try {
+    const h = hookHost({storage: {namespace: 'ns-clean'}})
+    await h.mount()
+    expect(sweepSpy).not.toHaveBeenCalled()
+    expect(aliasSpy).not.toHaveBeenCalled()
+    await h.unmount()
+  } finally {
+    sweepSpy.mockRestore()
+    aliasSpy.mockRestore()
+  }
+})
+
+test('10c. storage:false 纯查看器:无可写源,清扫与别名保底都不调', async () => {
+  const libModule = await import('./assetLibrary/library')
+  const sweepSpy = jest.spyOn(libModule.Library.prototype, 'sweepOrphanBlobs')
+  const aliasSpy = jest.spyOn(libModule.Library.prototype, 'getRigAliases')
+  try {
+    const h = hookHost({storage: false})
+    await h.mount()
+    expect(sweepSpy).not.toHaveBeenCalled()
+    expect(aliasSpy).not.toHaveBeenCalled()
+    await h.unmount()
+  } finally {
+    sweepSpy.mockRestore()
+    aliasSpy.mockRestore()
+  }
+})

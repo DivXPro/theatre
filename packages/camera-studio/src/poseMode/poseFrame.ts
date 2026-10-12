@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/poseMode/poseFrame.ts
+// packages/camera-studio/src/poseMode/poseFrame.ts
 /**
  * 摆姿势进入的帧模式判定(spec §8.1):底姿 = 播放头处时间轴求值(画面
  * 即求值,编辑态与画面一张皮);帧上进入 = 编辑该帧(保存覆盖),帧间

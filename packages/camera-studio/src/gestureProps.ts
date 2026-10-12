@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/gestureProps.ts
+// packages/camera-studio/src/gestureProps.ts
 /**
  * 手势属性(2026-10-05,左手势/右手势):姿势属性的「纯选择」版——
  * 值只能是库手势引用或「无手势」,没有自定义快照入口(不挂姿势模式);

@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/pathRegistry.ts
+// packages/camera-studio/src/pathRegistry.ts
 /**
  * 路径注册表:场景里有几条路径 = 注册表清单里有几行,每条路径是一个
  * theatre 对象(变换 + 控制点 + 行进进度)。照搬相机注册表模式;

@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/poseMode/poseValue.test.ts
+// packages/camera-studio/src/poseMode/poseValue.test.ts
 import {
   isMigratedPoseValue,
   parsePoseValue,

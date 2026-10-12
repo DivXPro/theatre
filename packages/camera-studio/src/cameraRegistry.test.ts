@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/cameraRegistry.test.ts
+// packages/camera-studio/src/cameraRegistry.test.ts
 import {setPrivateAPI} from '@dreamerbird/core/privateAPIs'
 import {
   nextCameraEntry,

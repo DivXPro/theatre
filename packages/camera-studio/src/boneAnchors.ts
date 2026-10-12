@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/boneAnchors.ts
+// packages/camera-studio/src/boneAnchors.ts
 /**
  * 骨骼锚点:放置模型的"可瞄准部位"。按骨骼名在实例骨架里找
  * 头/胸口/双手/双腿,把无网格的 Object3D 挂到骨骼下(对齐 Blender

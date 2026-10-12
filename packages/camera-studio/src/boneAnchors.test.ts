@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/boneAnchors.test.ts
+// packages/camera-studio/src/boneAnchors.test.ts
 import {Bone, Object3D} from 'three'
 import {
   BONE_PARTS,

@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/poseMode/poseFrame.test.ts
+// packages/camera-studio/src/poseMode/poseFrame.test.ts
 /**
  * 摆姿势进入的帧模式判定(spec §8.1):播放头贴网格后恰等于某姿势帧 =
  * 编辑该帧(保存=覆盖);否则 = 新建帧(保存=插入)。

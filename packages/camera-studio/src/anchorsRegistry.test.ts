@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/anchorsRegistry.test.ts
+// packages/camera-studio/src/anchorsRegistry.test.ts
 import {
   parseAnchorKeys,
   nextAnchorKey,

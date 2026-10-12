@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/poseStatusText.ts
+// packages/camera-studio/src/poseStatusText.ts
 /** 姿势状态行文案推导(spec §6.2),纯函数便于单测 */
 import {parsePoseValue} from './poseMode/poseValue'
 

@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/placementPoseProps.test.ts
+// packages/camera-studio/src/placementPoseProps.test.ts
 /**
  * PlacementManager 姿势注册改造的可测纯件:
  * - countLibraryEntryUsage 的姿势计数对旧裸 id 与新 {kind:'lib'} 都算使用

@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/poseMode/controlSpec.ts
+// packages/camera-studio/src/poseMode/controlSpec.ts
 /**
  * 人形骨架控制点装配表:用 threeIK 的骨名映射(Mixamo/VRM/无前缀预设)
  * 把模型骨名翻成人形 profile,产出标准控制点集合。关键骨(REQUIRED_HUMANOID_

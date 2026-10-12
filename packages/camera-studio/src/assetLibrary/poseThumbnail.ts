@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/assetLibrary/poseThumbnail.ts
+// packages/camera-studio/src/assetLibrary/poseThumbnail.ts
 /**
  * 姿势缩略图运行时渲染(2026-10-05):QBX 手势的预览图随包播种
  * (poseThumbsQbx),身体姿势(DPL/程序化基础)源包不在磁盘,改为运行

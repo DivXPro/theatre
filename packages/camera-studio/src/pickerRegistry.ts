@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/pickerRegistry.ts
+// packages/camera-studio/src/pickerRegistry.ts
 /**
  * 选择框体注册表(2026-10-01):宿主应用把自己的选择框体组件注册进来,
  * 替换库内置框体。目前两个槽位:

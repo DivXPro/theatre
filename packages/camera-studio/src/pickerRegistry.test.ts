@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/pickerRegistry.test.ts
+// packages/camera-studio/src/pickerRegistry.test.ts
 /**
  * 选择框体注册表:宿主注册/注销/缺省回退,pose 与 model 两槽位互不干扰。
  */

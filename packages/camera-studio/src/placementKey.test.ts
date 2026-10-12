@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/placementKey.test.ts
+// packages/camera-studio/src/placementKey.test.ts
 /**
  * 放置模型取名(顶层扁平化,不再套 "Models /" 文件夹):
  * 文件名净化、撞名追加序号、与全场景顶层路径防撞(相机/灯光/

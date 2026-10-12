@@ -1,7 +1,7 @@
 /*
  * @jest-environment jsdom
  */
-// packages/playground/src/shared/camera/poseMode/poseExitGuard.test.ts
+// packages/camera-studio/src/poseMode/poseExitGuard.test.ts
 /**
  * 姿势退出 Enter 守卫(spec §8.1 终审 F3):Enter 在交互元素(输入框/
  * 按钮/链接/下拉/contentEditable)里是控件自身语义(按钮 Enter=click,

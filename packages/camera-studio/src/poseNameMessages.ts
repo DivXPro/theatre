@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/poseNameMessages.ts
+// packages/camera-studio/src/poseNameMessages.ts
 /**
  * 内置姿势名 i18n 词典(2026-10-05):姿势/手势选择框与属性行只显示
  * 姿势名本身(三段式条目名「分类 · 姿势名 · 侧」的分类与侧不再上屏,

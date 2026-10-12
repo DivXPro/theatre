@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/assetLibrary/seedBuiltinPoses.test.ts
+// packages/camera-studio/src/assetLibrary/seedBuiltinPoses.test.ts
 import {seedBuiltinPosesInto} from './seedBuiltinPoses'
 import {seedPoses} from './seedPoses'
 import {seedPosesDpl} from './seedPosesDpl'

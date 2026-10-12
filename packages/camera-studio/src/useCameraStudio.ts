@@ -49,7 +49,7 @@ export function useCameraStudio(
       })
       return () => {
         // 报错实例不占会话;但若是最后离场者,要替正常实例补拆(其 cleanup
-        // 在还有消费者时按守卫跳过过拆解)
+        // 在还有消费者时按守卫跳过拆解)
         if (releaseCameraStudioConsumer() === 0) void disposeCameraStudio()
       }
     }

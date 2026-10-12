@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/poseMode/poseInterpolate.ts
+// packages/camera-studio/src/poseMode/poseInterpolate.ts
 /**
  * 姿势属性的自定义插值器(spec §4),注入 t.string 的 opts.interpolate。
  * theatre 求值契约:(left, right, progression) => value,progression 已过

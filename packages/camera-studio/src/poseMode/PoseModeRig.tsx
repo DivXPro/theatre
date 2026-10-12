@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/poseMode/PoseModeRig.tsx
+// packages/camera-studio/src/poseMode/PoseModeRig.tsx
 /**
  * 姿势模式运行时:SkeletonRig + threeIK 控制点的生命周期、每帧求解、退出提交。
  * 会话命中时由 PlacedModelCore 挂载;卸载(模型删除/会话切换)即 dispose 干净。

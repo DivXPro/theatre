@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/poseMode/controlSpec.test.ts
+// packages/camera-studio/src/poseMode/controlSpec.test.ts
 import {Bone, Group, Vector3} from 'three'
 import {
   deriveHumanoidFacing,

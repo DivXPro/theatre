@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/poseMode/poseExitGuard.ts
+// packages/camera-studio/src/poseMode/poseExitGuard.ts
 /**
  * 姿势退出快捷键(Enter)的目标守卫:交互元素(输入框/按钮/链接/下拉/
  * contentEditable)与 studio UI(shadow DOM)内的事件不触发退出——

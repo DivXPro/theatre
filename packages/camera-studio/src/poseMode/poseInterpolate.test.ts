@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/poseMode/poseInterpolate.test.ts
+// packages/camera-studio/src/poseMode/poseInterpolate.test.ts
 /**
  * 姿势插值器(spec §4):两侧都能解析出骨骼 → 逐骨骼 slerp/lerp,结果恒为
  * custom 快照(两帧之间的求值产物);任一侧不行 → 阶跃返回 left。

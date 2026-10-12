@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/assetLibrary/catalogThumbs.ts
+// packages/camera-studio/src/assetLibrary/catalogThumbs.ts
 /**
  * 内置目录条目的运行时缩略图渲染器(StaticCatalogSource 的默认注入):
  * 目录条目不落库存图——身体姿势/模型的缩略图按需从目录 GLB 离屏渲染,

@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/poseMode/poseRetarget.test.ts
+// packages/camera-studio/src/poseMode/poseRetarget.test.ts
 import {Quaternion, Vector3} from 'three'
 import {retargetPose} from './poseRetarget'
 import type {RestBone} from './poseRetarget'

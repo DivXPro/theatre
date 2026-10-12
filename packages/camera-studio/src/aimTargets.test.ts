@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/aimTargets.test.ts
+// packages/camera-studio/src/aimTargets.test.ts
 import {Object3D} from 'three'
 import {registerMessages, translate} from '@dreamerbird/studio/i18n'
 import {

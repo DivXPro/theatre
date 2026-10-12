@@ -281,11 +281,11 @@ export const zhCN: Messages = {
   'pg.import.reason.animationExists': '动作已在库中',
 }
 
-// 姿势名词典单独成册(poseNameMessages.ts,约 180 条 × 双语),此处合并注册
 /**
  * camera 词条显式注册(bootstrap 用它再注册一次;模块加载的自调用也走
  * 这里——ShotCamera 模块加载期就 translate,副作用必须保留)。
  * registerMessages/registerFallback 均为合并/覆盖语义,重复调用安全。
+ * 姿势名词典单独成册(poseNameMessages.ts,约 180 条 × 双语),此处合并注册。
  */
 export function registerCameraMessages(): void {
   registerMessages('en', {...en, ...poseNameEn})

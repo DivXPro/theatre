@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/anchorParenting.test.ts
+// packages/camera-studio/src/anchorParenting.test.ts
 import {Euler, Object3D, Vector3} from 'three'
 import {
   isDescendantAnchor,

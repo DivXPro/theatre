@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/poseMode/poseSession.ts
+// packages/camera-studio/src/poseMode/poseSession.ts
 /**
  * 姿势会话:哪个模型正在摆姿势(placementKey),全局唯一。
  * App 管进入/退出的触发;PoseModeRig 订阅退出请求,负责提交骨骼写回。

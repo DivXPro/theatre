@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/pathRegistry.test.ts
+// packages/camera-studio/src/pathRegistry.test.ts
 import {nextPathEntry, parsePathEntries} from './pathRegistry'
 
 describe('parsePathEntries', () => {

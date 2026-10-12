@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/assetLibrary/seedBuiltinPoses.ts
+// packages/camera-studio/src/assetLibrary/seedBuiltinPoses.ts
 /**
  * 内置姿势条目构建(2026-10-10 内置资产目录化后):三批来源的数据模块
  *   - seedPoses:12 个程序化基础姿势(blender_dump.py 按方向摆 metarig)

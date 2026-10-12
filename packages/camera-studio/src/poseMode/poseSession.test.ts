@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/poseMode/poseSession.test.ts
+// packages/camera-studio/src/poseMode/poseSession.test.ts
 import {
   enterPoseSession,
   getPoseSession,

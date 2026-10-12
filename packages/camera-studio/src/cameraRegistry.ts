@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/cameraRegistry.ts
+// packages/camera-studio/src/cameraRegistry.ts
 /**
  * 相机注册表:场景里有几台相机 = 注册表清单里有几行,每台相机是一个
  * theatre 对象。照搬放置模型(Placements)的注册表模式,结构天然支持

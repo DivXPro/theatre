@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/poseMode/poseOverride.ts
+// packages/camera-studio/src/poseMode/poseOverride.ts
 /**
  * poseOverride:摆姿势退出时内联写进 theatre 对象的骨骼状态(JSON 字符串)。
  * 优先级高于库姿势 poseId、低于什么都不写的绑定姿势兜底:

@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/poseMode/dragState.ts
+// packages/camera-studio/src/poseMode/dragState.ts
 /**
  * 姿势会话脏检查:退出前判定用户是否真拖过控制点。
  * 空进空出不提交(threeIK 首解有微小漂移,写回会产生幻影撤销步);

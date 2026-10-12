@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/assetLibrary/poseThumbnail.test.ts
+// packages/camera-studio/src/assetLibrary/poseThumbnail.test.ts
 /**
  * 姿势缩略图回填的筛选/分组逻辑(WebGL 渲染本体经 renderBatch 注入替身,
  * jsdom 不起 GL):只补「身体姿势 + 无图或死引用」的条目,按骨架族分组,

@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/assetLibrary/staticCatalogSource.ts
+// packages/camera-studio/src/assetLibrary/staticCatalogSource.ts
 /**
  * 内置资产目录源(2026-10-10 内置资产目录化):随包发布的模型 GLB 与
  * 姿势预览图,以只读 LibrarySource 形式并入聚合器——与宿主生产存储、

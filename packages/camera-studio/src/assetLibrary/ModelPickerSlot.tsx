@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/assetLibrary/ModelPickerSlot.tsx
+// packages/camera-studio/src/assetLibrary/ModelPickerSlot.tsx
 /**
  * 模型选择框体槽位(2026-10-01 注册制):顶栏「添加模型」弹出的框体的
  * 分派点。pickerRegistry 的 'model' 槽位注册了宿主组件就渲染宿主的

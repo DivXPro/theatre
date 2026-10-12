@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/placementPoseProps.ts
+// packages/camera-studio/src/placementPoseProps.ts
 /**
  * PlacementManager 姿势属性注册的可测纯件(组件逻辑留 PlacementManager.tsx)。
  */

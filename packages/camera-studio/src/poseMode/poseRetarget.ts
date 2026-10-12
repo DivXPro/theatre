@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/poseMode/poseRetarget.ts
+// packages/camera-studio/src/poseMode/poseRetarget.ts
 /**
  * 姿势重定向(2026-10-02 内置姿势管线,机制经 spike 验证):
  * 把「每根骨的世界 Y 轴目标方向」换算成目标骨架的 local 四元数快照。

@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/poseMode/dragState.test.ts
+// packages/camera-studio/src/poseMode/dragState.test.ts
 import {anyControlDragging} from './dragState'
 
 const target = (dragging: boolean) => ({isDragging: dragging})

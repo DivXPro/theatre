@@ -183,7 +183,13 @@ export class Library {
     if (mapped) return mapped.getEntry(id)
     for (const src of this.sources) {
       const entry = await src.getEntry(id)
-      if (entry) return entry
+      if (entry) {
+        // 探源命中回填冷映射:renameEntry 的只读源守卫走 getEntrySource,
+        // 未 listEntries 的冷会话里映射是空的,缺这一行会绕过守卫、
+        // 给内置条目写进可写源影子副本(T9 顺带,T8 评审遗留)
+        this.entrySourceMap.set(id, src)
+        return entry
+      }
     }
     return undefined
   }
@@ -342,8 +348,9 @@ export const SEED_RIG_ALIAS = 'Mixamo'
 /**
  * 内置目录骨架族的默认别名保底:旧播种流程在 seedModels 里设置,
  * 去播种(2026-10-10 目录化)后由这里补一次;用户已起过名的不覆盖。
+ * bootstrap 的缺省 IDB 启动分支调(T9 顺带,与单例内建那份同一语义)。
  */
-async function ensureBuiltinRigAlias(lib: Library): Promise<void> {
+export async function ensureBuiltinRigAlias(lib: Library): Promise<void> {
   const aliased = new Set((await lib.getRigAliases()).map((a) => a.rig))
   for (const m of seedAssetsManifest.models) {
     if (aliased.has(m.rig)) continue

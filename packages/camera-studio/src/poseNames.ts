@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/poseNames.ts
+// packages/camera-studio/src/poseNames.ts
 /**
  * 姿势条目显示名解析(2026-10-05 与用户对齐):选择框/属性行只显示
  * 姿势名本身,不再上屏三段式条目名的「分类 · 」前缀与「· 左手/右手」

@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/assetLibrary/useModelThumbUrl.ts
+// packages/camera-studio/src/assetLibrary/useModelThumbUrl.ts
 /**
  * 缩略图懒加载 hook:从 AssetLibraryPanel 抽出(2026-10-01 注册制改造),
  * 内置模型框体与注册进站的宿主模型框体(ModelPickerProps.getThumbUrl)共用;

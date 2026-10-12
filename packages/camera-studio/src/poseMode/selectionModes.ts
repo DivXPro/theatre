@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/poseMode/selectionModes.ts
+// packages/camera-studio/src/poseMode/selectionModes.ts
 /**
  * 控制点选中目标 → 支持的操纵器模式。
  * 用途:浮动小条禁用不可用模式按钮;选中单模式点时自动切到可用模式。

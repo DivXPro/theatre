@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/poseMode/poseValue.ts
+// packages/camera-studio/src/poseMode/poseValue.ts
 /**
  * 时间轴姿势属性的值模型(spec §3):pose 属性是 t.string,值为 JSON 字符串,
  * 二选一——库姿势引用 {kind:'lib',id} 或自定义骨骼快照 {kind:'custom',bones}。

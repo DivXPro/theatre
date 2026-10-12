@@ -1,4 +1,4 @@
-// packages/playground/src/shared/camera/poseMode/poseMigration.test.ts
+// packages/camera-studio/src/poseMode/poseMigration.test.ts
 /**
  * 旧两字段 → 新 pose 值的迁移合成(spec §9):覆盖优先;已是新格式不动;
  * 双空不迁移。旧值原样搬——读取侧容错(parsePoseValue)完成格式升级。
