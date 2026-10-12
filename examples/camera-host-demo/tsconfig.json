@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ESNext", "DOM"],
+    "noEmit": true,
+    "resolveJsonModule": true
+  },
+  "include": ["src/**/*"],
+  "references": [
+    {"path": "../../packages/camera-studio"},
+    {"path": "../../packages/core"},
+    {"path": "../../packages/studio"},
+    {"path": "../../packages/dataverse"},
+    {"path": "../../packages/r3f"}
+  ]
+}

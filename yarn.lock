@@ -15255,6 +15255,25 @@ __metadata:
   languageName: node
   linkType: hard
 
+"camera-host-demo@workspace:examples/camera-host-demo":
+  version: 0.0.0-use.local
+  resolution: "camera-host-demo@workspace:examples/camera-host-demo"
+  dependencies:
+    "@dreamerbird/camera-studio": "workspace:*"
+    "@dreamerbird/core": "workspace:*"
+    "@dreamerbird/studio": "workspace:*"
+    "@react-three/fiber": ^9.7.0
+    "@types/react": ^19.2.18
+    "@types/react-dom": ^19.2.5
+    "@vitejs/plugin-react-swc": ^3.3.2
+    react: ^19.2.0
+    react-dom: ^19.2.0
+    three: ^0.185.1
+    typescript: 5.6.3
+    vite: ^4.3.9
+  languageName: unknown
+  linkType: soft
+
 "caniuse-api@npm:^3.0.0":
   version: 3.0.0
   resolution: "caniuse-api@npm:3.0.0"

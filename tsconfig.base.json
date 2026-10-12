@@ -17,8 +17,8 @@
     "declaration": true,
     "paths": {
       "@dreamerbird/camera-studio": ["./packages/camera-studio/src/index.ts"],
-      "@dreamerbird/camera-studio/*": ["./packages/camera-studio/src/*"],
       "@dreamerbird/camera-studio/contract-tests": ["./packages/camera-studio/src/assetLibrary/contractTests.ts"],
+      "@dreamerbird/camera-studio/*": ["./packages/camera-studio/src/*"],
       "@dreamerbird/core": ["./packages/core/src/index.ts"],
       "@dreamerbird/core/*": ["./packages/core/src/*"],
       "@dreamerbird/studio": ["./packages/studio/src/index.ts"],
