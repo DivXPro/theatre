@@ -163,6 +163,58 @@ describe('聚合器(多数据源)', () => {
     expect(lib.canWrite).toBe(false)
     expect(await lib.listEntries()).toHaveLength(1) // 目录照常
   })
+
+  test('模型按 contentHash 去重:可写源副本优先,两个 id 都能 getEntry', async () => {
+    // 场景:旧浏览器 IDB 里已播种 Y Bot(随机管线 id),目录源又提供
+    // 同一模型(seed-model-<contentHash>)。列表只出一个且是可写源的 id
+    // (用户的条目,场景引用不断);目录条目不删数据,getEntry 两个 id
+    // 都仍解析。姿势/动画不按 contentHash 去重,维持 id 规则。
+    const sameHash = 'hash-ybot'
+    const userCopy = model('user-ybot-random-id', 'Y Bot')
+    userCopy.contentHash = sameHash
+    const catalogCopy = model('seed-model-' + sameHash, 'Y Bot')
+    catalogCopy.contentHash = sameHash
+    // 可写源注册在后,证明优先级不看注册顺序而看 writable 身份
+    const lib = new Library({
+      sources: [
+        fakeSource('catalog', [catalogCopy]),
+        {
+          ...(fakeSource('idb', [userCopy], true) as any),
+          putEntry: async () => {},
+          deleteEntry: async () => {},
+          putBlob: async () => 'h',
+          deleteBlob: async () => {},
+          getRigAliases: async () => [],
+          putRigAlias: async () => {},
+        } as WritableLibrarySource,
+      ],
+    })
+    const listed = await lib.listEntries('model')
+    expect(listed.map((e) => e.id)).toEqual(['user-ybot-random-id'])
+    // 不删数据:两个 id 都仍解析
+    expect((await lib.getEntry('user-ybot-random-id'))?.name).toBe('Y Bot')
+    expect((await lib.getEntry('seed-model-' + sameHash))?.name).toBe('Y Bot')
+  })
+
+  test('模型 contentHash 去重不殃及:不同 hash 并存;无 contentHash 不去重;姿势同 hash 不去重', async () => {
+    const a = model('m-a')
+    a.contentHash = 'h1'
+    const b = model('m-b')
+    b.contentHash = 'h2' // 不同 hash → 并存
+    const pose = {
+      id: 'seed-pose-x',
+      kind: 'pose' as const,
+      name: 'p',
+      rig: 'rig-x',
+      bones: {},
+      createdAt: 1,
+    }
+    const lib = new Library({
+      sources: [fakeSource('catalog', [a, b, pose])],
+    })
+    const ids = (await lib.listEntries()).map((e) => e.id).sort()
+    expect(ids).toEqual(['m-a', 'm-b', 'seed-pose-x'])
+  })
 })
 
 describe('blob 生命周期', () => {

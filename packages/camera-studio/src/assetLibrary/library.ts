@@ -105,10 +105,18 @@ export class Library {
    * 聚合列条目:合并各源。同 id 先注册者胜并上告 conflict;
    * 可写源里的内置前缀条目(seed-pose- 与 seed-model- 开头)剔除并上告
    * conflict——内置数据由内置目录源提供,可写源不得侵占其命名空间。
+   *
+   * 模型条目(kind 'model')额外按 contentHash 去重(2026-10-12 修复轮
+   * R11):旧浏览器 IDB 里已播种的模型与目录源同一模型会在选择框里成双,
+   * 故同一内容只列一份;可写源副本优先(用户的条目 id 保留,场景引用
+   * 不断),与注册顺序无关。只去重列表,不删数据——getEntry 对两个 id
+   * 都仍解析。姿势/动画维持 id 去重,不按 contentHash。
    */
   async listEntries(kind?: EntryKind): Promise<LibraryEntry[]> {
     const byId = new Map<string, LibraryEntry>()
     const srcById = new Map<string, LibrarySource>()
+    // 模型内容哈希 → 当前持有该哈希条目的 id,用于跨源去重后定位替换
+    const modelIdByHash = new Map<string, string>()
     for (const src of this.sources) {
       let list: LibraryEntry[]
       try {
@@ -134,6 +142,27 @@ export class Library {
             new LibraryError('conflict', `条目 id 冲突:${entry.id}`),
           )
           continue
+        }
+        // 模型按 contentHash 去重:已收同哈希条目时,可写源副本顶替
+        // (保留可写源 id),否则丢弃当前副本;姿势/动画不进此分支。
+        if (entry.kind === 'model') {
+          const heldId = modelIdByHash.get(entry.contentHash)
+          if (heldId !== undefined) {
+            const heldSrc = srcById.get(heldId)
+            const writableWins =
+              src === this.writable && heldSrc !== this.writable
+            if (writableWins) {
+              byId.delete(heldId)
+              srcById.delete(heldId)
+              byId.set(entry.id, entry)
+              srcById.set(entry.id, src)
+              modelIdByHash.set(entry.contentHash, entry.id)
+            }
+            // 非可写源顶替(可写源已持该哈希,或两个只读源撞哈希):
+            // 丢弃当前副本,先收者/可写源保留
+            continue
+          }
+          modelIdByHash.set(entry.contentHash, entry.id)
         }
         byId.set(entry.id, entry)
         srcById.set(entry.id, src)
