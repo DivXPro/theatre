@@ -12,6 +12,11 @@
  */
 import theatre, {getProject, getStudio, onChange} from '@dreamerbird/core'
 import type {IProject, IStudioUI, InitOpts} from '@dreamerbird/core'
+// studio 根模块加载即向 core 自注册(new Studio() + setStudio + 挂 window
+// bundle):theatre.init({studio: true}) 要求这步已完成,缺了它 init 报
+// "@dreamerbird/studio has not loaded" 且 studio UI 整体缺失(T10 fix
+// round 1 冒烟实证)。模块求值序天然先于本模块任何语句,放最顶部。
+import '@dreamerbird/studio'
 import {initState} from '@dreamerbird/core/initState'
 import {privateAPI} from '@dreamerbird/core/privateAPIs'
 import {

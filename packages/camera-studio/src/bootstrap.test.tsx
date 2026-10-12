@@ -70,6 +70,9 @@ initSpy.mockImplementation(async (opts?: unknown) => {
   if (!initStateBox.called) simulateHostInit(opts)
 })
 
+jest.doMock('@dreamerbird/studio', () => ({
+  __esModule: true,
+}))
 jest.doMock('@dreamerbird/core', () => ({
   __esModule: true,
   default: {init: initSpy},
