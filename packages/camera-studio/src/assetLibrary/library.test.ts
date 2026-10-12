@@ -1,6 +1,7 @@
 import {indexedDB as fakeIndexedDB} from 'fake-indexeddb'
 import {Library} from './library'
 import {IndexedDBBackend} from './indexedDBBackend'
+import {seedAssetsManifest} from './seedAssetsManifest'
 import type {LibraryError, LibrarySource, WritableLibrarySource} from './source'
 import type {LibraryBackend, LibraryEntry, ModelEntry} from './types'
 
@@ -66,7 +67,8 @@ describe('Library', () => {
     const unsub = lib.subscribe(() => events.push(1))
     await lib.setRigAlias('rig-a', 'Mixamo')
     unsub()
-    expect(await lib.getRigAliases()).toEqual([{rig: 'rig-a', name: 'Mixamo'}])
+    const aliases = await lib.getRigAliases()
+    expect(aliases).toContainEqual({rig: 'rig-a', name: 'Mixamo'})
     expect(events.length).toBe(1)
   })
 
@@ -308,6 +310,134 @@ describe('聚合器(多数据源)', () => {
       'm-nohash-2',
       'seed-pose-x',
     ])
+  })
+
+  test('数据源 id 撞名(含撞内置保留名):上告 conflict 一次,先注册者胜不换源', async () => {
+    // 终审 M-5:宿主源起名 'catalog'/'idb' 与内置源相撞——上告 conflict,
+    // 行为维持先注册者胜(blobId 前缀路由 find 首个匹配),不抛、不换源
+    const mkSource = (name: string): LibrarySource => ({
+      id: 'catalog', // 撞内置保留名
+      capabilities: {writable: false},
+      listEntries: async () => [{id: `${name}-m`, name} as any],
+      getEntry: async (id) =>
+        id === `${name}-m` ? ({id: `${name}-m`, name} as any) : undefined,
+      getBlobUrl: async (b) => `${name}://${b}`,
+    })
+    const builtin = mkSource('builtin')
+    const host = mkSource('host')
+    const errors: LibraryError[] = []
+    const lib = new Library({
+      sources: [builtin, host],
+      onError: (e) => errors.push(e),
+    })
+    expect(errors.filter((e) => e.code === 'conflict')).toHaveLength(1)
+    expect(errors[0].message).toContain('catalog')
+    expect(lib.sources).toHaveLength(2) // 不换源
+    // 先注册者胜:同前缀 blobId 路由仍走第一个源
+    expect(await lib.getBlobUrl('catalog:x')).toBe('builtin://catalog:x')
+    // 两源条目照常聚合(条目层 id 不撞就不裁)
+    const ids = (await lib.listEntries()).map((e) => e.id).sort()
+    expect(ids).toEqual(['builtin-m', 'host-m'])
+  })
+
+  test('getEntry 映射源已删该 id:落回探源循环解析目录条目(升级首启清理竞态)', async () => {
+    // 终审 I-2:冷会话 getEntry 探源先命中可写源并回填映射(同 id 目录
+    // 条目注册在后);随后启动清理把可写源里该 id 删了,映射重建前的
+    // 毫秒窗口内再来 getEntry——修复前直接返回 undefined,姿势预取
+    // (模块级缓存、不重试)整会话解析失败
+    const stored = new Map<string, LibraryEntry>([
+      ['seed-pose-x', {id: 'seed-pose-x', name: '旧播种副本'} as any],
+    ])
+    // 闸门挡住构造器 refreshSnapshot 的 listEntries:确定性冷映射会话
+    // (否则快照先重建映射,把 seed-pose-x 指向目录,窗口就合不上了)
+    let releaseList!: () => void
+    const listGate = new Promise<void>((r) => (releaseList = r))
+    const gatedList =
+      (entries: LibraryEntry[]) => async (): Promise<LibraryEntry[]> => {
+        await listGate
+        return entries
+      }
+    const writable: WritableLibrarySource = {
+      id: 'idb',
+      capabilities: {writable: true},
+      listEntries: gatedList([...stored.values()]),
+      getEntry: async (id) => stored.get(id),
+      getBlobUrl: async (b) => `idb://${b}`,
+      putEntry: async (e) => void stored.set(e.id, e),
+      deleteEntry: async (id) => void stored.delete(id),
+      putBlob: async () => 'h',
+      deleteBlob: async () => {},
+      getRigAliases: async () => [],
+      putRigAlias: async () => {},
+    }
+    const catalogEntries = [{id: 'seed-pose-x', name: '目录条目'} as any]
+    const lib = new Library({
+      sources: [
+        writable,
+        {
+          id: 'catalog',
+          capabilities: {writable: false},
+          listEntries: gatedList(catalogEntries),
+          getEntry: async (id) => catalogEntries.find((e) => e.id === id),
+          getBlobUrl: async (b) => `catalog://${b}`,
+        },
+      ],
+    })
+    // 冷映射:探源先命中可写源(注册序在先)并回填映射
+    expect((await lib.getEntry('seed-pose-x'))?.name).toBe('旧播种副本')
+    expect(lib.getEntrySource('seed-pose-x')?.id).toBe('idb')
+    // 升级首启清理删掉可写源副本(直调源自身,不发变更事件;映射仍指
+    // idb、下次 listEntries 重建前的窗口)
+    await writable.deleteEntry('seed-pose-x')
+    const resolved = await lib.getEntry('seed-pose-x')
+    expect(resolved?.name).toBe('目录条目') // 落回探源,不卡 undefined
+    expect(lib.getEntrySource('seed-pose-x')?.id).toBe('catalog') // 映射照旧回填
+    releaseList()
+  })
+})
+
+describe('骨架族别名并集读(终审 M-4)', () => {
+  // 内置默认别名的事实源 = seedAssetsManifest(与 ensureBuiltinRigAlias
+  // 共用 BUILTIN_RIG_ALIASES);测试取清单首个模型的 rig
+  const manifestRig = seedAssetsManifest.models[0].rig
+  const readOnlySource = (entries: LibraryEntry[] = []): LibrarySource => ({
+    id: 'catalog',
+    capabilities: {writable: false},
+    listEntries: async () => entries,
+    getEntry: async (id) => entries.find((e) => e.id === id),
+    getBlobUrl: async (b) => `catalog://${b}`,
+  })
+
+  test('纯查看器(无可写源)也返回内置 Mixamo 族名', async () => {
+    const lib = new Library({
+      sources: [readOnlySource([{id: 'p1'} as any])],
+    })
+    const aliases = await lib.getRigAliases()
+    expect(aliases).toEqual([{rig: manifestRig, name: 'Mixamo'}])
+  })
+
+  test('可写源覆盖同名族时优先;可写源新增别名并存', async () => {
+    const writable: WritableLibrarySource = {
+      id: 'idb',
+      capabilities: {writable: true},
+      listEntries: async () => [],
+      getEntry: async () => undefined,
+      getBlobUrl: async (b) => `idb://${b}`,
+      putEntry: async () => {},
+      deleteEntry: async () => {},
+      putBlob: async () => 'h',
+      deleteBlob: async () => {},
+      getRigAliases: async () => [
+        {rig: manifestRig, name: '自定义族名'},
+        {rig: 'rig-other', name: '其它'},
+      ],
+      putRigAlias: async () => {},
+    }
+    const lib = new Library({sources: [writable]})
+    const aliases = await lib.getRigAliases()
+    expect(aliases.find((a) => a.rig === manifestRig)?.name).toBe('自定义族名')
+    expect(aliases.find((a) => a.rig === 'rig-other')?.name).toBe('其它')
+    expect(aliases.filter((a) => a.rig === manifestRig)).toHaveLength(1)
   })
 })
 

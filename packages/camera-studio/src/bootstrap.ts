@@ -8,7 +8,7 @@
  *   theatre.init、project 解析、节流机械。重挂幂等复用,dispose 不拆。
  * - 会话级(每次挂载 acquire,dispose 拆解):3 个自定义属性编辑器注册、
  *   state 通道订阅、studio.ui 显隐。picker 注册表与宿主句柄由各自模块
- *   自管(App 组件 :2175/:2177),这里不碰。
+ *   自管(CameraScene 组件挂载时接线),这里不碰。
  */
 import theatre, {getProject, getStudio, onChange} from '@dreamerbird/core'
 import type {IProject, IStudioUI, InitOpts} from '@dreamerbird/core'
@@ -58,6 +58,10 @@ export interface BootCtx {
 }
 
 let initPromise: Promise<BootCtx> | undefined
+/** 首次 boot 使用的 config;重挂漂移告警与 hook 占位解析的依据 */
+let bootConfig: CameraStudioConfig | undefined
+/** 漂移告警只发一次(同页多次重挂不同 config 不刷屏) */
+let warnedConfigDrift = false
 /** 会话拆解函数;undefined = 当前无活跃会话(acquire 幂等守卫) */
 let sessionTeardown: (() => Promise<void>) | undefined
 /** 消费者计数由 hook 管(acquire/release 成对);dispose 据此做末位守卫 */
@@ -98,6 +102,62 @@ export function resolveSceneProps(
   config: CameraStudioConfig,
 ): CameraSceneProps {
   return {project: resolveProject(config), onFlows: config.flows?.onFlows}
+}
+
+/** 参与漂移比对的顶层配置键(flows 回调引用每次渲染都新,不比) */
+const DRIFT_KEYS = [
+  'project',
+  'storage',
+  'state',
+  'sync',
+  'ui',
+  'assets',
+] as const
+
+function shallowEqual(a: unknown, b: unknown): boolean {
+  if (Object.is(a, b)) return true
+  if (
+    typeof a !== 'object' ||
+    typeof b !== 'object' ||
+    a === null ||
+    b === null
+  ) {
+    return false
+  }
+  const ka = Object.keys(a)
+  const kb = Object.keys(b)
+  if (ka.length !== kb.length) return false
+  return ka.every((k) =>
+    Object.is(
+      (a as Record<string, unknown>)[k],
+      (b as Record<string, unknown>)[k],
+    ),
+  )
+}
+
+/** 本次 config 与首 boot config 的差异键(浅比较;无差异返回空数组) */
+function diffConfigKeys(
+  booted: CameraStudioConfig,
+  incoming: CameraStudioConfig,
+): string[] {
+  return DRIFT_KEYS.filter((k) => !shallowEqual(booted[k], incoming[k]))
+}
+
+/**
+ * 已 boot 且本次 config 与首 boot 不一致(hook 据此跳过占位解析,
+ * 不为新 config 调 getProject 造闲置 IProject——终审 I-1(b)③)
+ */
+export function isBootedWithDifferentConfig(
+  config: CameraStudioConfig,
+): boolean {
+  return (
+    bootConfig !== undefined && diffConfigKeys(bootConfig, config).length > 0
+  )
+}
+
+/** 首 boot 的 config;未 boot 时 undefined(hook 占位解析沿用首次配置) */
+export function getBootConfig(): CameraStudioConfig | undefined {
+  return bootConfig
 }
 
 /** config → theatre.init 期望 opts:键缺省就不带(不覆盖 theatre 自身缺省) */
@@ -308,12 +368,27 @@ function acquireSession(ctx: BootCtx): void {
 
 export function initCameraStudio(config: CameraStudioConfig): Promise<BootCtx> {
   if (!initPromise) {
+    bootConfig = config
     const p = boot(config)
     initPromise = p
     // 启动失败允许下次重试;成功则永久保留(重挂幂等复用)
     p.catch(() => {
-      if (initPromise === p) initPromise = undefined
+      if (initPromise === p) {
+        initPromise = undefined
+        bootConfig = undefined
+      }
     })
+  } else if (bootConfig && !warnedConfigDrift) {
+    // 重挂换配置(R14 boot 级资源按首 boot 复用,不一致也不热更):
+    // 告警一次并点名差异键,提示整页刷新——不静默沿用(终审 I-1(b))
+    const drifted = diffConfigKeys(bootConfig, config)
+    if (drifted.length > 0) {
+      warnedConfigDrift = true
+      console.warn(
+        `[camera-studio] config 与首次 boot 不一致(${drifted.join(', ')}),` +
+          '沿用首次配置;换配置需整页刷新(React 重挂不生效)',
+      )
+    }
   }
   return initPromise.then((ctx) => {
     acquireSession(ctx)

@@ -63,3 +63,25 @@ test('旧场景引用已不存在的模型条目:解析返回 undefined,不抛',
   })
   await expect(lib.getEntry('ghost-model-id')).resolves.toBeUndefined()
 })
+
+test('删除守卫(终审 M-1):目录没有同 id 的 seed-pose 孤儿不删;目录有的才删', async () => {
+  const idb = new IndexedDBBackend({dbName: `guard-${Math.random()}`})
+  // seed-pose-orphan-x:可写源里的孤儿,目录(真实清单)没有同 id 替身
+  await idb.putEntry({id: 'seed-pose-orphan-x', kind: 'pose'} as any)
+  // seed-pose-qbx-hands-01-base-base-l:目录清单里有同 id 替身(沿用 test 1 的 id)
+  await idb.putEntry({
+    id: 'seed-pose-qbx-hands-01-base-base-l',
+    kind: 'pose',
+  } as any)
+  const catalog = new StaticCatalogSource({baseUrl: 'https://x/'})
+  const lib = new Library({sources: [idb, catalog]})
+
+  const r = await cleanupLegacySeeds(lib)
+  expect(r.removed).toBe(1)
+  // 孤儿保留(数据修订移除/改名 id 时,旧场景引用不至于被清断)
+  expect(await idb.getEntry('seed-pose-orphan-x')).toBeDefined()
+  // 有目录替身的照删
+  expect(
+    await idb.getEntry('seed-pose-qbx-hands-01-base-base-l'),
+  ).toBeUndefined()
+})

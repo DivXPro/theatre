@@ -32,7 +32,9 @@ import type {WritableLibrarySource} from './assetLibrary/source'
 
 // ── 替身盒子(doMock 工厂闭包共享;beforeEach 复位) ─────────────
 const initSpy = jest.fn(async (_opts?: unknown) => {})
-const getProjectSpy = jest.fn(() => ({fake: true}))
+const getProjectSpy = jest.fn((_name?: string, _opts?: unknown) => ({
+  fake: true,
+}))
 // studio.ui 替身:hide/restore 翻转 isHidden(与真 UI 行为一致;
 // bootstrap 仅在 isHidden 时才 restore)
 const uiBox = {
@@ -362,10 +364,15 @@ test('9c. 宿主已 init 且一致 → 静默复用:不告警、不再 init', as
 // ensureBuiltinRigAlias 并入 boot 的内置 IDB 缺省库名分支
 test('10a. 缺省内置 IDB:孤儿清扫与骨架族别名保底都被调用', async () => {
   const libModule = await import('./assetLibrary/library')
+  const idbModule = await import('./assetLibrary/indexedDBBackend')
   const sweepSpy = jest.spyOn(libModule.Library.prototype, 'sweepOrphanBlobs')
-  // ensureBuiltinRigAlias 是独立导出函数(不可 spy 模块导出),改 spy 它
-  // 触达的 Library 方法:getRigAliases 只被它调用,调用即代表保底跑了
-  const aliasSpy = jest.spyOn(libModule.Library.prototype, 'getRigAliases')
+  // ensureBuiltinRigAlias 是独立导出函数(不可 spy 模块导出);M-4 并集读
+  // 后它直读可写源自有列表——spy 它触达的 IndexedDBBackend.getRigAliases:
+  // 调用即代表保底跑了
+  const aliasSpy = jest.spyOn(
+    idbModule.IndexedDBBackend.prototype,
+    'getRigAliases',
+  )
   try {
     const h = hookHost({}) // storage 缺省 = 缺省库名
     await h.mount()
@@ -380,8 +387,12 @@ test('10a. 缺省内置 IDB:孤儿清扫与骨架族别名保底都被调用', a
 
 test('10b. namespace 分支:清扫与别名保底都不调', async () => {
   const libModule = await import('./assetLibrary/library')
+  const idbModule = await import('./assetLibrary/indexedDBBackend')
   const sweepSpy = jest.spyOn(libModule.Library.prototype, 'sweepOrphanBlobs')
-  const aliasSpy = jest.spyOn(libModule.Library.prototype, 'getRigAliases')
+  const aliasSpy = jest.spyOn(
+    idbModule.IndexedDBBackend.prototype,
+    'getRigAliases',
+  )
   try {
     const h = hookHost({storage: {namespace: 'ns-clean'}})
     await h.mount()
@@ -396,8 +407,12 @@ test('10b. namespace 分支:清扫与别名保底都不调', async () => {
 
 test('10c. storage:false 纯查看器:无可写源,清扫与别名保底都不调', async () => {
   const libModule = await import('./assetLibrary/library')
+  const idbModule = await import('./assetLibrary/indexedDBBackend')
   const sweepSpy = jest.spyOn(libModule.Library.prototype, 'sweepOrphanBlobs')
-  const aliasSpy = jest.spyOn(libModule.Library.prototype, 'getRigAliases')
+  const aliasSpy = jest.spyOn(
+    idbModule.IndexedDBBackend.prototype,
+    'getRigAliases',
+  )
   try {
     const h = hookHost({storage: false})
     await h.mount()
@@ -416,10 +431,15 @@ test('10c. storage:false 纯查看器:无可写源,清扫与别名保底都不�
 // 三者一并兜住(与 10b/10c 同一断言策略)
 test('10d. 宿主可写源实例:缺省库名清理三项都不调', async () => {
   const libModule = await import('./assetLibrary/library')
+  const idbModule = await import('./assetLibrary/indexedDBBackend')
   const sweepSpy = jest.spyOn(libModule.Library.prototype, 'sweepOrphanBlobs')
-  // ensureBuiltinRigAlias 是独立导出函数(不可 spy 模块导出),改 spy 它
-  // 触达的 Library 方法:getRigAliases 只被它调用,调用即代表保底跑了
-  const aliasSpy = jest.spyOn(libModule.Library.prototype, 'getRigAliases')
+  // ensureBuiltinRigAlias 是独立导出函数(不可 spy 模块导出);M-4 并集读
+  // 后它直读可写源自有列表——spy 它触达的 IndexedDBBackend.getRigAliases:
+  // 调用即代表保底跑了
+  const aliasSpy = jest.spyOn(
+    idbModule.IndexedDBBackend.prototype,
+    'getRigAliases',
+  )
   try {
     const hostSource: WritableLibrarySource = {
       id: 'host-src',
@@ -441,5 +461,46 @@ test('10d. 宿主可写源实例:缺省库名清理三项都不调', async () =>
   } finally {
     sweepSpy.mockRestore()
     aliasSpy.mockRestore()
+  }
+})
+
+// 11. config 漂移(终审 I-1(b)):已 boot 后重挂换配置——告警一次并点名
+// 差异键;sceneProps 沿用首 boot;不为新 config 调 getProject 造闲置
+// IProject。换配置的正确姿势是整页刷新(React 重挂不生效)。
+test('11. 重挂换配置:warn 点名差异键一次,sceneProps 沿用首 boot,getProject 不为新 id 调用', async () => {
+  const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
+  try {
+    const h1 = hookHost({project: 'SceneA'})
+    await h1.mount()
+    const firstProject = h1.result.current?.sceneProps.project
+    expect(getProjectSpy).toHaveBeenCalledWith('SceneA', expect.anything())
+    await h1.unmount()
+    getProjectSpy.mockClear()
+
+    // 重挂传不同 project + sync:差异键被点名,只告警一次
+    const h2 = hookHost({project: 'SceneB', sync: {serverUrl: 'wss://y'}})
+    await h2.mount()
+    const driftWarns = warnSpy.mock.calls.filter((c) =>
+      String(c[0]).includes('config 与首次 boot 不一致'),
+    )
+    expect(driftWarns).toHaveLength(1)
+    expect(String(driftWarns[0][0])).toContain('project')
+    expect(String(driftWarns[0][0])).toContain('sync')
+    // sceneProps 沿用首 boot 的 project(同实例);getProject 未为新 id 调用
+    expect(h2.result.current?.sceneProps.project).toBe(firstProject)
+    expect(getProjectSpy.mock.calls.every((c) => c[0] !== 'SceneB')).toBe(true)
+    await h2.unmount()
+
+    // 第三次重挂(又不同 config):不重复告警
+    const h3 = hookHost({project: 'SceneC'})
+    await h3.mount()
+    expect(
+      warnSpy.mock.calls.filter((c) =>
+        String(c[0]).includes('config 与首次 boot 不一致'),
+      ),
+    ).toHaveLength(1)
+    await h3.unmount()
+  } finally {
+    warnSpy.mockRestore()
   }
 })

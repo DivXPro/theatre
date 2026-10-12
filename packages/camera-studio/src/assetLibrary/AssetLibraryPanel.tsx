@@ -572,10 +572,12 @@ export function AssetLibraryPanel({
         }}
       >
         <Thumb>{icon}</Thumb>
+        {/* 纯查看器模式隐藏改名入口(与导入/删除同套 canWrite 判别,
+            终审 M-6):标签仍是纯展示,点击不再弹 prompt */}
         <Tag
-          style={{cursor: 'pointer'}}
+          style={getLibrary().canWrite ? {cursor: 'pointer'} : undefined}
           title={t('pg.lib.rigTitle', {rig: entry.rig})}
-          onClick={renameRig(entry.rig)}
+          onClick={getLibrary().canWrite ? renameRig(entry.rig) : undefined}
         >
           {rigLabel(entry.rig)}
           {rigMismatch && t('pg.lib.rigMismatch')}

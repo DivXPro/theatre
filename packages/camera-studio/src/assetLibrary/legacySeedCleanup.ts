@@ -26,11 +26,20 @@ export async function cleanupLegacySeeds(
   let removed = 0
   const writable = lib.writable
   if (writable) {
+    // 删除守卫(终审 M-1):仅当某个只读源(内置目录)有同 id 替身才删
+    // ——数据修订一旦移除/改名某姿势 id,无条件删会让旧场景引用永断
+    // (不可逆)。沿用「枚举可写源自有列表」的既有机制;只读侧经
+    // lib.sources 逐个 getEntry 探,不经聚合 getEntry(可写源自己还
+    // 持有时探源会先命中它,守卫形同虚设)
+    const readOnlySources = lib.sources.filter((s) => s !== writable)
     for (const e of await writable.listEntries()) {
-      if (e.id.startsWith('seed-pose-')) {
-        await lib.deleteEntry(e.id)
-        removed++
-      }
+      if (!e.id.startsWith('seed-pose-')) continue
+      const hasCatalogTwin = (
+        await Promise.all(readOnlySources.map((s) => s.getEntry(e.id)))
+      ).some(Boolean)
+      if (!hasCatalogTwin) continue
+      await lib.deleteEntry(e.id)
+      removed++
     }
   }
   try {

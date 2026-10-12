@@ -15,6 +15,19 @@ export type LibraryOpts = {
 /** 内置目录条目的保留 id 前缀:出现在可写源即剔除并告警(内置数据只读) */
 const BUILTIN_ID_PREFIXES = ['seed-pose-', 'seed-model-']
 
+/** 内置骨架族(Mixamo 角色同一套骨骼命名)的默认别名 */
+export const SEED_RIG_ALIAS = 'Mixamo'
+
+/**
+ * 内置目录骨架族的默认别名表:getRigAliases 的并集读与
+ * ensureBuiltinRigAlias 的写保底共用这一份事实源(rig 集合只从
+ * seedAssetsManifest 派生一次,两个出口不许各写一份)
+ */
+const BUILTIN_RIG_ALIASES: RigAlias[] = seedAssetsManifest.models.map((m) => ({
+  rig: m.rig,
+  name: SEED_RIG_ALIAS,
+}))
+
 /**
  * 库的对外门面:多数据源聚合器(2026-10-10 spec §5 统一数据源)。
  * 读——listEntries 合并各源(同 id 先注册者胜),getBlobUrl 按 blobId
@@ -37,6 +50,19 @@ export class Library {
     this.sources = opts.sources
     this.writable = opts.writable ?? opts.sources.find(isWritableSource)
     this.onError = opts.onError
+    // 源 id 撞名守卫(终审 M-5;宿主源撞内置保留名 'catalog'/'idb' 同理):
+    // 上告 conflict 一次,行为维持先注册者胜——blobId 前缀路由按注册序
+    // find 首个匹配,不抛、不换源
+    const seenSourceIds = new Set<string>()
+    for (const src of opts.sources) {
+      if (seenSourceIds.has(src.id)) {
+        this.onError?.(
+          new LibraryError('conflict', `数据源 id 冲突:${src.id}(先注册者胜)`),
+        )
+      } else {
+        seenSourceIds.add(src.id)
+      }
+    }
     this.refreshSnapshot()
   }
 
@@ -177,10 +203,16 @@ export class Library {
   /**
    * 聚合读条目:映射命中直接走所属源;快照未覆盖(刚写入尚未回刷)时
    * 按注册顺序探源,先命中者胜(与 listEntries 的先注册者胜一致)。
+   * 映射命中但所属源已删该 id 时(升级首启清理竞态:删 seed-pose-*
+   * 后、下次 listEntries 重建映射前的毫秒窗口)落回同一探源循环,
+   * 不让缓存型消费者(姿势预取)整会话解析失败。
    */
   async getEntry(id: string): Promise<LibraryEntry | undefined> {
     const mapped = this.entrySourceMap.get(id)
-    if (mapped) return mapped.getEntry(id)
+    if (mapped) {
+      const entry = await mapped.getEntry(id)
+      if (entry) return entry
+    }
     for (const src of this.sources) {
       const entry = await src.getEntry(id)
       if (entry) {
@@ -322,9 +354,19 @@ export class Library {
     })
   }
 
-  /** 直读骨架族别名(透传可写源,不 emit);纯查看器模式返回空表 */
-  getRigAliases(): Promise<RigAlias[]> {
-    return this.writable?.getRigAliases() ?? Promise.resolve([])
+  /**
+   * 直读骨架族别名:内置默认别名 ∪ 可写源别名,可写源同名覆盖(不 emit)。
+   * 别名属目录数据、写宿主存储本就不妥,读侧并集让宿主存储与纯查看器
+   * 模式下内置 Mixamo 族名照常显示,不截断哈希(终审 M-4)
+   */
+  async getRigAliases(): Promise<RigAlias[]> {
+    const byRig = new Map<string, string>()
+    for (const a of BUILTIN_RIG_ALIASES) byRig.set(a.rig, a.name)
+    if (this.writable) {
+      for (const a of await this.writable.getRigAliases())
+        byRig.set(a.rig, a.name)
+    }
+    return [...byRig.entries()].map(([rig, name]) => ({rig, name}))
   }
 
   /** 设置/覆盖骨架族别名 */
@@ -342,20 +384,23 @@ function isBuiltinId(id: string): boolean {
 
 let singleton: Library | undefined
 
-/** 内置骨架族(Mixamo 角色同一套骨骼命名)的默认别名 */
-export const SEED_RIG_ALIAS = 'Mixamo'
-
 /**
  * 内置目录骨架族的默认别名保底:旧播种流程在 seedModels 里设置,
  * 去播种(2026-10-10 目录化)后由这里补一次;用户已起过名的不覆盖。
  * bootstrap 的缺省 IDB 启动分支调(T9 顺带,与单例内建那份同一语义)。
+ * 注意读的是可写源自有列表而非并集:getRigAliases 的并集读永远含
+ * 内置默认,「要不要写保底」按并集判断会失真(保底永不写入)
  */
 export async function ensureBuiltinRigAlias(lib: Library): Promise<void> {
-  const aliased = new Set((await lib.getRigAliases()).map((a) => a.rig))
-  for (const m of seedAssetsManifest.models) {
-    if (aliased.has(m.rig)) continue
-    aliased.add(m.rig)
-    await lib.setRigAlias(m.rig, SEED_RIG_ALIAS)
+  const aliased = new Set(
+    (await (lib.writable?.getRigAliases() ?? Promise.resolve([]))).map(
+      (a) => a.rig,
+    ),
+  )
+  for (const alias of BUILTIN_RIG_ALIASES) {
+    if (aliased.has(alias.rig)) continue
+    aliased.add(alias.rig)
+    await lib.setRigAlias(alias.rig, alias.name)
   }
 }
 
