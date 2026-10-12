@@ -5256,10 +5256,10 @@ __metadata:
     "@dreamerbird/r3f": "workspace:*"
     "@dreamerbird/react": "workspace:*"
     "@dreamerbird/threeik": 0.2.1
-    "@dreamerbird/utils": "workspace:*"
     "@gltf-transform/core": ^4.0.0
     "@gltf-transform/extensions": ^4.0.0
     "@gltf-transform/functions": ^4.0.0
+    "@microsoft/api-extractor": ^7.28.6
     "@phosphor-icons/react": ^2.1.10
     "@react-three/drei": ^10.7.8
     "@react-three/fiber": ^9.7.0

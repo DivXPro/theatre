@@ -9,7 +9,10 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./contract-tests": {"types": "./dist/assetLibrary/contractTests.d.ts", "default": "./dist/assetLibrary/contractTests.js"}
+    "./contract-tests": {
+      "types": "./dist/assetLibrary/contractTests.d.ts",
+      "default": "./dist/assetLibrary/contractTests.js"
+    }
   },
   "files": [
     "dist/**/*",
@@ -17,6 +20,7 @@
   ],
   "scripts": {
     "build:ts": "tsc -b tsconfig.json",
+    "build:api": "tsc -b tsconfig.json && api-extractor run --local --config devEnv/api-extractor.json",
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "peerDependencies": {
@@ -27,30 +31,32 @@
     "react-dom": ">=19",
     "three": ">=0.185"
   },
-  "devDependencies": {
+  "dependencies": {
     "@dreamerbird/dataverse": "workspace:*",
     "@dreamerbird/r3f": "workspace:*",
     "@dreamerbird/react": "workspace:*",
     "@dreamerbird/threeik": "0.2.1",
-    "@dreamerbird/utils": "workspace:*",
     "@gltf-transform/core": "^4.0.0",
     "@gltf-transform/extensions": "^4.0.0",
     "@gltf-transform/functions": "^4.0.0",
     "@phosphor-icons/react": "^2.1.10",
     "@react-three/drei": "^10.7.8",
+    "draco3dgltf": "^1.5.7",
+    "styled-components": "^6.5.3",
+    "three-stdlib": "^2.36.1"
+  },
+  "devDependencies": {
+    "@microsoft/api-extractor": "^7.28.6",
     "@react-three/fiber": "^9.7.0",
     "@types/jest": "^26.0.23",
     "@types/node": "^15.6.2",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.5",
     "@types/three": "0.185.4",
-    "draco3dgltf": "^1.5.7",
     "fake-indexeddb": "^5",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "styled-components": "^6.5.3",
     "three": "^0.185.1",
-    "three-stdlib": "^2.36.1",
     "typescript": "5.6.3"
   }
 }

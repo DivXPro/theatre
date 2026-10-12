@@ -9,58 +9,14 @@
  * - 演示简化:同 id 直接覆盖存(不省字节),没有跨会话持久化——
  *   刷新页面库即清空,这是刻意为之,生产 HTTP 实现不要学。
  *
- * 类型说明:条目/别名的形状照抄包内定义(包根暂未转出口这些类型,
- * 见指南「排错」一节);形状与包内逐字段一致,TS 结构化校验会在
- * `storage:` 传参与契约套件注册处兜底。
+ * 条目/别名/错误类型全部由包根导出(`@dreamerbird/camera-studio`),
+ * 直接 import 即可;WritableLibrarySource 接口形状见指南 §3。
  */
-
-// ---- 与包内 packages/camera-studio/src/assetLibrary/types.ts 一致 ----
-export type RigId = string
-export type RigAlias = {rig: RigId; name: string}
-export type EntryKind = 'model' | 'pose' | 'animation'
-
-export type ModelEntry = {
-  id: string
-  kind: 'model'
-  name: string
-  rig: RigId
-  blobId: string
-  contentHash: string
-  thumbnailId?: string
-  boneCount: number
-  vertexCount: number
-  createdAt: number
-}
-
-export type PoseEntry = {
-  id: string
-  kind: 'pose'
-  name: string
-  rig: RigId
-  thumbnailId?: string
-  bones: Record<
-    string,
-    {
-      rotation?: [number, number, number, number]
-      position?: [number, number, number]
-    }
-  >
-  createdAt: number
-}
-
-export type AnimationEntry = {
-  id: string
-  kind: 'animation'
-  name: string
-  rig: RigId
-  blobId: string
-  contentHash: string
-  duration: number
-  createdAt: number
-}
-
-export type LibraryEntry = ModelEntry | PoseEntry | AnimationEntry
-// ---- 类型拷贝结束 ----
+import type {
+  EntryKind,
+  LibraryEntry,
+  RigAlias,
+} from '@dreamerbird/camera-studio'
 
 /** FNV-1a 64 位:非加密,只做内容寻址(与包内 hashBytes 同算法) */
 function fnv1a64(data: Uint8Array): string {

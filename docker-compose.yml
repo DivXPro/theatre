@@ -24,10 +24,12 @@ services:
       - /app/compat-tests/fixtures/basic-vite4/package/node_modules
       - /app/compat-tests/node_modules
       - /app/examples/basic-dom/node_modules
+      - /app/examples/camera-host-demo/node_modules
       - /app/examples/dom-cra/node_modules
       - /app/examples/r3f-cra/node_modules
       - /app/packages/benchmarks/node_modules
       - /app/packages/browser-bundles/node_modules
+      - /app/packages/camera-studio/node_modules
       - /app/packages/dataverse/node_modules
       - /app/packages/dataverse-experiments/node_modules
       - /app/packages/playground/node_modules

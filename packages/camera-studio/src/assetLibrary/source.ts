@@ -24,6 +24,13 @@ export class LibraryError extends Error {
   }
 }
 
+/** 源能力自描述(供 capabilities 查询;可写判别以 putEntry 存在性为准) */
+export type LibrarySourceCapabilities = {
+  writable?: boolean
+  permanentUrls?: boolean // URL 长效才允许跨挂载缓存
+  maxUploadBytes?: number // 导入前先校验先提示
+}
+
 /** 统一数据源(读) */
 export interface LibrarySource {
   readonly id: string
@@ -31,11 +38,7 @@ export interface LibrarySource {
   getEntry(id: string): Promise<LibraryEntry | undefined>
   /** 每个源自己解析自己的 blob:静态源→CDN 地址,HTTP 源→预签名,IDB→blob: */
   getBlobUrl(blobId: string): Promise<string>
-  capabilities?: {
-    writable?: boolean
-    permanentUrls?: boolean // URL 长效才允许跨挂载缓存
-    maxUploadBytes?: number // 导入前先校验先提示
-  }
+  capabilities?: LibrarySourceCapabilities
   /** 远端变更推送(可选,v1 不强制) */
   subscribe?(fn: () => void): () => void
 }

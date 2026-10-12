@@ -10,7 +10,7 @@ import {getStudioSync, onChange, val} from '@dreamerbird/core'
 // 空构造不存 internals,摸不到 _store._saaz——TheatreStudio.ts:121)
 import getStudio from '@dreamerbird/studio/getStudio'
 import {privateAPI} from '@dreamerbird/core/privateAPIs'
-import getDeep from '@dreamerbird/utils/getDeep'
+import getDeep from './getDeep'
 import {usePrism, useVal} from '@dreamerbird/react'
 import type {IScrub, ISheet, ISheetObject} from '@dreamerbird/core'
 import React, {

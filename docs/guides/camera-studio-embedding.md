@@ -31,18 +31,9 @@ peer 依赖(按包内 peerDependencies 逐字列出,需由宿主提供):
 npm install react react-dom three @react-three/fiber
 ```
 
-**已知限制(0.1.0)**:当前 dist 的运行时 import 尚未全部列入包的
-dependencies(drei、styled-components、three-stdlib、@phosphor-icons/react、
-@gltf-transform/\*、draco3dgltf、@dreamerbird/threeik、@dreamerbird/dataverse、
-@dreamerbird/r3f、@dreamerbird/react、@dreamerbird/utils 等)。monorepo
-workspaces 消费不受影响(由兄弟包 devDependencies 提供);外部工程如遇打包器报「无
-法解析 xxx」,把缺的包在宿主侧补装即可:
-
-```bash
-npm install @react-three/drei styled-components three-stdlib \
-  @phosphor-icons/react @gltf-transform/core @gltf-transform/extensions \
-  @gltf-transform/functions draco3dgltf
-```
+其余运行时库(`@react-three/drei`、`styled-components`、`three-stdlib`、
+`@phosphor-icons/react`、`@gltf-transform/*`、`draco3dgltf`、`@dreamerbird/threeik`
+等)已列入包自身 dependencies,随包安装,无需宿主操心。
 
 ### monorepo 消费方(theatre 仓库内,含本示例)
 
@@ -113,7 +104,12 @@ export function CameraPage() {
 
 ## 3. 存储:实现 WritableLibrarySource
 
-模型/姿势/动画数据完全由你提供的存储承担。接口(照包内定义逐字):
+模型/姿势/动画数据完全由你提供的存储承担。接口与条目类型全部从包根导出
+(`LibrarySource`、`WritableLibrarySource`、`LibrarySourceCapabilities`、
+`LibraryEntry`、`ModelEntry`、`PoseEntry`、`AnimationEntry`、`EntryKind`、
+`RigId`、`RigAlias`、`LibraryError`、`LibraryErrorCode`、`isWritableSource`), 直
+接 `import type {...} from '@dreamerbird/camera-studio'` 即可;接口形状(照包内定
+义逐字):
 
 ```ts
 // 统一数据源(读)
@@ -171,56 +167,13 @@ interface WritableLibrarySource extends LibrarySource {
 
 ```ts
 // src/memorySource.ts —— 演示/测试用;生产换你的 HTTP 实现
-// 类型形状照抄包内定义(包根暂未转出口这些类型,见 §8「已知限制」);
-// 形状逐字段一致,TS 结构化校验会在 storage: 传参与契约套件注册处兜底。
-
-// ---- 与包内 packages/camera-studio/src/assetLibrary/types.ts 一致 ----
-export type RigId = string
-export type RigAlias = {rig: RigId; name: string}
-export type EntryKind = 'model' | 'pose' | 'animation'
-
-export type ModelEntry = {
-  id: string
-  kind: 'model'
-  name: string
-  rig: RigId
-  blobId: string
-  contentHash: string
-  thumbnailId?: string
-  boneCount: number
-  vertexCount: number
-  createdAt: number
-}
-
-export type PoseEntry = {
-  id: string
-  kind: 'pose'
-  name: string
-  rig: RigId
-  thumbnailId?: string
-  bones: Record<
-    string,
-    {
-      rotation?: [number, number, number, number]
-      position?: [number, number, number]
-    }
-  >
-  createdAt: number
-}
-
-export type AnimationEntry = {
-  id: string
-  kind: 'animation'
-  name: string
-  rig: RigId
-  blobId: string
-  contentHash: string
-  duration: number
-  createdAt: number
-}
-
-export type LibraryEntry = ModelEntry | PoseEntry | AnimationEntry
-// ---- 类型拷贝结束 ----
+// 条目/别名类型全部由包根导出,直接 import;WritableLibrarySource 接口
+// 形状见上文,TS 结构化校验会在 storage: 传参与契约套件注册处兜底。
+import type {
+  EntryKind,
+  LibraryEntry,
+  RigAlias,
+} from '@dreamerbird/camera-studio'
 
 /** FNV-1a 64 位:非加密,只做内容寻址(与包内 hashBytes 同算法) */
 function fnv1a64(data: Uint8Array): string {
@@ -388,8 +341,8 @@ const {ready, error, sceneProps} = useCameraStudio({
   它会被忽略(实例的状态由创建方负责),控制台有警告。
 - 节流是**尾部触发**:持续编辑期间每秒最多回调一次,停顿 1s 后必触发一次。
 - **冲突矩阵**:如果宿主在挂载模块**之前**已经自己调过 `theatre.init`, 模块检测到
-  init 配置不一致时**以先到的为准**(告警到 console,绝不悄悄重连)。所以要么把init
-  交给模块,要么自己 init 且保持一致,不要两头都管。
+  init 配置不一致时**以先到的为准**(告警到 console,绝不悄悄重连)。所以要么把
+  `init` 交给模块,要么自己 init 且保持一致,不要两头都管。
 
 ## 6. 协作
 
@@ -566,7 +519,7 @@ process.on('SIGTERM', () => {
   同时有「旧播种 Y Bot」和「内置目录 Y Bot」。这是刻意保留: 旧播种是浏览器内
   FBX→GLB 转换的非确定性产物,内容哈希与出货文件不同, 内容寻址下视为另一份资产;旧
   场景对它的引用不受影响,两边都能用。新用户只见目录里的一个。无需处理。
-- **已知限制**:存储相关类型(`WritableLibrarySource`、`LibraryEntry`、
-  `EntryKind`、`RigAlias`、`LibraryError` 等)尚未从包根转出口,§3 示例的「本地拷
-  贝类型」是当前的权宜写法;`@dreamerbird/camera-studio/contract-tests` 子路径导
-  出稳定,结构化校验不受影响。类型转出口在后续打包核对任务里定。
+- **想直接组合内置 IndexedDB 实现?** `IndexedDBBackend` 类同样从包根导出
+  (`new IndexedDBBackend({dbName})`),与 `storage: {namespace}` 简写用的是同一实
+  现;存储类型族(`WritableLibrarySource`、`LibraryEntry`、`LibraryError` 等) 全部
+  从包根导出,`@dreamerbird/camera-studio/contract-tests` 子路径导出稳定。
