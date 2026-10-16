@@ -35,6 +35,9 @@ npm install react react-dom three @react-three/fiber
 `@phosphor-icons/react`、`@gltf-transform/*`、`draco3dgltf`、`@dreamerbird/threeik`
 等)已列入包自身 dependencies,随包安装,无需宿主操心。
 
+运行时导出的 `CAMERA_STUDIO_VERSION` 与 `package.json` 的 `version` 同源(包内直接读
+package.json),排查版本时不需要核对第二个版本号。
+
 ### monorepo 消费方(theatre 仓库内,含本示例)
 
 `package.json` 里用 workspace 协议:
@@ -87,7 +90,7 @@ export function CameraPage() {
 ```
 
 `useCameraStudio(config)` 返回 `{ready, error, sceneProps}`;`sceneProps` 对宿主
-**不透明**(当前 = `{project, onFlows}` 的转发),不要解构它。
+**不透明**(当前 = `{project, onFlows, onError}` 的转发),不要解构它。
 
 ### config 全字段参考
 
@@ -95,6 +98,7 @@ export function CameraPage() {
 | -------------------- | -------------------------------------------------------- | --------------- | ---------------------------------------------------------------------------------------------------- |
 | `project`            | `string \| IProject`                                     | `'Space'`       | 场景 id 字符串(getProject),或宿主自建的 IProject 实例(传实例时 `state.initialState` 被忽略)          |
 | `state`              | `{initialState?, onStateChange?, throttleMs?}`           | 不传            | 传了 = **宿主接管场景状态**,同时关掉 theatre 本地持久化(见 §5)                                       |
+| `onError`            | `(error: CameraStudioError) => void`                     | 不传            | 库存储/启动清理/视频导出错误上告给宿主提示组件(见下节)                                              |
 | `storage`            | `WritableLibrarySource \| {namespace?: string} \| false` | 内置 IndexedDB  | 可写源实例 / 「namespace」简写(库名 `toybox-asset-library[-namespace]`)/ `false` 纯查看器(见 §3、§8) |
 | `assets.baseUrl`     | `string`                                                 | 包内 `assets/`  | 内置目录文件根(见 §4)                                                                                |
 | `sync`               | `{serverUrl?: string} \| false`                          | `false`         | 协作端点(见 §6)                                                                                      |
@@ -102,6 +106,48 @@ export function CameraPage() {
 | `ui.zIndexBase`      | `number`                                                 | `1000`          | 模块停靠框 z-index 基准(见 §7 层级地图)                                                              |
 | `ui.locale`          | `string`                                                 | 不生效          | 仅当宿主**未**包 I18nProvider 时应用,一次性 setLanguage(见 §7)                                       |
 | `flows.onFlows`      | `(flows: CameraFlows) => void`                           | 不传            | 接管「添加模型/添加路径/添加相机」入口,拿到模块的 flows 句柄                                         |
+
+### 错误提示:onError 交给宿主组件
+
+模块不内置错误条;运行期可展示错误统一转成 `CameraStudioError`,经 `onError`
+交给你自己的提示组件:
+
+```tsx
+import {useState} from 'react'
+import {
+  useCameraStudio,
+  CameraScene,
+  type CameraStudioError,
+} from '@dreamerbird/camera-studio'
+
+function CameraPage() {
+  const [notice, setNotice] = useState<CameraStudioError | null>(null)
+  const {ready, error, sceneProps} = useCameraStudio({
+    project: 'Space',
+    onError: setNotice,
+  })
+
+  if (error) return <YourErrorPage error={error} /> // 初始化失败
+  if (!ready) return null
+  return (
+    <>
+      {notice && (
+        <YourToast role="alert" onClose={() => setNotice(null)}>
+          {notice.message}
+        </YourToast>
+      )}
+      <CameraScene {...sceneProps} />
+    </>
+  )
+}
+```
+
+`CameraStudioError` 形状:`{source, code, message, cause?}`。`source: 'library'`
+= 库存储与启动清理错误,`code` 沿用 `LibraryError` 六码(`auth` / `quota` /
+`network` / `conflict` / `not-found` / `unknown`);`source: 'export'` = 视频导出错
+误,当前 `code` 为 `unknown`。不传 `onError` 时保持旧行为:库错误按原路径静默或
+console 留痕,视频导出错误用浏览器 `alert`。初始化失败不走 `onError`,仍从 hook 的
+`error` 返回。
 
 ## 3. 存储:实现 WritableLibrarySource
 
@@ -155,8 +201,9 @@ interface WritableLibrarySource extends LibrarySource {
   (这是去重和孤儿清扫的前提;生产请用 SHA-256)。
 - **错误码**(契约未覆盖):抛 `LibraryError`(code ∈ `auth` / `quota` / `network` /
   `conflict` / `not-found` / `unknown`),不要把业务错误混成 `unknown`。透出现
-  状:Library 聚合错误经 `onError` 回调上告,但模块 boot 当前未接 `onError`,失败只
-  在 console 留 warning; 按 code 的面板错误条是已知的未实施项(见 §8)。
+  状:Library 聚合错误经配置的顶层 `onError` 转成 `CameraStudioError`(source =
+  `library`)上告,宿主用自己的提示组件渲染(见 §2);不传 `onError` 则保持库层原
+  有静默/console 语义。
 - **id 命名空间**(契约未覆盖):你的源**不得**返回 `seed-pose-*` / `seed-model-*`
   前缀条目(内置目录专属,聚合层会拒绝并报 conflict)。源 id 同样占用命名空
   间:`catalog`(内置目录)与 `idb`(内置 IndexedDB)是保留名,宿主源自定义id 勿用——撞
@@ -284,8 +331,9 @@ npx jest memorySource
 
 ## 4. 内置资产上架到自有 CDN
 
-包自带内置目录(Y Bot 模型 + 手势姿势预览图),缺省从**包内 `assets/`** 加载。生产
-建议拷到你自己的 CDN:
+包自带内置目录(**一个标准人体模型 Y Bot** + 手势姿势预览图),缺省从**包内
+`assets/`** 加载。包内模型只承担开箱可用的人体骨架基线;业务模型一律由宿主存储
+(§3)提供,不随包附带。生产建议把内置目录拷到你自己的 CDN:
 
 ```
 assets/
@@ -512,9 +560,10 @@ process.on('SIGTERM', () => {
 - **导入/保存姿势/删除入口整个消失了?** 先看 `storage`:只有 `storage: false` 会
   进入**纯查看器模式**(模块内即「无可写源」状态),这些入口是**整体隐藏**(不是置
   灰)——预期行为。完全省略 `storage` 走的是内置 IndexedDB 可写源,入口都在。
-- **保存失败只在 console 留一行 warning?** 现状如此:库存储错误经 Library 的
-  `onError` 通道透出,模块 boot 未接该回调(写路径由调用方自行 console.warn), 按错
-  误码的面板错误条是已知未实施项——排查时以 console 为准。
+- **保存/导出错想进自己的提示组件?** 配顶层 `onError`:库存储与启动清理错误
+  (`source: 'library'`)带 `LibraryError` 六码,视频导出错误(`source: 'export'`)
+  当前为 `unknown`;`message` 可直接展示。不传时保持旧行为——库存储按原路径静默
+  或 console 留痕,导出用浏览器 `alert`。
 - **`seed-*` id 前缀的条目写不进/读不出?** `seed-pose-*` / `seed-model-*` 是内置
   目录专属前缀,可写源返回它们会被聚合层拒绝(conflict)。旧浏览器里历史播种留下的
   `seed-*` 条目,模块启动时会静默清理一次(仅内置 IDB缺省库名分支)。

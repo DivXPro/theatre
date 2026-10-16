@@ -504,3 +504,57 @@ test('11. 重挂换配置:warn 点名差异键一次,sceneProps 沿用首 boot,g
     warnSpy.mockRestore()
   }
 })
+
+// 12. 宿主错误提示接口(2026-10-16 收尾):库存储错误经 config.onError
+// 转成宿主可渲染的 CameraStudioError;sceneProps 同时透传给 CameraScene
+// (视频导出错误也走同一回调)。
+test('12a. onError:库错误转成 CameraStudioError,sceneProps 透传同一回调', async () => {
+  const onError = jest.fn()
+  const {LibraryError} = await import('./assetLibrary/source')
+  // storage:false 跳过启动清理,断言只压 reportError 这一通路上
+  const ctx = await bootstrap.initCameraStudio({storage: false, onError})
+  expect(ctx.sceneProps.onError).toBe(onError)
+
+  const cause = new Error('disk full')
+  ctx.library.reportError(new LibraryError('quota', '额度不足', cause))
+  expect(onError).toHaveBeenCalledTimes(1)
+  expect(onError.mock.calls[0][0]).toMatchObject({
+    source: 'library',
+    code: 'quota',
+    message: '额度不足',
+    cause,
+  })
+  await bootstrap.disposeCameraStudio(ctx)
+})
+
+test('12b. 启动清理失败:有 onError 上告宿主,不再走 console.warn', async () => {
+  const libModule = await import('./assetLibrary/library')
+  const failure = new Error('idb busy')
+  const sweepSpy = jest
+    .spyOn(libModule.Library.prototype, 'sweepOrphanBlobs')
+    .mockRejectedValue(failure)
+  const onError = jest.fn()
+  const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
+  try {
+    const h = hookHost({onError})
+    await h.mount()
+    await flush()
+    expect(onError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        source: 'library',
+        code: 'unknown',
+        message: '孤儿 blob 清扫失败',
+        cause: failure,
+      }),
+    )
+    expect(
+      warnSpy.mock.calls.some((c) =>
+        String(c[0]).includes('孤儿 blob 清扫失败'),
+      ),
+    ).toBe(false)
+    await h.unmount()
+  } finally {
+    sweepSpy.mockRestore()
+    warnSpy.mockRestore()
+  }
+})

@@ -647,7 +647,7 @@ function GroundGrid() {
  * UI 装配可配见 ./uiConfig:停靠框 portal 容器 / z-index 基准 / 语言
  * (宿主已包 I18nProvider 时语言以宿主为准,ui.locale 仅自包时生效)。
  */
-export function CameraScene({project, onFlows}: CameraSceneProps) {
+export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
   const t = useT()
   const cameraTargetRef = useRef<Mesh>(null!)
   const cameraObjRef = useRef<ISheetObject<any> | undefined>(undefined)
@@ -1346,7 +1346,13 @@ export function CameraScene({project, onFlows}: CameraSceneProps) {
       canvas,
       sheet,
       sink,
-      onError: (message) => window.alert(message),
+      onError: (message) => {
+        if (onError) {
+          onError({source: 'export', code: 'unknown', message})
+        } else {
+          window.alert(message)
+        }
+      },
     })
     if (!handle) {
       setShotView(prevShotViewRef.current)
@@ -1361,7 +1367,7 @@ export function CameraScene({project, onFlows}: CameraSceneProps) {
         setExporting(false)
         setShotView(prevShotViewRef.current)
       })
-  }, [shotView, sheet, activeCamera])
+  }, [shotView, sheet, activeCamera, onError])
 
   // 导出中按 Esc = 取消(丢弃已录内容)
   useEffect(() => {

@@ -24,6 +24,7 @@ import {
   unregisterCustomPropEditor,
 } from '@dreamerbird/studio/propEditors/customPropEditors'
 import type {CameraSceneProps, CameraStudioConfig} from './config'
+import {cameraErrorFromLibrary, cameraErrorFromUnknown} from './errors'
 import {registerCameraMessages} from './i18n'
 import {configureLibrary} from './assetLibrary/library'
 import {ensureBuiltinRigAlias} from './assetLibrary/library'
@@ -101,7 +102,11 @@ function resolveProject(config: CameraStudioConfig): IProject {
 export function resolveSceneProps(
   config: CameraStudioConfig,
 ): CameraSceneProps {
-  return {project: resolveProject(config), onFlows: config.flows?.onFlows}
+  return {
+    project: resolveProject(config),
+    onFlows: config.flows?.onFlows,
+    onError: config.onError,
+  }
 }
 
 /** 参与漂移比对的顶层配置键(flows 回调引用每次渲染都新,不比) */
@@ -260,21 +265,33 @@ async function boot(config: CameraStudioConfig): Promise<BootCtx> {
   const library = configureLibrary({
     sources: writable ? [writable, catalog] : [catalog],
     writable,
+    // 宿主错误提示接口:库错误转成 CameraStudioError;不传则保持库层
+    // 现有语义(未配置 onError 时静默/调用方自行 console.warn)
+    onError: config.onError
+      ? (err) => config.onError?.(cameraErrorFromLibrary(err))
+      : undefined,
   })
+  const reportStartupError = (message: string, err: unknown): void => {
+    if (config.onError) {
+      config.onError(cameraErrorFromUnknown('library', message, err))
+    } else {
+      console.warn(`[camera-studio] ${message}`, err)
+    }
+  }
   // 旧播种条目启动清理(一次性迁移):只在缺省库名的内置 IDB 上跑——
   // 历史播种只写过缺省库,带 namespace 的库从未有种子;纯查看器无可写源
   if (idbName === DEFAULT_IDB_NAME) {
     void cleanupLegacySeeds(library).catch((err) => {
-      console.warn('[camera-studio] 旧播种条目清理失败', err)
+      reportStartupError('旧播种条目清理失败', err)
     })
     // 两个启动清理(T8 评审遗留)并列进缺省分支,失败不阻断 boot。
     // 时序:清扫调度在 cleanupLegacySeeds 之后——旧种子条目先被删,
     // 它们的孤儿 blob 本轮即可被收走(并发竞态下留待下次启动,无害)
     void library.sweepOrphanBlobs().catch((err) => {
-      console.warn('[camera-studio] 孤儿 blob 清扫失败', err)
+      reportStartupError('孤儿 blob 清扫失败', err)
     })
     void ensureBuiltinRigAlias(library).catch((err) => {
-      console.warn('[camera-studio] 内置骨架族别名保底失败', err)
+      reportStartupError('内置骨架族别名保底失败', err)
     })
   }
 

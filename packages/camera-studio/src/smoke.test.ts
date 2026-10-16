@@ -10,7 +10,8 @@ jest.doMock('@dreamerbird/studio', () => ({
   __esModule: true,
 }))
 
-test('包骨架可导入', async () => {
+test('包骨架可导入,版本号与 package.json 同步', async () => {
+  const {version} = require('../package.json') as {version: string}
   const {CAMERA_STUDIO_VERSION} = await import('./index')
-  expect(CAMERA_STUDIO_VERSION).toBe('0.1.0')
+  expect(CAMERA_STUDIO_VERSION).toBe(version)
 })

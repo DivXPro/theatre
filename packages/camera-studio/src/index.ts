@@ -2,7 +2,7 @@
 // 加载期就 translate 的调用(ShotCamera 属性标签)
 import './i18n'
 export {CameraScene} from './CameraScene'
-export const CAMERA_STUDIO_VERSION = '0.1.0'
+export {CAMERA_STUDIO_VERSION} from './version'
 export {useCameraStudio} from './useCameraStudio'
 export type {
   CameraStudioConfig,
@@ -12,6 +12,11 @@ export type {
 // flows.onFlows 回调句柄类型(指南 §2 config 表已点名)及其签名用到的类型
 export type {CameraFlows, Vec3} from './hostFlows'
 export type {PathPreset} from './pathPresets'
+export type {
+  CameraStudioError,
+  CameraStudioErrorHandler,
+  CameraStudioErrorSource,
+} from './errors'
 // 测试与高级宿主可用:绕过 hook 直接管 init/dispose 生命周期
 export {initCameraStudio, disposeCameraStudio} from './bootstrap'
 export type {BootCtx} from './bootstrap'

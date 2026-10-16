@@ -6,11 +6,16 @@
  * 演示点:
  * - storage: 自定义可写存储(内存版,刷新即失;生产换 HTTP 实现);
  * - assets.baseUrl: 不传 = 包内缺省 assets/(上架 CDN 的写法见指南 §4);
- * - sync: false:协作关闭(缺省即 false,这里显式写出)。
+ * - sync: false:协作关闭(缺省即 false,这里显式写出);
+ * - onError: 模块错误交给宿主自己的提示条(不内置错误条)。
  */
-import React from 'react'
+import React, {useState} from 'react'
 import ReactDOM from 'react-dom/client'
-import {useCameraStudio, CameraScene} from '@dreamerbird/camera-studio'
+import {
+  useCameraStudio,
+  CameraScene,
+  type CameraStudioError,
+} from '@dreamerbird/camera-studio'
 import {MemorySource} from './memorySource'
 
 // 宿主视觉决定:页面底色(库不替宿主页面着色)
@@ -49,16 +54,73 @@ function HostNav() {
   )
 }
 
+/** 宿主自己的错误提示组件:模块只上告结构化错误,不规定 UI 形态 */
+function HostErrorToast({
+  error,
+  onClose,
+}: {
+  error: CameraStudioError
+  onClose: () => void
+}) {
+  return (
+    <div
+      role="alert"
+      style={{
+        position: 'fixed',
+        top: 56,
+        right: 16,
+        zIndex: 2000, // 高过模块停靠框基准(1000),由宿主自己掌握层级
+        maxWidth: 360,
+        padding: '10px 12px',
+        borderRadius: 6,
+        background: '#3b2323',
+        border: '1px solid #8a4b4b',
+        color: '#ffd7d7',
+        font: '13px/1.5 system-ui, sans-serif',
+        boxShadow: '0 8px 24px rgba(0,0,0,.35)',
+      }}
+    >
+      <strong style={{display: 'block', marginBottom: 4}}>
+        {error.source === 'library' ? '资产库' : '视频导出'}({error.code})
+      </strong>
+      {error.message}
+      <button
+        type="button"
+        onClick={onClose}
+        style={{
+          float: 'right',
+          marginLeft: 12,
+          border: 0,
+          background: 'transparent',
+          color: '#ffd7d7',
+          cursor: 'pointer',
+        }}
+      >
+        关闭
+      </button>
+    </div>
+  )
+}
+
 function StudioRoute() {
+  const [notice, setNotice] = useState<CameraStudioError | null>(null)
   const {ready, error, sceneProps} = useCameraStudio({
     project: 'Space',
     storage: memoryStorage,
     // assets: {baseUrl: 'https://cdn.example.com/camera-assets/'} ← §4 CDN 写法
     sync: false,
+    onError: setNotice,
   })
   if (error) throw error
   if (!ready) return null
-  return <CameraScene {...sceneProps} />
+  return (
+    <>
+      {notice && (
+        <HostErrorToast error={notice} onClose={() => setNotice(null)} />
+      )}
+      <CameraScene {...sceneProps} />
+    </>
+  )
 }
 
 function App() {

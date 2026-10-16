@@ -36,7 +36,7 @@ export interface BootCtx {
 }
 
 // @public (undocumented)
-export const CAMERA_STUDIO_VERSION = "0.1.0";
+export const CAMERA_STUDIO_VERSION: string;
 
 // @public (undocumented)
 export type CameraFlows = {
@@ -51,12 +51,13 @@ export type CameraFlows = {
 };
 
 // @public
-export function CameraScene({ project, onFlows }: CameraSceneProps): React_2.JSX.Element;
+export function CameraScene({ project, onFlows, onError }: CameraSceneProps): React_2.JSX.Element;
 
 // @public
 export type CameraSceneProps = {
     project: IProject;
     onFlows?: (flows: CameraFlows) => void;
+    onError?: CameraStudioErrorHandler;
 };
 
 // @public (undocumented)
@@ -68,6 +69,7 @@ export interface CameraStudioConfig {
     flows?: {
         onFlows?: (flows: CameraFlows) => void;
     };
+    onError?: CameraStudioErrorHandler;
     project?: string | IProject;
     state?: {
         initialState?: unknown;
@@ -87,6 +89,20 @@ export interface CameraStudioConfig {
         locale?: string;
     };
 }
+
+// @public
+export type CameraStudioError = {
+    source: CameraStudioErrorSource;
+    code: LibraryErrorCode;
+    message: string;
+    cause?: unknown;
+};
+
+// @public
+export type CameraStudioErrorHandler = (error: CameraStudioError) => void;
+
+// @public
+export type CameraStudioErrorSource = 'library' | 'export';
 
 // @public (undocumented)
 export interface CameraStudioHandle {

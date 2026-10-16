@@ -6,6 +6,7 @@
  */
 import type {IProject} from '@dreamerbird/core'
 import type {WritableLibrarySource} from './assetLibrary/source'
+import type {CameraStudioErrorHandler} from './errors'
 import type {CameraFlows} from './hostFlows'
 
 export interface CameraStudioConfig {
@@ -18,6 +19,8 @@ export interface CameraStudioConfig {
     /** onStateChange 节流,缺省 1000ms(尾部触发,卸载时 flush) */
     throttleMs?: number
   }
+  /** 宿主错误提示入口:库存储/启动清理/视频导出错误统一上告;不传保持内置提示行为 */
+  onError?: CameraStudioErrorHandler
   /** 可写源实例 | 「namespace」内置 IDB 简写(库名 toybox-asset-library[-namespace],
       不带 namespace 与现状一字不差) | false 纯查看器(仅内置目录);缺省 = 现状 */
   storage?: WritableLibrarySource | {namespace?: string} | false
@@ -37,6 +40,7 @@ export interface CameraStudioConfig {
 export type CameraSceneProps = {
   project: IProject
   onFlows?: (flows: CameraFlows) => void
+  onError?: CameraStudioErrorHandler
 }
 
 export interface CameraStudioHandle {
