@@ -16,14 +16,13 @@ import {
 } from '@dreamerbird/studio/panels/BasePanel/common'
 import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
 import ObjectDetails from './ObjectDetails'
-import ProjectDetails from './ProjectDetails'
 import getStudio from '@dreamerbird/studio/getStudio'
 import useHotspot from '@dreamerbird/studio/uiComponents/useHotspot'
 import {Atom, prism, val} from '@dreamerbird/dataverse'
 import useLockSet from '@dreamerbird/studio/uiComponents/useLockSet'
 import {usePresenceListenersOnRootElement} from '@dreamerbird/studio/uiComponents/usePresence'
 import {__private} from '@dreamerbird/core'
-const {isProject, isSheetObject} = __private.instanceTypes
+const {isSheetObject} = __private.instanceTypes
 
 const headerHeight = `32px`
 
@@ -163,23 +162,8 @@ const DetailPanel: React.FC<{}> = (props) => {
         </Container>
       )
     }
-    const project = selection.find(isProject)
-    if (project) {
-      return (
-        <Container $pin={showDetailsPanel}>
-          <Header>
-            <Title title={`${project.address.projectId}`}>
-              <TitleBar_Piece>{project.address.projectId} </TitleBar_Piece>
-            </Title>
-          </Header>
-          <Body>
-            <ProjectDetails projects={[project]} />
-          </Body>
-        </Container>
-      )
-    }
-
-    // 无选中时不显示空态提示块,整个面板隐藏
+    // 无选中物体时不显示面板(项目行选中也不再弹 ProjectDetails 空面板,
+    // 2026-10-16 用户定夺:整块去掉,Export to JSON 入口随之移除)
     return null
   }, [showDetailsPanel])
 }
