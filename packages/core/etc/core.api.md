@@ -10,6 +10,7 @@ import { Pointer } from '@dreamerbird/dataverse';
 import { PointerToPrismProvider } from '@dreamerbird/dataverse';
 import { PointerType } from '@dreamerbird/dataverse';
 import { Prism } from '@dreamerbird/dataverse';
+import { ReactNode } from 'react';
 import { Ticker } from '@dreamerbird/dataverse';
 
 // @public (undocumented)
@@ -74,6 +75,14 @@ export function getStudio(): Promise<IStudio>;
 // @public (undocumented)
 export function getStudioSync(errorIfNotReady?: boolean): IStudio | undefined;
 
+// @public
+export type I18nMessages = {
+    [key: string]: string;
+};
+
+// @public (undocumented)
+export type I18nVars = Record<string, string | number>;
+
 // @public (undocumented)
 export interface IAttachAudioArgs {
     audioContext?: AudioContext;
@@ -88,18 +97,32 @@ export interface IBasePropType<LiteralIdentifier extends string, ValueType, Dese
     // (undocumented)
     default: ValueType;
     deserializeAndSanitize: (json: unknown) => undefined | DeserializeType;
+    editor?: string;
     hidden?: boolean;
-    label: string | undefined;
+    label: PropLabel | undefined;
     type: LiteralIdentifier;
     valueType: ValueType;
 }
 
-// @public
+// @public (undocumented)
 export interface IExtension {
+    i18n?: IExtensionI18n;
     id: string;
+    outlineObjectMenu?: (object: ISheetObject<UnknownShorthandCompoundProps>) => OutlineObjectMenuContribution | undefined;
     panes?: Array<PaneClassDefinition>;
     toolbars?: {
         [key in 'global' | string]: (set: (config: ToolsetConfig) => void, studio: IStudio) => () => void;
+    };
+}
+
+// @public
+export interface IExtensionI18n {
+    fallbacks?: {
+        [from: string]: string;
+    };
+    language?: string;
+    messages?: {
+        [lang: string]: I18nMessages;
     };
 }
 
@@ -116,6 +139,7 @@ export interface InitOpts {
     // (undocumented)
     studio?: boolean;
     usePersistentStorage?: boolean;
+    workspaceButton?: IWorkspaceButtonConfig;
 }
 
 // @public
@@ -160,7 +184,7 @@ export type IRange = IPlaybackRange;
 // @public (undocumented)
 export interface IScrub {
     capture(fn: (api: IScrubApi) => void): void;
-    commit(): void;
+    commit(undoable?: boolean): void;
     discard(): void;
     reset(): void;
 }
@@ -178,6 +202,7 @@ export interface ISequence {
         destinationNode: AudioNode;
         gainNode: GainNode;
     }>;
+    closestGridPosition(posInUnitSpace: number): number;
     getKeyframes(prop: Pointer<{}>): BasicKeyframe[];
     pause(): void;
     play(conf?: {
@@ -237,13 +262,17 @@ export interface IStudio {
         reconfigure?: boolean;
     }): void;
     getStudioProject(): IProject;
+    readonly i18n: IStudioI18nAPI;
+    readonly initialized: Promise<void>;
     onSelectionChange(fn: (s: Array<ISheetObject<{}> | ISheet>) => void): VoidFunction;
+    redo(): void;
     scrub(): IScrub;
     readonly selection: Array<ISheetObject<{}> | ISheet>;
     setSelection(selection: Array<ISheetObject<any> | ISheet>): void;
     transaction(fn: (api: ITransactionAPI) => void): void;
     // (undocumented)
     readonly ui: IStudioUI;
+    undo(): void;
 }
 
 // @public
@@ -254,6 +283,19 @@ export interface IStudioBundle {
     registerCoreBundle(coreBundle: CoreBundle): void;
     // (undocumented)
     readonly type: 'Theatre_StudioBundle';
+}
+
+// @public
+export interface IStudioI18nAPI {
+    // (undocumented)
+    getLanguage(): string;
+    getRegisteredLanguages(): string[];
+    languageDisplayName(code: string, inLanguage?: string): string;
+    onLanguageChange(fn: () => void): () => void;
+    registerFallback(from: string, to: string): void;
+    registerMessages(lang: string, messages: I18nMessages): void;
+    setLanguage(lang: string): void;
+    t(key: string, vars?: I18nVars): string;
 }
 
 // @public
@@ -271,6 +313,7 @@ export interface IStudioUI {
     // (undocumented)
     renderToolset(toolsetId: string, htmlNode: HTMLElement): () => void;
     restore(): void;
+    setLeftStripHidden(hidden: boolean): void;
 }
 
 // @public (undocumented)
@@ -279,7 +322,19 @@ export interface ITransactionAPI {
     forgetSheet(sheet: ISheet): void;
     sequenceProp<V>(pointer: Pointer<V>): void;
     set<V>(pointer: Pointer<V>, value: V): void;
+    unsequenceProp<V>(pointer: Pointer<V>): void;
     unset<V>(pointer: Pointer<V>): void;
+}
+
+// @public
+export interface IWorkspaceButtonConfig {
+    icon?: ReactNode;
+    menu?: Array<{
+        label: string;
+        onClick: () => void;
+    }>;
+    name?: string;
+    team?: string;
 }
 
 // Warning: (ae-forgotten-export) The symbol "Nominal" needs to be exported by the entry point index.d.ts
@@ -324,6 +379,20 @@ export interface OnDiskState extends ProjectState_Historic {
 }
 
 // @public (undocumented)
+export type OutlineMenuItem = {
+    type: 'normal';
+    label: string;
+    onSelect: () => void;
+    enabled?: boolean;
+    role?: 'delete';
+};
+
+// @public (undocumented)
+export type OutlineObjectMenuContribution = {
+    items: OutlineMenuItem[];
+};
+
+// @public (undocumented)
 export interface PaneClassDefinition {
     class: string;
     // (undocumented)
@@ -363,6 +432,9 @@ export interface PropAddress extends SheetObjectAddress {
     // (undocumented)
     pathToProp: PathToProp;
 }
+
+// @public
+export type PropLabel = string | (() => string);
 
 // Warning: (ae-forgotten-export) The symbol "LonghandCompoundPropsToInitialValue" needs to be exported by the entry point index.d.ts
 //
@@ -433,6 +505,9 @@ export interface PropTypeConfig_StringLiteral<T extends string> extends ISimpleP
 
 // @public (undocumented)
 export const propTypeSymbol: unique symbol;
+
+// @public
+export const resolvePropLabel: (label: PropLabel | undefined) => string | undefined;
 
 // @public (undocumented)
 export type Rgba = {
@@ -573,7 +648,7 @@ export type ToolsetConfig = Array<ToolConfig>;
 
 // @public (undocumented)
 export namespace types {
-        { index_d_boolean as boolean, index_d_compound as compound, index_d_file as file, index_d_image as image, index_d_number as number, index_d_rgba as rgba, index_d_string as string, index_d_stringLiteral as stringLiteral };
+        { export type index_d_PropLabel as PropLabel, index_d_boolean as boolean, index_d_compound as compound, index_d_file as file, index_d_image as image, index_d_number as number, index_d_resolvePropLabel as resolvePropLabel, index_d_rgba as rgba, index_d_string as string, index_d_stringLiteral as stringLiteral };
 }
 
 // @public
@@ -597,10 +672,10 @@ export type WithoutSheetInstance<T extends SheetAddress> = Omit<T, 'sheetInstanc
 
 // Warnings were encountered during analysis:
 //
-// dist/index.d.ts:2413:5 - (ae-forgotten-export) The symbol "propTypeUtils" needs to be exported by the entry point index.d.ts
-// dist/index.d.ts:2414:5 - (ae-forgotten-export) The symbol "ids" needs to be exported by the entry point index.d.ts
-// dist/index.d.ts:2415:5 - (ae-forgotten-export) The symbol "instanceTypes" needs to be exported by the entry point index.d.ts
-// dist/index.d.ts:2416:5 - (ae-forgotten-export) The symbol "keyframeUtils" needs to be exported by the entry point index.d.ts
+// dist/index.d.ts:2607:5 - (ae-forgotten-export) The symbol "propTypeUtils" needs to be exported by the entry point index.d.ts
+// dist/index.d.ts:2608:5 - (ae-forgotten-export) The symbol "ids" needs to be exported by the entry point index.d.ts
+// dist/index.d.ts:2609:5 - (ae-forgotten-export) The symbol "instanceTypes" needs to be exported by the entry point index.d.ts
+// dist/index.d.ts:2610:5 - (ae-forgotten-export) The symbol "keyframeUtils" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

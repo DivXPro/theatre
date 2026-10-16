@@ -32,6 +32,8 @@ export interface CameraStudioConfig {
     portalContainer?: HTMLElement
     zIndexBase?: number
     locale?: string
+    /** 隐藏 studio 左上角带 logo 的整条 LeftStrip(应用 logo + 工作区按钮) */
+    hideLeftStrip?: boolean
   }
   flows?: {onFlows?: (flows: CameraFlows) => void}
 }

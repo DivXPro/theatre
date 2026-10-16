@@ -105,6 +105,7 @@ export function CameraPage() {
 | `ui.portalContainer` | `HTMLElement`                                            | `document.body` | 模块停靠框的 portal 挂载点                                                                           |
 | `ui.zIndexBase`      | `number`                                                 | `1000`          | 模块停靠框 z-index 基准(见 §7 层级地图)                                                              |
 | `ui.locale`          | `string`                                                 | 不生效          | 仅当宿主**未**包 I18nProvider 时应用,一次性 setLanguage(见 §7)                                       |
+| `ui.hideLeftStrip`   | `boolean`                                                | `false`         | 隐藏 studio 左上角带 logo 的整条 LeftStrip(应用 logo + 工作区按钮);boot 级一次性应用,换值需整页刷新 |
 | `flows.onFlows`      | `(flows: CameraFlows) => void`                           | 不传            | 接管「添加模型/添加路径/添加相机」入口,拿到模块的 flows 句柄                                         |
 
 ### 错误提示:onError 交给宿主组件

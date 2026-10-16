@@ -1288,6 +1288,12 @@ export interface IStudioUI {
    */
   restore(): void
 
+  /**
+   * 显隐全局工具条左侧的整条 LeftStrip(应用 logo + 工作区按钮)。
+   * 宿主嵌入场景可用它去掉左上角的 logo 条;缺省为显示。
+   */
+  setLeftStripHidden(hidden: boolean): void
+
   renderToolset(toolsetId: string, htmlNode: HTMLElement): () => void
 }
 
@@ -1384,6 +1390,13 @@ export interface IWorkspaceButtonConfig {
  */
 export interface IStudio {
   readonly ui: IStudioUI
+
+  /**
+   * studio 初始化收尾完成的承诺(持久化/同步状态恢复落库后才解析)。
+   * 需要读取恢复后状态(如界面显隐)时,必须等它再读,否则读到的是
+   * 恢复前的快照。
+   */
+  readonly initialized: Promise<void>
 
   /**
    * i18n:取词条、切语言、注入词典。宿主应用可注册自己的语言/覆盖

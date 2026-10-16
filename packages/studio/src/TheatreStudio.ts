@@ -65,9 +65,21 @@ export default class TheatreStudio implements IStudio {
       getStudio().ui.restore()
     },
 
+    setLeftStripHidden(hidden: boolean) {
+      getStudio().ui.setLeftStripHidden(hidden)
+    },
+
     renderToolset(toolsetId: string, htmlNode: HTMLElement) {
       return getStudio().ui.renderToolset(toolsetId, htmlNode)
     },
+  }
+
+  /**
+   * studio 初始化收尾完成的承诺(含持久化/同步状态恢复落库)。
+   * 读恢复后状态前必须等它。
+   */
+  get initialized(): Promise<void> {
+    return getStudio().initialized
   }
 
   /** i18n:取词条/切语言/注入词典(详见 IStudioI18nAPI) */

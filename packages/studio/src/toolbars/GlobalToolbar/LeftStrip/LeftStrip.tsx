@@ -1,5 +1,7 @@
 import React from 'react'
 import styled from 'styled-components'
+import {useVal} from '@dreamerbird/react'
+import getStudio from '@dreamerbird/studio/getStudio'
 import AppButton from './AppButton/AppButton'
 import WorkspaceButton from './WorkspaceButton/WorkspaceButton'
 
@@ -25,6 +27,9 @@ const Separator = styled.div`
 `
 
 const LeftStrip: React.FC<{}> = (props) => {
+  // 宿主可经 studio.ui.setLeftStripHidden 隐藏整条(logo + 工作区按钮)
+  const hidden = useVal(getStudio().ephemeralAtom.pointer.leftStripHidden)
+  if (hidden === true) return null
   return (
     <Container>
       <AppButton />

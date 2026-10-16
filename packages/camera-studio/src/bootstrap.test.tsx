@@ -37,6 +37,7 @@ const getProjectSpy = jest.fn((_name?: string, _opts?: unknown) => ({
 }))
 // studio.ui 替身:hide/restore 翻转 isHidden(与真 UI 行为一致;
 // bootstrap 仅在 isHidden 时才 restore)
+const setLeftStripHiddenSpy = jest.fn()
 const uiBox = {
   isHidden: false,
   hide: jest.fn(() => {
@@ -45,9 +46,14 @@ const uiBox = {
   restore: jest.fn(() => {
     uiBox.isHidden = false
   }),
+  setLeftStripHidden: setLeftStripHiddenSpy,
 }
 const hideSpy = uiBox.hide
 const restoreSpy = uiBox.restore
+/** studio.initialized 替身:缺省即解析;竞态回归用例换成自持 deferred */
+const initializedBox: {promise: Promise<void>} = {
+  promise: Promise.resolve(),
+}
 const stateUnsubSpy = jest.fn()
 // onChange(pointer, cb) 的返回值 = 退订函数;state 通道那条订阅的断开断言压它
 const onChangeSpy = jest.fn(
@@ -79,7 +85,7 @@ jest.doMock('@dreamerbird/core', () => ({
   __esModule: true,
   default: {init: initSpy},
   getProject: getProjectSpy,
-  getStudio: () => ({ui: uiBox}),
+  getStudio: () => ({ui: uiBox, initialized: initializedBox.promise}),
   onChange: onChangeSpy,
 }))
 jest.doMock('@dreamerbird/core/initState', () => ({
@@ -128,6 +134,8 @@ beforeEach(async () => {
   initStateBox.called = false
   initStateBox.optsDeferred = {promise: new Promise(() => {})}
   uiBox.isHidden = false
+  initializedBox.promise = Promise.resolve()
+  setLeftStripHiddenSpy.mockClear()
   // react/react-dom 与被测模块同注册表,见文件头注释
   React = await import('react')
   ReactDOM = await import('react-dom/client')
@@ -182,6 +190,7 @@ test('1. StrictMode 双跑:init 只调一次,编辑器只注册一轮,ready 就�
   expect(registerSpy).toHaveBeenCalledTimes(3)
   expect(h.result.current?.ready).toBe(true)
   expect(h.result.current?.error).toBeUndefined()
+  expect(setLeftStripHiddenSpy).not.toHaveBeenCalled() // 缺省配置不动 LeftStrip
   await h.unmount()
 })
 
@@ -557,4 +566,34 @@ test('12b. 启动清理失败:有 onError 上告宿主,不再走 console.warn', 
     sweepSpy.mockRestore()
     warnSpy.mockRestore()
   }
+})
+
+test('13. 显隐恢复竞态回归:initialized 未收尾前不判 isHidden,收尾后补恢复', async () => {
+  // 场景:上次 dispose 的 hidden 随同步恢复落库。落库前(initialized 挂起)
+  // restore-check 不得抢跑(抢跑读到可见快照就会漏恢复,UI 永久隐藏——
+  // 2026-10-16 线上事故根因);落库后(initialized 解析)必须补恢复
+  let releaseInit!: () => void
+  initializedBox.promise = new Promise<void>((r) => (releaseInit = r))
+  const h = hookHost({})
+  await h.mount()
+  expect(h.result.current?.ready).toBe(true)
+  await flush()
+  // initialized 挂起中:即使 isHidden 马上会翻真,此刻也不得发 restore
+  expect(restoreSpy).not.toHaveBeenCalled()
+  // 同步落库(状态恢复为 hidden)→ initialized 解析 → restore-check 补恢复
+  uiBox.isHidden = true
+  releaseInit()
+  await flush()
+  expect(restoreSpy).toHaveBeenCalledTimes(1)
+  expect(uiBox.isHidden).toBe(false)
+  await h.unmount()
+})
+
+test('14. ui.hideLeftStrip → boot 经 studio.ui.setLeftStripHidden(true) 应用', async () => {
+  const h = hookHost({ui: {hideLeftStrip: true}})
+  await h.mount()
+  expect(h.result.current?.ready).toBe(true)
+  await flush()
+  expect(setLeftStripHiddenSpy).toHaveBeenCalledWith(true)
+  await h.unmount()
 })

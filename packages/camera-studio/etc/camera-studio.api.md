@@ -87,6 +87,7 @@ export interface CameraStudioConfig {
         portalContainer?: HTMLElement;
         zIndexBase?: number;
         locale?: string;
+        hideLeftStrip?: boolean;
     };
 }
 

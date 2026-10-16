@@ -53,6 +53,14 @@ export default class UI {
     )
   }
 
+  /**
+   * 显隐全局工具条的 LeftStrip(logo + 工作区按钮):写 ephemeral 槽,
+   * LeftStrip 组件订阅;ephemeral 不持久化/不同步,随会话生效。
+   */
+  setLeftStripHidden(hidden: boolean) {
+    this.studio.ephemeralAtom.setByPointer((p) => p.leftStripHidden, hidden)
+  }
+
   renderToolset(toolsetId: string, htmlNode: HTMLElement) {
     let shouldUnmount = false
 

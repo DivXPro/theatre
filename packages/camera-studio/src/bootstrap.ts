@@ -244,6 +244,10 @@ async function boot(config: CameraStudioConfig): Promise<BootCtx> {
   // 0. UI 装配可配(T9:portal 容器 / z-index 基准 / 语言):boot 级一次
   // 写入,dispose 不复位——与 R14 boot 级保留语义一致,重挂幂等复用
   setUiConfig(config.ui ?? {})
+  // 左上角 logo 条显隐(boot 级):经 studio.ui 公共口写 ephemeral 槽
+  if (config.ui?.hideLeftStrip) {
+    withStudioUi((ui) => ui.setLeftStripHidden(true))
+  }
 
   // 1. 数据源:可写源(若有) + 内置目录,聚合进 Library 单例
   const {sources, idbName} = resolveSources(config)
@@ -346,7 +350,13 @@ async function boot(config: CameraStudioConfig): Promise<BootCtx> {
 function withStudioUi(fn: (ui: IStudioUI) => void): void {
   Promise.resolve()
     .then(() => getStudio())
-    .then((studio) => fn(studio.ui))
+    .then(async (studio) => {
+      // 必须等 studio 初始化收尾(持久化/同步状态恢复落库)再读写显隐:
+      // 读早一步拿到的是恢复前快照——曾致 restore-check 漏判 hidden,
+      // 上次 dispose 隐去的 UI 经同步服务播到每个后续加载且永不恢复
+      await studio.initialized
+      fn(studio.ui)
+    })
     .catch(() => {
       /* studio 不存在时显隐无从谈起,静默 */
     })
