@@ -47,7 +47,7 @@ export type AgentRuntime = {
   assertActive(): void
   /** 会话未 dispose 且本代次未被 activate() 替换 */
   assertCurrent(): void
-  /** 合并绑定 handlers,返回解绑函数(代次失效后解绑静默失效) */
+  /** 合并绑定 handlers,返回解绑函数;代次失效后绑定抛 API_DISPOSED,解绑静默失效 */
   bindHandlers(handlers: Handlers): () => void
   /** 创建新执行代次;旧代次的 assertCurrent/markReady 从此抛 API_DISPOSED */
   activate(): AgentRuntime
@@ -156,6 +156,9 @@ function makeRuntime(core: RuntimeCore, generation: Generation): AgentRuntime {
       assertGenerationUsable(core, generation)
     },
     bindHandlers(handlers: Handlers) {
+      // 与其余代次操作一致:代次被替换或会话销毁后拒绝绑定,
+      // 避免 remount 场景"绑了却无效"的静默失败
+      assertGenerationUsable(core, generation)
       const keys = Object.keys(handlers)
       generation.handlers = {...generation.handlers, ...handlers}
       return () => {

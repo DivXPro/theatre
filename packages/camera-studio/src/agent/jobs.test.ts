@@ -237,3 +237,36 @@ test('unsubscribe stops notifications', async () => {
   await Promise.resolve()
   expect(calls).toBe(before)
 })
+
+test('a throwing subscriber neither corrupts job state nor blocks broadcast', async () => {
+  const manager = new AgentJobManager()
+  const received: string[] = []
+  manager.subscribe(() => {
+    throw new Error('subscriber boom')
+  })
+  manager.subscribe((snapshot) => {
+    received.push(`${snapshot.state}:${snapshot.progress}`)
+  })
+  const handle = manager.start({
+    kind: 'test.throwing-subscriber',
+    cancelable: true,
+    execute: async ({update}) => {
+      update({progress: 0.5})
+      return 'ok'
+    },
+  })
+  // 订阅者抛错不得被 start 的 catch 误判为任务失败
+  const final = await handle.done
+  expect(final).toMatchObject({state: 'succeeded', progress: 1, result: 'ok'})
+  // 抛错订阅者之后的订阅者仍收到每一次广播
+  expect(received).toEqual(['running:0', 'running:0.5', 'succeeded:1'])
+
+  // cancel 路径同样隔离订阅者异常
+  const cancelable = manager.start({
+    kind: 'test.throwing-subscriber-cancel',
+    cancelable: true,
+    execute: () => new Promise(() => {}),
+  })
+  expect(() => manager.cancel(cancelable.jobId)).not.toThrow()
+  expect(manager.get(cancelable.jobId)).toMatchObject({state: 'cancelled'})
+})

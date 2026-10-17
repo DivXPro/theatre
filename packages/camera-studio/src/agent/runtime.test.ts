@@ -134,13 +134,15 @@ test('bindHandlers merges handlers and unbind removes only its own keys', () => 
   expect(runtime.handlers).toEqual({a: 1, b: 2})
   unbindA()
   expect(runtime.handlers).toEqual({b: 2})
-  unbindB()
-  expect(runtime.handlers).toEqual({})
 
-  // 代次被替换后旧代次的 handlers 不再增长,解绑静默失效
+  // 代次被替换后:在存活期创建的解绑函数调用静默失效,
+  // 而继续绑定被明确拒绝(与 markReady/assertCurrent 一致)
   const next = runtime.activate()
-  const unbindStale = runtime.bindHandlers({c: 3})
-  expect(runtime.handlers).toEqual({c: 3})
+  expect(() => unbindB()).not.toThrow()
+  expect(runtime.handlers).toEqual({b: 2})
   expect(next.handlers).toEqual({})
-  expect(() => unbindStale()).not.toThrow()
+  expectErrorCode(() => runtime.bindHandlers({c: 3}), 'API_DISPOSED')
+  // 会话 dispose 后同样拒绝绑定
+  next.dispose()
+  expectErrorCode(() => next.bindHandlers({d: 4}), 'API_DISPOSED')
 })

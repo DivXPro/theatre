@@ -60,7 +60,15 @@ export class AgentJobManager {
     if (current && TERMINAL_STATES.has(current.state)) return current
     const frozen = Object.freeze(snapshot)
     this.snapshots.set(jobId, frozen)
-    for (const listener of [...this.listeners]) listener(frozen)
+    // 单个订阅者抛错不得中断广播,也不得反向污染任务状态
+    // (异常若传回 execute 调用点,会被 start 的 catch 误判为任务失败)
+    for (const listener of [...this.listeners]) {
+      try {
+        listener(frozen)
+      } catch {
+        // 忽略:后续订阅者仍应收到本快照
+      }
+    }
     return frozen
   }
 
