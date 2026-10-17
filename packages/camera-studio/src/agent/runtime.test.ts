@@ -1,5 +1,16 @@
 import {createAgentRuntime} from './runtime'
-import type {AgentRuntimeDeps} from './runtime'
+import type {AgentRuntimeDeps, AgentSceneRuntimeHandlers} from './runtime'
+
+/**
+ * 本文件的绑定键是合成假键(a/b/c/d),不属于任何领域 handler;
+ * 真实 handler 由各领域任务经 declaration merging 加入接口(Task 4 起),
+ * 之后 Partial<AgentSceneRuntimeHandlers> 成为弱类型,对象字面量会触发
+ * 多余属性检查 —— 故此处统一断言绕过(语义不变:仍验证合并/解绑行为)。
+ */
+const fakeHandlers = (
+  handlers: Record<string, unknown>,
+): Partial<AgentSceneRuntimeHandlers> =>
+  handlers as Partial<AgentSceneRuntimeHandlers>
 
 function expectErrorCode(fn: () => void, code: string) {
   try {
@@ -129,8 +140,8 @@ test('readiness resolves per generation and dispose rejects pending ready', asyn
 
 test('bindHandlers merges handlers and unbind removes only its own keys', () => {
   const runtime = createAgentRuntime(makeDeps())
-  const unbindA = runtime.bindHandlers({a: 1})
-  const unbindB = runtime.bindHandlers({b: 2})
+  const unbindA = runtime.bindHandlers(fakeHandlers({a: 1}))
+  const unbindB = runtime.bindHandlers(fakeHandlers({b: 2}))
   expect(runtime.handlers).toEqual({a: 1, b: 2})
   unbindA()
   expect(runtime.handlers).toEqual({b: 2})
@@ -141,8 +152,11 @@ test('bindHandlers merges handlers and unbind removes only its own keys', () => 
   expect(() => unbindB()).not.toThrow()
   expect(runtime.handlers).toEqual({b: 2})
   expect(next.handlers).toEqual({})
-  expectErrorCode(() => runtime.bindHandlers({c: 3}), 'API_DISPOSED')
+  expectErrorCode(
+    () => runtime.bindHandlers(fakeHandlers({c: 3})),
+    'API_DISPOSED',
+  )
   // 会话 dispose 后同样拒绝绑定
   next.dispose()
-  expectErrorCode(() => next.bindHandlers({d: 4}), 'API_DISPOSED')
+  expectErrorCode(() => next.bindHandlers(fakeHandlers({d: 4})), 'API_DISPOSED')
 })

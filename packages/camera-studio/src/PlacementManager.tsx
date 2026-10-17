@@ -116,7 +116,8 @@ export type PlacingState = {
   source: PlacementSource
 }
 
-const REGISTRY_KEY = 'Placements'
+/** 注册表对象的 theatre key(大纲顶层 "Placements" 行;Agent resolver 只读探测用) */
+export const PLACEMENTS_REGISTRY_KEY = 'Placements'
 
 // IProject 的公开类型上没有 assetStorage:它在内部 Project 实例上,
 // 由 studio attach 完成后挂上真实存储(之前是会抛错的占位实现)。
@@ -218,7 +219,7 @@ function fileConfigFor(assetId: string) {
 function getRegistry(sheet: ISheet) {
   // 注册表只是存数据的对象,不出现在大纲树
   return sheet.object(
-    REGISTRY_KEY,
+    PLACEMENTS_REGISTRY_KEY,
     {list: t.string('[]')},
     {hideFromOutline: true},
   )
@@ -401,7 +402,9 @@ export function suppressSelectBriefly() {
   suppressSelectUntil = performance.now() + 200
 }
 
-function readRegistry(
+/** 解析放置清单 JSON;坏数据一律回退空(注册表是底账,勿手改)。
+ *  导出给 Agent resolver:无副作用查询在注册表对象已存在时复用同一解析 */
+export function readRegistry(
   registry: ISheetObject<{list: string}>,
 ): PlacementEntry[] {
   try {
