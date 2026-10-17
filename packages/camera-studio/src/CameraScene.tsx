@@ -76,6 +76,7 @@ import {
   removeAnchor,
   useAnchorsList,
 } from './anchorsRegistry'
+import type {AnchorSeed} from './anchorsRegistry'
 import {PipCameraSelector} from './PipCameraSelector'
 import {usePipBottom} from './pipLayout'
 import {bindUndoShortcuts, isInsideStudioUi} from './undoShortcuts'
@@ -91,7 +92,7 @@ import {
   removeCamera,
   useCamerasList,
 } from './cameraRegistry'
-import type {CameraEntry} from './cameraRegistry'
+import type {CameraEntry, CameraSeed} from './cameraRegistry'
 import {
   addPathPoint,
   CameraPath,
@@ -642,6 +643,46 @@ function GroundGrid() {
 }
 
 /**
+ * 添加相机的默认取景种子(2026-10-17,Task 10 抽成纯函数):
+ * 新机位/朝向都取当前导演视角(用户正看着的画面);无导演相机时无种子
+ * (组件按 theatre 属性默认值落地)。UI 顶栏「添加相机」与 Agent
+ * cameras.create(fromCurrentView) 的 Scene Runtime 绑定共用。
+ */
+export function captureCameraSeed(
+  mainCam: ISheetObject<any> | undefined,
+): CameraSeed | undefined {
+  if (!mainCam) return undefined
+  return {
+    position: val(mainCam.props.position) as CameraSeed['position'],
+    rotation: val(mainCam.props.rotation) as CameraSeed['rotation'],
+  }
+}
+
+/**
+ * 添加锚点的默认落点(2026-10-17,Task 10 抽成纯函数):
+ * 落在当前导演视角前方约 5 单位(导演相机 -Z 前方,three 相机朝向约定);
+ * 无导演相机退场景中心上方。UI 顶栏「添加锚点」与 Agent
+ * anchors.create(缺省 position)的 Scene Runtime 绑定共用。
+ */
+export function captureAnchorSeed(
+  mainCam: ISheetObject<any> | undefined,
+): AnchorSeed {
+  if (!mainCam) return {position: {x: 0, y: 1, z: 0}}
+  const p = val(mainCam.props.position) as {x: number; y: number; z: number}
+  const r = val(mainCam.props.rotation) as {x: number; y: number; z: number}
+  const forward = new Vector3(0, 0, -1).applyEuler(
+    new Euler(r.x, r.y, r.z, 'XYZ'),
+  )
+  return {
+    position: {
+      x: p.x + forward.x * 5,
+      y: p.y + forward.y * 5,
+      z: p.z + forward.z * 5,
+    },
+  }
+}
+
+/**
  * 相机场景组件(spec §3 宿主唯一渲染面,2026-10-12 由 App 改名而来):
  * project 由宿主经 useCameraStudio 的 sceneProps 注入(bootstrap 内解析,
  * 字符串/IProject 实例皆由配置侧处理),组件内不再 getProject。
@@ -750,49 +791,18 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
     ? getShotRefs(activeCamera.cameraKey)
     : undefined
 
-  // 添加相机:新机位/朝向都取当前导演视角(用户正看着的画面)
+  // 添加相机:取景种子由 captureCameraSeed 从当前导演视角捕获
   const addCamera = useCallback(() => {
     const entry = nextCameraEntry(sheet, cameras)
-    const mainCam = cameraObjRef.current
-    const seed = mainCam
-      ? {
-          position: val(mainCam.props.position),
-          rotation: val(mainCam.props.rotation),
-        }
-      : undefined
-    addCameraToRegistry(sheet, entry, seed)
+    addCameraToRegistry(sheet, entry, captureCameraSeed(cameraObjRef.current))
     // 新相机落地即活动(用户刚加的就是他想看的)
     setActiveCameraKey(entry.cameraKey)
   }, [cameras, sheet])
 
-  // 添加锚点:落在当前导演视角前方约 5 单位(无导演相机退场景中心上方)
+  // 添加锚点:落点由 captureAnchorSeed 计算(导演视角前方约 5 单位)
   const addAnchor = useCallback(() => {
     const key = nextAnchorKey(anchors)
-    const mainCam = cameraObjRef.current
-    const pos = mainCam
-      ? (() => {
-          const p = val(mainCam.props.position) as {
-            x: number
-            y: number
-            z: number
-          }
-          const r = val(mainCam.props.rotation) as {
-            x: number
-            y: number
-            z: number
-          }
-          // 导演相机 -Z 前方 5 单位(three 相机朝向约定)
-          const forward = new Vector3(0, 0, -1).applyEuler(
-            new Euler(r.x, r.y, r.z, 'XYZ'),
-          )
-          return {
-            x: p.x + forward.x * 5,
-            y: p.y + forward.y * 5,
-            z: p.z + forward.z * 5,
-          }
-        })()
-      : {x: 0, y: 1, z: 0}
-    addAnchorToRegistry(sheet, key, {position: pos})
+    addAnchorToRegistry(sheet, key, captureAnchorSeed(cameraObjRef.current))
   }, [anchors, sheet])
 
   // 删除相机(右键菜单):真删——持久数据清掉、大纲行消失;
