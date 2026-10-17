@@ -3,7 +3,11 @@
  *
  * 播放/定位走真实 core sequence(position 的 clamp/先 pause 都是 core
  * 语义,seek 只写 position 不额外包装);setLength 走与 TransportBar
- * 完全相同的 stateEditors 路径,经 getStudioSync 的 doMock 捕获调用。
+ * 完全相同的**内部 Studio** stateEditors 路径,经
+ * `@dreamerbird/studio/getStudio` 的 doMock 捕获调用——公开
+ * TheatreStudio 事务 api 不携带 stateEditors,若实现回退到
+ * getStudioSync,真实 core 在测试环境无 Studio 会返回 undefined,
+ * setLength 用例必失败(2026-10-17 修正后该形状被测试锁定)。
  * play 用 spy 替换 sequence.play 返回可控 promise,验证命令确实
  * 「先等 project.ready、再调用并等待 sequence.play()」,同时避开真实
  * ticker 的时序不确定。
@@ -15,12 +19,12 @@ import type {CommandContext} from '../types'
 
 let projectSeq = 0
 
-/** 晚绑定:doMock 工厂只跑一次,getStudioSync 读取当前 setup 的 studio */
+/** 晚绑定:doMock 工厂只跑一次,getStudio 读取当前 setup 的 studio */
 let activeFakeStudio: {transaction: unknown} | undefined
 
-jest.doMock('@dreamerbird/core', () => ({
-  ...jest.requireActual('@dreamerbird/core'),
-  getStudioSync: () => activeFakeStudio,
+jest.doMock('@dreamerbird/studio/getStudio', () => ({
+  __esModule: true,
+  default: () => activeFakeStudio,
 }))
 
 const cleanups: Array<() => void> = []

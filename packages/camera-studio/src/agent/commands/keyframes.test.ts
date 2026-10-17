@@ -111,8 +111,9 @@ function setup(options: SetupOptions = {}) {
   const {PLACEMENTS_REGISTRY_KEY} =
     require('../../PlacementManager') as typeof import('../../PlacementManager')
 
-  /** 事务调用记录(op 顺序 + 关键参数) */
+  /** 事务调用记录(op 顺序 + 关键参数);transactionFlags 记录各事务的 undoable 实参 */
   const calls: Array<Record<string, unknown>> = []
+  const transactionFlags: Array<boolean | undefined> = []
   const sequenceEditor = {
     setPrimitivePropAsSequenced: jest.fn((args: Record<string, unknown>) => {
       calls.push({
@@ -137,8 +138,10 @@ function setup(options: SetupOptions = {}) {
           unset: (pointer: unknown) => void
           stateEditors: unknown
         }) => void,
-      ) =>
-        fn({
+        undoable?: boolean,
+      ) => {
+        transactionFlags.push(undoable)
+        return fn({
           set: (pointer: unknown, value: unknown) => {
             const {path} = getPointerParts(pointer as never)
             calls.push({op: 'set', path: path.join('.'), value})
@@ -152,7 +155,8 @@ function setup(options: SetupOptions = {}) {
               historic: {sheetsById: {sequence: sequenceEditor}},
             },
           },
-        }),
+        })
+      },
     ),
   }
   activeFakeStudio = fakeStudio
@@ -219,6 +223,7 @@ function setup(options: SetupOptions = {}) {
     runtime,
     fakeStudio,
     calls,
+    transactionFlags,
     sequenceEditor,
     mountFoo,
     registerObjectCommands: () => registerObjectCommands(registry, runtime),
@@ -270,8 +275,9 @@ describe('keyframes 命令注册', () => {
 })
 
 describe('keyframes.set', () => {
-  test('未建轨 position.x:同一事务内先 sequenceProp 再 set,播放头定位到吸附后的 at', async () => {
-    const {registry, sheet, fakeStudio, calls, mountFoo} = setup()
+  test('未建轨 position.x:先以 undoable:false 事务建轨,再以可撤销事务写首帧,播放头定位到吸附后的 at', async () => {
+    const {registry, sheet, fakeStudio, calls, transactionFlags, mountFoo} =
+      setup()
     mountFoo()
 
     const result = await registry.execute(
@@ -286,7 +292,9 @@ describe('keyframes.set', () => {
       ctx(),
     )
 
-    expect(fakeStudio.transaction).toHaveBeenCalledTimes(1)
+    // 两笔事务:建轨(不入撤销栈)→ 写首帧(可撤销);顺序先 sequenceProp 再 set
+    expect(fakeStudio.transaction).toHaveBeenCalledTimes(2)
+    expect(transactionFlags).toEqual([false, undefined])
     expect(calls).toEqual([
       {
         op: 'sequenceProp',

@@ -104,15 +104,17 @@ export function findKeyframeAt(
 }
 
 /**
- * 写关键帧:先把播放头定位到 position(吸附由命令层按 snap 完成),
- * 再在单个事务内按需 sequenceProp(首次建轨)并 set 写值——事务内
- * set 的轨道感知写帧依赖播放头位置(core 会先对 position 做一次
- * 网格吸附),因此 position 必须在事务之前落定。
+ * 写关键帧:先把播放头定位到 position(吸附由命令层按 snap 完成;
+ * 事务内 set 的轨道感知写帧依赖播放头位置,core 会先对 position 做
+ * 一次网格吸附),再分两档写值:
  *
- * 已知限制(同 poseTrack.writePoseKeyframe 注释):事务内 set 的轨道
- * 检测读已提交 track map,看不到同事务 sequenceProp 新建的轨道
- * (trackId 随机生成)——首次建轨的这一帧在生产上落成静态覆盖而非
- * 关键帧;单事务形状是 spec 既定契约,修正需 core 层支持或改两事务。
+ *   - 已建轨:单个可撤销事务 set(pointer, value);
+ *   - 首次建轨:先以 undoable:false 的事务 setPrimitivePropAsSequenced
+ *     建轨(轨道落进已提交 state),再以第二个可撤销事务 set 写首帧——
+ *     事务内 set 的轨道检测只读已提交 track map,看不到同事务新建的
+ *     轨道(trackId 随机生成,同 poseTrack.writePoseKeyframe 注释的
+ *     已知限制),所以首帧必须等轨道提交后才能落成关键帧;建轨事务
+ *     不入撤销栈,整个 keyframes.set 对撤销历史只呈现一步。
  */
 export function setKeyframe(
   sheet: ISheet,
@@ -123,8 +125,9 @@ export function setKeyframe(
   const studio = requireStudio()
   const pointer = leafPointer(obj, propPath)
   sheet.sequence.position = args.position
-  studio.transaction(({set, stateEditors}) => {
-    if (!args.sequenced) {
+  if (!args.sequenced) {
+    // 建轨:undoable:false,提交生效但不占撤销栈(同 scrub.commit(false))
+    studio.transaction(({stateEditors}) => {
       const {root, path} = getPointerParts(pointer as Pointer<$IntentionalAny>)
       stateEditors.coreByProject.historic.sheetsById.sequence.setPrimitivePropAsSequenced(
         {
@@ -132,7 +135,9 @@ export function setKeyframe(
           pathToProp: path,
         },
       )
-    }
+    }, false)
+  }
+  studio.transaction(({set}) => {
     set(pointer, args.value as $IntentionalAny)
   })
 }
