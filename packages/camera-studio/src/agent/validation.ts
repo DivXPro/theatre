@@ -23,6 +23,17 @@ export function requireString(
   return value
 }
 
+export function requireBoolean(
+  object: Record<string, unknown>,
+  key: string,
+): boolean {
+  const value = object[key]
+  if (typeof value !== 'boolean') {
+    throw new AgentApiError('INVALID_ARGUMENT', `${key} 必须是布尔值`)
+  }
+  return value
+}
+
 export function requireFiniteNumber(value: unknown, label: string): number {
   if (typeof value !== 'number' || !Number.isFinite(value)) {
     throw new AgentApiError('INVALID_ARGUMENT', `${label} 必须是有限数字`)

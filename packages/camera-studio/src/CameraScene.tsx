@@ -117,6 +117,8 @@ import {
 import type {BoundCameraReset} from './pathRegistry'
 import {resolveBoundPathKey} from './pathBinding'
 import {deletePathDomain} from './agent/pathCommands'
+import {registerDirectorView} from './agent/runtime/directorView'
+import type {DirectorViewController} from './agent/runtime/directorView'
 import {findFreeSpot, presetPlacement} from './pathPresets'
 import type {PathPreset} from './pathPresets'
 import {PathPresetDropRig} from './PathPresetDropRig'
@@ -232,6 +234,14 @@ function Model({url, selectLocked}: {url: string; selectLocked?: boolean}) {
     </group>
   )
 }
+
+/**
+ * 导演视角初始机位/瞄准点:PerspectiveCamera/Target 的 JSX position 与
+ * Agent view.reset(MainOrbitControls 登记的导演控制器)同源,改一处
+ * 两处一致。
+ */
+const DIRECTOR_HOME_CAMERA_POSITION: [number, number, number] = [0, 0, 16]
+const DIRECTOR_HOME_TARGET_POSITION: [number, number, number] = [0, 0, 0]
 
 /**
  * 主画面的视角控制,操作方式与 Blender 默认键位一致:
@@ -443,6 +453,84 @@ function MainOrbitControls({
     element.addEventListener('wheel', onWheel, {passive: false, capture: true})
     return () =>
       element.removeEventListener('wheel', onWheel, {capture: true} as any)
+  }, [controls])
+
+  // Agent view.* 导演视角命令(Task 12):把 orbit/pan/dolly/reset 登记到
+  // directorView 模块表。四个操作都复用拖拽的事件流(start → 改机位/瞄准点
+  // → update → end),写回 theatre 的 scrub 逻辑随之复用;新位置先算好再
+  // 派生事件,零增量不产生空 scrub(同触控板 wheel 处理)。cleanup 由
+  // registerDirectorView 的同引用校验保证只解绑自己这一代。
+  useLayoutEffect(() => {
+    if (!controls) return
+    const spherical = new Spherical()
+    const offset = new Vector3()
+    const panOffset = new Vector3()
+    const homeCamera = new Vector3()
+    const EPS = 0.000001
+
+    const controller: DirectorViewController = {
+      orbit({deltaTheta, deltaPhi}) {
+        offset.copy(controls.object.position).sub(controls.target)
+        spherical.setFromVector3(offset)
+        spherical.theta += deltaTheta
+        spherical.phi += deltaPhi
+        spherical.phi = Math.max(
+          controls.minPolarAngle + EPS,
+          Math.min(controls.maxPolarAngle - EPS, spherical.phi),
+        )
+        offset.setFromSpherical(spherical).add(controls.target)
+        if (offset.distanceToSquared(controls.object.position) < EPS) return
+        controls.dispatchEvent({type: 'start'})
+        controls.object.position.copy(offset)
+        controls.update()
+        controls.dispatchEvent({type: 'end'})
+      },
+      pan({deltaX, deltaY}) {
+        const camera = controls.object
+        panOffset
+          .setFromMatrixColumn(camera.matrix, 0)
+          .multiplyScalar(deltaX)
+          .add(
+            offset.setFromMatrixColumn(camera.matrix, 1).multiplyScalar(deltaY),
+          )
+        if (panOffset.lengthSq() < EPS) return
+        controls.dispatchEvent({type: 'start'})
+        camera.position.add(panOffset)
+        controls.target.add(panOffset)
+        controls.update()
+        controls.dispatchEvent({type: 'end'})
+      },
+      dolly({delta}) {
+        offset.copy(controls.object.position).sub(controls.target)
+        const length = offset.length()
+        // 正值 = 靠近瞄准点;不小于轨道最小距离(兜底 0.01 防与瞄准点重合)
+        const next = Math.max(controls.minDistance || 0.01, length - delta)
+        if (Math.abs(next - length) < EPS) return
+        controls.dispatchEvent({type: 'start'})
+        controls.object.position.copy(
+          offset.setLength(next).add(controls.target),
+        )
+        controls.update()
+        controls.dispatchEvent({type: 'end'})
+      },
+      reset() {
+        const camera = controls.object
+        const atRest =
+          camera.position.distanceToSquared(
+            homeCamera.set(...DIRECTOR_HOME_CAMERA_POSITION),
+          ) < EPS &&
+          controls.target.distanceToSquared(
+            offset.set(...DIRECTOR_HOME_TARGET_POSITION),
+          ) < EPS
+        if (atRest) return
+        controls.dispatchEvent({type: 'start'})
+        camera.position.set(...DIRECTOR_HOME_CAMERA_POSITION)
+        controls.target.set(...DIRECTOR_HOME_TARGET_POSITION)
+        controls.update()
+        controls.dispatchEvent({type: 'end'})
+      },
+    }
+    return registerDirectorView(controller)
   }, [controls])
 
   return (
@@ -1624,6 +1712,8 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
     () => () => toggleFrame('path'),
     [toggleFrame],
   )
+  // 稳定引用:行为不变(setPipVisible 取反),与 handleToggleModel/Path 同模式
+  const handleTogglePip = useCallback(() => setPipVisible((v) => !v), [])
 
   return (
     <SceneI18nRoot>
@@ -1647,7 +1737,7 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
           onStopExport={handleStopExport}
           exportDisabled={!activeCamera}
           pipVisible={pipVisible}
-          onTogglePip={() => setPipVisible((v) => !v)}
+          onTogglePip={handleTogglePip}
           pipDisabled={!activeCamera}
           libraryDisabled={!!placing || modelDragging || presetDrag !== null}
         />
@@ -1996,7 +2086,7 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
               objRef={cameraObjRef}
               hideFromOutline
               makeDefault={!shotView}
-              position={[0, 0, 16]}
+              position={DIRECTOR_HOME_CAMERA_POSITION}
               fov={75}
               lookAt={cameraTargetRef}
             />
@@ -2005,7 +2095,7 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
               theatreKey="Camera / Target"
               objRef={targetObjRef}
               hideFromOutline
-              position={[0, 0, 0]}
+              position={DIRECTOR_HOME_TARGET_POSITION}
               visible="editor"
             >
               <boxGeometry attach="geometry" />
