@@ -987,6 +987,10 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
   // 点击模型卡片 = 立即放到默认位(原点被占沿 +X 自动错开);要指定位置用拖拽
   const placeModelAtDefault = useCallback(
     (entry: ModelEntry) => {
+      // placeLibraryEntryAt 返回 {key, persisted}(Task 8,Agent
+      // models.create 的挂载等待句柄);UI 路径不等挂载完成——失败由
+      // PlacedModelErrorBoundary 上告,persisted 的 rejection 已在
+      // placeLibraryEntryAt 内兜底,这里只触发放置、忽略返回句柄
       placeLibraryEntryAt(entry, findFreeSpot(readPlacementPositions(sheet)))
     },
     [sheet, placeLibraryEntryAt],

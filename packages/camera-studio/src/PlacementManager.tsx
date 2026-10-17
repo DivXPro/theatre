@@ -68,6 +68,16 @@ import {gesturePropConfigShape, resolveGestureBones} from './gestureProps'
 import {computeLegacyPoseMigration} from './poseMode/poseMigration'
 import {parsePoseValue} from './poseMode/poseValue'
 import type {ModelEntry, PoseEntry} from './assetLibrary/types'
+import {formatSceneObjectId} from './agent/objectIds'
+import {
+  registerSceneSheetObject,
+  unregisterSceneSheetObject,
+} from './agent/runtime/objectRuntime'
+import {
+  createPlacementWaiter,
+  rejectPlacement,
+  resolvePlacementPersisted,
+} from './agent/runtime/placementLifecycle'
 
 /**
  * FBX 模型放置:页面顶部按钮选文件进入放置模式,半透明 ghost 跟随光标
@@ -603,15 +613,26 @@ export function usePlacementController(project: IProject, sheet: ISheet) {
     [placing, sheet],
   )
 
-  /** 点击库卡片直接落点:跳过幽灵预览,走与 confirmPlacing 相同的落地管线 */
+  /**
+   * 点击库卡片直接落点:跳过幽灵预览,走与 confirmPlacing 相同的落地管线。
+   * 返回 {key, persisted}(2026-10-17,Task 8):Agent models.create 靠
+   * persisted 等挂载完成(completion:mounted);waiter 必须先于
+   * setPendingEntry 创建,挂载链路的 resolve/reject 都按 key 找它。
+   * UI 调用方不 await persisted —— 这里挂 noop catch 兜底,失败告警由
+   * PlacedModelErrorBoundary 负责,不产生 unhandled rejection。
+   */
   const placeLibraryEntryAt = useCallback(
     (entry: ModelEntry, point: {x: number; y: number; z: number}) => {
+      const key = uniquePlacedModelKey(sheet, entry.name)
+      const persisted = createPlacementWaiter(key)
+      persisted.catch(() => {})
       setPendingEntry({
-        key: uniquePlacedModelKey(sheet, entry.name),
+        key,
         libraryEntryId: entry.id,
         position: point,
         pending: true,
       })
+      return {key, persisted}
     },
     [sheet],
   )
@@ -1136,10 +1157,23 @@ function PlacedModelCore({
   const [sheetObject, setSheetObject] = useState<ISheetObject<any> | undefined>(
     undefined,
   )
-  const setObjRef = useCallback((obj: ISheetObject<any> | null) => {
-    objRef.current = obj ?? undefined
-    setSheetObject(obj ?? undefined)
-  }, [])
+  // Agent 运行时登记(2026-10-17,Task 8):objRef 填充即「运行时 SheetObject
+  // 已挂载」信号,models.create 的 resolver 复核与 scene/objects 查询都读
+  // 这份登记;清空/卸载时按 id + 同一对象清理,防过期 cleanup 误删新代次
+  const setObjRef = useCallback(
+    (obj: ISheetObject<any> | null) => {
+      const id = formatSceneObjectId('model', entry.key)
+      const prev = objRef.current
+      objRef.current = obj ?? undefined
+      setSheetObject(obj ?? undefined)
+      if (obj) {
+        registerSceneSheetObject(id, obj)
+      } else {
+        unregisterSceneSheetObject(id, prev)
+      }
+    },
+    [entry.key],
+  )
   // 登记为落点表面:之后的放置可以把模型摞到这个模型上
   const groupRef = useRef<Group>(null!)
   usePlacementSurface(groupRef)
@@ -1477,27 +1511,40 @@ function PlacedModelCore({
     if (!isPending) return
     const obj = objRef.current
     const studio = getStudioSync()
-    if (!obj || !studio) return
-    const registry = getRegistry(sheet)
-    const list = readRegistry(registry)
-    // 已在清单里 = 重做/同步/StrictMode 二次触发,不重复提交
-    if (list.some((e) => e.key === entry.key)) return
-    const scrub = studio.scrub()
-    scrub.capture(({set}) => {
-      const {pending: _pending, ...rest} = entry as PendingPlacementEntry
-      set(registry.props.list, JSON.stringify([...list, rest]))
-      if (sourceType === 'local' && entry.assetId) {
-        set(
-          obj.props.source as any,
-          {
-            type: 'file',
-            id: entry.assetId,
-          } as any,
-        )
+    if (obj && studio) {
+      const registry = getRegistry(sheet)
+      const list = readRegistry(registry)
+      // 已在清单里 = 重做/同步/StrictMode 二次触发,不重复提交
+      if (!list.some((e) => e.key === entry.key)) {
+        const scrub = studio.scrub()
+        scrub.capture(({set}) => {
+          const {pending: _pending, ...rest} = entry as PendingPlacementEntry
+          set(registry.props.list, JSON.stringify([...list, rest]))
+          if (sourceType === 'local' && entry.assetId) {
+            set(
+              obj.props.source as any,
+              {
+                type: 'file',
+                id: entry.assetId,
+              } as any,
+            )
+          }
+        })
+        scrub.commit()
+        onPersisted()
+        // Agent models.create 的 mounted 信号(Task 8):注册表提交 +
+        // pending 清理之后才兑现;waiter 不存在(UI 路径)时是 no-op
+        resolvePlacementPersisted(entry.key)
       }
-    })
-    scrub.commit()
-    onPersisted()
+    }
+    // pending 条目未持久化即卸载(场景拆解等):拒绝 waiter,Agent 侧
+    // 不悬挂;正常路径 waiter 已 settle 并从 Map 删除,这里是 no-op
+    return () => {
+      rejectPlacement(
+        entry.key,
+        new Error(`[placement] 模型 ${entry.key} 未持久化即卸载`),
+      )
+    }
   }, [])
 
   return (
@@ -1547,6 +1594,9 @@ class PlacedModelErrorBoundary extends React.Component<
   }
   componentDidCatch(err: unknown) {
     console.warn(`[placement] 模型 ${this.props.entry.key} 加载失败`, err)
+    // Agent models.create 正等着挂载完成(Task 8):失败必须 reject waiter,
+    // 不能悬挂;UI 路径没有 waiter,rejectPlacement 是 no-op
+    rejectPlacement(this.props.entry.key, err)
   }
   render() {
     return this.state.failed ? null : <PlacedModel {...this.props} />
