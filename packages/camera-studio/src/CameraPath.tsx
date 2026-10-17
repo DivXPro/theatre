@@ -56,6 +56,12 @@ import {
   withResetU,
 } from './pathModel'
 import type {PathPointEntry, PathTransform, Vec3Like} from './pathModel'
+import {formatSceneObjectId} from './agent/objectIds'
+import {
+  registerSceneSheetObject,
+  unregisterSceneSheetObject,
+} from './agent/runtime/objectRuntime'
+import {registerPathSampler} from './agent/runtime/pathRuntime'
 
 /**
  * 运镜路径:一条可编辑的空间曲线(机位用,同一个组件将来可复用)。
@@ -555,6 +561,25 @@ export function CameraPath({
       pathRegistry.delete(metaKey)
     }
   }, [metaKey, meta, entries, curve, us])
+
+  // Agent 运行时登记(2026-10-17,Task 11):meta 句柄填充即登记
+  // path:<key> 的 SheetObject(objectRuntime;scene/objects 查询与领域
+  // 命令的解析底账),并把当前曲线的采样函数注册到 pathRuntime——
+  // paths.sample 与 ShotCamera 每帧采样读同一份登记表(samplePathPoint
+  // 按 metaKey 直读上面的 pathRegistry,名单/矩阵随渲染更新)。卸载只
+  // 解绑自己的 pathKey:两处清理都校验同一对象/函数引用,防过期
+  // cleanup 抹掉新代次的登记
+  useEffect(() => {
+    const id = formatSceneObjectId('path', metaKey)
+    registerSceneSheetObject(id, meta)
+    const unbindSampler = registerPathSampler(metaKey, (u, out) =>
+      samplePathPoint(metaKey, u, out),
+    )
+    return () => {
+      unregisterSceneSheetObject(id, meta)
+      unbindSampler()
+    }
+  }, [metaKey, meta])
 
   // 路径本身可被选中(对齐 Blender:曲线是一等公民物体)——左键点线
   // 选中对应的名单对象(大纲高亮、属性面板出现),线色微微提亮

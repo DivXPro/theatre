@@ -116,6 +116,7 @@ import {
 } from './pathRegistry'
 import type {BoundCameraReset} from './pathRegistry'
 import {resolveBoundPathKey} from './pathBinding'
+import {deletePathDomain} from './agent/pathCommands'
 import {findFreeSpot, presetPlacement} from './pathPresets'
 import type {PathPreset} from './pathPresets'
 import {PathPresetDropRig} from './PathPresetDropRig'
@@ -1210,16 +1211,20 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
     [sheet, pathPresetHeight, enterPathEdit],
   )
 
-  // 删除整条路径:注册表真删(forgetObject + detach + 清单移除,撤销
-  // 两步完整回滚);正在编辑/选中了它的点就一并退出/清掉——用失焦式
-  // 退出(不回头重选,对象已经没了,重选会把它又建出来)
+  // 删除整条路径:领域函数在 agent/pathCommands(deletePathDomain,
+  // 最后一点删除与 objects.delete 共用同一清理);UI 侧传入自己按 refs
+  // 收集的绑定相机回退(既有行为逐行保留)。正在编辑/选中了它的点就
+  // 一并退出/清掉——用失焦式退出(不回头重选,对象已经没了,重选会把
+  // 它又建出来)
   const removePath = useCallback(
     (metaKey: string) => {
-      removePathFromRegistry(
-        sheet,
-        {pathKey: metaKey},
-        collectBoundCameraResets(sheet, shotRefsMapRef.current, metaKey),
-      )
+      deletePathDomain(sheet, metaKey, {
+        boundCameras: collectBoundCameraResets(
+          sheet,
+          shotRefsMapRef.current,
+          metaKey,
+        ),
+      })
       if (editingPath === metaKey) exitPathEditOnBlur()
       if (selectedPathPoint?.metaKey === metaKey) setSelectedPathPoint(null)
     },
