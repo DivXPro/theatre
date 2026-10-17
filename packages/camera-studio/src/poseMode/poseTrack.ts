@@ -20,6 +20,10 @@ import {getStudioSync} from '@dreamerbird/core'
 import {getPointerParts, val} from '@dreamerbird/dataverse'
 import type {ISheetObject} from '@dreamerbird/core'
 import type {$IntentionalAny} from '@dreamerbird/core/types/public'
+// clearPoseValue 需要 stateEditors 直改 historic(公共 transaction api
+// 不暴露),走内部 Studio 通道——与 agent/keyframeTracks、CameraScene
+// 诊断钩子同路径
+import getStudio from '@dreamerbird/studio/getStudio'
 import {parsePoseValue} from './poseValue'
 
 type InternalSheetObject = {
@@ -163,4 +167,44 @@ export function setPoseValue(
     set(sheetObject.props.pose as $IntentionalAny, json)
   })
   scrub.commit()
+}
+
+/**
+ * 清除姿势值与轨道(CameraScene 清除按钮与 Agent poses.clear 共用):
+ * 单个事务 = 一个撤销步骤。经内部 Studio 的 stateEditors 直改 historic:
+ * setPrimitivePropAsStatic(有轨时把当前值落为静态)紧接着
+ * unsetValueOfPrimitiveProp(删掉落下来的静态)——两个编辑器都是幂等直写,
+ * 不经指针读轨道树,绕开「单事务里 unsequenceProp 后 unset(pointer) 读到
+ * 事务前轨道树、错走删播放头帧分支」的指针级限制(2026-10-01 冒烟记录),
+ * 无需拆两事务。行为由 agent/commands/poses.realStudio.test.ts 验证
+ * (删轨+清值一步撤销,undo 一并恢复)。
+ *
+ * 返回 'cleared' | 'empty' | 'unavailable':空姿势(无轨无静态)不开空事务,
+ * 调用方据此返回明确结果而非静默 no-op;Studio 不可用由调用方决定
+ * 报错(Agent SCENE_UNAVAILABLE)还是静默(UI)。
+ */
+export function clearPoseValue(
+  sheetObject: ISheetObject<$IntentionalAny>,
+): 'cleared' | 'empty' | 'unavailable' {
+  const studio = getStudio()
+  if (!studio) return 'unavailable'
+  const hadTrack = Boolean(getPoseTrackId(sheetObject))
+  const current =
+    (val(sheetObject.props.pose as $IntentionalAny) as string) ?? ''
+  if (!hadTrack && current === '') return 'empty'
+  studio.transaction(({stateEditors}) => {
+    const editors = stateEditors.coreByProject.historic.sheetsById
+    const address = {
+      projectId: sheetObject.address.projectId,
+      sheetId: sheetObject.address.sheetId,
+      objectKey: sheetObject.address.objectKey,
+      pathToProp: ['pose'],
+    }
+    if (hadTrack) {
+      // 先把当前求值落为静态(编辑器语义),随即删掉——净效果=回默认绑定
+      editors.sequence.setPrimitivePropAsStatic({...address, value: current})
+    }
+    editors.staticOverrides.byObject.unsetValueOfPrimitiveProp(address)
+  })
+  return 'cleared'
 }

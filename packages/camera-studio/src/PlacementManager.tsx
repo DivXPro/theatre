@@ -78,6 +78,10 @@ import {
   rejectPlacement,
   resolvePlacementPersisted,
 } from './agent/runtime/placementLifecycle'
+import {
+  clearAnimationLoadStatus,
+  setAnimationLoadStatus,
+} from './agent/runtime/animationStatus'
 
 /**
  * FBX 模型放置:页面顶部按钮选文件进入放置模式,半透明 ghost 跟随光标
@@ -1276,33 +1280,61 @@ function PlacedModelCore({
     }
   }, [sheetObject, entry.key, instance])
 
-  // animation 属性变化时加载库动画 GLB
+  // animation 属性变化时加载库动画 GLB。加载状态登记进
+  // agent/runtime/animationStatus(animations.getStatus 的唯一数据源,
+  // 不从 props 猜测):开始=loaded:false、成功=loaded:true、失败=error;
+  // cleanup(卸载或 animationId 切换)必须删 key,不留陈旧 loaded。
   useEffect(() => {
     if (!animationId) {
       setClip(null)
       return
     }
     let cancelled = false
+    setAnimationLoadStatus(entry.key, {assetId: animationId, loaded: false})
     const load = async () => {
       const animEntry = await getLibrary().getEntry(animationId)
       if (!animEntry || animEntry.kind !== 'animation') {
-        if (!cancelled) setClip(null)
+        if (!cancelled) {
+          setClip(null)
+          setAnimationLoadStatus(entry.key, {
+            assetId: animationId,
+            loaded: false,
+            error: {
+              code: 'RESOURCE_LOAD_FAILED',
+              message: `动画资产不存在或类型不符: ${animationId}`,
+              retryable: false,
+            },
+          })
+        }
         return
       }
       const url = await getLibrary().getBlobUrl(animEntry.blobId)
       const gltf = await createGLTFLoader().loadAsync(url)
       if (!cancelled) {
         setClip(gltf.animations[0] ?? null)
+        setAnimationLoadStatus(entry.key, {assetId: animationId, loaded: true})
       }
     }
     load().catch((err) => {
       console.warn('[placement] 动画加载失败', err)
-      if (!cancelled) setClip(null)
+      if (!cancelled) {
+        setClip(null)
+        setAnimationLoadStatus(entry.key, {
+          assetId: animationId,
+          loaded: false,
+          error: {
+            code: 'RESOURCE_LOAD_FAILED',
+            message: err instanceof Error ? err.message : String(err),
+            retryable: true,
+          },
+        })
+      }
     })
     return () => {
       cancelled = true
+      clearAnimationLoadStatus(entry.key)
     }
-  }, [animationId])
+  }, [animationId, entry.key])
 
   const [libResolveTick, setLibResolveTick] = useState(0)
   // 旧两字段 → 新 pose 值迁移(spec §9):一个事务(可撤销、经 saaz 同步),

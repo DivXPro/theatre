@@ -46,6 +46,7 @@ import {
   setPoseSelectionModes,
   setPoseSessionFrame,
 } from './poseSession'
+import {registerPoseSessionRig} from '../agent/runtime/poseSessionRuntime'
 
 export function PoseModeRig({
   instance,
@@ -219,9 +220,11 @@ export function PoseModeRig({
       }
     })
 
-    // 退出提交:捕获实时骨骼 → 写姿势轨关键帧(可撤销,经 writePoseKeyframe)
-    const offExit = onPoseExitRequested((key) => {
-      if (key !== placementKey) return
+    // 退出提交:捕获实时骨骼 → 写姿势轨关键帧(可撤销,经 writePoseKeyframe)。
+    // 与 Agent poses.session.commit 共用——本函数即登记进
+    // poseSessionRuntime 的 commit 句柄;Esc/双击空白/播放自动退出
+    // 走 requestPoseExit → 同一函数,行为不变。
+    const commitSession = () => {
       const studio = getStudioSync()
       // 脏检查:没拖过控制点就不提交(threeIK 首解有微小漂移,
       // 空进空出写回会产生幻影撤销步;语义对齐 modalGrab 的 moved)。
@@ -236,10 +239,23 @@ export function PoseModeRig({
         writePoseKeyframe(sheetObject, serializeCustomPose(bones))
       }
       clearPoseSession()
+    }
+    const offExit = onPoseExitRequested((key) => {
+      if (key !== placementKey) return
+      commitSession()
+    })
+
+    // Agent 姿势会话句柄(poses.session.commit/cancel):commit 与 UI 退出
+    // 同一提交路径;cancel 不写回,会话清除后姿势应用 effect 把当前值
+    // 补刷回骨骼(poseModeActive 翻转触发,见 PlacementManager)
+    const unregisterSessionRig = registerPoseSessionRig(placementKey, {
+      commit: commitSession,
+      cancel: () => clearPoseSession(),
     })
 
     invalidate() // 进姿势模式首帧:控制球立刻可见
     return () => {
+      unregisterSessionRig()
       offExit()
       offMode()
       offPosition()

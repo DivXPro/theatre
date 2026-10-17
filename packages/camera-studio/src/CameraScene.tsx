@@ -123,7 +123,6 @@ import type {ExportSink} from './videoExport/sinks'
 import {startShotExport} from './videoExport/exporter'
 import type {ShotExportHandle} from './videoExport/exporter'
 import type {AnimationEntry, ModelEntry, PoseEntry} from './assetLibrary/types'
-import {capturePose} from './assetLibrary/pose'
 import {rigIdOf, collectBoneNames} from './assetLibrary/rig'
 import {
   cameraOutlineMenuExtensionId,
@@ -154,7 +153,9 @@ import {
   getPoseKeyframeCount,
   setPoseValue,
   writePoseKeyframe,
+  clearPoseValue,
 } from './poseMode/poseTrack'
+import {savePoseFromInstance} from './poseMode/savePose'
 import {parsePoseValue, serializeLibPose} from './poseMode/poseValue'
 import {isPoseExitGuardedTarget} from './poseMode/poseExitGuard'
 import {poseStatusText} from './poseStatusText'
@@ -1497,7 +1498,10 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
     [selectedPlacement],
   )
 
-  // 抽帧存姿势:从当前选中的已放置模型实例捕获骨骼状态入库
+  // 抽帧存姿势:从当前选中的已放置模型实例捕获骨骼状态入库。
+  // 入库流程(rig 解析/capturePose/putEntry/缩略图)与 Agent
+  // poses.saveCurrent 共用 poseMode/savePose.savePoseFromInstance;
+  // 这里只负责 UI 侧的名称来源(prompt)与告警。
   const onSavePose = useCallback(async () => {
     try {
       const placement = selectedPlacement
@@ -1506,36 +1510,18 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
       const instance = placement?.instance
       const entry = placement?.entry
       if (!instance) return
-      // GLB 导出会清洗骨骼名(如去掉 mixamorig:Hips 中的 ':'),
-      // 实例侧重算的 rig 与库模型条目记录的 rig 可能不一致。
-      // 优先取库模型条目的 rig,保证保存的姿势能和来源模型匹配;
-      // 本地 FBX 路径或条目缺失时回退到实例计算(legacy 路径,可能与库 rig 不一致但可接受)。
-      let rig: string | undefined
-      if (entry?.libraryEntryId) {
-        const libEntry = await getLibrary().getEntry(entry.libraryEntryId)
-        if (libEntry?.kind === 'model') rig = libEntry.rig
-      }
-      if (!rig) rig = rigIdOf(instance)
-      if (rig === 'static') return
       const poseEntries = (await getLibrary().listEntries(
         'pose',
       )) as PoseEntry[]
       const defaultName = `姿势-${poseEntries.length + 1}`
       const name = window.prompt('姿势名称', defaultName)?.trim()
       if (!name) return
-      const bones = capturePose(instance)
-      await getLibrary().putEntry({
-        id: 'lib-' + Math.random().toString(36).slice(2, 10),
-        kind: 'pose',
+      await savePoseFromInstance({
+        library: getLibrary(),
+        instance,
+        libraryEntryId: entry?.libraryEntryId,
         name,
-        rig,
-        bones,
-        createdAt: Date.now(),
       })
-      // 自存姿势顺手补缩略图(运行时离屏渲染,后台进行,失败只告警)
-      void import('./assetLibrary/poseThumbnail')
-        .then((m) => m.backfillPoseThumbnails(getLibrary()))
-        .catch((err) => console.warn('[assetLibrary] 姿势缩略图补图失败', err))
     } catch (err) {
       console.warn('[assetLibrary] 存姿势失败', err)
     }
@@ -1580,24 +1566,10 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
       writePoseKeyframe(selectedPlacement, selectedPoseJson)
   }, [selectedPlacement, selectedPoseJson])
   const onClearPose = useCallback(() => {
-    const studio = getStudioSync()
-    if (!studio || !selectedPlacement) return
-    // 两个事务(theatre API 限制,2026-10-01 冒烟暴露):单事务里
-    // unsequenceProp 之后的 unset(pose) 读到的是事务前的轨道树,错走
-    // 「删播放头帧」分支,unsequence 落下来的静态删不掉——「删轨道」与
-    // 「清静态」只能分两步;撤销同样两步(先回静态,再回轨道)。
-    // 事务1:删轨道(theatre 把当前值落为静态,姿势视觉不变)
-    studio.transaction(({unsequenceProp}) => {
-      unsequenceProp(selectedPlacement.props.pose)
-    })
-    // 事务2:清静态 → 回默认绑定(T 姿势)。unset 对不存在的 key 会
-    // 抛 TypeError 并回滚整个事务(同冒烟暴露):值非默认(非空串)才
-    // 说明有 override 可删,空值跳过——全空时事务为空,saaz 不入栈
-    studio.transaction(({unset}) => {
-      if (((val(selectedPlacement.props.pose) as string) ?? '') !== '') {
-        unset(selectedPlacement.props.pose)
-      }
-    })
+    if (!selectedPlacement) return
+    // 单事务删轨 + 清静态(一个撤销步骤),与 Agent poses.clear 共用
+    // poseTrack.clearPoseValue;空姿势是明确 no-op,不产生空撤销步
+    clearPoseValue(selectedPlacement)
   }, [selectedPlacement])
 
   // ── 宿主能力句柄(规格:host-picker-integration)────────────

@@ -23,6 +23,14 @@ export type JobState =
 /** 写命令/任务声明的完成阶段(spec 8.7) */
 export type CompletionPhase = 'committed' | 'mounted' | 'loaded'
 
+/** 结构化错误 DTO(任务快照与资源加载状态共用;HTTP 桥接原样透传) */
+export type AgentErrorDto = {
+  code: string
+  message: string
+  retryable: boolean
+  details?: unknown
+}
+
 /**
  * JSON Schema 子集:只覆盖命令参数/结果声明需要的结构,
  * 桥接层原样透传给 Agent 做客户端校验。
@@ -45,7 +53,7 @@ export type JobSnapshot<T = unknown> = {
   progress: number
   phase: 'accepted' | CompletionPhase
   result?: T
-  error?: {code: string; message: string; retryable: boolean; details?: unknown}
+  error?: AgentErrorDto
   cancelable: boolean
 }
 
