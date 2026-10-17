@@ -106,6 +106,63 @@ describe('history 可用性', () => {
     expect(Object.keys(redoResult as object)).toEqual(['revision'])
   })
 
+  test('expectedRevision 匹配时正常执行并返回当前 revision', async () => {
+    const {registry, undoRedoStudio} = setup()
+
+    const undoResult = await registry.execute(
+      'history.undo',
+      {expectedRevision: 1},
+      ctx(),
+    )
+    const redoResult = await registry.execute(
+      'history.redo',
+      {expectedRevision: 2},
+      ctx(),
+    )
+
+    expect(undoRedoStudio.undo).toHaveBeenCalledTimes(1)
+    expect(undoRedoStudio.redo).toHaveBeenCalledTimes(1)
+    expect(undoResult).toEqual({revision: 2})
+    expect(redoResult).toEqual({revision: 3})
+  })
+
+  test('expectedRevision 冲突返回 REVISION_CONFLICT 且不调用 Studio', async () => {
+    const {registry, undoRedoStudio} = setup()
+
+    await expect(
+      registry.execute('history.undo', {expectedRevision: 99}, ctx()),
+    ).rejects.toMatchObject({code: 'REVISION_CONFLICT'})
+    await expect(
+      registry.execute('history.redo', {expectedRevision: 99}, ctx()),
+    ).rejects.toMatchObject({code: 'REVISION_CONFLICT'})
+    expect(undoRedoStudio.undo).not.toHaveBeenCalled()
+    expect(undoRedoStudio.redo).not.toHaveBeenCalled()
+  })
+
+  test('expectedRevision 非有限数返回 INVALID_ARGUMENT', async () => {
+    const {registry, undoRedoStudio} = setup()
+
+    for (const bad of [NaN, Infinity, '1']) {
+      await expect(
+        registry.execute('history.undo', {expectedRevision: bad}, ctx()),
+      ).rejects.toMatchObject({code: 'INVALID_ARGUMENT'})
+    }
+    expect(undoRedoStudio.undo).not.toHaveBeenCalled()
+  })
+
+  test('describe 元数据声明接受 expectedRevision 且真实生效', () => {
+    const {registry} = setup()
+
+    for (const name of ['history.undo', 'history.redo']) {
+      const described = registry
+        .describe()
+        .commands.find((c) => c.name === name)
+      expect(described).toMatchObject({
+        acceptsExpectedRevision: true,
+      })
+    }
+  })
+
   test('Studio 不可用返回 SCENE_UNAVAILABLE', async () => {
     const {registry, setStudioAvailable} = setup()
     setStudioAvailable(false)

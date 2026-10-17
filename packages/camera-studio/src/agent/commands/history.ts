@@ -5,20 +5,33 @@
  * (生产中 studio.undo() 同步改写 historic 指针、onChange 同步递增
  * revision),绝不伪造 canUndo/canRedo,也不把它们塞进结果。
  * 历史恢复的是项目状态,但 undo 本身不再产生可撤销步骤:undoable:none。
+ * 写命令的 expectedRevision 乐观并发对 undo/redo 一致生效:revision 匹配
+ * 检查先于 Studio 调用,冲突时不产生任何副作用。
  */
 import {AgentApiError} from '../errors'
 import type {AgentCommandRegistry} from '../registry'
 import type {AgentRuntime} from '../runtime'
 import type {JsonSchema} from '../types'
-import {requireObject} from '../validation'
+import {requireFiniteNumber, requireObject} from '../validation'
 
 /** 历史门面(Task 15 由同名命令转发实现) */
 export type HistoryApi = {
-  undo(): Promise<{revision: number}>
-  redo(): Promise<{revision: number}>
+  undo(args?: {expectedRevision?: number}): Promise<{revision: number}>
+  redo(args?: {expectedRevision?: number}): Promise<{revision: number}>
 }
 
-const emptyInput: JsonSchema = {type: 'object', additionalProperties: false}
+type HistoryArgs = {expectedRevision?: number}
+
+const historyInput: JsonSchema = {
+  type: 'object',
+  properties: {
+    expectedRevision: {
+      type: 'number',
+      description: '乐观并发:读取场景时的 revision',
+    },
+  },
+  additionalProperties: false,
+}
 
 const revisionOutput: JsonSchema = {
   type: 'object',
@@ -26,10 +39,17 @@ const revisionOutput: JsonSchema = {
   required: ['revision'],
 }
 
-/** 无参命令的运行时校验:允许省略参数或空对象 */
-function noArgs(value: unknown): Record<string, unknown> {
-  if (value === undefined || value === null) return {}
-  return requireObject(value)
+/** 无参/可选 expectedRevision 命令的运行时校验:允许省略参数或空对象 */
+function validateHistoryArgs(value: unknown): HistoryArgs {
+  const args = value === undefined || value === null ? {} : requireObject(value)
+  let expectedRevision: number | undefined
+  if (args.expectedRevision !== undefined) {
+    expectedRevision = requireFiniteNumber(
+      args.expectedRevision,
+      'expectedRevision',
+    )
+  }
+  return {expectedRevision}
 }
 
 function requireStudio(runtime: AgentRuntime) {
@@ -44,36 +64,53 @@ export function registerHistoryCommands(
   registry: AgentCommandRegistry,
   runtime: AgentRuntime,
 ): void {
-  registry.register<Record<string, unknown>, {revision: number}>({
+  registry.register<HistoryArgs, {revision: number}>({
     name: 'history.undo',
     kind: 'mutation',
     stateDomain: 'project',
     undoable: 'none',
     completion: 'committed',
-    inputSchema: emptyInput,
+    inputSchema: historyInput,
     outputSchema: revisionOutput,
-    errorCodes: ['API_DISPOSED', 'SCENE_UNAVAILABLE'],
-    validate: noArgs,
-    execute: async () => {
+    errorCodes: [
+      'API_DISPOSED',
+      'INVALID_ARGUMENT',
+      'REVISION_CONFLICT',
+      'SCENE_UNAVAILABLE',
+    ],
+    validate: validateHistoryArgs,
+    execute: async (args) => {
       runtime.assertActive()
+      // 乐观并发先于 Studio 调用;冲突时不产生任何副作用
+      if (args.expectedRevision !== undefined) {
+        runtime.assertRevision(args.expectedRevision)
+      }
       requireStudio(runtime).undo()
       // 生产里 undo 的 historic 通知已同步递增 revision;返回当前值
       return {revision: runtime.revision}
     },
   })
 
-  registry.register<Record<string, unknown>, {revision: number}>({
+  registry.register<HistoryArgs, {revision: number}>({
     name: 'history.redo',
     kind: 'mutation',
     stateDomain: 'project',
     undoable: 'none',
     completion: 'committed',
-    inputSchema: emptyInput,
+    inputSchema: historyInput,
     outputSchema: revisionOutput,
-    errorCodes: ['API_DISPOSED', 'SCENE_UNAVAILABLE'],
-    validate: noArgs,
-    execute: async () => {
+    errorCodes: [
+      'API_DISPOSED',
+      'INVALID_ARGUMENT',
+      'REVISION_CONFLICT',
+      'SCENE_UNAVAILABLE',
+    ],
+    validate: validateHistoryArgs,
+    execute: async (args) => {
       runtime.assertActive()
+      if (args.expectedRevision !== undefined) {
+        runtime.assertRevision(args.expectedRevision)
+      }
       requireStudio(runtime).redo()
       return {revision: runtime.revision}
     },
