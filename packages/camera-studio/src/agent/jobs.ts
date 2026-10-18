@@ -111,11 +111,24 @@ export class AgentJobManager {
         this.emit(jobId, {...current, state: 'succeeded', progress: 1, result})
       } catch (error) {
         const current = this.snapshots.get(jobId)!
-        this.emit(jobId, {
-          ...current,
-          state: 'failed',
-          error: errorDetails(asAgentApiError(error)),
-        })
+        const normalized = asAgentApiError(error)
+        // execute 以 JOB_CANCELLED 拒绝 = 任务因取消而结束(如视频导出的
+        // 用户侧中止:Esc/开录相机被删,非 jobs.cancel 路径)——终态应为
+        // cancelled 并带上错误码,轮询方据此区分"被中止"与真失败;
+        // 若已是 cancelled(jobs.cancel 先到),emit 的终态保护保持原样
+        if (normalized.code === 'JOB_CANCELLED') {
+          this.emit(jobId, {
+            ...current,
+            state: 'cancelled',
+            error: errorDetails(normalized),
+          })
+        } else {
+          this.emit(jobId, {
+            ...current,
+            state: 'failed',
+            error: errorDetails(normalized),
+          })
+        }
       }
       return this.snapshots.get(jobId) as JobSnapshot<T>
     })()

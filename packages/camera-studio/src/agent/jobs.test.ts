@@ -192,6 +192,30 @@ test('structured AgentApiError failures keep their code in the snapshot', async 
   })
 })
 
+test('JOB_CANCELLED rejection maps to cancelled (with error code), not failed', async () => {
+  const manager = new AgentJobManager()
+  const handle = manager.start({
+    kind: 'test.user-abort',
+    cancelable: true,
+    execute: async () => {
+      // 用户侧中止(如视频导出 Esc/开录相机被删):非 jobs.cancel 路径,
+      // execute 以 JOB_CANCELLED 拒绝,终态应为 cancelled 而非 failed
+      throw new AgentApiError('JOB_CANCELLED', '视频导出被中止')
+    },
+  })
+  const final = await handle.done
+  expect(final.state).toBe('cancelled')
+  expect(final.error).toMatchObject({code: 'JOB_CANCELLED'})
+  expect(manager.get(handle.jobId)).toMatchObject({state: 'cancelled'})
+  // 已 cancelled 的任务不可再 cancel
+  try {
+    manager.cancel(handle.jobId)
+    throw new Error('Expected INVALID_STATE')
+  } catch (error) {
+    expect(error).toMatchObject({code: 'INVALID_STATE'})
+  }
+})
+
 test('falls back to counter-based ids when crypto.randomUUID is unavailable', async () => {
   const globals = globalThis as {crypto?: {randomUUID?: () => string}}
   const original = globals.crypto?.randomUUID

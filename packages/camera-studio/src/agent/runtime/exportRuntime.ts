@@ -123,6 +123,17 @@ function recordShot(args: {
   const handle = startShotExport({canvas, sheet, sink, onError})
   if (!handle) return undefined
 
+  // exporter 的 abort 收尾(用户 Esc、开录相机被删、signal 取消共用)会调
+  // sink.abort 丢弃已录内容;包一层记录"内容已弃",done 映射时据它把
+  // 用户侧中止(signal 未 abort)也识别为 JOB_CANCELLED,而不是掉进
+  // blob() 的 INVALID_STATE —— 轮询任务的 Agent 必须能区分"被中止"与真失败
+  let sinkAborted = false
+  const originalAbort = sink.abort.bind(sink)
+  sink.abort = async () => {
+    sinkAborted = true
+    await originalAbort()
+  }
+
   // 进度随序列播放头更新:录制 = 序列从头播到尾,position/length 即进度
   const sequence = sheet.sequence
   const length = val(sequence.pointer.length)
@@ -152,6 +163,14 @@ function recordShot(args: {
     }
     if (signal?.aborted) {
       throw new AgentApiError('JOB_CANCELLED', '视频导出已取消')
+    }
+    // done resolve 但内容已被丢弃(sink.abort 被调)= 用户侧中止
+    // (Esc/开录相机被删):同样按取消交付,不报 INVALID_STATE 假失败
+    if (sinkAborted) {
+      throw new AgentApiError(
+        'JOB_CANCELLED',
+        '视频导出被中止(Esc 取消或开录相机被删除)',
+      )
     }
     if (isCollectingSink(sink)) {
       const blob = sink.blob()

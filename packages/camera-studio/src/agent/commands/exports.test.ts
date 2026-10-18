@@ -21,6 +21,7 @@
  *    不做 JSON 序列化。
  */
 import {getProject, val} from '@dreamerbird/core'
+import {AgentApiError} from '../errors'
 import type {CommandContext, JobSnapshot} from '../types'
 import type {ExportSink} from '../../videoExport/sinks'
 import type {BlobCollectSink} from '../../videoExport/BlobCollectSink'
@@ -357,6 +358,23 @@ test('jobs.cancel:handle.abort + sink.abort,任务置 cancelled 且不被迟到 
   expect(scene.exporting).toBe(false)
 })
 
+test('用户侧中止(Esc/开录相机被删,signal 未 abort):任务置 cancelled 并带 JOB_CANCELLED,非 failed/INVALID_STATE', async () => {
+  const {registry, runtime, controller, scene} = makeScene()
+  stubExporterAvailable()
+  const {jobId} = await startVideo(registry)
+  controller.notifySceneReady()
+  await recording!.recordChunks([new Uint8Array([1, 2])])
+  // 模拟 Esc/相机删除:场景直调 handle.abort(signal 不经过 jobs.cancel);
+  // 假实现对齐真实 exporter:abort 丢弃内容(sink.abort)后 done resolve
+  recording!.handle.abort()
+  const snapshot = await settleJob(runtime, jobId)
+  // 轮询任务的 Agent 必须能区分"被用户中止"与真失败
+  expect(snapshot.state).toBe('cancelled')
+  expect(snapshot.error!.code).toBe('JOB_CANCELLED')
+  expect(scene.shotView).toBe(false)
+  expect(scene.exporting).toBe(false)
+})
+
 // ── 前置校验失败(任务启动前拒绝命令) ──────────────────────────
 
 test('无活动相机 → INVALID_STATE,不起任务', async () => {
@@ -437,6 +455,18 @@ test('录制中途失败 → 任务 failed,视角恢复', async () => {
   expect(snapshot.error!.message).toContain('编码器炸了')
   expect(scene.shotView).toBe(false)
   expect(scene.exporting).toBe(false)
+})
+
+test('录制中途的结构化失败保留原错误码(INVALID_STATE 不被误归为取消)', async () => {
+  const {registry, runtime, controller} = makeScene()
+  stubExporterAvailable()
+  const {jobId} = await startVideo(registry)
+  controller.notifySceneReady()
+  // 真实路径示例:sink.write 拒绝(写盘失败)经 exporter 收尾后 done 拒绝
+  recording!.rejectDone(new AgentApiError('INVALID_STATE', '写入失败'))
+  const snapshot = await settleJob(runtime, jobId)
+  expect(snapshot.state).toBe('failed')
+  expect(snapshot.error!.code).toBe('INVALID_STATE')
 })
 
 test('场景 dispose:先 abort 在录任务,再恢复视图,最后拒绝未完成任务(API_DISPOSED)', async () => {
