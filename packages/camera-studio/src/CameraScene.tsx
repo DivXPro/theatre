@@ -124,8 +124,11 @@ import type {PathPreset} from './pathPresets'
 import {PathPresetDropRig} from './PathPresetDropRig'
 import {listSinks} from './videoExport/sinks'
 import type {ExportSink} from './videoExport/sinks'
-import {startShotExport} from './videoExport/exporter'
 import type {ShotExportHandle} from './videoExport/exporter'
+import {
+  createSceneExportController,
+  registerSceneExportController,
+} from './agent/runtime/exportRuntime'
 import type {AnimationEntry, ModelEntry, PoseEntry} from './assetLibrary/types'
 import {rigIdOf, collectBoneNames} from './assetLibrary/rig'
 import {
@@ -839,11 +842,10 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
     window.addEventListener('mousemove', onMove)
     return () => window.removeEventListener('mousemove', onMove)
   }, [pipBottom])
-  // 视频导出:进行中的导出句柄 / 导出前的视角(导完恢复)
+  // 视频导出:进行中的导出句柄由场景导出控制器(agent/runtime/exportRuntime)
+  // 同步进来(Esc 取消/相机被删中止/停止按钮共用);导出前的视角由控制器恢复
   const [exporting, setExporting] = useState(false)
   const exportHandleRef = useRef<ShotExportHandle | null>(null)
-  const prevShotViewRef = useRef(false)
-  const pendingExportSinkRef = useRef<ExportSink | null>(null)
 
   // project 来自 props(T9):宿主经 sceneProps 注入,bootstrap 已解析
   const sheet = project.sheet('Scene')
@@ -987,6 +989,53 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
     }
   }, [exporting, cameras])
 
+  // 场景导出控制器(Task 13):活动相机校验、ShotView 切换/恢复、canvas
+  // 获取、录制与异常恢复的共享核心在 agent/runtime/exportRuntime,UI 导出
+  // 菜单与 Agent exports.startVideo 经它走同一流程。getter 经 ref 读最新
+  // 会话态,控制器本身随 sheet 重建
+  const camerasForExportRef = useRef(cameras)
+  camerasForExportRef.current = cameras
+  const activeCameraForExportRef = useRef(activeCamera)
+  activeCameraForExportRef.current = activeCamera
+  const shotViewForExportRef = useRef(shotView)
+  shotViewForExportRef.current = shotView
+  const exportingRef = useRef(exporting)
+  exportingRef.current = exporting
+  const exportController = useMemo(
+    () =>
+      createSceneExportController({
+        sheet,
+        getActiveCameraKey: () =>
+          activeCameraForExportRef.current?.cameraKey ?? null,
+        hasCamera: (cameraKey) =>
+          camerasForExportRef.current.some((e) => e.cameraKey === cameraKey),
+        setActiveCamera: (cameraKey) => setActiveCameraKey(cameraKey),
+        isExporting: () => exportingRef.current,
+        getShotView: () => shotViewForExportRef.current,
+        setShotView,
+        // 页面上只有一个 canvas(快照编辑器的在 shadow DOM 里,查不到)
+        getCanvas: () => document.querySelector('canvas'),
+        setExporting,
+        setActiveHandle: (handle) => {
+          exportHandleRef.current = handle
+        },
+        lockExportCamera: (cameraKey) => {
+          exportCameraKeyRef.current = cameraKey
+        },
+      }),
+    [sheet],
+  )
+  // 登记给 Agent exports.startVideo(getSceneExportController);卸载先
+  // dispose(abort 在录任务 → 恢复视图 → 拒绝未完成任务)再解绑,
+  // 防过期 cleanup 抹掉新代次登记由 register 的同一引用校验兜底
+  useEffect(() => {
+    const unregister = registerSceneExportController(exportController)
+    return () => {
+      exportController.dispose()
+      unregister()
+    }
+  }, [exportController])
+
   // 运镜路径编辑模式:正在编辑的路径 metaKey(同一时刻只编辑一条,
   // 对齐 Blender 的对象/编辑模式);右键路径线或选中路径后按 Tab 进出
   const [editingPath, setEditingPath] = useState<string | null>(null)
@@ -1125,13 +1174,30 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
 
   // 导出目标在运行环境稳定后不再变化,useMemo 避免每次渲染重建数组
   const exportSinks = useMemo(() => listSinks(), [])
+  // 导出错误提示通道:有宿主 onError 走宿主,否则 alert(既有行为)
+  const reportExportError = useCallback(
+    (message: string) => {
+      if (onError) {
+        onError({source: 'export', code: 'unknown', message})
+      } else {
+        window.alert(message)
+      }
+    },
+    [onError],
+  )
   const handlePickExportSink = useCallback(
     (sink: ExportSink) => {
-      prevShotViewRef.current = shotView
-      pendingExportSinkRef.current = sink
-      setShotView(true)
+      // UI 菜单与 Agent 共用同一场景导出流程;前置校验失败(无活动相机/
+      // 已在导出)同步抛,录制中途失败由控制器经 onError 透传(同既有行为)
+      try {
+        exportController.startVideo({sink, onError: reportExportError}).catch(
+          () => {}, // 出错已通过 onError 提示,这里只吞收尾
+        )
+      } catch (err) {
+        reportExportError(err instanceof Error ? err.message : String(err))
+      }
     },
-    [shotView],
+    [exportController, reportExportError],
   )
   const handleStopExport = useCallback(
     () => exportHandleRef.current?.finishEarly(),
@@ -1440,42 +1506,13 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
   const progressKeyframesRef = useRef(progressKeyframes)
   progressKeyframesRef.current = progressKeyframes
 
-  // 导出视频:先切到镜头视角(录 canvas 当前内容),再开始录制;
-  // "另存为"的系统对话框在菜单点击的调用栈里已经弹过,这里只剩录制
+  // 导出开录时机:先切到镜头视角(录 canvas 当前内容),ShotView/活动
+  // 相机切换生效(本副作用)后通知场景导出控制器开录;无挂起导出请求时
+  // 静默 no-op。流程主体(校验/canvas/录制/恢复)在 exportRuntime
   useEffect(() => {
-    const sink = pendingExportSinkRef.current
-    if (!shotView || !sink) return
-    pendingExportSinkRef.current = null
-    // 页面上只有一个 canvas(快照编辑器的在 shadow DOM 里,查不到)
-    const canvas = document.querySelector('canvas')
-    if (!canvas) return
-    exportCameraKeyRef.current = activeCamera?.cameraKey ?? null
-    const handle = startShotExport({
-      canvas,
-      sheet,
-      sink,
-      onError: (message) => {
-        if (onError) {
-          onError({source: 'export', code: 'unknown', message})
-        } else {
-          window.alert(message)
-        }
-      },
-    })
-    if (!handle) {
-      setShotView(prevShotViewRef.current)
-      return
-    }
-    exportHandleRef.current = handle
-    setExporting(true)
-    handle.done
-      .catch(() => {}) // 出错已通过 onError 提示,这里只收尾
-      .finally(() => {
-        exportHandleRef.current = null
-        setExporting(false)
-        setShotView(prevShotViewRef.current)
-      })
-  }, [shotView, sheet, activeCamera, onError])
+    if (!shotView) return
+    exportController.notifySceneReady()
+  }, [shotView, activeCamera, exportController])
 
   // 导出中按 Esc = 取消(丢弃已录内容)
   useEffect(() => {
