@@ -89,8 +89,10 @@ export function CameraPage() {
 }
 ```
 
-`useCameraStudio(config)` 返回 `{ready, error, sceneProps}`;`sceneProps` 对宿主
-**不透明**(当前 = `{project, onFlows, onError}` 的转发),不要解构它。
+`useCameraStudio(config)` 返回 `{ready, error, sceneProps, api}`;`sceneProps` 对宿主
+**不透明**(当前 = `{project, onFlows, onError}` 的转发),不要解构它。`api` 是
+Agent JS 命令面门面的模块级单例(首帧即稳定),页内自动化/Agent 场景见
+§9 与[专项指南](./camera-studio-agent-js-api.md)。
 
 ### config 全字段参考
 
@@ -107,6 +109,7 @@ export function CameraPage() {
 | `ui.locale`          | `string`                                                 | 不生效          | 仅当宿主**未**包 I18nProvider 时应用,一次性 setLanguage(见 §7)                                       |
 | `ui.hideLeftStrip`   | `boolean`                                                | `false`         | 隐藏 studio 左上角带 logo 的整条 LeftStrip(应用 logo + 工作区按钮);boot 级一次性应用,换值需整页刷新 |
 | `flows.onFlows`      | `(flows: CameraFlows) => void`                           | 不传            | 接管「添加模型/添加路径/添加相机」入口,拿到模块的 flows 句柄                                         |
+| `agent.exposeGlobal` | `boolean`                                                | `false`         | 场景 ready 后把 Agent JS API 门面挂到 `window.__cameraStudioApi`,dispose 时删除(见 §9)              |
 
 ### 错误提示:onError 交给宿主组件
 
@@ -580,3 +583,38 @@ process.on('SIGTERM', () => {
   (`new IndexedDBBackend({dbName})`),与 `storage: {namespace}` 简写用的是同一实
   现;存储类型族(`WritableLibrarySource`、`LibraryEntry`、`LibraryError` 等) 全部
   从包根导出,`@dreamerbird/camera-studio/contract-tests` 子路径导出稳定。
+
+## 9. Agent JS API(浏览器命令面)
+
+除了编辑器 UI,模块还暴露一个稳定的浏览器 JS 命令面,供页内自动化与 Agent 驱动
+场景:18 个命名空间、71 条命令(`scene / objects / models / assets / poses /
+animations / cameras / anchors / paths / sequence / keyframes / history /
+view / ui / project / exports / jobs`)。
+
+```ts
+const {ready, sceneProps, api} = useCameraStudio({project: 'Space'})
+// ...
+await api.ready
+const snapshot = await api.scene.getSnapshot()
+await api.objects.update({
+  objectId: 'model:Y Bot',
+  props: {position: {x: 2, y: 0, z: -1}},
+  expectedRevision: snapshot.revision,
+})
+```
+
+要点速记(细节、完整签名与错误码见
+[Agent JS API 专项指南](./camera-studio-agent-js-api.md)):
+
+- `api` 是模块级单例,hook 首帧即返回同一对象;`api.ready` 在 project + studio +
+  Scene Runtime 就位后兑现,命令调用也会自动等它。
+- `objects.update` 只写静态属性(已建轨报 `INVALID_STATE`);做动画显式走
+  `keyframes.set`。
+- 项目写命令可选 `expectedRevision` 乐观并发,冲突返回 `REVISION_CONFLICT` 且不执行
+  写入。
+- `models.create` / `cameras.create` / `anchors.create` 等到对象**挂载完成**才返回;
+  `assets.importModel` / `exports.startVideo` 返回任务句柄,用 `jobs.get` 轮询、
+  `jobs.cancel` 取消。
+- 资产操作不可 undo;`history.undo`/`redo` 只管 Theatre 项目状态。
+- 默认不挂 window 全局;`agent: {exposeGlobal: true}` 时场景 ready 后挂载
+  `window.__cameraStudioApi`,dispose 时删除。
