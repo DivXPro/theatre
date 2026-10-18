@@ -483,6 +483,55 @@ describe('command transport errors', () => {
     expect(session.calls).toEqual([])
   })
 
+  test('rejects declared Content-Length over the limit with a delivered 413', async () => {
+    const {baseUrl, session} = await startServer({
+      config: resolveBridgeConfig({token: TOKEN, maxCommandBytes: 64}),
+    })
+    // 显式 Content-Length + 大 body:服务端在客户端仍在发送时就要响应,
+    // 必须排空再应答,否则 destroy 会把未读入站数据连同 413 一起 RST 掉。
+    // 重复多次锁定确定性送达,而不是侥幸时序。
+    const body = JSON.stringify({
+      requestId: 'r1',
+      name: 'x'.repeat(256 * 1024),
+      args: {},
+    })
+    for (let attempt = 0; attempt < 10; attempt++) {
+      const res = await new Promise<HttpResult>((resolve, reject) => {
+        const url = new URL('/v1/commands', baseUrl)
+        const req = http.request(
+          {
+            hostname: url.hostname,
+            port: url.port,
+            path: url.pathname,
+            method: 'POST',
+            headers: authedHeaders({
+              'Content-Type': 'application/json',
+              'Content-Length': String(Buffer.byteLength(body)),
+            }),
+          },
+          (res) => {
+            const chunks: Buffer[] = []
+            res.on('data', (chunk: Buffer) => chunks.push(chunk))
+            res.on('end', () => {
+              const text = Buffer.concat(chunks).toString('utf8')
+              resolve({
+                status: res.statusCode ?? 0,
+                headers: res.headers,
+                body: text,
+                json: () => JSON.parse(text),
+              })
+            })
+          },
+        )
+        req.on('error', reject)
+        req.end(body)
+      })
+      expect(res.status).toBe(413)
+      expect(res.json().error.code).toBe('PAYLOAD_TOO_LARGE')
+    }
+    expect(session.calls).toEqual([])
+  })
+
   test('counts streaming bodies against maxCommandBytes', async () => {
     const {baseUrl, session} = await startServer({
       config: resolveBridgeConfig({token: TOKEN, maxCommandBytes: 100}),

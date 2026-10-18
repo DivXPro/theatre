@@ -63,7 +63,7 @@ export class BridgeHttpError extends Error {
   readonly status: number
   readonly code: string
   readonly retryable: boolean
-  /** 响应写完后是否销毁底层连接(超限请求必须销毁,防止继续灌数据) */
+  /** 响应是否带 `Connection: close`(超限请求在排空 body 后关闭连接) */
   readonly closeConnection: boolean
 
   constructor(

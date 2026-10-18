@@ -126,24 +126,19 @@ function writeUnauthorized(res: ServerResponse): void {
 /**
  * 流式读取并解析 JSON body:逐块累计字节,超过 maxCommandBytes 抛 413
  * 并标记销毁连接;JSON 语法错误抛 400(传输层 INVALID_ARGUMENT)。
- * Content-Length 已超限的直接拒绝,不读 body。
+ * Content-Length 预检只决定是否缓冲;超限 body 一律排空后再响应,
+ * 保证 413 确定性送达(见下文注释)。
  */
 async function readJsonBody(
   req: IncomingMessage,
   maxBytes: number,
 ): Promise<unknown> {
   const declared = Number(req.headers['content-length'])
-  if (Number.isFinite(declared) && declared > maxBytes) {
-    throw new BridgeHttpError(
-      413,
-      'PAYLOAD_TOO_LARGE',
-      `请求体超过 maxCommandBytes(${maxBytes} 字节)`,
-      {closeConnection: true},
-    )
-  }
+  // Content-Length 预检只决定"是否缓冲",绝不提前响应:响应前必须排空
+  // 请求体,否则 destroy 时连接上还有未读入站数据,可能把 413 响应 RST 掉
+  let tooLarge = Number.isFinite(declared) && declared > maxBytes
   const chunks: Buffer[] = []
   let total = 0
-  let tooLarge = false
   for await (const chunk of req) {
     if (tooLarge) continue // 排空剩余数据,让响应能干净地写回
     total += (chunk as Buffer).length
@@ -287,6 +282,12 @@ export function createHttpServer(deps: HttpServerDeps): http.Server {
         return
       }
       if (error instanceof BridgeHttpError) {
+        if (error.closeConnection) {
+          // 超限请求体已在 readJsonBody 排空(无未读入站数据),这里用
+          // Connection: close 优雅关闭:直接 destroy 会在客户端仍在发送
+          // 时把还没送达的 413 响应 RST 掉(实测 socket hang up)
+          res.setHeader('Connection', 'close')
+        }
         writeAgentError(
           res,
           {
@@ -296,9 +297,6 @@ export function createHttpServer(deps: HttpServerDeps): http.Server {
           },
           error.status,
         )
-        if (error.closeConnection) {
-          res.on('finish', () => req.socket.destroy())
-        }
       } else {
         writeInternalError(res)
       }
