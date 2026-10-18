@@ -10,6 +10,10 @@
  */
 import {getStudioSync, types as t, val} from '@dreamerbird/core'
 import type {ISheet, ISheetObject} from '@dreamerbird/core'
+import type {ObjectAddressKey} from '@dreamerbird/core/types/public'
+// 内部 Studio 通道:合并事务需要 stateEditors.forgetObject(按地址清持久
+// 数据,不要求对象已挂载)——与 keyframeTracks/poseTrack 同先例
+import getStudio from '@dreamerbird/studio/getStudio'
 import {useEffect, useMemo, useState} from 'react'
 import type {Object3D} from 'three'
 import {notifyTargetRegistryChange, sheetObjectExists} from './aimTargets'
@@ -135,39 +139,49 @@ export function addCameraToRegistry(
 }
 
 /**
- * 删除相机:先清持久数据(forgetObject:静态覆盖 + 时间轴轨道,
- * 同步到所有客户端),再从注册表移除(组件卸载 → detachObject →
- * 大纲行消失)。两个事务,撤销也是两步,都能完整回滚。
+ * 删除相机:单个事务完成 forgetObject + 注册表移除 = 一步撤销
+ * (2026-10-19,Task 14 合并;原先两个事务两步撤销)。
+ *
+ * forgetObject 走 stateEditors 按地址清持久数据(静态覆盖 + 时间轴
+ * 轨道,同步到所有客户端):不再要求挂载中的对象句柄——注册表有条目
+ * 但组件未挂载(或已脱离对象表)的相机同样真删,不静默跳过
+ * (schema 编辑器对无持久数据的对象先查后删,幂等不抛)。
+ * 注册表行移除 → 组件卸载 → detachObject → 大纲行消失。
  */
-export function removeCamera(
-  sheet: ISheet,
-  entry: CameraEntry,
-  objects: {camera?: ISheetObject<any>},
-) {
-  const studio = getStudioSync()
+export function removeCamera(sheet: ISheet, entry: CameraEntry) {
+  const studio = getStudio()
   if (!studio) return
   // 没来得及挂载消费掉的取景种子一并清掉,不留残留
   pendingSeeds.delete(entry.cameraKey)
-  for (const obj of [objects.camera]) {
-    if (!obj) continue
-    try {
-      studio.transaction(({forgetObject}) => forgetObject(obj as any))
-    } catch (err) {
-      // forgetObject 对"没写过任何覆盖/轨道"的对象会触发 saaz draft 的
-      // 老坑(TypeError);这类对象本来就没在持久态留痕,刷新即没,跳过
-      console.warn('[camera] forgetObject 跳过(对象无持久数据)', err)
-    }
-  }
   const registry = getCamerasRegistry(sheet)
   const list = readCameraEntries(registry)
-  const scrub = studio.scrub()
-  scrub.capture(({set}) =>
+  studio.transaction(({set, stateEditors}) => {
+    stateEditors.coreByProject.historic.sheetsById.forgetObject({
+      projectId: sheet.address.projectId,
+      sheetId: sheet.address.sheetId,
+      // 业务 key 跨适配层边界按不透明字符串传递,此处回到 core 的名义类型
+      // (同 keyframeTracks 的 trackId as SequenceTrackId)
+      objectKey: entry.cameraKey as ObjectAddressKey,
+    })
     set(
       registry.props.list,
       JSON.stringify(list.filter((e) => e.cameraKey !== entry.cameraKey)),
-    ),
+    )
+  })
+}
+
+/**
+ * 活动相机推导(2026-10-19,Task 14 抽成纯函数):activeCameraKey 失效
+ * (被删/对端同步)时顺位清单第一台,空清单为 null。CameraScene 的
+ * 活动相机、objects.delete 的「删除活动相机按现有规则回退」共用。
+ */
+export function resolveActiveCamera(
+  cameras: readonly CameraEntry[],
+  activeCameraKey: string | null,
+): CameraEntry | null {
+  return (
+    cameras.find((e) => e.cameraKey === activeCameraKey) ?? cameras[0] ?? null
   )
-  scrub.commit()
 }
 
 /** 拍摄相机的 cameraKey → three 相机对象(锚点父级绑定的 camera: 解析用) */

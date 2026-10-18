@@ -849,6 +849,34 @@ describe('paths.deletePoint', () => {
     expect(val(camera.props.position)).toEqual({x: 1, y: 2, z: 3})
   })
 
+  test('删最后一点也是一步撤销(undoable:single-step 元数据属实,Task 11 遗留修正):undo 一次还原注册表与相机绑定', async () => {
+    const {registry, registeredPaths, seedPaths, seedBoundCamera} =
+      await setup()
+    seedPaths([{key: PATH_KEY, points: [{x: 3, y: 4, z: 5}]}])
+    const camera = seedBoundCamera('Shot Camera', PATH_KEY)
+    cleanups.push(
+      pathRuntime.registerPathSampler(PATH_KEY, (_u, out) => {
+        out.set(1, 2, 3)
+        return true
+      }),
+    )
+    const stackBefore = undoStackOf().length
+
+    await registry.execute(
+      'paths.deletePoint',
+      {pathId: `path:${PATH_KEY}`, pointKey: 'P1'},
+      ctx(),
+    )
+    // Task 14 把 removePathFromRegistry 的两步提交合并为单事务后,
+    // 最后一点删除 = 整路径删除同样只有一个撤销步骤
+    expect(undoStackOf().length).toBe(stackBefore + 1)
+
+    studio.undo()
+    expect(registeredPaths()).toEqual([PATH_KEY])
+    expect(val(camera.props.pathKey)).toBe(PATH_KEY)
+    expect(val(camera.props.position)).toEqual({x: 9, y: 9, z: 9})
+  })
+
   test('删最后一点但路径未挂载(无采样器):相机只清绑定,不定格机位', async () => {
     const {registry, registeredPaths, seedPaths, seedBoundCamera} =
       await setup()

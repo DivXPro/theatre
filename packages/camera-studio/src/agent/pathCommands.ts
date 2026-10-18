@@ -289,9 +289,10 @@ export function collectBoundCamerasForPath(
 /**
  * 删除整条路径(preflight ruling:领域函数的家在 agent 层,CameraScene
  * UI、最后一点删除和 Task 14 的 objects.delete 都调这里):
- * forgetObject 清持久数据 + detachObject 显式脱离 + 注册表移除 +
- * 绑定相机回退(定格机位/清绑定),折进 removePathFromRegistry 的既有
- * 两步提交,撤销两步完整回滚。
+ * forgetObject 清持久数据 + 注册表移除 + 绑定相机回退(定格机位/清
+ * 绑定)合并为单个事务 = 一步撤销(2026-10-19,Task 14 合并,见
+ * removePathFromRegistry);detachObject 显式脱离是非 historic 清理,
+ * 放在事务之后。
  *
  * boundCameras 缺省时按 Agent 运行时登记现收集;CameraScene 传入自己
  * 按 refs 收集的结果(既有 UI 行为逐行保留)。

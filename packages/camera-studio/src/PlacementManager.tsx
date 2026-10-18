@@ -1,9 +1,13 @@
 import {editable as e} from '@dreamerbird/r3f'
 import {getStudioSync, onChange, types as t, val} from '@dreamerbird/core'
 import type {IProject, IScrub, ISheet, ISheetObject} from '@dreamerbird/core'
+import type {ObjectAddressKey} from '@dreamerbird/core/types/public'
 import {privateAPI} from '@dreamerbird/core/privateAPIs'
 import {useVal} from '@dreamerbird/react'
 import {translate} from '@dreamerbird/studio/i18n'
+// 内部 Studio 通道:删除合并事务需要 stateEditors.forgetObject
+// (按地址清持久数据,不要求对象已挂载)——与 keyframeTracks 同先例
+import getStudio from '@dreamerbird/studio/getStudio'
 import {TransformControls, useFBX} from '@react-three/drei'
 import {useFrame, useThree} from '@react-three/fiber'
 import type {ThreeEvent} from '@react-three/fiber'
@@ -1678,18 +1682,28 @@ export function useGizmoMode(): [GizmoMode, (mode: GizmoMode) => void] {
 }
 
 /**
- * 从放置清单里删除一个模型:一次 scrub 提交 = 一步撤销(撤销即模型回来)。
- * theatre 对象本身删不掉(公开 API 没有删除),会留个空壳在大纲里,
- * 刷新后消失——和撤销放置的已知行为一样。FBX 文件本体留在 IndexedDB。
+ * 从放置清单里删除一个模型:单个事务完成 forgetObject + 清单移除 =
+ * 一步撤销(2026-10-19,Task 14 合并;原先只退清单)。
+ * forgetObject 按地址清持久数据(变换/姿势/动画覆盖与轨道,同步到所有
+ * 客户端),撤销一步把清单行和覆盖一起还原;不再残留"同名重放复活旧
+ * 变换"的幽灵数据。theatre 对象本身删不掉(公开 API 没有删除),会留个
+ * 空壳在大纲里,刷新后消失——和撤销放置的已知行为一样。FBX 文件本体
+ * 留在 IndexedDB。
  */
 export function deletePlacement(sheet: ISheet, key: string) {
-  const studio = getStudioSync()
+  const studio = getStudio()
   if (!studio) return
   const registry = getRegistry(sheet)
   const list = readRegistry(registry).filter((e) => e.key !== key)
-  const scrub = studio.scrub()
-  scrub.capture(({set}) => set(registry.props.list, JSON.stringify(list)))
-  scrub.commit()
+  studio.transaction(({set, stateEditors}) => {
+    stateEditors.coreByProject.historic.sheetsById.forgetObject({
+      projectId: sheet.address.projectId,
+      sheetId: sheet.address.sheetId,
+      // 业务 key 跨适配层按不透明字符串传递,此处回到 core 的名义类型
+      objectKey: key as ObjectAddressKey,
+    })
+    set(registry.props.list, JSON.stringify(list))
+  })
 }
 
 /**

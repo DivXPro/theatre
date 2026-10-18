@@ -6,8 +6,8 @@
  * 解析分两层:纯函数 resolveTargetObject(id, lookup) 供测试注入;
  * resolveAimTarget / resolveAnchorParent 读运行时登记表,供帧驱动调用。
  */
-import {Matrix4} from 'three'
-import type {Object3D, Vector3} from 'three'
+import {Matrix4, Vector3} from 'three'
+import type {Object3D} from 'three'
 import {translate} from '@dreamerbird/studio/i18n'
 import {val} from '@dreamerbird/core'
 import {privateAPI} from '@dreamerbird/core/privateAPIs'
@@ -24,8 +24,9 @@ import {
   getShotCameraObjects,
   readCameraEntries,
 } from './cameraRegistry'
-import type {ISheet} from '@dreamerbird/core'
+import type {ISheet, ISheetObject} from '@dreamerbird/core'
 import {getAnchorsRegistry, readAnchorKeys} from './anchorsRegistry'
+import type {AnchorChildReset} from './anchorsRegistry'
 
 export type TargetKind = 'anchor' | 'bone' | 'model' | 'camera'
 
@@ -327,6 +328,40 @@ export function shouldClearMissingParent(
   resolvable: boolean,
 ): boolean {
   return parentId !== '' && boundParentId === parentId && !resolvable
+}
+
+/**
+ * 删除锚点前收集以它为父级的子锚点(连同世界定格),交给
+ * anchorsRegistry.removeAnchor 折进删除的同一事务(同
+ * collectBoundCameraResets 对路径删除的作用;撤销陷阱见
+ * pathRegistry.removePathFromRegistry 注释)。
+ *
+ * 只探测不创建:子锚点对象经内部对象表 peek(getObject 不创建),
+ * 世界定格读运行时登记表(anchorObjects)的节点。节点缺失(未挂载)
+ * 的子锚点跳过——局部偏移没有世界定格可写,持久绑定留给挂载后的
+ * 重试/看护处理。
+ */
+export function collectAnchorChildResets(
+  sheet: ISheet,
+  parentKey: string,
+): AnchorChildReset[] {
+  const parentId = makeTargetId('anchor', parentKey)
+  const resets: AnchorChildReset[] = []
+  for (const key of readAnchorKeys(getAnchorsRegistry(sheet))) {
+    if (key === parentKey) continue
+    const node = anchorObjects.get(key)
+    if (!node) continue
+    const internal = (privateAPI(sheet) as any).getObject(key)
+    const obj = (internal?.publicApi ?? undefined) as
+      | ISheetObject<any>
+      | undefined
+    if (!obj) continue
+    const parent = (val(obj.props.parent) as string | undefined) ?? ''
+    if (parent !== parentId) continue
+    const world = node.getWorldPosition(new Vector3())
+    resets.push({obj, freeze: {x: world.x, y: world.y, z: world.z}})
+  }
+  return resets
 }
 
 /** 从放置注册表反查模型显示名;放置注册表未建好时回退原 key */

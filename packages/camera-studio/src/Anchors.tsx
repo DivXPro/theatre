@@ -262,11 +262,25 @@ function AnchorObject({
       // 解绑(下拉选「无」/看护清除后的跟随):挂回娘家,属性=世界坐标
       const world = node.getWorldPosition(tmpWorld.current).clone()
       homeRef.current?.add(node)
-      const scrub = studio.scrub()
-      scrub.capture(({set}) =>
-        set(obj.props.position, {x: world.x, y: world.y, z: world.z}),
-      )
-      scrub.commit()
+      // 父级锚点被删时,parent 解绑 + 世界定格已折进删除的同一事务
+      // (anchorsRegistry.removeAnchor 的 children 参数):持久值已等于
+      // 此刻世界坐标,原样重写会多出一个同值撤销步骤(撤销陷阱),
+      // 同值跳过提交,只推进游标;正常解绑(持久值还是旧局部偏移)
+      // 不受影响照常定格
+      const persisted = (val(obj.props.position) as
+        | {x: number; y: number; z: number}
+        | undefined) ?? {x: 0, y: 0, z: 0}
+      const samePosition =
+        Math.abs(persisted.x - world.x) < 1e-6 &&
+        Math.abs(persisted.y - world.y) < 1e-6 &&
+        Math.abs(persisted.z - world.z) < 1e-6
+      if (!samePosition) {
+        const scrub = studio.scrub()
+        scrub.capture(({set}) =>
+          set(obj.props.position, {x: world.x, y: world.y, z: world.z}),
+        )
+        scrub.commit()
+      }
       prevParentRef.current = ''
       boundParentRef.current = null
       return

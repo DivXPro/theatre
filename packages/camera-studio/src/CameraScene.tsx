@@ -69,7 +69,7 @@ import {
 } from './menuModel'
 import {TopToolbar} from './TopToolbar'
 import {Anchors} from './Anchors'
-import {setAimOptionsSheet} from './aimTargets'
+import {collectAnchorChildResets, setAimOptionsSheet} from './aimTargets'
 import {
   addAnchorToRegistry,
   nextAnchorKey,
@@ -90,6 +90,7 @@ import {
   nextCameraEntry,
   readCameraEntries,
   removeCamera,
+  resolveActiveCamera,
   useCamerasList,
 } from './cameraRegistry'
 import type {CameraEntry, CameraSeed} from './cameraRegistry'
@@ -117,6 +118,9 @@ import {
 import type {BoundCameraReset} from './pathRegistry'
 import {resolveBoundPathKey} from './pathBinding'
 import {deletePathDomain} from './agent/pathCommands'
+import {formatSceneObjectId} from './agent/objectIds'
+import {getSceneSheetObject} from './agent/runtime/objectRuntime'
+import type {SceneObjectKind} from './agent/types'
 import {registerDirectorView} from './agent/runtime/directorView'
 import type {DirectorViewController} from './agent/runtime/directorView'
 import {findFreeSpot, presetPlacement} from './pathPresets'
@@ -799,8 +803,9 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
     return refs
   }
   // 每个锚点一个 objRef(多锚点:单对 ref 会被 map 里的实例互相覆盖)。
-  // CameraScene 持有而非组件自持:右键删除时要经它取到对象传给 removeAnchor
-  // 做真删(forgetObject 清持久数据,对齐相机)
+  // CameraScene 持有而非组件自持:删除后的 ref slot 清理由下面的看护
+  // effect 按注册表清单扫(真删本身走 anchorsRegistry.removeAnchor,
+  // forgetObject 按地址清持久数据,不再依赖这里的对象句柄)
   const anchorRefsMapRef = useRef(
     new Map<string, MutableRefObject<ISheetObject<any> | undefined>>(),
   )
@@ -858,9 +863,9 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
   const anchors = useAnchorsList(sheet)
   // 活动相机:画中画/镜头视角/导出只对它生效(右键「查看此镜头」= 设活动)。
   // 持久化没必要(session 态);key 失效(被删)时顺位回退清单第一台
+  // (resolveActiveCamera,Task 14 抽纯函数,Agent 侧共用同一规则)
   const [activeCameraKey, setActiveCameraKey] = useState<string | null>(null)
-  const activeCamera =
-    cameras.find((e) => e.cameraKey === activeCameraKey) ?? cameras[0] ?? null
+  const activeCamera = resolveActiveCamera(cameras, activeCameraKey)
 
   // 相机被删(含对端同步):清掉它的 ref slot,不留失效引用
   useEffect(() => {
@@ -896,16 +901,6 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
     addAnchorToRegistry(sheet, key, captureAnchorSeed(cameraObjRef.current))
   }, [anchors, sheet])
 
-  // 删除相机(右键菜单):真删——持久数据清掉、大纲行消失;
-  // 活动相机被删时 activeCamera 推导自动顺位给清单第一台
-  const deleteCamera = useCallback(
-    (entry: CameraEntry) => {
-      const refs = shotRefsMapRef.current.get(entry.cameraKey)
-      removeCamera(sheet, entry, {camera: refs?.camera.current})
-    },
-    [sheet],
-  )
-
   // 大纲右键删除走宿主注册表删除流程(与画布右键同一套真删);
   // extend 按 id 幂等覆盖,重复执行安全
   useEffect(() => {
@@ -915,10 +910,10 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
     })
   }, [])
 
-  // 每渲染刷新菜单上下文:注册表清单 + 删除处理器(含集合名单清理)。
+  // 每渲染刷新菜单上下文:注册表清单 + 删除处理器(领域删除 + 会话
+  // 清理都走 afterSceneObjectDeleted 抽出的共用实现,与画布右键一致)。
   // CameraScene 不卸载;卸载时清 ctx,防止悬空 sheet 引用
   useEffect(() => {
-    const {projectId, sheetId, sheetInstanceId} = sheet.address
     setCameraOutlineMenuCtx({
       sheet,
       cameras,
@@ -928,45 +923,17 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
       handlers: {
         removeCamera: (entry) => {
           deleteCamera(entry)
-          pruneObjectFromOutlineCollections(
-            projectId,
-            sheetId,
-            sheetInstanceId,
-            entry.cameraKey,
-          )
         },
-        removeAnchor: (key, object) => {
-          // studio 传进来的是 publicApi;若拿到内部对象则剥一层
-          const anchorObj =
-            (object as {publicApi?: ISheetObject<any>} | undefined)
-              ?.publicApi ?? object
-          removeAnchor(sheet, key, anchorObj)
-          getStudioSync()?.setSelection([])
-          pruneObjectFromOutlineCollections(
-            projectId,
-            sheetId,
-            sheetInstanceId,
-            key,
-          )
+        removeAnchor: (key) => {
+          removeAnchor(sheet, key, collectAnchorChildResets(sheet, key))
+          afterSceneObjectDeleted('anchor', key)
         },
         removePlacement: (key) => {
           deletePlacement(sheet, key)
-          getStudioSync()?.setSelection([])
-          pruneObjectFromOutlineCollections(
-            projectId,
-            sheetId,
-            sheetInstanceId,
-            key,
-          )
+          afterSceneObjectDeleted('model', key)
         },
         removePath: (pathKey) => {
           removePath(pathKey)
-          pruneObjectFromOutlineCollections(
-            projectId,
-            sheetId,
-            sheetInstanceId,
-            pathKey,
-          )
         },
       },
     })
@@ -1172,6 +1139,59 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
   const closeCameraMenu = useCallback(() => setCameraMenu(null), [])
   const closeAnchorMenu = useCallback(() => setAnchorMenu(null), [])
 
+  // 对象删除后的会话清理(2026-10-19,Task 14 从各删除流程抽出共用;
+  // Agent objects.delete 经 runtime handler 调同一实现):项目数据已由
+  // 领域删除函数在单个事务里清完,这里只收会话态——
+  // - 路径编辑态/控制点选择随被删路径清掉(失焦式退出:不回头重选,
+  //   对象已经没了,重选会把它又建出来);
+  // - 还指着被删对象的右键菜单关掉;
+  // - 大纲伪集合(收藏/分组名单)里摘掉该对象;
+  // - studio 选区里摘除被删对象(仅当它还在选区里,其余选择保留——
+  //   注册表行已删但组件尚未卸载的窗口里,选区不得留着已失效对象)。
+  // 活动相机回退/镜头视角强制退出/导出中止由推导与看护 effect 自动完成。
+  const afterSceneObjectDeleted = useCallback(
+    (kind: SceneObjectKind, key: string) => {
+      const studio = getStudioSync()
+      const mounted = getSceneSheetObject(formatSceneObjectId(kind, key))
+      if (
+        studio &&
+        mounted &&
+        (studio.selection as unknown[]).includes(mounted)
+      ) {
+        studio.setSelection(studio.selection.filter((item) => item !== mounted))
+      }
+      if (kind === 'path') {
+        if (editingPathRef.current === key) {
+          setEditingPath(null)
+          setSelectedPathPoint(null)
+        }
+        setSelectedPathPoint((sel) => (sel?.metaKey === key ? null : sel))
+      }
+      setPathMenu((m) => (m?.metaKey === key ? null : m))
+      setCameraMenu((m) => (m?.cameraKey === key ? null : m))
+      setAnchorMenu((m) => (m?.key === key ? null : m))
+      setObjectMenu((m) => (m?.key === key ? null : m))
+      const {projectId, sheetId, sheetInstanceId} = sheet.address
+      pruneObjectFromOutlineCollections(
+        projectId,
+        sheetId,
+        sheetInstanceId,
+        key,
+      )
+    },
+    [sheet],
+  )
+
+  // 删除相机(右键菜单):真删——持久数据清掉、大纲行消失;
+  // 活动相机被删时 activeCamera 推导自动顺位给清单第一台
+  const deleteCamera = useCallback(
+    (entry: CameraEntry) => {
+      removeCamera(sheet, entry)
+      afterSceneObjectDeleted('camera', entry.cameraKey)
+    },
+    [sheet, afterSceneObjectDeleted],
+  )
+
   // 导出目标在运行环境稳定后不再变化,useMemo 避免每次渲染重建数组
   const exportSinks = useMemo(() => listSinks(), [])
   // 导出错误提示通道:有宿主 onError 走宿主,否则 alert(既有行为)
@@ -1367,9 +1387,8 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
 
   // 删除整条路径:领域函数在 agent/pathCommands(deletePathDomain,
   // 最后一点删除与 objects.delete 共用同一清理);UI 侧传入自己按 refs
-  // 收集的绑定相机回退(既有行为逐行保留)。正在编辑/选中了它的点就
-  // 一并退出/清掉——用失焦式退出(不回头重选,对象已经没了,重选会把
-  // 它又建出来)
+  // 收集的绑定相机回退(既有行为逐行保留)。会话清理(编辑态/选中点/
+  // 菜单/大纲集合/选区)走 afterSceneObjectDeleted 的共用实现
   const removePath = useCallback(
     (metaKey: string) => {
       deletePathDomain(sheet, metaKey, {
@@ -1379,10 +1398,9 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
           metaKey,
         ),
       })
-      if (editingPath === metaKey) exitPathEditOnBlur()
-      if (selectedPathPoint?.metaKey === metaKey) setSelectedPathPoint(null)
+      afterSceneObjectDeleted('path', metaKey)
     },
-    [sheet, editingPath, selectedPathPoint, exitPathEditOnBlur],
+    [sheet, afterSceneObjectDeleted],
   )
 
   const deleteSelectedPathPoint = useCallback(() => {
@@ -1894,8 +1912,7 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
                 onSelectMode: setGizmoMode,
                 onDelete: () => {
                   deletePlacement(sheet, objectMenu.key)
-                  // 被删的对象留在选中列表里没意义，顺带清掉
-                  getStudioSync()?.setSelection([])
+                  afterSceneObjectDeleted('model', objectMenu.key)
                 },
                 // 库来源模型才有姿势/动作可套(本地遗留放置体没有库 id);
                 // 骨架不匹配的置灰由框体自己兜
@@ -1993,15 +2010,15 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
             position={{x: anchorMenu.x, y: anchorMenu.y}}
             items={buildAnchorMenuItems({
               onDeleteAnchor: () => {
-                // 真删:forgetObject 清持久数据(静态覆盖/时间轴轨道),再移除
-                // 注册表(对齐相机;不传对象会残留持久态,同名重加时旧数据复活)
+                // 真删:forgetObject 按地址清持久数据(静态覆盖/时间轴
+                // 轨道,不要求挂载句柄)+ 子锚点解绑定格折进同一事务;
+                // 会话清理走共用实现
                 removeAnchor(
                   sheet,
                   anchorMenu.key,
-                  anchorRefsMapRef.current.get(anchorMenu.key)?.current,
+                  collectAnchorChildResets(sheet, anchorMenu.key),
                 )
-                // 被删的锚点留在选中列表里没意义,顺带清掉
-                getStudioSync()?.setSelection([])
+                afterSceneObjectDeleted('anchor', anchorMenu.key)
               },
             })}
             onClose={closeAnchorMenu}

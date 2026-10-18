@@ -6,6 +6,10 @@
  */
 import {getStudioSync, types as t, val} from '@dreamerbird/core'
 import type {ISheet, ISheetObject} from '@dreamerbird/core'
+import type {ObjectAddressKey} from '@dreamerbird/core/types/public'
+// 内部 Studio 通道:合并事务需要 stateEditors.forgetObject(按地址清持久
+// 数据,不要求对象已挂载)——与 keyframeTracks/poseTrack 同先例
+import getStudio from '@dreamerbird/studio/getStudio'
 import {useEffect, useMemo, useState} from 'react'
 
 export const ANCHORS_REGISTRY_KEY = 'Anchors'
@@ -85,27 +89,49 @@ export function addAnchorToRegistry(
   if (seed) stashAnchorSeed(key, seed)
 }
 
-/** 删除锚点:真删(forgetObject 清持久数据 + 注册表移除),两步事务 */
+/**
+ * 删除锚点时一并回退的子级锚点(parent 指向被删锚点);
+ * 由调用方经 aimTargets.collectAnchorChildResets 收集
+ * (同 removePathFromRegistry 的 boundCameras 模式:收集需要运行时
+ * 登记表,本模块不反向依赖 aimTargets)。
+ */
+export type AnchorChildReset = {
+  obj: ISheetObject<any>
+  /** 子锚点的世界坐标定格(解绑后 position 语义回到世界坐标,画面不跳) */
+  freeze: {x: number; y: number; z: number}
+}
+
+/**
+ * 删除锚点:单个事务完成 forgetObject + 子级解绑/定格 + 注册表移除 =
+ * 一步撤销(2026-10-19,Task 14 合并;原先两个事务两步撤销)。
+ *
+ * forgetObject 走 stateEditors 按地址清持久数据,不要求挂载中的对象
+ * 句柄(schema 编辑器对无持久数据的对象先查后删,幂等不抛)。
+ * children 必须折进同一事务:不折的话子组件的「父级消失看护」会在
+ * 删除后补一笔提交,撤销删除时先看护提交把撤销游标顶掉
+ * (同 removePathFromRegistry 注释的撤销陷阱)。
+ */
 export function removeAnchor(
   sheet: ISheet,
   key: string,
-  object?: ISheetObject<any>,
+  children: AnchorChildReset[] = [],
 ): void {
-  const studio = getStudioSync()
+  const studio = getStudio()
   if (!studio) return
   pendingSeeds.delete(key)
-  if (object) {
-    try {
-      studio.transaction(({forgetObject}) => forgetObject(object as any))
-    } catch (err) {
-      console.warn('[anchors] forgetObject 跳过(对象无持久数据)', err)
-    }
-  }
   const registry = getAnchorsRegistry(sheet)
   const list = readAnchorKeys(registry)
-  const scrub = studio.scrub()
-  scrub.capture(({set}) =>
-    set(registry.props.list, JSON.stringify(list.filter((k) => k !== key))),
-  )
-  scrub.commit()
+  studio.transaction(({set, stateEditors}) => {
+    stateEditors.coreByProject.historic.sheetsById.forgetObject({
+      projectId: sheet.address.projectId,
+      sheetId: sheet.address.sheetId,
+      // 业务 key 跨适配层按不透明字符串传递,此处回到 core 的名义类型
+      objectKey: key as ObjectAddressKey,
+    })
+    for (const {obj, freeze} of children) {
+      set(obj.props.parent, '')
+      set(obj.props.position, {x: freeze.x, y: freeze.y, z: freeze.z})
+    }
+    set(registry.props.list, JSON.stringify(list.filter((k) => k !== key)))
+  })
 }
