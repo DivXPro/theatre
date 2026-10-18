@@ -5,6 +5,7 @@
  * 自己的 handlers 与 readiness,会话 dispose 使全部代次失效。
  */
 import type {IProject, ISheet, IStudio} from '@dreamerbird/core'
+import {getCoreTicker} from '@dreamerbird/core/coreTicker'
 import {AgentApiError} from './errors'
 import {AgentJobManager} from './jobs'
 import type {Library} from '../assetLibrary/library'
@@ -13,6 +14,40 @@ import {
   rejectAllAnchorMounts,
   rejectAllCameraMounts,
 } from './runtime/cameraLifecycle'
+
+/**
+ * 等一个 core tick(2026-10-19,F2 修复):historic 指针的 onChange 监听
+ * 经 prism.onChange → ticker.onThisOrNextTick 调度(prism.ts),事务提交后
+ * 同步读 revision 拿到的是写入前的值;写命令返回前必须等一个 tick。
+ *
+ * 生产浏览器:RAF 驱动持续 tick,dormant→active 时 start() 自动武装。
+ * 测试(node):SSR start() 只在 dormant→active 补两脚 tick 就停,ticker
+ * 可能停在 active 但无人驱动(测试手动 tick 过);有的测试文件还会把
+ * window 残桩成 globalThis(delete/paths.test.ts,为 getPathMeta 的调试
+ * 挂钩)——window 在但 requestAnimationFrame 不在,start() 的 RAF 分支
+ * 直接抛错(此时 fn 已入队、ticker 已转 active)。两种情形统一手动补
+ * 一脚兜底;已同步触发的(dormant+SSR)不重复补。
+ */
+function nextCoreTick(): Promise<void> {
+  const ticker = getCoreTicker()
+  const hasRafDriver =
+    typeof window !== 'undefined' &&
+    typeof window.requestAnimationFrame === 'function'
+  return new Promise<void>((resolve) => {
+    let fired = false
+    try {
+      ticker.onNextTick(() => {
+        fired = true
+        resolve()
+      })
+    } catch {
+      // 无 RAF 的 window 残桩:start() 抛错,但 fn 已入队——落到手动 tick
+    }
+    if (!hasRafDriver && !fired) {
+      ticker.tick()
+    }
+  })
+}
 
 /**
  * 场景运行时 handler 宿主接口:Task 3 先导出空接口,
@@ -42,6 +77,13 @@ export type AgentRuntime = {
   readonly jobs: AgentJobManager
   /** 当前会话的 historic revision,从 1 开始 */
   readonly revision: number
+  /**
+   * 写命令返回用的 revision(F2):historic 通知是 tick 调度的,事务后
+   * 同步读 revision 拿到的是写入前的值——这里等一个 core tick 再读,
+   * 返回值反映本次写入,expectedRevision 链式调用才不错误冲突。
+   * 等待期间会话拆解 → API_DISPOSED。
+   */
+  nextRevision(): Promise<number>
   /** 本代次的 readiness:CameraScene 绑定完整 handlers 后 markReady resolve,dispose reject */
   readonly ready: Promise<void>
   /** 本代次当前绑定的 handlers(live 视图) */
@@ -152,6 +194,15 @@ function makeRuntime(core: RuntimeCore, generation: Generation): AgentRuntime {
     get revision() {
       return core.revision
     },
+    async nextRevision() {
+      await nextCoreTick()
+      // 等待期间会话可能已拆解:已提交的写入不回滚,但调用方不得再拿到
+      // 成功结果(与 create 等命令 await 后 assertActive 同一语义)
+      if (core.disposed) {
+        throw new AgentApiError('API_DISPOSED', 'Camera Studio API 已销毁')
+      }
+      return core.revision
+    },
     get ready() {
       return generation.readyPromise
     },
@@ -260,9 +311,17 @@ export function createAgentRuntime(deps: AgentRuntimeDeps): AgentRuntime {
     revision: 1,
     currentGeneration: first,
     generations: new Set([first]),
-    unsubscribeHistoric: deps.subscribeHistoric(() => {
-      core.revision += 1
-    }),
+    unsubscribeHistoric: () => {},
   }
+  // 订阅必须在 core 建好之后:真实 subscribeHistoric 走 core
+  // onChange(pointers.historic)(immediate:true),订阅瞬间同步回调一次——
+  // 字面量内联订阅会撞上 TDZ(core 尚未初始化,生产 bootstrap 必崩),
+  // 且那次回调是订阅产物而非 historic 变更,不得递增 revision
+  let subscribing = true
+  core.unsubscribeHistoric = deps.subscribeHistoric(() => {
+    if (subscribing) return
+    core.revision += 1
+  })
+  subscribing = false
   return makeRuntime(core, first)
 }

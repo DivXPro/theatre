@@ -347,8 +347,8 @@ export function registerKeyframeCommands(
         value: args.value,
         sequenced,
       })
-      // historic 通知可能尚未在同一调用栈触发;返回当前值,不手工加一
-      return {revision: runtime.revision}
+      // historic 通知 tick 调度:等一个 tick,返回反映本次写入的 revision
+      return {revision: await runtime.nextRevision()}
     },
   })
 
@@ -405,7 +405,7 @@ export function registerKeyframeCommands(
         runtime.assertRevision(args.expectedRevision)
       }
       moveKeyframe(runtime.sheet, sheetObject, target, {from, to})
-      return {revision: runtime.revision}
+      return {revision: await runtime.nextRevision()}
     },
   })
 
@@ -459,7 +459,7 @@ export function registerKeyframeCommands(
         runtime.assertRevision(args.expectedRevision)
       }
       deleteKeyframe(runtime.sheet, sheetObject, args.propPath, {position: at})
-      return {revision: runtime.revision}
+      return {revision: await runtime.nextRevision()}
     },
   })
 }

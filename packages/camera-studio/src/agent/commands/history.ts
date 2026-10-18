@@ -1,9 +1,10 @@
 /**
  * history 命令(2026-10-17,Task 6):undo/redo。
  *
- * 直接调用 Studio 真实 undo()/redo();revision 取当前 historic 驱动值
- * (生产中 studio.undo() 同步改写 historic 指针、onChange 同步递增
- * revision),绝不伪造 canUndo/canRedo,也不把它们塞进结果。
+ * 直接调用 Studio 真实 undo()/redo();revision 等一个 core tick 再读
+ * (F2 修复:historic 指针通知经 prism.onChange 排到 ticker 下一 tick,
+ * undo/redo 后同步读拿到的是操作前的值),绝不伪造 canUndo/canRedo,
+ * 也不把它们塞进结果。
  * 历史恢复的是项目状态,但 undo 本身不再产生可撤销步骤:undoable:none。
  * 写命令的 expectedRevision 乐观并发对 undo/redo 一致生效:revision 匹配
  * 检查先于 Studio 调用,冲突时不产生任何副作用。
@@ -86,8 +87,8 @@ export function registerHistoryCommands(
         runtime.assertRevision(args.expectedRevision)
       }
       requireStudio(runtime).undo()
-      // 生产里 undo 的 historic 通知已同步递增 revision;返回当前值
-      return {revision: runtime.revision}
+      // historic 通知 tick 调度:等一个 tick,返回 undo 后的真实 revision
+      return {revision: await runtime.nextRevision()}
     },
   })
 
@@ -112,7 +113,7 @@ export function registerHistoryCommands(
         runtime.assertRevision(args.expectedRevision)
       }
       requireStudio(runtime).redo()
-      return {revision: runtime.revision}
+      return {revision: await runtime.nextRevision()}
     },
   })
 }

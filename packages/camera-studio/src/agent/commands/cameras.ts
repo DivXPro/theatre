@@ -286,18 +286,18 @@ function assertAimTargetValid(sheet: ISheet, target: string): void {
  * freeze(可选)是解除类写入的坐标定格,折进同一事务(F1 修复):
  * preflight 只管领域属性,定格与 UI 看护的 scrub 写入同语义。
  */
-function writeCameraStaticProp(
+async function writeCameraStaticProp(
   runtime: AgentRuntime,
   sheetObject: ISheetObject<any>,
   props: Record<string, unknown>,
   expectedRevision: number | undefined,
   freeze?: Record<string, unknown>,
-): {revision: number} {
+): Promise<{revision: number}> {
   assertStaticPropsWritable(sheetObject, props)
   if (expectedRevision !== undefined) runtime.assertRevision(expectedRevision)
   setStaticPropsWithFreeze(sheetObject, props, freeze ?? {})
-  // historic 通知可能尚未在同一调用栈触发;返回当前值,不手工加一
-  return {revision: runtime.revision}
+  // historic 通知 tick 调度:等一个 tick,返回反映本次写入的 revision
+  return {revision: await runtime.nextRevision()}
 }
 
 /**
@@ -463,7 +463,7 @@ export function registerCameraCommands(
       runtime.assertActive()
       const objectId = formatSceneObjectId('camera', key)
       assertCreateVisible(runtime, objectId)
-      return {objectId, revision: runtime.revision}
+      return {objectId, revision: await runtime.nextRevision()}
     },
   })
 

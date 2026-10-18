@@ -162,8 +162,8 @@ export function registerObjectCommands(
         runtime.assertRevision(args.expectedRevision)
       }
       setStaticProps(sheetObject, args.props)
-      // historic 通知可能尚未在同一调用栈触发;返回当前值,不手工加一
-      return {revision: runtime.revision}
+      // historic 通知 tick 调度:等一个 tick,返回反映本次写入的 revision
+      return {revision: await runtime.nextRevision()}
     },
   })
 
@@ -218,7 +218,7 @@ export function registerObjectCommands(
         }
       }
       runtime.handlers.afterSceneObjectDeleted?.(deleted)
-      return {deleted: deleted.id, revision: runtime.revision}
+      return {deleted: deleted.id, revision: await runtime.nextRevision()}
     },
   })
 }

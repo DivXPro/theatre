@@ -335,7 +335,7 @@ export function registerPathCommands(
       return {
         pathId: formatSceneObjectId('path', pathKey),
         pointKeys,
-        revision: runtime.revision,
+        revision: await runtime.nextRevision(),
       }
     },
   })
@@ -387,7 +387,7 @@ export function registerPathCommands(
         key,
         revisionGuard(args.expectedRevision),
       )
-      return {pointKey, revision: runtime.revision}
+      return {pointKey, revision: await runtime.nextRevision()}
     },
   })
 
@@ -483,7 +483,7 @@ export function registerPathCommands(
         },
         revisionGuard(args.expectedRevision),
       )
-      return {revision: runtime.revision}
+      return {revision: await runtime.nextRevision()}
     },
   })
 
@@ -541,7 +541,7 @@ export function registerPathCommands(
         args.pointKey,
         revisionGuard(args.expectedRevision),
       )
-      return {revision: runtime.revision, pathDeleted}
+      return {revision: await runtime.nextRevision(), pathDeleted}
     },
   })
 
@@ -612,7 +612,7 @@ export function registerPathCommands(
         args.u,
         revisionGuard(args.expectedRevision),
       )
-      return {revision: runtime.revision}
+      return {revision: await runtime.nextRevision()}
     },
   })
 

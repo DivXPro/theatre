@@ -202,7 +202,7 @@ export function registerModelCommands(
           {details: {objectId}},
         )
       }
-      return {objectId, revision: runtime.revision}
+      return {objectId, revision: await runtime.nextRevision()}
     },
   })
 }

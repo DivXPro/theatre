@@ -241,7 +241,7 @@ export function registerAnimationCommands(
         runtime.assertRevision(args.expectedRevision)
       }
       setStaticProps(sheetObject, {animation: args.assetId})
-      return {revision: runtime.revision}
+      return {revision: await runtime.nextRevision()}
     },
   })
 
@@ -285,7 +285,7 @@ export function registerAnimationCommands(
         runtime.assertRevision(args.expectedRevision)
       }
       setStaticProps(sheetObject, {animation: ''})
-      return {revision: runtime.revision}
+      return {revision: await runtime.nextRevision()}
     },
   })
 

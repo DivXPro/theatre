@@ -231,12 +231,12 @@ function assertParentValid(
  * 锚点网格未登记 / 父级目标运行时对象未就绪(异步加载)→ INVALID_STATE
  * (可重试),不写半悬挂状态。
  */
-function writeAnchorParent(
+async function writeAnchorParent(
   runtime: AgentRuntime,
   sheetObject: ISheetObject<any>,
   parent: string,
   expectedRevision: number | undefined,
-): {revision: number} {
+): Promise<{revision: number}> {
   assertStaticPropsWritable(sheetObject, {parent})
   if (expectedRevision !== undefined) runtime.assertRevision(expectedRevision)
   const {objectKey: selfKey} = sheetObject.address
@@ -254,8 +254,8 @@ function writeAnchorParent(
   // 事务已提交,立即换父:包装器下一 tick 应用 position=定格值时节点已在
   // 正确父级下,世界坐标不跳;看护 effect 的同值守卫随之跳过提交
   freeze.reparent()
-  // historic 通知可能尚未在同一调用栈触发;返回当前值,不手工加一
-  return {revision: runtime.revision}
+  // historic 通知 tick 调度:等一个 tick,返回反映本次写入的 revision
+  return {revision: await runtime.nextRevision()}
 }
 
 export function registerAnchorCommands(
@@ -349,7 +349,7 @@ export function registerAnchorCommands(
           {details: {objectId}},
         )
       }
-      return {objectId, revision: runtime.revision}
+      return {objectId, revision: await runtime.nextRevision()}
     },
   })
 

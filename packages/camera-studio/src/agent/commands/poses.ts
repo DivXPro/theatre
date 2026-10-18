@@ -275,18 +275,18 @@ async function requirePoseEntry(
   return entry
 }
 
-/** 领域静态写入:建轨预检 → expectedRevision → 单事务写完(propAccess) */
-function writeStaticProp(
+/** 领域静态写入:建轨预检 → expectedRevision → 单事务写完(propAccess);revision 等一个 core tick 再读(F2) */
+async function writeStaticProp(
   runtime: AgentRuntime,
   sheetObject: Parameters<typeof setStaticProps>[0],
   props: Record<string, unknown>,
   expectedRevision: number | undefined,
-): {revision: number} {
+): Promise<{revision: number}> {
   assertStaticPropsWritable(sheetObject, props)
   if (expectedRevision !== undefined) runtime.assertRevision(expectedRevision)
   setStaticProps(sheetObject, props)
-  // historic 通知可能尚未在同一调用栈触发;返回当前值,不手工加一
-  return {revision: runtime.revision}
+  // historic 通知 tick 调度:等一个 tick,返回反映本次写入的 revision
+  return {revision: await runtime.nextRevision()}
 }
 
 export function registerPoseCommands(
@@ -445,7 +445,10 @@ export function registerPoseCommands(
           'Studio 不可用,无法清除姿势',
         )
       }
-      return {cleared: outcome === 'cleared', revision: runtime.revision}
+      return {
+        cleared: outcome === 'cleared',
+        revision: await runtime.nextRevision(),
+      }
     },
   })
 
