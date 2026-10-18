@@ -19,6 +19,7 @@
     {"path": "../../packages/studio"},
     {"path": "../../packages/sync-server"},
     {"path": "../../packages/saaz"},
-    {"path": "../../packages/utils"}
+    {"path": "../../packages/utils"},
+    {"path": "../../packages/camera-studio-bridge"}
   ]
 }

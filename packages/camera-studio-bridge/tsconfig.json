@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "lib": ["ESNext"],
+    "rootDir": "src",
+    "types": ["jest", "node"],
+    "target": "es2020",
+    "composite": true
+  },
+  "include": ["src"]
+}
