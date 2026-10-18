@@ -512,6 +512,18 @@ export function ShotCamera({
         : cam.position
     const m = new Matrix4().lookAt(from, aimRef.current.position, cam.up)
     const e = new Euler().setFromRotationMatrix(m, 'XYZ')
+    // 同值守卫(与解绑定格的 alreadyFrozen 同款):cameras.setAimTarget
+    // 命令解除瞄准时已把朝向定格折进写 aimTarget 的同一事务,持久值==
+    // 此处换算结果,原样重写会多出一个同值撤销步骤(撤销陷阱)——跳过提交
+    const persisted = val(obj.props.rotation) as
+      | {x: number; y: number; z: number}
+      | undefined
+    const sameRotation =
+      !!persisted &&
+      Math.abs(persisted.x - e.x) < 1e-6 &&
+      Math.abs(persisted.y - e.y) < 1e-6 &&
+      Math.abs(persisted.z - e.z) < 1e-6
+    if (sameRotation) return
     const scrub = studio.scrub()
     scrub.capture(({set}) => set(obj.props.rotation, {x: e.x, y: e.y, z: e.z}))
     scrub.commit()

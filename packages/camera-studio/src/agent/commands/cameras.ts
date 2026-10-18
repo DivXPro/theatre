@@ -16,8 +16,14 @@
  *
  * setAimTarget / bindPath / unbindPath 是领域静态写入(preflight
  * ruling):aimTarget/pathKey 属 domainOwnedProps,命令完成自身校验
- * (目标存在性/类型)与建轨预检后经 setStaticProps 单事务写入;已建轨
- * 返回 INVALID_STATE,打帧由 keyframes.* 显式进行。
+ * (目标存在性/类型)与建轨预检后写入;已建轨返回 INVALID_STATE,
+ * 打帧由 keyframes.* 显式进行。
+ *
+ * 解除类写入(unbindPath、setAimTarget 目标为 '')把坐标定格折进同一
+ * 事务(2026-10-19,F1 修复):原实现只写属性,ShotCamera 的看护 effect
+ * 再补一笔定格提交——两步撤销,undo 一次只回属性不回定格,相机跳变
+ * (撤销陷阱)。现在事务内同写属性+position/rotation 定格,看护的
+ * 同值守卫看到 persisted==定格值即跳过提交,一步撤销。
  *
  * 瞄准目标与 UI 下拉同集(stringLiteral 字面量):''(解除)+
  * anchor:<key> + bone:<placement>#<part>;其余类型 ID 拒绝
@@ -26,15 +32,22 @@
 import {AgentApiError} from '../errors'
 import type {AgentCommandRegistry} from '../registry'
 import type {AgentRuntime} from '../runtime'
+import {val} from '@dreamerbird/core'
 import type {ISheet, ISheetObject} from '@dreamerbird/core'
+import {Euler, Matrix4, Vector3} from 'three'
 import {formatSceneObjectId, parseSceneObjectId} from '../objectIds'
 import {
   getSceneObjectSummary,
   listSceneObjectKeys,
   resolveSceneSheetObject,
 } from '../objectResolver'
-import {assertStaticPropsWritable, setStaticProps} from '../propAccess'
+import {
+  assertStaticPropsWritable,
+  setStaticPropsWithFreeze,
+} from '../propAccess'
 import {createCameraWaiter} from '../runtime/cameraLifecycle'
+import {getSceneSheetObject} from '../runtime/objectRuntime'
+import {getPathSampler} from '../runtime/pathRuntime'
 import type {JsonSchema, SceneObjectId, Vec3} from '../types'
 import {
   requireFiniteNumber,
@@ -42,7 +55,8 @@ import {
   requireString,
   requireVec3,
 } from '../validation'
-import {parseTargetId} from '../../aimTargets'
+import {parseTargetId, resolveAimTarget} from '../../aimTargets'
+import {getShotCameraObjects} from '../../cameraRegistry'
 import type {CameraSeed} from '../../cameraRegistry'
 
 declare module '../runtime' {
@@ -267,18 +281,96 @@ function assertAimTargetValid(sheet: ISheet, target: string): void {
   }
 }
 
-/** 领域静态写入:建轨预检 → expectedRevision → 单事务写完(propAccess) */
+/**
+ * 领域静态写入:建轨预检 → expectedRevision → 单事务写完(propAccess)。
+ * freeze(可选)是解除类写入的坐标定格,折进同一事务(F1 修复):
+ * preflight 只管领域属性,定格与 UI 看护的 scrub 写入同语义。
+ */
 function writeCameraStaticProp(
   runtime: AgentRuntime,
   sheetObject: ISheetObject<any>,
   props: Record<string, unknown>,
   expectedRevision: number | undefined,
+  freeze?: Record<string, unknown>,
 ): {revision: number} {
   assertStaticPropsWritable(sheetObject, props)
   if (expectedRevision !== undefined) runtime.assertRevision(expectedRevision)
-  setStaticProps(sheetObject, props)
+  setStaticPropsWithFreeze(sheetObject, props, freeze ?? {})
   // historic 通知可能尚未在同一调用栈触发;返回当前值,不手工加一
   return {revision: runtime.revision}
+}
+
+/**
+ * 解绑路径的机位定格(F1):驱动机位 = 绑定路径当前进度处的采样点——
+ * 与 ShotCamera 帧驱动每帧写入 drivenPosRef、看护定格读 drivenPosRef
+ * 同源(同一采样器与 progress),命令此刻同步采样得到同一值。
+ * 路径未挂载/无控制点(从未驱动)返回 undefined:机位不动,只清 pathKey,
+ * 看护的 alreadyFrozen 守卫看到 persisted==当前机位即跳过。
+ */
+function planUnbindFreeze(sheetObject: ISheetObject<any>): Vec3 | undefined {
+  const pathKey = (val(sheetObject.props.pathKey) as string | undefined) ?? ''
+  if (!pathKey) return undefined
+  const sampler = getPathSampler(pathKey)
+  const pathObj = getSceneSheetObject(formatSceneObjectId('path', pathKey))
+  if (!sampler || !pathObj) return undefined
+  const progress = (val(pathObj.props.progress) as number | undefined) ?? 0
+  const out = new Vector3()
+  return sampler(progress, out) ? {x: out.x, y: out.y, z: out.z} : undefined
+}
+
+/**
+ * 解除瞄准的朝向定格(F1):与 ShotCamera 看护同一算法——from 取绑定路径
+ * 采样点(机位被路径接管时)否则相机当前机位,lookAt(from, 目标世界位置)
+ * 转 XYZ 欧拉角。目标此刻可解析(tracking 为 true)才有定格必要;
+ * 目标已失效时看护的 prev===true 闸本就不通过,返回 undefined 只写属性。
+ */
+function planAimReleaseFreeze(
+  sheetObject: ISheetObject<any>,
+): Vec3 | undefined {
+  const prevTarget = (val(sheetObject.props.aimTarget) as string) ?? ''
+  if (!prevTarget) return undefined
+  const aimObj = resolveAimTarget(prevTarget)
+  if (!aimObj) return undefined
+  const {objectKey: cameraKey} = sheetObject.address
+  const cam = getShotCameraObjects().get(cameraKey)
+  const from = new Vector3()
+  if (!sampleBoundPathPosition(sheetObject, from)) {
+    if (cam) {
+      from.copy(cam.position)
+    } else {
+      // 未驱动相机的持久 position 即画面机位(包装器全量应用过)
+      const persisted = (val(sheetObject.props.position) as
+        | Vec3
+        | undefined) ?? {
+        x: 0,
+        y: 0,
+        z: 0,
+      }
+      from.set(persisted.x, persisted.y, persisted.z)
+    }
+  }
+  const targetPos = aimObj.getWorldPosition(new Vector3())
+  const m = new Matrix4().lookAt(
+    from,
+    targetPos,
+    cam?.up ?? new Vector3(0, 1, 0),
+  )
+  const e = new Euler().setFromRotationMatrix(m, 'XYZ')
+  return {x: e.x, y: e.y, z: e.z}
+}
+
+/** 机位被在册路径接管时采样当前进度处的世界机位;不可采样返回 false */
+function sampleBoundPathPosition(
+  sheetObject: ISheetObject<any>,
+  out: Vector3,
+): boolean {
+  const pathKey = (val(sheetObject.props.pathKey) as string | undefined) ?? ''
+  if (!pathKey) return false
+  const sampler = getPathSampler(pathKey)
+  const pathObj = getSceneSheetObject(formatSceneObjectId('path', pathKey))
+  if (!sampler || !pathObj) return false
+  const progress = (val(pathObj.props.progress) as number | undefined) ?? 0
+  return sampler(progress, out)
 }
 
 /** 挂载等待兑现后的双可见复核(与 models.create 同一不变量) */
@@ -464,11 +556,16 @@ export function registerCameraCommands(
       const sheetObject = resolveMountedCamera(runtime, args.objectId)
       // 目标校验先于建轨预检:无效目标不得写 props
       assertAimTargetValid(runtime.sheet, args.target)
+      // 解除瞄准(target==='')把当前朝向定格折进同一事务(F1);看护的
+      // 同值守卫看到 persisted==定格值即跳过,一步撤销
+      const freeze =
+        args.target === '' ? planAimReleaseFreeze(sheetObject) : undefined
       return writeCameraStaticProp(
         runtime,
         sheetObject,
         {aimTarget: args.target},
         args.expectedRevision,
+        freeze ? {rotation: freeze} : undefined,
       )
     },
   })
@@ -564,12 +661,15 @@ export function registerCameraCommands(
     execute: async (args) => {
       runtime.assertActive()
       const sheetObject = resolveMountedCamera(runtime, args.objectId)
-      // 清空绑定;ShotCamera 的既有看护负责把当前驱动机位定格进 position
+      // 清空绑定 + 驱动机位定格同一事务(F1);看护的 alreadyFrozen 守卫
+      // 看到 persisted==定格值即跳过,一步撤销
+      const freeze = planUnbindFreeze(sheetObject)
       return writeCameraStaticProp(
         runtime,
         sheetObject,
         {pathKey: ''},
         args.expectedRevision,
+        freeze ? {position: freeze} : undefined,
       )
     },
   })

@@ -73,6 +73,13 @@ function setup(options: SetupOptions = {}) {
     require('../../anchorsRegistry') as typeof import('../../anchorsRegistry')
   const {PLACEMENTS_REGISTRY_KEY} =
     require('../../PlacementManager') as typeof import('../../PlacementManager')
+  const cameraRegistry =
+    require('../../cameraRegistry') as typeof import('../../cameraRegistry')
+  const aimTargets =
+    require('../../aimTargets') as typeof import('../../aimTargets')
+  const pathRuntime =
+    require('../runtime/pathRuntime') as typeof import('../runtime/pathRuntime')
+  const three = require('three') as typeof import('three')
 
   /** 事务 set 调用记录(path + value) */
   const setCalls: Array<{path: string; value: unknown}> = []
@@ -236,6 +243,52 @@ function setup(options: SetupOptions = {}) {
     return createCamera
   }
 
+  /** 布景:路径采样器 + meta SheetObject(F1 解绑定格的数据源) */
+  function mountPathSampler(
+    pathKey: string,
+    sample: {x: number; y: number; z: number},
+    progress = 0.25,
+  ) {
+    const pathObj = sheet.object(pathKey, {
+      progress: t.number(progress),
+    }) as ISheetObject<any>
+    const id = `path:${pathKey}` as const
+    objectRuntime.registerSceneSheetObject(id, pathObj)
+    const unbind = pathRuntime.registerPathSampler(pathKey, (_u, out) => {
+      out.set(sample.x, sample.y, sample.z)
+      return true
+    })
+    cleanups.push(() => {
+      unbind()
+      objectRuntime.unregisterSceneSheetObject(id, pathObj)
+    })
+    return pathObj
+  }
+
+  /** 布景:相机 three 对象(F1 解除瞄准时 from 取它的机位) */
+  function mountCameraObject(
+    key: string = CAMERA_KEY,
+    position: {x: number; y: number; z: number} = POSITION,
+  ) {
+    const cam = new three.Object3D()
+    cam.position.set(position.x, position.y, position.z)
+    cameraRegistry.registerShotCameraObject(key, cam)
+    cleanups.push(() => cameraRegistry.registerShotCameraObject(key, null))
+    return cam
+  }
+
+  /** 布景:瞄准目标节点(anchor: 解析的运行时登记表) */
+  function mountAimTargetNode(
+    key: string,
+    position: {x: number; y: number; z: number},
+  ) {
+    const node = new three.Object3D()
+    node.position.set(position.x, position.y, position.z)
+    aimTargets.registerAnchorObject(key, node)
+    cleanups.push(() => aimTargets.registerAnchorObject(key, null))
+    return node
+  }
+
   return {
     core,
     sheet,
@@ -245,6 +298,10 @@ function setup(options: SetupOptions = {}) {
     setCalls,
     cameraLifecycle,
     mountCamera,
+    mountPathSampler,
+    mountCameraObject,
+    mountAimTargetNode,
+    three,
     writeCamerasRegistry,
     writePathsRegistry,
     writeAnchorsRegistry,
@@ -563,6 +620,68 @@ describe('cameras.setAimTarget', () => {
     expect(setCalls.map((c) => c.value)).toEqual(['bone:Y Bot#head', ''])
   })
 
+  test('解除瞄准:aimTarget 与朝向定格同一事务(F1,一步撤销)', async () => {
+    const {
+      registry,
+      mountCamera,
+      mountCameraObject,
+      mountAimTargetNode,
+      writeCamerasRegistry,
+      writeAnchorsRegistry,
+      three,
+      setCalls,
+    } = setup()
+    writeCamerasRegistry([CAMERA_KEY])
+    writeAnchorsRegistry(['Anchor 1'])
+    // 持久态:相机正瞄准 Anchor 1;机位 (1,2,3),目标在 (0,0,-5)
+    const camObj = mountCamera()
+    camObj.initialValue = {aimTarget: 'anchor:Anchor 1'}
+    mountCameraObject(CAMERA_KEY, POSITION)
+    mountAimTargetNode('Anchor 1', {x: 0, y: 0, z: -5})
+
+    await expect(
+      registry.execute(
+        'cameras.setAimTarget',
+        {objectId: `camera:${CAMERA_KEY}`, target: ''},
+        ctx(),
+      ),
+    ).resolves.toEqual({revision: 1})
+    // 与 ShotCamera 看护同一算法:lookAt(机位, 目标世界位置) → XYZ 欧拉角
+    const m = new three.Matrix4().lookAt(
+      new three.Vector3(POSITION.x, POSITION.y, POSITION.z),
+      new three.Vector3(0, 0, -5),
+      new three.Vector3(0, 1, 0),
+    )
+    const e = new three.Euler().setFromRotationMatrix(m, 'XYZ')
+    expect(setCalls).toEqual([
+      {path: 'aimTarget', value: ''},
+      {path: 'rotation', value: {x: e.x, y: e.y, z: e.z}},
+    ])
+  })
+
+  test('解除瞄准时目标已失效(tracking 已为 false):只写 aimTarget,无定格', async () => {
+    const {
+      registry,
+      mountCamera,
+      writeCamerasRegistry,
+      writeAnchorsRegistry,
+      setCalls,
+    } = setup()
+    writeCamerasRegistry([CAMERA_KEY])
+    writeAnchorsRegistry(['Anchor 1'])
+    const camObj = mountCamera()
+    camObj.initialValue = {aimTarget: 'anchor:Anchor 1'}
+    // 目标运行时对象未登记(已删/未加载):看护本就不会触发定格
+    await expect(
+      registry.execute(
+        'cameras.setAimTarget',
+        {objectId: `camera:${CAMERA_KEY}`, target: ''},
+        ctx(),
+      ),
+    ).resolves.toEqual({revision: 1})
+    expect(setCalls).toEqual([{path: 'aimTarget', value: ''}])
+  })
+
   test('无效目标:无类型前缀 → INVALID_ID_KIND;锚点/骨骼放置不存在 → OBJECT_NOT_FOUND;均不写 props', async () => {
     const {registry, mountCamera, writeCamerasRegistry, fakeStudio} = setup()
     writeCamerasRegistry([CAMERA_KEY])
@@ -731,6 +850,58 @@ describe('cameras.bindPath / unbindPath', () => {
       {path: 'pathKey', value: 'Path 1'},
       {path: 'pathKey', value: ''},
     ])
+  })
+
+  test('unbindPath:pathKey 与驱动机位定格同一事务(F1,一步撤销)', async () => {
+    const {
+      registry,
+      mountCamera,
+      mountPathSampler,
+      writeCamerasRegistry,
+      writePathsRegistry,
+      setCalls,
+    } = setup()
+    writeCamerasRegistry([CAMERA_KEY])
+    writePathsRegistry(['Path 1'])
+    // 持久态:相机绑定 Path 1;驱动机位 = 路径当前进度采样 (7,8,9)
+    const camObj = mountCamera()
+    camObj.initialValue = {pathKey: 'Path 1'}
+    mountPathSampler('Path 1', {x: 7, y: 8, z: 9})
+
+    await expect(
+      registry.execute(
+        'cameras.unbindPath',
+        {objectId: `camera:${CAMERA_KEY}`},
+        ctx(),
+      ),
+    ).resolves.toEqual({revision: 1})
+    expect(setCalls).toEqual([
+      {path: 'pathKey', value: ''},
+      {path: 'position', value: {x: 7, y: 8, z: 9}},
+    ])
+  })
+
+  test('unbindPath:路径无采样(未挂载/无控制点)只清 pathKey,无机位定格', async () => {
+    const {
+      registry,
+      mountCamera,
+      writeCamerasRegistry,
+      writePathsRegistry,
+      setCalls,
+    } = setup()
+    writeCamerasRegistry([CAMERA_KEY])
+    writePathsRegistry(['Path 1'])
+    const camObj = mountCamera()
+    camObj.initialValue = {pathKey: 'Path 1'}
+    // 不登记采样器:路径组件未挂载,机位未被驱动,无定格可写
+    await expect(
+      registry.execute(
+        'cameras.unbindPath',
+        {objectId: `camera:${CAMERA_KEY}`},
+        ctx(),
+      ),
+    ).resolves.toEqual({revision: 1})
+    expect(setCalls).toEqual([{path: 'pathKey', value: ''}])
   })
 
   test('被绑定路径不存在 → OBJECT_NOT_FOUND;pathId 类型错误 → INVALID_ID_KIND;不写 props', async () => {

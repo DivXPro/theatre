@@ -8,8 +8,10 @@
  * notifyAnchorReady)。
  *
  * 父级目标校验:自身/成环 → INVALID_ARGUMENT;无类型前缀 →
- * INVALID_ID_KIND;目标不存在 → OBJECT_NOT_FOUND;世界/局部换算由
- * AnchorObject 的既有 effect 在 parent 属性变化后完成(命令只写属性)。
+ * INVALID_ID_KIND;目标不存在 → OBJECT_NOT_FOUND;锚点网格/父级目标
+ * 运行时对象未就绪 → INVALID_STATE(F1 修复:命令把坐标定格折进写
+ * parent 的同一事务,需要同步解析世界矩阵;布景注册真实 Object3D
+ * 节点模拟挂载)。
  */
 import type {ISheetObject} from '@dreamerbird/core'
 import type {CommandContext, Vec3} from '../types'
@@ -70,6 +72,9 @@ function setup(options: SetupOptions = {}) {
     require('../../cameraRegistry') as typeof import('../../cameraRegistry')
   const {PLACEMENTS_REGISTRY_KEY} =
     require('../../PlacementManager') as typeof import('../../PlacementManager')
+  const aimTargets =
+    require('../../aimTargets') as typeof import('../../aimTargets')
+  const three = require('three') as typeof import('three')
 
   /** 事务 set 调用记录(path + value) */
   const setCalls: Array<{path: string; value: unknown}> = []
@@ -184,6 +189,28 @@ function setup(options: SetupOptions = {}) {
     return obj
   }
 
+  /** 布景:娘家 group(命令解绑时同步挂回用) */
+  function mountAnchorHome() {
+    const home = new three.Group()
+    aimTargets.registerAnchorHome(home)
+    cleanups.push(() => aimTargets.registerAnchorHome(null))
+    return home
+  }
+
+  /** 布景:锚点网格节点(F1 定格需同步解析世界矩阵) */
+  function mountAnchorNode(
+    key: string,
+    position: {x: number; y: number; z: number},
+    parentNode?: import('three').Object3D,
+  ) {
+    const node = new three.Object3D()
+    node.position.set(position.x, position.y, position.z)
+    if (parentNode) parentNode.add(node)
+    aimTargets.registerAnchorObject(key, node)
+    cleanups.push(() => aimTargets.registerAnchorObject(key, null))
+    return node
+  }
+
   /** 布景:Cameras 注册表写一台相机(父级目标存在性底账) */
   function writeCamerasRegistry(keys: string[]) {
     const registryObj = sheet.object(
@@ -228,6 +255,10 @@ function setup(options: SetupOptions = {}) {
     setCalls,
     cameraLifecycle,
     mountAnchor,
+    mountAnchorHome,
+    mountAnchorNode,
+    aimTargets,
+    three,
     writeAnchorsRegistry,
     writeCamerasRegistry,
     writePlacementsRegistry,
@@ -383,10 +414,12 @@ describe('anchors.create 完成语义', () => {
 })
 
 describe('anchors.setParent', () => {
-  test('绑定另一锚点:单事务写 parent,返回 revision', async () => {
+  test('绑定另一锚点:parent 与局部偏移定格同一事务(一步撤销),同步换父', async () => {
     const {
       registry,
       mountAnchor,
+      mountAnchorHome,
+      mountAnchorNode,
       writeAnchorsRegistry,
       setCalls,
       notifyHistoric,
@@ -394,6 +427,11 @@ describe('anchors.setParent', () => {
     writeAnchorsRegistry([ANCHOR_KEY, 'Anchor 2'])
     mountAnchor()
     notifyHistoric()
+    const home = mountAnchorHome()
+    // 锚点世界坐标 (1,2,3)(娘家是单位阵);父级锚点网格在 (10,0,0)
+    // → 局部偏移定格 (-9,2,3)
+    const node = mountAnchorNode(ANCHOR_KEY, {x: 1, y: 2, z: 3}, home)
+    const parentNode = mountAnchorNode('Anchor 2', {x: 10, y: 0, z: 0})
 
     await expect(
       registry.execute(
@@ -402,22 +440,52 @@ describe('anchors.setParent', () => {
         ctx(),
       ),
     ).resolves.toEqual({revision: 2})
-    expect(setCalls).toEqual([{path: 'parent', value: 'anchor:Anchor 2'}])
+    expect(setCalls).toEqual([
+      {path: 'parent', value: 'anchor:Anchor 2'},
+      {path: 'position', value: {x: -9, y: 2, z: 3}},
+    ])
+    // 事务提交后同步换父,包装器应用局部偏移时节点已在新父之下
+    expect(node.parent).toBe(parentNode)
   })
 
   test('支持的目标类型:model / camera / bone(骨骼锚点要求放置模型存在)', async () => {
     const {
       registry,
       mountAnchor,
+      mountAnchorHome,
+      mountAnchorNode,
       writeAnchorsRegistry,
       writeCamerasRegistry,
       writePlacementsRegistry,
+      three,
       setCalls,
     } = setup()
     writeAnchorsRegistry([ANCHOR_KEY])
     writeCamerasRegistry(['Shot Camera'])
     writePlacementsRegistry(['Y Bot'])
     mountAnchor()
+    const home = mountAnchorHome()
+    mountAnchorNode(ANCHOR_KEY, {x: 1, y: 2, z: 3}, home)
+    // 三类父级目标的运行时对象(全部单位阵,局部偏移 = 锚点世界坐标)
+    const placement =
+      require('../../PlacementManager') as typeof import('../../PlacementManager')
+    const cameraRegistry =
+      require('../../cameraRegistry') as typeof import('../../cameraRegistry')
+    const boneAnchors =
+      require('../../boneAnchors') as typeof import('../../boneAnchors')
+    const modelNode = new three.Group()
+    placement.registerPlacedInstance('Y Bot', modelNode)
+    cleanups.push(() => placement.unregisterPlacedInstance('Y Bot'))
+    cameraRegistry.registerShotCameraObject('Shot Camera', new three.Object3D())
+    cleanups.push(() =>
+      cameraRegistry.registerShotCameraObject('Shot Camera', null),
+    )
+    const rigRoot = new three.Group()
+    const spine = new three.Bone()
+    spine.name = 'Spine1'
+    rigRoot.add(spine)
+    boneAnchors.registerBoneAnchors('Y Bot', rigRoot)
+    cleanups.push(() => boneAnchors.unregisterBoneAnchors('Y Bot'))
 
     for (const parent of [
       'model:Y Bot',
@@ -432,10 +500,15 @@ describe('anchors.setParent', () => {
         ),
       ).resolves.toEqual({revision: 1})
     }
-    expect(setCalls.map((c) => c.value)).toEqual([
-      'model:Y Bot',
-      'camera:Shot Camera',
-      'bone:Y Bot#chest',
+    // 每次写入 = parent + position 定格(同一事务),父级都是单位阵,
+    // 局部偏移恒等于锚点世界坐标
+    expect(setCalls).toEqual([
+      {path: 'parent', value: 'model:Y Bot'},
+      {path: 'position', value: {x: 1, y: 2, z: 3}},
+      {path: 'parent', value: 'camera:Shot Camera'},
+      {path: 'position', value: {x: 1, y: 2, z: 3}},
+      {path: 'parent', value: 'bone:Y Bot#chest'},
+      {path: 'position', value: {x: 1, y: 2, z: 3}},
     ])
   })
 
@@ -570,10 +643,21 @@ describe('anchors.setParent', () => {
 })
 
 describe('anchors.clearParent', () => {
-  test('写空父级(既有 Three effect 负责挂回 home 并定格世界坐标)', async () => {
-    const {registry, mountAnchor, writeAnchorsRegistry, setCalls} = setup()
+  test('清父级与世界坐标定格同一事务(一步撤销),同步挂回娘家', async () => {
+    const {
+      registry,
+      mountAnchor,
+      mountAnchorHome,
+      mountAnchorNode,
+      writeAnchorsRegistry,
+      setCalls,
+    } = setup()
     writeAnchorsRegistry([ANCHOR_KEY, 'Anchor 2'])
     mountAnchor(ANCHOR_KEY, 'anchor:Anchor 2')
+    const home = mountAnchorHome()
+    // 锚点挂在父级 (10,0,0) 下、局部偏移 (1,1,1) → 世界坐标 (11,1,1)
+    const parentNode = mountAnchorNode('Anchor 2', {x: 10, y: 0, z: 0})
+    const node = mountAnchorNode(ANCHOR_KEY, {x: 1, y: 1, z: 1}, parentNode)
 
     await expect(
       registry.execute(
@@ -582,7 +666,47 @@ describe('anchors.clearParent', () => {
         ctx(),
       ),
     ).resolves.toEqual({revision: 1})
-    expect(setCalls).toEqual([{path: 'parent', value: ''}])
+    expect(setCalls).toEqual([
+      {path: 'parent', value: ''},
+      {path: 'position', value: {x: 11, y: 1, z: 1}},
+    ])
+    expect(node.parent).toBe(home)
+  })
+
+  test('锚点网格/父级目标运行时对象未就绪 → INVALID_STATE(可重试),不写 props', async () => {
+    const {
+      registry,
+      mountAnchor,
+      mountAnchorHome,
+      mountAnchorNode,
+      writeAnchorsRegistry,
+      writePlacementsRegistry,
+      fakeStudio,
+    } = setup()
+    writeAnchorsRegistry([ANCHOR_KEY])
+    writePlacementsRegistry(['Y Bot'])
+    mountAnchor()
+
+    // SheetObject 已登记但锚点网格未注册(组件挂载竞态)→ 拒绝
+    await expect(
+      registry.execute(
+        'anchors.clearParent',
+        {objectId: `anchor:${ANCHOR_KEY}`},
+        ctx(),
+      ),
+    ).rejects.toMatchObject({code: 'INVALID_STATE'})
+
+    // 锚点网格在,但父级目标运行时对象未就绪(注册表有、模型异步加载中)
+    const home = mountAnchorHome()
+    mountAnchorNode(ANCHOR_KEY, {x: 1, y: 2, z: 3}, home)
+    await expect(
+      registry.execute(
+        'anchors.setParent',
+        {objectId: `anchor:${ANCHOR_KEY}`, parent: 'model:Y Bot'},
+        ctx(),
+      ),
+    ).rejects.toMatchObject({code: 'INVALID_STATE'})
+    expect(fakeStudio.transaction).not.toHaveBeenCalled()
   })
 
   test('锚点不存在 → OBJECT_NOT_FOUND;未挂载 → INVALID_STATE;类型不符 → INVALID_ID_KIND', async () => {

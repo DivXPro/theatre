@@ -139,6 +139,18 @@ export function getAnchorObjects(): ReadonlyMap<string, Object3D> {
   return anchorObjects
 }
 
+/**
+ * 锚点网格的「娘家」挂载点(Anchors 组件的 home group):解绑/父级消失
+ * 时挂回这里。命令侧(anchors.clearParent)同步换父也需要它,故随
+ * Anchors 挂载登记进模块级(单页单场景,同 anchorObjects)。
+ */
+let anchorHome: Object3D | null = null
+
+/** Anchors 组件挂载时登记 home group;卸载清 null */
+export function registerAnchorHome(obj: Object3D | null): void {
+  anchorHome = obj
+}
+
 export function defaultTargetLookup(): TargetLookup {
   return {
     anchors: anchorObjects,
@@ -289,6 +301,51 @@ export function localOffsetForParent(
   parentObj.updateWorldMatrix(true, false)
   const inv = new Matrix4().copy(parentObj.matrixWorld).invert()
   return out.copy(childWorld).applyMatrix4(inv)
+}
+
+/**
+ * 命令侧父级切换的定格计划(2026-10-19,Agent API F1 修复):
+ * anchors.setParent/clearParent 把坐标定格折进写 parent 的同一事务,
+ * 否则 AnchorObject 的看护 effect 会在属性变化后再补一笔定格提交——
+ * 两步撤销,undo 一次只回属性不回定格,锚点跳变(撤销陷阱,同
+ * removeAnchor/removePathFromRegistry 注释)。
+ *
+ * 同步读当前世界坐标,算出换父后 position 属性应取值(绑定=新父局部
+ * 偏移;解绑=世界坐标)。返回的 reparent 必须在事务提交后、同一调用栈
+ * 内执行:抢在包装器应用新 position 与看护 effect 之前完成换父,包装器
+ * 应用落在新父之下、世界坐标不变,看护的同值守卫看到 persisted==定格值
+ * 即跳过提交(只推进游标)。
+ *
+ * 返回 null = 锚点网格未登记(未挂载)或父级目标运行时对象未就绪
+ * (异步加载中)——调用方按 INVALID_STATE 拒绝(可重试),不写半悬挂
+ * 状态。
+ */
+export function planAnchorParentFreeze(
+  key: string,
+  parentId: string,
+): {position: {x: number; y: number; z: number}; reparent: () => void} | null {
+  const node = anchorObjects.get(key)
+  if (!node) return null
+  const world = node.getWorldPosition(new Vector3())
+  if (parentId === '') {
+    const home = anchorHome
+    if (!home) return null
+    return {
+      position: {x: world.x, y: world.y, z: world.z},
+      reparent: () => {
+        home.add(node)
+      },
+    }
+  }
+  const parentObj = resolveAnchorParent(parentId)
+  if (!parentObj) return null
+  const local = localOffsetForParent(world, parentObj, new Vector3())
+  return {
+    position: {x: local.x, y: local.y, z: local.z},
+    reparent: () => {
+      parentObj.add(node)
+    },
+  }
 }
 
 /**

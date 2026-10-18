@@ -10,10 +10,11 @@
  * 与 SheetObject 双双可见(脱节 = INTERNAL_ERROR,不静默成功)。
  *
  * setParent / clearParent 是领域静态写入:parent 属 domainOwnedProps,
- * 命令完成自身校验(目标类型/存在性/自身与成环)与建轨预检后经
- * setStaticProps 单事务写入;世界/局部坐标换算由 AnchorObject 的既有
- * effect 在 parent 属性变化后完成(与 UI 下拉同一路径),异步目标的
- * 挂载重试也由既有 useFrame 循环兜底,命令只写属性。
+ * 命令完成自身校验(目标类型/存在性/自身与成环)与建轨预检后,把
+ * parent 与世界/局部坐标定格折进同一事务写入(F1 修复,见
+ * writeAnchorParent;AnchorObject 看护 effect 的同值守卫随之跳过,
+ * 一步撤销);父级目标运行时对象未就绪(异步加载)抛 INVALID_STATE
+ * 可重试。刷新/撤销恢复既有绑定的挂载仍由既有 useFrame 重试循环兜底。
  *
  * 父级目标与 UI 下拉同集:anchor:<key>(排除自身与后代,成环
  * INVALID_ARGUMENT)/ model:<key> / camera:<key> /
@@ -31,7 +32,10 @@ import {
   listSceneObjectKeys,
   resolveSceneSheetObject,
 } from '../objectResolver'
-import {assertStaticPropsWritable, setStaticProps} from '../propAccess'
+import {
+  assertStaticPropsWritable,
+  setStaticPropsWithFreeze,
+} from '../propAccess'
 import {createAnchorWaiter} from '../runtime/cameraLifecycle'
 import type {JsonSchema, SceneObjectId, Vec3} from '../types'
 import {
@@ -40,7 +44,11 @@ import {
   requireString,
   requireVec3,
 } from '../validation'
-import {isDescendantAnchor, parseTargetId} from '../../aimTargets'
+import {
+  isDescendantAnchor,
+  parseTargetId,
+  planAnchorParentFreeze,
+} from '../../aimTargets'
 
 declare module '../runtime' {
   interface AgentSceneRuntimeHandlers {
@@ -209,16 +217,43 @@ function assertParentValid(
   }
 }
 
-/** 领域静态写入:建轨预检 → expectedRevision → 单事务写完(propAccess) */
-function writeAnchorStaticProp(
+/**
+ * 父级切换写入(2026-10-19,F1 修复):parent 与坐标定格折进同一事务。
+ *
+ * 原实现只写 parent,世界/局部换算由 AnchorObject 的看护 effect 在属性
+ * 变化后补一笔提交——属性一笔、定格一笔,两步撤销,undo 一次只回属性
+ * 不回定格,锚点跳变(撤销陷阱,同 removeAnchor 注释)。现在:同步算
+ * 定格(planAnchorParentFreeze,命令要求锚点已挂载,世界矩阵可解析),
+ * 事务内同写 parent+position,提交后立即换父(抢在包装器应用新
+ * position 与看护 effect 之前);看护的同值守卫看到 persisted==定格值
+ * 即跳过提交,全程一步撤销。
+ *
+ * 锚点网格未登记 / 父级目标运行时对象未就绪(异步加载)→ INVALID_STATE
+ * (可重试),不写半悬挂状态。
+ */
+function writeAnchorParent(
   runtime: AgentRuntime,
   sheetObject: ISheetObject<any>,
-  props: Record<string, unknown>,
+  parent: string,
   expectedRevision: number | undefined,
 ): {revision: number} {
-  assertStaticPropsWritable(sheetObject, props)
+  assertStaticPropsWritable(sheetObject, {parent})
   if (expectedRevision !== undefined) runtime.assertRevision(expectedRevision)
-  setStaticProps(sheetObject, props)
+  const {objectKey: selfKey} = sheetObject.address
+  const freeze = planAnchorParentFreeze(selfKey, parent)
+  if (!freeze) {
+    throw new AgentApiError(
+      'INVALID_STATE',
+      parent === ''
+        ? `锚点网格尚未挂载,无法定格世界坐标: anchor:${selfKey}`
+        : `父级目标已登记但运行时对象未就绪(异步加载中),请重试: ${parent}`,
+      {details: {objectId: formatSceneObjectId('anchor', selfKey), parent}},
+    )
+  }
+  setStaticPropsWithFreeze(sheetObject, {parent}, {position: freeze.position})
+  // 事务已提交,立即换父:包装器下一 tick 应用 position=定格值时节点已在
+  // 正确父级下,世界坐标不跳;看护 effect 的同值守卫随之跳过提交
+  freeze.reparent()
   // historic 通知可能尚未在同一调用栈触发;返回当前值,不手工加一
   return {revision: runtime.revision}
 }
@@ -369,10 +404,10 @@ export function registerAnchorCommands(
       // 目标校验先于建轨预检:无效目标不得写 props
       const {objectKey: selfKey} = sheetObject.address
       assertParentValid(runtime.sheet, selfKey, args.parent)
-      return writeAnchorStaticProp(
+      return writeAnchorParent(
         runtime,
         sheetObject,
-        {parent: args.parent},
+        args.parent,
         args.expectedRevision,
       )
     },
@@ -413,14 +448,9 @@ export function registerAnchorCommands(
     execute: async (args) => {
       runtime.assertActive()
       const sheetObject = resolveMountedAnchor(runtime, args.objectId)
-      // 清空父级;AnchorObject 的既有 effect 负责挂回 home 并把
-      // 世界坐标定格进 position(与 UI 下拉选「无」同一路径)
-      return writeAnchorStaticProp(
-        runtime,
-        sheetObject,
-        {parent: ''},
-        args.expectedRevision,
-      )
+      // 清空父级 + 世界坐标定格同一事务(F1);定格后看护 effect 同值守卫
+      // 跳过,挂回 home 由 writeAnchorParent 的 reparent 同步完成
+      return writeAnchorParent(runtime, sheetObject, '', args.expectedRevision)
     },
   })
 }

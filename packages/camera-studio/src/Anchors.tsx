@@ -31,6 +31,7 @@ import {
   detachAnchorMesh,
   localOffsetForParent,
   needsParentEstablish,
+  registerAnchorHome,
   registerAnchorObject,
   resolveAnchorParent,
   shouldClearMissingParent,
@@ -84,6 +85,12 @@ export function Anchors({
   const anchorKeys = useAnchorsList(sheet)
   // 锚点网格的"娘家":r3f 原挂载点,解绑/父级消失时挂回这里
   const homeRef = useRef<React.ElementRef<'group'>>(null!)
+  // 登记娘家给命令侧(anchors.clearParent 解绑时同步挂回,F1 修复:
+  // 定格折进命令事务后,包装器应用新 position 前节点必须已在正确父级下)
+  useEffect(() => {
+    registerAnchorHome(homeRef.current)
+    return () => registerAnchorHome(null)
+  }, [])
   return (
     <group ref={homeRef}>
       {anchorKeys.map((key) => (
@@ -295,11 +302,23 @@ function AnchorObject({
     newParentObj.add(node)
     node.updateWorldMatrix(true, false)
     const local = localOffsetForParent(world, newParentObj, tmpWorld.current)
-    const scrub = studio.scrub()
-    scrub.capture(({set}) =>
-      set(obj.props.position, {x: local.x, y: local.y, z: local.z}),
-    )
-    scrub.commit()
+    // 同值守卫(与上面解绑路径同款):anchors.setParent 命令已把局部偏移
+    // 定格折进写 parent 的同一事务并同步换父时,持久值==此处换算结果,
+    // 原样重写会多出一个同值撤销步骤(撤销陷阱)——跳过提交,只推进游标
+    const persisted = (val(obj.props.position) as
+      | {x: number; y: number; z: number}
+      | undefined) ?? {x: 0, y: 0, z: 0}
+    const samePosition =
+      Math.abs(persisted.x - local.x) < 1e-6 &&
+      Math.abs(persisted.y - local.y) < 1e-6 &&
+      Math.abs(persisted.z - local.z) < 1e-6
+    if (!samePosition) {
+      const scrub = studio.scrub()
+      scrub.capture(({set}) =>
+        set(obj.props.position, {x: local.x, y: local.y, z: local.z}),
+      )
+      scrub.commit()
+    }
     // 游标推进放在成功路径之后:解析失败时下次提交还会走到这里重试,
     // 不会出现"推进了却什么都没做"的假成功
     prevParentRef.current = parentId

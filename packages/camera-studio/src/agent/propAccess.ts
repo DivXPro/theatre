@@ -208,6 +208,32 @@ export function setStaticProps(
   props: Record<string, unknown>,
 ): void {
   assertStaticPropsWritable(sheetObject, props)
+  writePropsInTransaction(sheetObject, props)
+}
+
+/**
+ * 领域静态写入 + 坐标定格同事务(2026-10-19,Agent API F1 修复):
+ * 绑定/父级切换类命令(setParent/clearParent/unbindPath/setAimTarget 解除)
+ * 把看护 effect 的坐标定格折进写领域属性的同一事务,守住
+ * undoable:'single-step' 契约(一次撤销同时回退属性与定格)。
+ *
+ * preflight(值形状 + 建轨拒绝)只覆盖 props 里的领域属性;freeze 里的
+ * position/rotation 与 UI 看护的 scrub 写入同语义——不做建轨拒绝
+ * (已建轨时 UI 看护同样照写),但只在领域属性通过校验后才落笔。
+ */
+export function setStaticPropsWithFreeze(
+  sheetObject: ISheetObject<$IntentionalAny>,
+  props: Record<string, unknown>,
+  freeze: Record<string, unknown>,
+): void {
+  assertStaticPropsWritable(sheetObject, props)
+  writePropsInTransaction(sheetObject, {...props, ...freeze})
+}
+
+function writePropsInTransaction(
+  sheetObject: ISheetObject<$IntentionalAny>,
+  props: Record<string, unknown>,
+): void {
   const studio = getStudioSync()
   if (!studio) {
     throw new AgentApiError(
