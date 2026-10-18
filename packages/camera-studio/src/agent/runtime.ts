@@ -8,6 +8,11 @@ import type {IProject, ISheet, IStudio} from '@dreamerbird/core'
 import {AgentApiError} from './errors'
 import {AgentJobManager} from './jobs'
 import type {Library} from '../assetLibrary/library'
+import {rejectAllPlacements} from './runtime/placementLifecycle'
+import {
+  rejectAllAnchorMounts,
+  rejectAllCameraMounts,
+} from './runtime/cameraLifecycle'
 
 /**
  * 场景运行时 handler 宿主接口:Task 3 先导出空接口,
@@ -49,11 +54,13 @@ export type AgentRuntime = {
   assertCurrent(): void
   /** 合并绑定 handlers,返回解绑函数;代次失效后绑定抛 API_DISPOSED,解绑静默失效 */
   bindHandlers(handlers: Handlers): () => void
-  /** 创建新执行代次;旧代次的 assertCurrent/markReady 从此抛 API_DISPOSED */
+  /** 创建新执行代次;旧代次的 assertCurrent/markReady 从此抛 API_DISPOSED,
+      其未 settle 的 ready 以 API_NOT_READY 拒绝(handler 解绑换代,Task 15) */
   activate(): AgentRuntime
   /** 标记本代次 ready(通常由 CameraScene 绑定完整 handlers 后调用) */
   markReady(): void
-  /** 会话拆解:取消 historic 订阅、失效全部代次并拒绝未 settle 的 ready */
+  /** 会话拆解:取消 historic 订阅、硬取消在途任务、拒绝全部挂载 waiter
+      (placement/camera/anchor)、失效全部代次并拒绝未 settle 的 ready */
   dispose(): void
 }
 
@@ -173,6 +180,18 @@ function makeRuntime(core: RuntimeCore, generation: Generation): AgentRuntime {
         throw new AgentApiError('API_DISPOSED', 'Camera Studio API 已销毁')
       }
       generation.superseded = true
+      // handler 解绑换代(Task 15 预检裁定):旧代次未 settle 的 ready 以
+      // API_NOT_READY 拒绝——等待方拿到"暂时不就绪"而非悬挂;已 settle 的
+      // 不动。永久性 API_DISPOSED 只留给会话拆解(dispose)
+      if (!generation.readySettled) {
+        generation.readySettled = true
+        generation.rejectReady(
+          new AgentApiError(
+            'API_NOT_READY',
+            `执行代次 ${generation.index} 的就绪已失效(Scene Runtime 解绑)`,
+          ),
+        )
+      }
       const next = makeGeneration(generation.index + 1)
       core.generations.add(next)
       core.currentGeneration = next
@@ -189,13 +208,21 @@ function makeRuntime(core: RuntimeCore, generation: Generation): AgentRuntime {
       if (core.disposed) return
       core.disposed = true
       core.unsubscribeHistoric()
+      const disposedError = new AgentApiError(
+        'API_DISPOSED',
+        'Camera Studio API 已销毁',
+      )
+      // 挂载等待者(Task 8/10)与在途任务(Task 15 决策:硬取消)一并收尾——
+      // dispose 不伴随 React 卸载时组件 cleanup 不会跑,waiter 不得悬挂
+      rejectAllPlacements(disposedError)
+      rejectAllCameraMounts(disposedError)
+      rejectAllAnchorMounts(disposedError)
+      core.jobs.dispose()
       for (const gen of core.generations) {
         gen.superseded = true
         if (!gen.readySettled) {
           gen.readySettled = true
-          gen.rejectReady(
-            new AgentApiError('API_DISPOSED', 'Camera Studio API 已销毁'),
-          )
+          gen.rejectReady(disposedError)
         }
       }
     },

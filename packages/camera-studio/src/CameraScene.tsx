@@ -94,6 +94,7 @@ import {
   useCamerasList,
 } from './cameraRegistry'
 import type {CameraEntry, CameraSeed} from './cameraRegistry'
+import type {GizmoMode} from './PlacementManager'
 import {
   addPathPoint,
   CameraPath,
@@ -121,6 +122,8 @@ import {deletePathDomain} from './agent/pathCommands'
 import {formatSceneObjectId} from './agent/objectIds'
 import {getSceneSheetObject} from './agent/runtime/objectRuntime'
 import type {SceneObjectKind} from './agent/types'
+import {bindCameraStudioSceneHandlers} from './agent/api'
+import type {AgentSceneRuntimeHandlers} from './agent/runtime'
 import {registerDirectorView} from './agent/runtime/directorView'
 import type {DirectorViewController} from './agent/runtime/directorView'
 import {findFreeSpot, presetPlacement} from './pathPresets'
@@ -1753,6 +1756,113 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
     () => createHostFlows(() => hostFlowDepsRef.current!),
     [],
   )
+
+  // ── Agent Scene Runtime 绑定(2026-10-19,Task 15)──────────────
+  // 与 HostFlowsWiring 同一 effect 生命周期:挂载即把完整 handler 集绑进
+  // 当前执行代次并 markReady(api.ready 随之兑现);卸载解绑并使该代次
+  // 就绪失效(API_NOT_READY 换代,重挂由绑定层产出新代次;会话拆解才
+  // API_DISPOSED)。无会话(直连宿主未走 bootstrap)时绑定层静默降级。
+  // deps 走 latest-ref(同 hostFlowDepsRef:绑定一次、永远读最新实现,
+  // activeCamera 切换等重渲染不重建绑定,无陈旧闭包)。
+  const agentDepsRef = useRef<{
+    cameras: CameraEntry[]
+    anchors: string[]
+    activeCameraKey: string | null
+    shotView: boolean
+    pipVisible: boolean
+    gizmoMode: GizmoMode
+    selectedPathPoint: {metaKey: string; key: string} | null
+    placeLibraryEntryAt: (
+      entry: ModelEntry,
+      point: {x: number; y: number; z: number},
+    ) => {key: string; persisted: Promise<void>}
+    enterPathEdit: (metaKey: string) => void
+    exitPathEditOnBlur: () => void
+    afterSceneObjectDeleted: (kind: SceneObjectKind, key: string) => void
+  } | null>(null)
+  agentDepsRef.current = {
+    cameras,
+    anchors,
+    activeCameraKey: activeCamera?.cameraKey ?? null,
+    shotView,
+    pipVisible,
+    gizmoMode,
+    selectedPathPoint,
+    placeLibraryEntryAt,
+    enterPathEdit,
+    exitPathEditOnBlur,
+    afterSceneObjectDeleted,
+  }
+  useEffect(() => {
+    const deps = () => agentDepsRef.current!
+    const handlers: AgentSceneRuntimeHandlers = {
+      // 模型:转发 placeLibraryEntryAt(Task 8 已返回 {key, persisted},
+      // 与 UI 点击放置同一条落地管线)
+      createModel: ({entry, position}) =>
+        deps().placeLibraryEntryAt(entry, position),
+      // 相机:Task 15 决策——生产绑定不自动 setActiveCameraKey。
+      // create/setActive 是 spec §9 的两条显式命令,Agent 调用
+      // cameras.create 不得隐性改变会话态;自动激活是 UI 顶栏
+      // addCamera 面向人类点击的 UX 糖,保留在 UI 包装层
+      createCamera: ({seed}) => {
+        const entry = nextCameraEntry(sheet, deps().cameras)
+        addCameraToRegistry(
+          sheet,
+          entry,
+          seed ?? captureCameraSeed(cameraObjRef.current),
+        )
+        return {key: entry.cameraKey}
+      },
+      setActiveCamera: ({cameraKey}) => setActiveCameraKey(cameraKey),
+      createAnchor: ({position}) => {
+        const key = nextAnchorKey(deps().anchors)
+        addAnchorToRegistry(
+          sheet,
+          key,
+          position ? {position} : captureAnchorSeed(cameraObjRef.current),
+        )
+        return {key}
+      },
+      // 按 key 取已挂载模型的运行时实例(poses.saveCurrent /
+      // poses.session.start / animations.apply 共用)
+      getModelPlacement: ({key}) => {
+        const obj = getSceneSheetObject(formatSceneObjectId('model', key))
+        return obj ? getPlacementInstanceForObject(obj) : undefined
+      },
+      openPanel: ({panel}) => openFrame(panel),
+      closePanel: ({panel}) => closeFrame(panel),
+      setGizmoMode: ({mode}) => setGizmoMode(mode),
+      getViewState: () => ({
+        activeCameraKey: deps().activeCameraKey,
+        shotView: deps().shotView,
+        pipVisible: deps().pipVisible,
+        editingPath: editingPathRef.current,
+        gizmoMode: deps().gizmoMode,
+      }),
+      setShotView: ({on}) => setShotView(on),
+      setPipVisible: ({visible}) => setPipVisible(visible),
+      startPathEditing: ({pathKey}) => deps().enterPathEdit(pathKey),
+      // 失焦式退出:清编辑态,不回头重选路径本体(与 handler 声明一致)
+      exitPathEditing: () => deps().exitPathEditOnBlur(),
+      selectPathPoint: ({pathKey, pointKey}) =>
+        setSelectedPathPoint({metaKey: pathKey, key: pointKey}),
+      getPathEditingState: () => {
+        const pathKey = editingPathRef.current
+        const selection = deps().selectedPathPoint
+        return {
+          pathKey,
+          pointKey:
+            pathKey && selection?.metaKey === pathKey ? selection.key : null,
+        }
+      },
+      clearPathPointSelection: () => setSelectedPathPoint(null),
+      afterSceneObjectDeleted: ({kind, key}) =>
+        deps().afterSceneObjectDeleted(kind, key),
+    }
+    return bindCameraStudioSceneHandlers(handlers)
+    // sheet 随 project 固定(组件实例不换 project);deps 全部走 ref
+  }, [sheet])
+
   useEffect(() => {
     setPlacingSnapshot(placing)
   }, [placing])

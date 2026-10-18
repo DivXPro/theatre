@@ -62,3 +62,12 @@ export function rejectPlacement(key: string, error: unknown): void {
 export function hasPlacementWaiter(key: string): boolean {
   return waiters.has(key)
 }
+
+/**
+ * 会话拆解兜底(2026-10-19,Task 15):拒绝全部未 settle 的 waiter。
+ * dispose 不伴随 React 卸载的路径(如桥接直连 teardown)上,组件 cleanup
+ * 不会运行,pending waiter 必须由此拒绝(API_DISPOSED),等待方不悬挂。
+ */
+export function rejectAllPlacements(error: unknown): void {
+  for (const key of [...waiters.keys()]) rejectPlacement(key, error)
+}

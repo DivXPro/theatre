@@ -9,6 +9,7 @@
 import {
   createPlacementWaiter,
   hasPlacementWaiter,
+  rejectAllPlacements,
   rejectPlacement,
   resolvePlacementPersisted,
 } from './placementLifecycle'
@@ -69,4 +70,17 @@ test('同 key 重复创建:旧 waiter 被拒绝(不悬挂),新 waiter 独立工�
   resolvePlacementPersisted('k4')
   await expect(second).resolves.toBeUndefined()
   expect(hasPlacementWaiter('k4')).toBe(false)
+})
+
+test('rejectAllPlacements:全部 pending waiter 以同一错误拒绝并清空(dispose 不悬挂,Task 15)', async () => {
+  const a = createPlacementWaiter('ra1')
+  const b = createPlacementWaiter('ra2')
+  const disposed = new Error('API_DISPOSED')
+  rejectAllPlacements(disposed)
+  await expect(a).rejects.toBe(disposed)
+  await expect(b).rejects.toBe(disposed)
+  expect(hasPlacementWaiter('ra1')).toBe(false)
+  expect(hasPlacementWaiter('ra2')).toBe(false)
+  // 空 Map 上调 rejectAll 静默 no-op
+  expect(() => rejectAllPlacements(new Error('again'))).not.toThrow()
 })

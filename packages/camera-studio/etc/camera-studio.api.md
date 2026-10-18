@@ -7,6 +7,58 @@
 import type { IProject } from '@dreamerbird/core';
 import { default as React_2 } from 'react';
 
+// @public
+export const AGENT_API_ERROR_CODES: readonly ["API_NOT_READY", "API_DISPOSED", "SCENE_UNAVAILABLE", "COMMAND_NOT_FOUND", "CAPABILITY_UNAVAILABLE", "INVALID_ARGUMENT", "INVALID_ID_KIND", "OBJECT_NOT_FOUND", "ASSET_NOT_FOUND", "PATH_POINT_NOT_FOUND", "KEYFRAME_NOT_FOUND", "INVALID_STATE", "REVISION_CONFLICT", "JOB_NOT_FOUND", "JOB_NOT_CANCELABLE", "JOB_CANCELLED", "FILE_NOT_FOUND", "PAYLOAD_TOO_LARGE", "UNAUTHORIZED", "FORBIDDEN", "STORAGE_ERROR", "NETWORK_ERROR", "RESOURCE_LOAD_FAILED", "PARTIAL_FAILURE", "INTERNAL_ERROR"];
+
+// @public
+export class AgentApiError extends Error {
+    constructor(code: AgentApiErrorCode, message: string, { retryable, details }?: {
+        retryable?: boolean;
+        details?: unknown;
+    });
+    // (undocumented)
+    readonly code: AgentApiErrorCode;
+    // (undocumented)
+    readonly details?: unknown;
+    // (undocumented)
+    readonly retryable: boolean;
+}
+
+// @public (undocumented)
+export type AgentApiErrorCode = (typeof AGENT_API_ERROR_CODES)[number];
+
+// @public
+export type AgentErrorDto = {
+    code: string;
+    message: string;
+    retryable: boolean;
+    details?: unknown;
+};
+
+// @public
+export type AnchorsApi = {
+    create(args: {
+        position?: Vec3;
+        expectedRevision?: number;
+    }): Promise<{
+        objectId: SceneObjectId;
+        revision: number;
+    }>;
+    setParent(args: {
+        objectId: SceneObjectId;
+        parent: string;
+        expectedRevision?: number;
+    }): Promise<{
+        revision: number;
+    }>;
+    clearParent(args: {
+        objectId: SceneObjectId;
+        expectedRevision?: number;
+    }): Promise<{
+        revision: number;
+    }>;
+};
+
 // @public (undocumented)
 export type AnimationEntry = {
     id: string;
@@ -19,8 +71,60 @@ export type AnimationEntry = {
     createdAt: number;
 };
 
+// @public
+export type AnimationsApi = {
+    apply(args: {
+        objectId: string;
+        assetId: string;
+        expectedRevision?: number;
+    }): Promise<{
+        revision: number;
+    }>;
+    clear(args: {
+        objectId: string;
+        expectedRevision?: number;
+    }): Promise<{
+        revision: number;
+    }>;
+    getStatus(args: {
+        objectId: string;
+    }): Promise<AnimationStatusDto>;
+};
+
+// @public
+export type AnimationStatusDto = {
+    assetId?: string;
+    loaded: boolean;
+    error?: AgentErrorDto;
+};
+
+// @public
+export type AssetsApi = {
+    list(args?: {
+        kind?: EntryKind;
+    }): Promise<LibraryEntry[]>;
+    get(args: {
+        assetId: string;
+    }): Promise<LibraryEntry>;
+    importModel(args: {
+        file: File;
+    }): Promise<{
+        jobId: string;
+    }>;
+    rename(args: {
+        assetId: string;
+        name: string;
+    }): Promise<LibraryEntry>;
+    delete(args: {
+        assetId: string;
+    }): Promise<{
+        deleted: true;
+    }>;
+};
+
 // @public (undocumented)
 export interface BootCtx {
+    api: CameraStudioApi;
     // (undocumented)
     config: CameraStudioConfig;
     flushState: () => void;
@@ -51,6 +155,44 @@ export type CameraFlows = {
 };
 
 // @public
+export type CamerasApi = {
+    create(args: {
+        fromCurrentView?: boolean;
+        transform?: {
+            position: Vec3;
+            rotation: Vec3;
+        };
+        expectedRevision?: number;
+    }): Promise<{
+        objectId: SceneObjectId;
+        revision: number;
+    }>;
+    setActive(args: {
+        objectId: SceneObjectId;
+    }): Promise<void>;
+    setAimTarget(args: {
+        objectId: SceneObjectId;
+        target: string;
+        expectedRevision?: number;
+    }): Promise<{
+        revision: number;
+    }>;
+    bindPath(args: {
+        objectId: SceneObjectId;
+        pathId: SceneObjectId;
+        expectedRevision?: number;
+    }): Promise<{
+        revision: number;
+    }>;
+    unbindPath(args: {
+        objectId: SceneObjectId;
+        expectedRevision?: number;
+    }): Promise<{
+        revision: number;
+    }>;
+};
+
+// @public
 export function CameraScene({ project, onFlows, onError }: CameraSceneProps): React_2.JSX.Element;
 
 // @public
@@ -60,8 +202,42 @@ export type CameraSceneProps = {
     onError?: CameraStudioErrorHandler;
 };
 
+// @public
+export type CameraStudioAgentConfig = {
+    exposeGlobal?: boolean;
+};
+
+// @public
+export type CameraStudioApi = {
+    readonly ready: Promise<void>;
+    describe(): RegistryDescription;
+    readonly scene: SceneApi;
+    readonly selection: SelectionApi;
+    readonly objects: ObjectsApi;
+    readonly models: ModelsApi;
+    readonly assets: AssetsApi;
+    readonly poses: PosesApi & {
+        readonly session: PosesSessionApi;
+    };
+    readonly animations: AnimationsApi;
+    readonly cameras: CamerasApi;
+    readonly anchors: AnchorsApi;
+    readonly paths: PathsApi & {
+        readonly session: PathsSessionApi;
+    };
+    readonly sequence: SequenceApi;
+    readonly keyframes: KeyframesApi;
+    readonly history: HistoryApi;
+    readonly view: ViewApi;
+    readonly ui: UiApi;
+    readonly project: ProjectApi;
+    readonly exports: ExportsApi;
+    readonly jobs: JobsApi;
+};
+
 // @public (undocumented)
 export interface CameraStudioConfig {
+    agent?: CameraStudioAgentConfig;
     assets?: {
         baseUrl?: string;
     };
@@ -107,6 +283,7 @@ export type CameraStudioErrorSource = 'library' | 'export';
 
 // @public (undocumented)
 export interface CameraStudioHandle {
+    api: CameraStudioApi;
     // (undocumented)
     error: Error | undefined;
     // (undocumented)
@@ -115,11 +292,80 @@ export interface CameraStudioHandle {
     sceneProps: CameraSceneProps;
 }
 
+// @public
+export type CommandContext = {
+    requestId: string;
+    signal: AbortSignal;
+};
+
+// @public
+export type CommandDefinition<A, R> = {
+    name: string;
+    kind: 'query' | 'mutation' | 'job';
+    stateDomain: 'project' | 'asset' | 'session' | 'transport';
+    undoable: 'single-step' | 'none';
+    completion?: CompletionPhase;
+    cancelable?: boolean;
+    inputSchema: JsonSchema;
+    outputSchema: JsonSchema;
+    jobResultSchema?: JsonSchema;
+    errorCodes: readonly string[];
+    validate: (value: unknown) => A;
+    execute: (args: A, context: CommandContext) => Promise<R>;
+};
+
+// @public
+export type CommandDescription = {
+    name: string;
+    kind: CommandDefinition<unknown, unknown>['kind'];
+    stateDomain: CommandDefinition<unknown, unknown>['stateDomain'];
+    undoable: CommandDefinition<unknown, unknown>['undoable'];
+    completion?: CommandDefinition<unknown, unknown>['completion'];
+    cancelable?: boolean;
+    inputSchema: CommandDefinition<unknown, unknown>['inputSchema'];
+    outputSchema: CommandDefinition<unknown, unknown>['outputSchema'];
+    jobResultSchema?: CommandDefinition<unknown, unknown>['jobResultSchema'];
+    errorCodes: readonly string[];
+    acceptsExpectedRevision: boolean;
+};
+
+// @public
+export type CompletionPhase = 'committed' | 'mounted' | 'loaded';
+
 // @public (undocumented)
 export function disposeCameraStudio(ctx?: BootCtx): Promise<void>;
 
 // @public (undocumented)
 export type EntryKind = 'model' | 'pose' | 'animation';
+
+// @public
+export type ExportsApi = {
+    startVideo(args?: {
+        cameraId?: string;
+    }): Promise<{
+        jobId: string;
+    }>;
+};
+
+// @public (undocumented)
+export type GestureSide = 'left' | 'right';
+
+// @public
+export type GizmoMode = 'select' | 'translate' | 'rotate' | 'scale';
+
+// @public
+export type HistoryApi = {
+    undo(args?: {
+        expectedRevision?: number;
+    }): Promise<{
+        revision: number;
+    }>;
+    redo(args?: {
+        expectedRevision?: number;
+    }): Promise<{
+        revision: number;
+    }>;
+};
 
 // @public
 export class IndexedDBBackend implements WritableLibrarySource {
@@ -162,6 +408,85 @@ export function initCameraStudio(config: CameraStudioConfig): Promise<BootCtx>;
 
 // @public (undocumented)
 export function isWritableSource(s: LibrarySource): s is WritableLibrarySource;
+
+// @public
+export type JobsApi = {
+    get(args: {
+        jobId: string;
+    }): Promise<JobSnapshot>;
+    cancel(args: {
+        jobId: string;
+    }): Promise<JobSnapshot>;
+};
+
+// @public
+export type JobSnapshot<T = unknown> = {
+    jobId: string;
+    kind: string;
+    state: JobState;
+    progress: number;
+    phase: 'accepted' | CompletionPhase;
+    result?: T;
+    error?: AgentErrorDto;
+    cancelable: boolean;
+};
+
+// @public (undocumented)
+export type JobState = 'pending' | 'running' | 'succeeded' | 'failed' | 'cancelled';
+
+// @public
+export type JsonSchema = {
+    type?: string;
+    description?: string;
+    properties?: Record<string, JsonSchema>;
+    required?: string[];
+    items?: JsonSchema;
+    enum?: readonly (string | number | boolean | null)[];
+    additionalProperties?: boolean | JsonSchema;
+};
+
+// @public
+export type KeyframeInfo = {
+    position: number;
+    value: unknown;
+};
+
+// @public
+export type KeyframesApi = {
+    list(args: {
+        objectId: string;
+        propPath: string[];
+    }): Promise<KeyframeInfo[]>;
+    set(args: {
+        objectId: string;
+        propPath: string[];
+        at: number;
+        value: unknown;
+        snap?: boolean;
+        expectedRevision?: number;
+    }): Promise<{
+        revision: number;
+    }>;
+    move(args: {
+        objectId: string;
+        propPath: string[];
+        from: number;
+        to: number;
+        snap?: boolean;
+        expectedRevision?: number;
+    }): Promise<{
+        revision: number;
+    }>;
+    delete(args: {
+        objectId: string;
+        propPath: string[];
+        at: number;
+        snap?: boolean;
+        expectedRevision?: number;
+    }): Promise<{
+        revision: number;
+    }>;
+};
 
 // @public (undocumented)
 export type LibraryEntry = ModelEntry | PoseEntry | AnimationEntry;
@@ -213,6 +538,40 @@ export type ModelEntry = {
     createdAt: number;
 };
 
+// @public
+export type ModelsApi = {
+    create(args: {
+        assetId: string;
+        position: Vec3;
+        expectedRevision?: number;
+    }): Promise<{
+        objectId: SceneObjectId;
+        revision: number;
+    }>;
+};
+
+// @public
+export type ObjectsApi = {
+    list(): Promise<SceneObjectSummary[]>;
+    get(args: {
+        objectId: SceneObjectId;
+    }): Promise<SceneObjectSummary>;
+    update(args: {
+        objectId: SceneObjectId;
+        props: Record<string, unknown>;
+        expectedRevision?: number;
+    }): Promise<{
+        revision: number;
+    }>;
+    delete(args: {
+        objectId: SceneObjectId;
+        expectedRevision?: number;
+    }): Promise<{
+        deleted: SceneObjectId;
+        revision: number;
+    }>;
+};
+
 // @public (undocumented)
 export type PathPreset = {
     id: 'circle' | 'line' | 'arc' | 'figure8' | 'dollyIn' | 'reveal' | 'spiralUp' | 'crane' | 'orbitPush' | 'dive' | 'figure8v';
@@ -221,6 +580,85 @@ export type PathPreset = {
     closed: boolean;
     durSeconds: number;
 };
+
+// @public
+export type PathPresetInfo = {
+    id: string;
+    name: string;
+    en: string;
+    closed: boolean;
+    durSeconds: number;
+};
+
+// @public
+export type PathsApi = {
+    listPresets(): Promise<PathPresetInfo[]>;
+    createPreset(args: {
+        preset: string;
+        at?: Vec3;
+        expectedRevision?: number;
+    }): Promise<{
+        pathId: SceneObjectId;
+        pointKeys: string[];
+        revision: number;
+    }>;
+    addPoint(args: {
+        pathId: SceneObjectId;
+        expectedRevision?: number;
+    }): Promise<{
+        pointKey: string;
+        revision: number;
+    }>;
+    updatePoint(args: {
+        pathId: SceneObjectId;
+        pointKey: string;
+        position?: Vec3;
+        handles?: {
+            side: 'left' | 'right';
+            offset: Vec3;
+        };
+        expectedRevision?: number;
+    }): Promise<{
+        revision: number;
+    }>;
+    deletePoint(args: {
+        pathId: SceneObjectId;
+        pointKey: string;
+        expectedRevision?: number;
+    }): Promise<{
+        revision: number;
+        pathDeleted: boolean;
+    }>;
+    setPointTiming(args: {
+        pathId: SceneObjectId;
+        pointKey: string;
+        u: number | null;
+        expectedRevision?: number;
+    }): Promise<{
+        revision: number;
+    }>;
+    sample(args: {
+        pathId: SceneObjectId;
+        u: number;
+    }): Promise<{
+        position: Vec3;
+    }>;
+};
+
+// @public
+export type PathsSessionApi = {
+    startEditing(args: {
+        pathId: SceneObjectId;
+    }): Promise<void>;
+    exitEditing(): Promise<void>;
+    selectPoint(args: {
+        pathId: SceneObjectId;
+        pointKey: string;
+    }): Promise<void>;
+};
+
+// @public (undocumented)
+export type PoseBones = PoseEntry['bones'];
 
 // @public (undocumented)
 export type PoseEntry = {
@@ -237,6 +675,79 @@ export type PoseEntry = {
 };
 
 // @public
+export type PoseFrameMode = {
+    mode: 'edit' | 'new';
+    position: number;
+};
+
+// @public
+export type PosesApi = {
+    apply(args: {
+        objectId: string;
+        assetId: string;
+        expectedRevision?: number;
+    }): Promise<{
+        revision: number;
+    }>;
+    applyCustom(args: {
+        objectId: string;
+        bones: PoseBones;
+        expectedRevision?: number;
+    }): Promise<{
+        revision: number;
+    }>;
+    clear(args: {
+        objectId: string;
+        expectedRevision?: number;
+    }): Promise<{
+        cleared: boolean;
+        revision: number;
+    }>;
+    saveCurrent(args: {
+        objectId: string;
+        name?: string;
+    }): Promise<PoseEntry>;
+    setGesture(args: {
+        objectId: string;
+        side: GestureSide;
+        assetId: string | null;
+        expectedRevision?: number;
+    }): Promise<{
+        revision: number;
+    }>;
+};
+
+// @public
+export type PosesSessionApi = {
+    start(args: {
+        objectId: string;
+    }): Promise<{
+        objectId: SceneObjectId;
+        frame?: PoseFrameMode;
+    }>;
+    commit(): Promise<{
+        objectId: SceneObjectId;
+    }>;
+    cancel(): Promise<{
+        objectId: SceneObjectId;
+    }>;
+};
+
+// @public
+export type ProjectApi = {
+    exportState(): Promise<{
+        projectId: string;
+        content: unknown;
+    }>;
+};
+
+// @public
+export type RegistryDescription = {
+    apiVersion: 1;
+    commands: CommandDescription[];
+};
+
+// @public
 export type RigAlias = {
     rig: RigId;
     name: string;
@@ -245,14 +756,137 @@ export type RigAlias = {
 // @public
 export type RigId = string;
 
+// @public
+export type SceneApi = {
+    getSnapshot(): Promise<SceneSnapshot>;
+};
+
+// @public
+export type SceneObjectId = `${SceneObjectKind}:${string}`;
+
+// @public
+export type SceneObjectKind = 'model' | 'camera' | 'anchor' | 'path';
+
+// @public
+export type SceneObjectSummary = {
+    id: SceneObjectId;
+    kind: SceneObjectKind;
+    key: string;
+    props: Record<string, unknown> | null;
+    mounted: boolean;
+};
+
+// @public
+export type SceneSnapshot = {
+    revision: number;
+    objects: SceneObjectSummary[];
+};
+
+// @public
+export type SelectionApi = {
+    get(): Promise<{
+        objectIds: SceneObjectId[];
+    }>;
+    selectObject(args: {
+        objectId: SceneObjectId;
+    }): Promise<void>;
+    clear(): Promise<void>;
+};
+
+// @public
+export type SequenceApi = {
+    getState(): Promise<SequenceState>;
+    play(): Promise<SequenceState>;
+    pause(): Promise<SequenceState>;
+    seek(args: {
+        position: number;
+        snap?: boolean;
+    }): Promise<SequenceState>;
+    setLength(args: {
+        length: number;
+        expectedRevision?: number;
+    }): Promise<{
+        revision: number;
+    }>;
+};
+
+// @public (undocumented)
+export type SequenceState = {
+    playing: boolean;
+    position: number;
+    length: number;
+};
+
+// @public
+export type UiApi = {
+    hide(): Promise<void>;
+    restore(): Promise<void>;
+    setLeftStripHidden(args: {
+        hidden: boolean;
+    }): Promise<void>;
+    openPanel(args: {
+        panel: UiPanelKind;
+    }): Promise<void>;
+    closePanel(args: {
+        panel: UiPanelKind;
+    }): Promise<void>;
+    setGizmoMode(args: {
+        mode: GizmoMode;
+    }): Promise<void>;
+};
+
+// @public
+export type UiPanelKind = 'model' | 'pose' | 'animation' | 'path';
+
 // @public (undocumented)
 export function useCameraStudio(config?: CameraStudioConfig): CameraStudioHandle;
 
-// @public (undocumented)
+// @public
 export type Vec3 = {
     x: number;
     y: number;
     z: number;
+};
+
+// @public
+export type VideoExportResult = {
+    blob: Blob;
+    fileName: string;
+    mimeType: string;
+    size: number;
+};
+
+// @public
+export type ViewApi = {
+    getState(): Promise<ViewState>;
+    setShotView(args: {
+        on: boolean;
+    }): Promise<void>;
+    setPipVisible(args: {
+        visible: boolean;
+    }): Promise<void>;
+    orbit(args: {
+        deltaTheta: number;
+        deltaPhi: number;
+    }): Promise<void>;
+    pan(args: {
+        deltaX: number;
+        deltaY: number;
+    }): Promise<void>;
+    dolly(args: {
+        delta: number;
+    }): Promise<void>;
+    reset(): Promise<void>;
+};
+
+// @public
+export type ViewState = {
+    activeCameraKey: string | null;
+    shotView: boolean;
+    pipVisible: boolean;
+    editingPath: string | null;
+    gizmoMode: GizmoMode;
+    studioHidden: boolean;
 };
 
 // @public

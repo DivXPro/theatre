@@ -63,6 +63,15 @@ function makeMountLifecycle(label: string) {
     has(key: string): boolean {
       return waiters.has(key)
     },
+    /**
+     * 会话拆解兜底(Task 15):拒绝全部未 settle 的 waiter。
+     * dispose 不伴随组件卸载时,pending waiter 由此拒绝,不悬挂。
+     */
+    rejectAll(error: unknown): void {
+      for (const key of [...waiters.keys()]) {
+        waiters.get(key)?.reject(error)
+      }
+    },
   }
 }
 
@@ -89,6 +98,11 @@ export function hasCameraWaiter(cameraKey: string): boolean {
   return cameraLifecycle.has(cameraKey)
 }
 
+/** 会话拆解时拒绝全部未 settle 的相机挂载 waiter(Task 15) */
+export function rejectAllCameraMounts(error: unknown): void {
+  cameraLifecycle.rejectAll(error)
+}
+
 /** anchors.create 在 handler 返回 key 后创建;resolve 于 AnchorObject 挂载就绪 */
 export function createAnchorWaiter(anchorKey: string): Promise<void> {
   return anchorLifecycle.create(anchorKey)
@@ -107,4 +121,9 @@ export function rejectAnchorMount(anchorKey: string, error: unknown): void {
 /** 该 anchorKey 是否有未 settle 的 waiter(测试与调试用) */
 export function hasAnchorWaiter(anchorKey: string): boolean {
   return anchorLifecycle.has(anchorKey)
+}
+
+/** 会话拆解时拒绝全部未 settle 的锚点挂载 waiter(Task 15) */
+export function rejectAllAnchorMounts(error: unknown): void {
+  anchorLifecycle.rejectAll(error)
 }

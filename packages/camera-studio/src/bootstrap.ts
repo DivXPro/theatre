@@ -10,7 +10,12 @@
  *   state 通道订阅、studio.ui 显隐。picker 注册表与宿主句柄由各自模块
  *   自管(CameraScene 组件挂载时接线),这里不碰。
  */
-import theatre, {getProject, getStudio, onChange} from '@dreamerbird/core'
+import theatre, {
+  getProject,
+  getStudio,
+  getStudioSync,
+  onChange,
+} from '@dreamerbird/core'
 import type {IProject, IStudioUI, InitOpts} from '@dreamerbird/core'
 // studio 根模块加载即向 core 自注册(new Studio() + setStudio + 挂 window
 // bundle):theatre.init({studio: true}) 要求这步已完成,缺了它 init 报
@@ -40,6 +45,13 @@ import {
   GesturePropEditorLeft,
   GesturePropEditorRight,
 } from './gesturePropsEditor'
+import {createAgentRuntime} from './agent/runtime'
+import {
+  activateCameraStudioApi,
+  disposeCameraStudioApi,
+  getCameraStudioApi,
+} from './agent/api'
+import type {CameraStudioApi} from './agent/api'
 
 /** 内置 IDB 缺省库名(与现状一字不差,硬约束:老用户浏览器里的库零迁移) */
 const DEFAULT_IDB_NAME = 'toybox-asset-library'
@@ -56,6 +68,8 @@ export interface BootCtx {
    */
   notifyStateChange: (content: unknown) => void
   sceneProps: CameraSceneProps
+  /** Agent JS API 门面(模块级单例,与 useCameraStudio 返回的同一对象) */
+  api: CameraStudioApi
 }
 
 let initPromise: Promise<BootCtx> | undefined
@@ -117,6 +131,7 @@ const DRIFT_KEYS = [
   'sync',
   'ui',
   'assets',
+  'agent',
 ] as const
 
 function shallowEqual(a: unknown, b: unknown): boolean {
@@ -343,6 +358,7 @@ async function boot(config: CameraStudioConfig): Promise<BootCtx> {
     flushState,
     notifyStateChange,
     sceneProps,
+    api: getCameraStudioApi(),
   }
 }
 
@@ -369,6 +385,23 @@ function acquireSession(ctx: BootCtx): void {
   registerCustomPropEditor('pose', PosePropEditor)
   registerCustomPropEditor('gestureL', GesturePropEditorLeft)
   registerCustomPropEditor('gestureR', GesturePropEditorRight)
+  // Agent JS API 会话(Task 15,spec §7):每次挂载新建 runtime——
+  // historic 订阅随 dispose 断开,revision 从 1 重计(新会话不复用旧
+  // revision,spec 8.4);激活模块级门面后,CameraScene 挂载绑定完整
+  // handlers 才让 api.ready 兑现。exposeGlobal 只在显式开启时挂
+  // window.__cameraStudioApi(浏览器默认不挂全局、不连桥接)
+  const project = ctx.sceneProps.project
+  const agentRuntime = createAgentRuntime({
+    project,
+    sheet: project.sheet('Scene'),
+    library: ctx.library,
+    getStudio: () => getStudioSync(),
+    subscribeHistoric: (listener) =>
+      onChange(privateAPI(project).pointers.historic, () => listener()),
+  })
+  activateCameraStudioApi(agentRuntime, {
+    exposeGlobal: ctx.config.agent?.exposeGlobal === true,
+  })
   // state 通道订阅:project 历史状态变更 → 节流转给宿主
   let unsubState: (() => void) | undefined
   if (ctx.config.state?.onStateChange) {
@@ -385,6 +418,9 @@ function acquireSession(ctx: BootCtx): void {
 
   sessionTeardown = async () => {
     sessionTeardown = undefined
+    // 先拆 API 代次(拒绝 pending ready/挂载 waiter、硬取消在途任务、
+    // 摘除 window 全局),再执行既有清理
+    disposeCameraStudioApi()
     ctx.unregisterEditors()
     unsubState?.()
     // 先断订阅再 flush:尾部变更带给宿主,不丢

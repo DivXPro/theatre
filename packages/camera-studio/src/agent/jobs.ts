@@ -172,4 +172,27 @@ export class AgentJobManager {
       this.listeners.delete(listener)
     }
   }
+
+  /**
+   * 会话拆解(Task 15 决策,Task 3 遗留):硬取消全部未结束任务——
+   * abort 其 AbortController 并立即映射为 cancelled(错误码
+   * API_DISPOSED),不把任务留进已拆解的会话继续跑。execute 守约监听
+   * signal(如视频导出)就此收尾,`done` 以 cancelled 快照 resolve;
+   * 晚到的 settle 被 emit 的终态保护吞掉,不会复活任务。
+   */
+  dispose(): void {
+    for (const [jobId, snapshot] of [...this.snapshots]) {
+      if (TERMINAL_STATES.has(snapshot.state)) continue
+      this.controllers.get(jobId)?.abort()
+      this.emit(jobId, {
+        ...snapshot,
+        state: 'cancelled',
+        error: {
+          code: 'API_DISPOSED',
+          message: 'Camera Studio API 已销毁,任务随会话取消',
+          retryable: false,
+        },
+      })
+    }
+  }
 }
