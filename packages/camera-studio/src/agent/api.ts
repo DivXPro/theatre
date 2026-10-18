@@ -24,6 +24,7 @@ import {AgentApiError} from './errors'
 import {AgentCommandRegistry} from './registry'
 import type {RegistryDescription} from './registry'
 import type {AgentRuntime, AgentSceneRuntimeHandlers} from './runtime'
+import {isGenerationSupersededError} from './runtime'
 import {registerAllAgentCommands} from './registerCommands'
 import type {SceneApi, ObjectsApi} from './commands/scene'
 import type {SelectionApi} from './commands/selection'
@@ -180,8 +181,21 @@ export function createCameraStudioApi(
     const controller = new AbortController()
     // 等待本代次 ready;解绑换代 → API_NOT_READY,会话拆解 → API_DISPOSED
     await captured.runtime.ready
-    // ready 兑现后再次被替换的竞态复核
-    captured.runtime.assertCurrent()
+    // ready 兑现后再次被替换的竞态复核:解绑换代间隙(StrictMode 双跑/
+    // remount)命中 superseded 代次 ≠ 会话销毁,映射为可重试的 API_NOT_READY;
+    // 永久 API_DISPOSED 只属 dispose()/会话拆解(Fix round 1)
+    try {
+      captured.runtime.assertCurrent()
+    } catch (error) {
+      if (isGenerationSupersededError(error)) {
+        throw new AgentApiError(
+          'API_NOT_READY',
+          '执行代次已被替换(Scene Runtime 重绑中),可重试',
+          {retryable: true},
+        )
+      }
+      throw error
+    }
     return captured.registry.execute(name, args, {
       requestId,
       signal: controller.signal,

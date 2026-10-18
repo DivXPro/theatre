@@ -789,6 +789,55 @@ describe('生命周期', () => {
     controller.dispose()
   })
 
+  // Fix round 1:ready 兑现后撞上 unbind→rebind 间隙的调用,经 ready 复核命中
+  // superseded 代次——必须映射为可重试的 API_NOT_READY,而非永久 API_DISPOSED
+  test('ready 复核命中 superseded 代次(unbind 间隙):API_NOT_READY + retryable:true;dispose 后仍是 API_DISPOSED + retryable:false', async () => {
+    const execute = jest.fn(async () => 'ok')
+    const controller = createCameraStudioApi({
+      buildRegistry: stubRegistryFactory(execute),
+    })
+    controller.activate(makeRuntime())
+    const unbind1 = controller.bindSceneHandlers({})!
+    await controller.api.ready
+    // 调用捕获旧代次并通过 ready(已 settle);unbind 同步换代后,
+    // invoke 的 assertCurrent 复核命中 superseded
+    const gapCall = callFacade(controller.api, 'scene.getSnapshot', undefined)
+    unbind1()
+    await expect(gapCall).rejects.toMatchObject({
+      code: 'API_NOT_READY',
+      retryable: true,
+    })
+    expect(execute).not.toHaveBeenCalled()
+    // 重绑后新代次恢复正常服务
+    const unbind2 = controller.bindSceneHandlers({})!
+    await controller.api.ready
+    await expect(
+      callFacade(controller.api, 'scene.getSnapshot', undefined),
+    ).resolves.toBe('ok')
+    unbind2()
+    controller.dispose()
+    // dispose 路径:同间隙命中仍是永久 API_DISPOSED(retryable:false)
+    const controller2 = createCameraStudioApi({
+      buildRegistry: stubRegistryFactory(execute),
+    })
+    controller2.activate(makeRuntime())
+    controller2.bindSceneHandlers({})
+    await controller2.api.ready
+    const doomedInflight = callFacade(
+      controller2.api,
+      'scene.getSnapshot',
+      undefined,
+    )
+    controller2.dispose()
+    await expect(doomedInflight).rejects.toMatchObject({
+      code: 'API_DISPOSED',
+      retryable: false,
+    })
+    await expect(
+      callFacade(controller2.api, 'scene.getSnapshot', undefined),
+    ).rejects.toMatchObject({code: 'API_DISPOSED', retryable: false})
+  })
+
   test('会话拆解后重激活(initPromise 复用的 remount):新代次重新 ready,旧代次 promise 不写入新 runtime', async () => {
     const execute = jest.fn(async (name: string) => ({echo: name}))
     const controller = createCameraStudioApi({

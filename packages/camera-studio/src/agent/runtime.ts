@@ -116,11 +116,30 @@ function assertGenerationUsable(core: RuntimeCore, generation: Generation) {
     throw new AgentApiError('API_DISPOSED', 'Camera Studio API 已销毁')
   }
   if (generation.superseded) {
+    // 代次被替换 ≠ 会话销毁:携带结构化标记,门面层(api.ts invoke 复核)
+    // 据此映射为可重试的 API_NOT_READY;runtime/命令层维持 API_DISPOSED
+    // 语义不变(既有用例与调用方依赖)
     throw new AgentApiError(
       'API_DISPOSED',
       `执行代次 ${generation.index} 已被替换`,
+      {
+        details: {
+          reason: 'GENERATION_SUPERSEDED',
+          generation: generation.index,
+        },
+      },
     )
   }
+}
+
+/** 判定错误是否来自"代次被替换但会话未 dispose"(门面映射 API_NOT_READY 的依据) */
+export function isGenerationSupersededError(error: unknown): boolean {
+  return (
+    error instanceof AgentApiError &&
+    error.code === 'API_DISPOSED' &&
+    (error.details as {reason?: unknown} | undefined)?.reason ===
+      'GENERATION_SUPERSEDED'
+  )
 }
 
 function makeRuntime(core: RuntimeCore, generation: Generation): AgentRuntime {
