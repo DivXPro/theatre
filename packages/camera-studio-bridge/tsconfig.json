@@ -6,6 +6,11 @@
     "rootDir": "src",
     "types": ["jest", "node"],
     "target": "es2020",
+    // 本包是 Node 运行时包(bin: dist/cli.js 直接被 node 执行):
+    // CommonJS + esModuleInterop 产出 node 可直接运行的 dist;
+    // 基座的 ESNext emit 不带扩展名,node 无法直接加载
+    "module": "CommonJS",
+    "esModuleInterop": true,
     "composite": true
   },
   "include": ["src"]
