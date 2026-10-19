@@ -3,8 +3,9 @@
  *
  * 本模块只做传输层:
  * - `GET /v1/health` / `GET /v1/schema`;
- * - `POST /v1/commands` 的 body 解析、形状校验和结果透传(requestId
- *   去重、WebSocket 转发在 Task 4 的 SceneSession/RequestDeduplicator);
+ * - `POST /v1/commands` 的 body 解析、形状校验和结果透传;命令经
+ *   `session.execute` 转发到浏览器场景(requestId 去重与 WebSocket
+ *   转发在 ./SceneSession 与 ./RequestDeduplicator,Task 4);
  * - `POST /v1/files` / `GET /v1/files/:id` 的有界二进制传输(Task 3,
  *   FileStore 负责磁盘与过期,这里只做 header 适配与流转发);
  * - `/v1/jobs` 路由在 Task 5 接入,此处只预留依赖接口形状。
@@ -38,9 +39,9 @@ export type SceneHealth = {
 }
 
 /**
- * 场景会话依赖形状。Task 4 的 SceneSession 实现真实版本:
- * `attachUpgrade` 处理 WebSocket upgrade,`execute` 转发命令到浏览器。
- * 本任务用 fake session 接线。
+ * 场景会话依赖形状。真实实现是 ./SceneSession 的 createSceneSession
+ * (Task 4):`attachUpgrade` 处理 WebSocket upgrade,`execute` 经
+ * requestId 去重后转发命令到浏览器。
  */
 export type BridgeSessionHandle = {
   health(): SceneHealth
@@ -349,8 +350,8 @@ export function createHttpServer(deps: HttpServerDeps): http.Server {
     })
   })
 
-  // WebSocket upgrade 与 /v1 共用同一鉴权函数;真实页面接入在 Task 4,
-  // 未实现 attachUpgrade 前已授权的 upgrade 一律拒绝
+  // WebSocket upgrade 与 /v1 共用同一鉴权函数(upgrade 凭据在 subprotocol
+  // 中解析,见 auth.ts);session 缺 attachUpgrade 时授权后也拒绝
   server.on('upgrade', (req: IncomingMessage, socket: Duplex, head: Buffer) => {
     authorizeRequest(req, config).then(
       (authorized) => {
