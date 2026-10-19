@@ -49,9 +49,12 @@ import {createAgentRuntime} from './agent/runtime'
 import {
   activateCameraStudioApi,
   disposeCameraStudioApi,
+  getActiveAgentRegistry,
   getCameraStudioApi,
 } from './agent/api'
 import type {CameraStudioApi} from './agent/api'
+import {createAgentBridgeClient} from './agent/bridgeClient'
+import type {AgentBridgeClient} from './agent/bridgeClient'
 
 /** 内置 IDB 缺省库名(与现状一字不差,硬约束:老用户浏览器里的库零迁移) */
 const DEFAULT_IDB_NAME = 'toybox-asset-library'
@@ -402,6 +405,20 @@ function acquireSession(ctx: BootCtx): void {
   activateCameraStudioApi(agentRuntime, {
     exposeGlobal: ctx.config.agent?.exposeGlobal === true,
   })
+  // 桥接客户端(Task 6,spec §10.3):浏览器默认不连桥接,宿主显式配置
+  // agent.bridge 才启动。在 API/runtime 激活之后启动,命令经会话自身
+  // 注册表执行(与门面同一注册表,不重复注册);拆解时先关客户端
+  // (停重连/退订任务/拒绝新执行)再 dispose runtime
+  let bridgeClient: AgentBridgeClient | undefined
+  const bridgeConfig = ctx.config.agent?.bridge
+  const bridgeRegistry = bridgeConfig ? getActiveAgentRegistry() : undefined
+  if (bridgeConfig && bridgeRegistry) {
+    bridgeClient = createAgentBridgeClient({
+      registry: bridgeRegistry,
+      runtime: agentRuntime,
+      config: bridgeConfig,
+    })
+  }
   // state 通道订阅:project 历史状态变更 → 节流转给宿主
   let unsubState: (() => void) | undefined
   if (ctx.config.state?.onStateChange) {
@@ -418,6 +435,10 @@ function acquireSession(ctx: BootCtx): void {
 
   sessionTeardown = async () => {
     sessionTeardown = undefined
+    // 先关桥接客户端(停止重连、退订任务事件、拒绝新执行),再拆 API
+    // 代次——顺序不可换:dispose 硬取消在途任务会发 job 事件,客户端
+    // 必须先退订,否则往已关闭的连接发报文
+    bridgeClient?.close()
     // 先拆 API 代次(拒绝 pending ready/挂载 waiter、硬取消在途任务、
     // 摘除 window 全局),再执行既有清理
     disposeCameraStudioApi()

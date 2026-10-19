@@ -10,6 +10,23 @@ import type {CameraStudioErrorHandler} from './errors'
 import type {CameraFlows} from './hostFlows'
 import type {CameraStudioApi} from './agent/api'
 
+/**
+ * Agent 桥接连接配置(spec §10.3/§10.4,Task 6)。
+ * 浏览器默认不连接桥接:只有宿主显式配置本项才启动桥接客户端;
+ * 配置变化按既有 boot 规则处理(重挂告警,换配置需整页刷新)。
+ */
+export type CameraStudioAgentBridgeConfig = {
+  /** 桥接 WebSocket 地址,如 ws://127.0.0.1:43110 */
+  url: string
+  /**
+   * Bearer 凭据:WebSocket subprotocol(token.<encoded>)与桥接 HTTP
+   * 文件传输(Authorization)共用;绝不写入日志
+   */
+  token: string
+  /** 桥接 HTTP 地址(二进制 File/Blob ↔ fileId 适配),如 http://127.0.0.1:43110 */
+  httpUrl: string
+}
+
 /** Agent JS API 配置(spec §7;首 boot 锁定,重挂换配置不生效) */
 export type CameraStudioAgentConfig = {
   /**
@@ -17,6 +34,8 @@ export type CameraStudioAgentConfig = {
    * 不连接桥接);会话拆解时删除。缺省 false
    */
   exposeGlobal?: boolean
+  /** 本机桥接连接;缺省不连接(浏览器默认不连桥接) */
+  bridge?: CameraStudioAgentBridgeConfig
 }
 
 export interface CameraStudioConfig {

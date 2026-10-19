@@ -203,8 +203,16 @@ export type CameraSceneProps = {
 };
 
 // @public
+export type CameraStudioAgentBridgeConfig = {
+    url: string;
+    token: string;
+    httpUrl: string;
+};
+
+// @public
 export type CameraStudioAgentConfig = {
     exposeGlobal?: boolean;
+    bridge?: CameraStudioAgentBridgeConfig;
 };
 
 // @public

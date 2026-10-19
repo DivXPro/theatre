@@ -72,11 +72,24 @@ const fakeApiObject = {fakeApi: true}
 const activateApiSpy = jest.fn()
 const disposeApiSpy = jest.fn()
 const getApiSpy = jest.fn(() => fakeApiObject)
+/** 会话注册表替身(桥接接线断言用;无桥接配置时 bootstrap 不读它) */
+const fakeRegistryObject = {fakeRegistry: true}
+const getRegistrySpy = jest.fn(() => fakeRegistryObject)
 jest.doMock('./agent/api', () => ({
   __esModule: true,
   getCameraStudioApi: getApiSpy,
   activateCameraStudioApi: activateApiSpy,
   disposeCameraStudioApi: disposeApiSpy,
+  getActiveAgentRegistry: getRegistrySpy,
+}))
+// ── 桥接客户端替身(Task 6)──────────────────────────────────
+// 真客户端会拉起 WebSocket;接线契约(配置门槛、启动/关闭时序)用桩断言,
+// 客户端自身行为由 bridgeClient.test.ts 覆盖
+const bridgeClientCloseSpy = jest.fn()
+const createBridgeClientSpy = jest.fn(() => ({close: bridgeClientCloseSpy}))
+jest.doMock('./agent/bridgeClient', () => ({
+  __esModule: true,
+  createAgentBridgeClient: createBridgeClientSpy,
 }))
 const registerSpy = jest.fn()
 const unregisterSpy = jest.fn()
@@ -160,6 +173,9 @@ beforeEach(async () => {
   activateApiSpy.mockClear()
   disposeApiSpy.mockClear()
   getApiSpy.mockClear()
+  getRegistrySpy.mockClear()
+  createBridgeClientSpy.mockClear()
+  bridgeClientCloseSpy.mockClear()
   // react/react-dom 与被测模块同注册表,见文件头注释
   React = await import('react')
   ReactDOM = await import('react-dom/client')
@@ -268,6 +284,44 @@ test('2c. Agent API:未配置 agent.exposeGlobal 时以 false 激活', async () 
     exposeGlobal: false,
   })
   await h.unmount()
+})
+
+// 2d. 桥接客户端接线(Task 6):显式配置才启动;拆解先关客户端再 dispose API
+test('2d. Agent 桥接:agent.bridge 显式配置才启动客户端;拆解顺序 close → dispose API', async () => {
+  const bridge = {
+    url: 'ws://127.0.0.1:43110',
+    token: 't',
+    httpUrl: 'http://127.0.0.1:43110',
+  }
+  const h = hookHost({agent: {bridge}})
+  await h.mount()
+  // 启动在 API 激活之后,使用会话自身注册表与 runtime
+  expect(createBridgeClientSpy).toHaveBeenCalledTimes(1)
+  const deps = (createBridgeClientSpy.mock.calls[0] as any[])[0]
+  expect(deps.config).toBe(bridge)
+  expect(deps.registry).toBe(fakeRegistryObject)
+  expect(deps.runtime).toBe((activateApiSpy.mock.calls[0] as any[])[0])
+  expect(createBridgeClientSpy.mock.invocationCallOrder[0]).toBeGreaterThan(
+    activateApiSpy.mock.invocationCallOrder[0],
+  )
+  await h.unmount()
+  await flush()
+  // 拆解:先关桥接客户端(停重连/退订任务),再 dispose API
+  expect(bridgeClientCloseSpy).toHaveBeenCalledTimes(1)
+  expect(bridgeClientCloseSpy.mock.invocationCallOrder[0]).toBeLessThan(
+    disposeApiSpy.mock.invocationCallOrder[0],
+  )
+})
+
+// 2e. 桥接缺省不连:未配置 agent.bridge 时客户端不启动、拆解不涉及
+test('2e. Agent 桥接:未配置 agent.bridge 时不启动客户端', async () => {
+  const h = hookHost({})
+  await h.mount()
+  expect(createBridgeClientSpy).not.toHaveBeenCalled()
+  expect(getRegistrySpy).not.toHaveBeenCalled()
+  await h.unmount()
+  await flush()
+  expect(bridgeClientCloseSpy).not.toHaveBeenCalled()
 })
 
 // 3. 重挂幂等

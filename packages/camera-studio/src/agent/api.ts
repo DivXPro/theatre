@@ -120,6 +120,8 @@ export type CameraStudioApiController = {
   ): (() => void) | undefined
   /** 内部:当前会话的 runtime(测试与页内桥接调试用) */
   currentRuntime(): AgentRuntime | undefined
+  /** 内部:当前会话的注册表(桥接客户端接线用,Task 6) */
+  currentRegistry(): AgentCommandRegistry | undefined
 }
 
 let requestIdFallbackCounter = 0
@@ -428,6 +430,7 @@ export function createCameraStudioApi(
     dispose,
     bindSceneHandlers,
     currentRuntime: () => session?.runtime,
+    currentRegistry: () => session?.registry,
   }
 }
 
@@ -462,4 +465,9 @@ export function bindCameraStudioSceneHandlers(
 /** 内部(测试与页内桥接调试用):当前会话的 runtime;无会话返回 undefined */
 export function getActiveAgentRuntime(): AgentRuntime | undefined {
   return controller.currentRuntime()
+}
+
+/** 内部(bootstrap 桥接接线用,Task 6):当前会话的注册表;无会话返回 undefined */
+export function getActiveAgentRegistry(): AgentCommandRegistry | undefined {
+  return controller.currentRegistry()
 }
