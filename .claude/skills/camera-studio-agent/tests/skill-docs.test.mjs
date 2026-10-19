@@ -154,3 +154,45 @@ test('docs carry no real tokens, eval(, or placeholder debt', () => {
     assert.ok(!/\bTODO\b/.test(content), `${label}: contains TODO`)
   }
 })
+
+// Task 4 验收:assets.delete 后 history.undo 不恢复资产——SKILL 必须明示,
+// 否则 Agent 会按直觉依赖撤销。文档级断言与行为级 E2E
+// (examples/camera-host-demo/src/agent-skill.e2e.ts)互相对照。
+test('errors.md states asset operations bypass history.undo', () => {
+  const content = readDoc(docPaths.errors)
+  const section = content.match(
+    /## Asset operations do not undo\n([\s\S]*?)(\n## |$)/,
+  )
+  assert.ok(
+    section,
+    'errors.md must carry an "Asset operations do not undo" section',
+  )
+  const body = section[1]
+  for (const name of [
+    'assets.delete',
+    'assets.rename',
+    'assets.importModel',
+    'poses.saveCurrent',
+    'history.undo',
+  ]) {
+    assert.ok(body.includes(name), `section must name ${name}`)
+  }
+  assert.ok(
+    /does not roll them back/i.test(body),
+    'section must state history.undo does not roll asset operations back',
+  )
+})
+
+test('commands.md marks assets.delete and history.undo as Undoable: none', () => {
+  const content = readDoc(docPaths.commands)
+  for (const name of ['assets.delete', 'history.undo']) {
+    const block = content.match(
+      new RegExp(`## \`${name}\`\n([\\s\\S]*?)(\\n## |$)`),
+    )
+    assert.ok(block, `commands.md must document ${name}`)
+    assert.ok(
+      block[1].includes('Undoable: `none`'),
+      `${name} must be documented as Undoable: none`,
+    )
+  }
+})

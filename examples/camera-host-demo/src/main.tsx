@@ -129,8 +129,10 @@ function StudioRoute() {
     // assets: {baseUrl: 'https://cdn.example.com/camera-assets/'} ← §4 CDN 写法
     sync: false,
     onError: setNotice,
-    // 桥接配置缺失时是 undefined:浏览器默认不连桥接(spec §4/§10.4)
-    ...(agentBridge ? {agent: {bridge: agentBridge}} : {}),
+    // 桥接配置缺失时是 undefined:浏览器默认不连桥接(spec §4/§10.4)。
+    // 桥接模式下同时挂 window.__cameraStudioApi(exposeGlobal):端到端
+    // 验收用它扮演「另一个写入者」制造 revision 冲突;不连桥接时不挂
+    ...(agentBridge ? {agent: {bridge: agentBridge, exposeGlobal: true}} : {}),
   })
   if (error) throw error
   if (!ready) return null

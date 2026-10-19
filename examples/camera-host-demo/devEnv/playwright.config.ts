@@ -39,7 +39,8 @@ const repoRoot = path.resolve(__dirname, '../../..')
 
 const config: PlaywrightTestConfig = {
   testDir: '../src',
-  testMatch: /agent\.e2e\.ts/,
+  /* agent.e2e.ts(纯 HTTP 传输层)+ agent-skill.e2e.ts(SKILL CLI 端到端) */
+  testMatch: /agent(?:-skill)?\.e2e\.ts/,
   /* 真实浏览器 + GLB 导入 + 视频录制:单用例上限放宽到 5 分钟 */
   timeout: 300_000,
   expect: {timeout: 15_000},

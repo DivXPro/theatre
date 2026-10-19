@@ -343,3 +343,32 @@ curl "$CAMERA_STUDIO_API_URL/v1/files/<fileId>" -H "$AUTH" -o shot.webm
 工作流纪律(与 SKILL 一致):先 `health`/`schema`/`scene.getSnapshot` 再动手; 写后
 重读验证;长任务轮询到终态再下载;重试写命令复用原 `requestId`;按 `error.code` 与
 `retryable` 决定是否重试。
+
+## 12. 随仓库的 Agent SKILL(推荐给 Claude Code 类 Agent)
+
+上面的 curl 序列是用来讲协议的;实际驱动场景时,Agent 不必自己拼 HTTP——仓库自带
+一个开箱即用的 SKILL:`.claude/skills/camera-studio-agent/`。宿主只需把两个环境变量
+交给 Agent 运行环境:
+
+- `CAMERA_STUDIO_API_URL`:桥接 HTTP 地址(如 `http://127.0.0.1:43110`);
+- `CAMERA_STUDIO_TOKEN`:Bearer 凭据。CLI 只从环境变量读取,绝不打印——不要把真实
+  token 写进脚本、日志或提交记录。
+
+SKILL 内的客户端 `scripts/scene-api.mjs` 零依赖、只需 Node >= 18(内置 `fetch`/
+`stream`),子命令:`health` / `schema` / `call` / `upload` / `job` / `wait` /
+`cancel` / `download`(`--help` 看用法)。从仓库根调用:
+
+```bash
+export CAMERA_STUDIO_API_URL=http://127.0.0.1:43110
+export CAMERA_STUDIO_TOKEN='<由部署方提供>'
+node .claude/skills/camera-studio-agent/scripts/scene-api.mjs health
+node .claude/skills/camera-studio-agent/scripts/scene-api.mjs schema
+```
+
+**运行时 schema 是命令的事实源**:`scene-api.mjs schema` 返回当前部署实际注册的命
+令清单、参数 schema 与错误码;`.claude/skills/camera-studio-agent/references/`
+下的 `commands.md` 由它生成(`scripts/schema-to-markdown.mjs`),供离线阅读,以运行
+时输出为准。工作流配方与错误恢复规则见同目录的 `workflows.md` 与 `errors.md`;
+SKILL 的端到端验收(真实浏览器 + 真实桥接,全程经该 CLI 驱动)是
+`examples/camera-host-demo/src/agent-skill.e2e.ts`(`yarn workspace camera-host-demo
+test:e2e --grep "agent skill"`)。
