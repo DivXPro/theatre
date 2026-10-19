@@ -17,3 +17,15 @@ globalThis.__jestGlobStub = () => ({})
 if (typeof globalThis.document === 'undefined') {
   globalThis.document = {body: {style: {}}}
 }
+//
+// 3) structuredClone:jsdom 测试环境没有(Node 全局不进 jsdom 全局),
+//    fake-indexeddb 的 put 路径(buildRecordAddPut)直接抛
+//    ReferenceError——bootstrap 的启动清理(ensureBuiltinRigAlias)在
+//    jsdom 套件里必败,迟到的 catch 日志还被 jest 判成
+//    "Cannot log after tests are done" 拉非零退出码。浏览器/node 环境
+//    都有原生实现;util.structuredClone 已在 Node 23 移除,缺失时用
+//    node:v8 的序列化对凑出同语义实现。
+if (typeof globalThis.structuredClone === 'undefined') {
+  const v8 = require('node:v8')
+  globalThis.structuredClone = (value) => v8.deserialize(v8.serialize(value))
+}
