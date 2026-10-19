@@ -140,6 +140,18 @@ for (const p of todo) {
     )
   }
   published.push(`${p.name}@${p.version}`)
+
+  // yarn 3.6 在非 TTY 下遭遇 npm 的二次认证(安全密钥)挑战时会打印
+  // "Open https://www.npmjs.com/login/…" 然后**以退出码 0 假成功**,
+  // 什么都没发出去。必须发后查证,把静默哑炮变成显式失败。
+  if (!existsOnRegistry(p.name, p.version)) {
+    fail(
+      `${p.name}@${p.version} did not land on npm although the publish ` +
+        `command exited 0. npm likely demanded a second factor (security ` +
+        `key) — the NPM_TOKEN secret must be a 2FA-exempt Automation token. ` +
+        `Already published in this run: ${published.slice(0, -1).join(', ') || '(none)'}.`,
+    )
+  }
 }
 
 // GitHub Actions step output + summary

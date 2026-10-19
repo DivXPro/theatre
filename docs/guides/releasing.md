@@ -37,7 +37,7 @@
 
 ## 前置配置（一次性）
 
-- 仓库 secret `NPM_TOKEN`：npm 的 Automation 类型 token，需要对 `@dreamerbird` scope 有发布权限。配置方式：`gh secret set NPM_TOKEN` 或仓库 Settings → Secrets。
+- 仓库 secret `NPM_TOKEN`：npm 的 **Automation（免二次认证）** token，需要对 `@dreamerbird` scope 有发布权限。配置方式：`gh secret set NPM_TOKEN` 或仓库 Settings → Secrets。⚠️ 如果账号开了安全密钥（passkey）两步验证，普通 token 发布时 npm 会要求按安全密钥，而 yarn 3.6 在 CI 无终端环境下会把这种挑战**静默当成功**（实际没发出去）；脚本已带发后查证兜底，但正确做法是直接用 Automation 类型 token（granular token 则需勾选 bypass 2FA）。
 - npm 上 scoped 包首次发布为 public 由脚本的 `--access public` 处理，无需手动设置。
 
 ## 其他发布通道
