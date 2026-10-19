@@ -111,6 +111,9 @@ if (todo.length === 0) {
 if (dryRun) process.exit(0)
 
 // --- publish ---------------------------------------------------------------
+// 各包 prepublish 钩子(devEnv/ensurePublishing.js)只认这个哨兵变量,
+// 与 devEnv/cli.ts 的 release/prerelease 通道同一约定。
+const publishEnv = {...process.env, THEATRE_IS_PUBLISHING: 'true'}
 const published = []
 for (const p of todo) {
   console.log(`Publishing ${p.name}@${p.version} …`)
@@ -127,7 +130,7 @@ for (const p of todo) {
         '--tag',
         'latest',
       ],
-      {cwd: repoRoot, stdio: 'inherit'},
+      {cwd: repoRoot, stdio: 'inherit', env: publishEnv},
     )
   } catch {
     fail(
