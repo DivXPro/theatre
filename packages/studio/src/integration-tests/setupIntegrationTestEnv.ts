@@ -6,9 +6,16 @@ global.__THEATREJS__FORCE_CONNECT_CORE_AND_STUDIO = true
 // skips the crash-recovery path. Install a minimal polyfill so that path is
 // exercised in tests. Lock release happens when the callback resolves (the
 // `finally` below), matching the real LockManager semantics.
-if (!(globalThis.navigator as {locks?: unknown}).locks) {
+//
+// Node ≥21 有全局 navigator,Node ≤20(CI 用的 20.9)没有——这套 setup 也跑在
+// node 环境的测试(bridge/camera-studio)里,没有就先造一个空壳再装 polyfill。
+const navHolder = globalThis as {navigator?: unknown}
+if (!navHolder.navigator) {
+  navHolder.navigator = {}
+}
+if (!(navHolder.navigator as {locks?: unknown}).locks) {
   const held = new Map<string, {mode: string}>()
-  ;(globalThis.navigator as unknown as {locks: unknown}).locks = {
+  ;(navHolder.navigator as {locks: unknown}).locks = {
     async request(
       name: string,
       opts: {mode?: string; ifAvailable?: boolean} | undefined,
