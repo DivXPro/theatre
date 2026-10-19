@@ -8,7 +8,10 @@
  *   转发在 ./SceneSession 与 ./RequestDeduplicator,Task 4);
  * - `POST /v1/files` / `GET /v1/files/:id` 的有界二进制传输(Task 3,
  *   FileStore 负责磁盘与过期,这里只做 header 适配与流转发);
- * - `/v1/jobs` 路由在 Task 5 接入,此处只预留依赖接口形状。
+ * - `GET /v1/jobs/:id` / `POST /v1/jobs/:id/cancel` 的任务投影
+ *   (Task 5,JobStore 负责状态机,这里只做路由与 202/404/409 适配);
+ *   job 命令(经 schema kind 判定)返回 {jobId} 后立即保存 accepted
+ *   快照并应答 202,紧随其后的 GET 不会 JOB_NOT_FOUND(preflight ruling)。
  *
  * 约束:
  * - URL 精确匹配,不用正则执行用户输入;
@@ -57,10 +60,12 @@ export type BridgeSessionHandle = {
  */
 export type {FileDescriptor, FileStore} from './FileStore'
 
-/** Task 5 的任务投影依赖形状(JobStore);本任务不挂 /v1/jobs 路由 */
+/** Task 5 的任务投影依赖形状(真实实现是 ./JobStore 的 createJobStore) */
 export type BridgeJobsHandle = {
   get(jobId: string): BridgeJobSnapshot | undefined
   cancel(jobId: string): Promise<BridgeJobSnapshot>
+  /** 保存/更新任务快照;httpServer 用它写入 job 命令的 accepted 初始快照 */
+  upsert(snapshot: BridgeJobSnapshot): void
 }
 
 export type HttpServerDeps = {
@@ -185,6 +190,60 @@ function asCommandRequest(body: unknown): CommandRequest {
   return {requestId, name, args}
 }
 
+/**
+ * 从 hello 携带的 schema 判断命令是否为 job,并取 cancelable 元数据。
+ * schema 不可信(对端是浏览器):逐层收窄,形状不符一律按非 job 处理。
+ */
+function jobCommandMeta(
+  schema: unknown,
+  name: string,
+): {cancelable: boolean} | undefined {
+  if (typeof schema !== 'object' || schema === null) return undefined
+  const commands = (schema as {commands?: unknown}).commands
+  if (!Array.isArray(commands)) return undefined
+  for (const entry of commands) {
+    if (typeof entry !== 'object' || entry === null) continue
+    const candidate = entry as {
+      name?: unknown
+      kind?: unknown
+      cancelable?: unknown
+    }
+    if (candidate.name !== name) continue
+    if (candidate.kind !== 'job') return undefined
+    return {cancelable: candidate.cancelable === true}
+  }
+  return undefined
+}
+
+/**
+ * job 命令的 202 投影(spec 8.7、10.1):schema kind === 'job' 的命令成功
+ * 返回 {jobId} 时构造 accepted 初始快照;mutation 即使结果形似 {jobId}
+ * 也不投影(由 kind 判定,不看结果形状)。
+ */
+function projectAcceptedJob(
+  schema: unknown,
+  command: CommandRequest,
+  response: CommandResponse,
+): BridgeJobSnapshot | undefined {
+  if (!response.ok) return undefined
+  const meta = jobCommandMeta(schema, command.name)
+  if (meta === undefined) return undefined
+  const result = response.result
+  if (typeof result !== 'object' || result === null || Array.isArray(result)) {
+    return undefined
+  }
+  const jobId = (result as {jobId?: unknown}).jobId
+  if (typeof jobId !== 'string' || jobId === '') return undefined
+  return {
+    jobId,
+    kind: command.name,
+    state: 'pending',
+    progress: 0,
+    phase: 'accepted',
+    cancelable: meta.cancelable,
+  }
+}
+
 function writeInternalError(res: ServerResponse): void {
   // 未处理异常:只返回通用信息,绝不回显异常 message/stack
   writeAgentError(res, {
@@ -195,7 +254,7 @@ function writeInternalError(res: ServerResponse): void {
 }
 
 export function createHttpServer(deps: HttpServerDeps): http.Server {
-  const {config, session, files} = deps
+  const {config, session, files, jobs} = deps
 
   async function handleCommand(req: IncomingMessage, res: ServerResponse) {
     const body = await readJsonBody(req, config.maxCommandBytes)
@@ -206,6 +265,16 @@ export function createHttpServer(deps: HttpServerDeps): http.Server {
     } catch {
       writeInternalError(res)
       return
+    }
+    // job 命令:立即保存 accepted 快照并应答 202(preflight ruling:
+    // 202 后紧随的 GET 不得 JOB_NOT_FOUND)
+    if (jobs !== undefined) {
+      const snapshot = projectAcceptedJob(session.schema(), command, response)
+      if (snapshot !== undefined) {
+        jobs.upsert(snapshot)
+        writeJson(res, 202, {ok: true, result: snapshot})
+        return
+      }
     }
     writeCommandResponse(res, response)
   }
@@ -260,6 +329,32 @@ export function createHttpServer(deps: HttpServerDeps): http.Server {
     // 读流在响应后出错(如磁盘故障)只能断开,无法改状态码
     stream.on('error', () => res.destroy())
     stream.pipe(res)
+  }
+
+  /**
+   * 任务查询:jobId 是 `/v1/jobs/` 之后的整段(与 files 同一约定)。
+   * 未知任务 404 JOB_NOT_FOUND;快照原样返回(含 result/error)。
+   */
+  function handleJobGet(jobId: string, res: ServerResponse): void {
+    if (jobs === undefined || jobId === '') throw notFound()
+    const snapshot = jobs.get(jobId)
+    if (snapshot === undefined) {
+      throw new BridgeHttpError(404, 'JOB_NOT_FOUND', '任务不存在')
+    }
+    writeJson(res, 200, {ok: true, result: snapshot})
+  }
+
+  /**
+   * 任务取消:成功一律 202 返回当前快照——HTTP 不假装已取消,终态以
+   * 浏览器 job 事件为准。未知任务 404、不可取消 409 由 JobStore 抛出。
+   */
+  async function handleJobCancel(
+    jobId: string,
+    res: ServerResponse,
+  ): Promise<void> {
+    if (jobs === undefined || jobId === '') throw notFound()
+    const snapshot = await jobs.cancel(jobId)
+    writeJson(res, 202, {ok: true, result: snapshot})
   }
 
   async function handleRequest(
@@ -317,8 +412,23 @@ export function createHttpServer(deps: HttpServerDeps): http.Server {
       handleFileDownload(pathname.slice('/v1/files/'.length), res)
       return
     }
+    if (
+      req.method === 'POST' &&
+      pathname.startsWith('/v1/jobs/') &&
+      pathname.endsWith('/cancel')
+    ) {
+      await handleJobCancel(
+        pathname.slice('/v1/jobs/'.length, -'/cancel'.length),
+        res,
+      )
+      return
+    }
+    if (req.method === 'GET' && pathname.startsWith('/v1/jobs/')) {
+      handleJobGet(pathname.slice('/v1/jobs/'.length), res)
+      return
+    }
 
-    // 未知路由(含未接入的 /v1/jobs,由 Task 5 接入)
+    // 未知路由
     throw notFound()
   }
 
