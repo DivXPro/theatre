@@ -19,11 +19,10 @@
 import {randomUUID} from 'crypto'
 import {once} from 'events'
 import {createReadStream, createWriteStream, mkdtempSync} from 'fs'
-import type {WriteStream} from 'fs'
 import {promises as fsp} from 'fs'
 import {tmpdir} from 'os'
 import {join} from 'path'
-import type {Readable} from 'stream'
+import type {Readable, Writable} from 'stream'
 import {BridgeHttpError} from './errors'
 
 /** 上传/下载结果元数据(POST /v1/files 的 result,任务输出引用同形) */
@@ -45,6 +44,11 @@ export type CreateFileStoreOptions = {
   clock?: FileStoreClock
   /** 后台清理间隔;默认 min(fileTtlMs, 60s),测试可注入小间隔 */
   sweepIntervalMs?: number
+  /**
+   * 故障注入/测试用写流工厂;默认 `fs.createWriteStream(path, {flags:'wx'})`。
+   * 生产代码不应设置。
+   */
+  writeStreamFactory?: (filePath: string) => Writable
 }
 
 export type FileStore = {
@@ -72,15 +76,6 @@ type FileEntry = FileDescriptor & {
 
 function fileNotFound(): BridgeHttpError {
   return new BridgeHttpError(404, 'FILE_NOT_FOUND', '文件不存在或已过期')
-}
-
-/** 写完并等待 finish/error;error 优先,绝不静默吞掉写入失败 */
-function finishWrite(out: WriteStream): Promise<void> {
-  return new Promise<void>((resolve, reject) => {
-    out.once('error', reject)
-    out.once('finish', () => resolve())
-    out.end()
-  })
 }
 
 export function createFileStore(options: CreateFileStoreOptions): FileStore {
@@ -134,11 +129,64 @@ export function createFileStore(options: CreateFileStoreOptions): FileStore {
     // 外部输入永远走 Map 键查询,到不了这里
     const filePath = join(dir, `${fileId}.bin`)
     // wx:已存在即失败,防止任何覆盖既有文件的路径
-    const out = createWriteStream(filePath, {flags: 'wx'})
+    const out = options.writeStreamFactory
+      ? options.writeStreamFactory(filePath)
+      : createWriteStream(filePath, {flags: 'wx'})
+    /**
+     * 持久错误监听:从创建起就挂上,任何时机(无背压的 flush 阶段、
+     * drain 竞速落定之后)的写错误都只记录到 writeError,绝不成为
+     * uncaught exception;循环与收尾统一读取该变量决定拒绝。
+     */
+    let writeError: Error | undefined
+    out.on('error', (error: Error) => {
+      writeError = error
+    })
+    /**
+     * 等 drain 或写错误落定。两个事件都只是"醒来重查 writeError",
+     * handler 绝不抛异常,胜出方清理双方监听器——不留竞速落败方的
+     * 残留监听,因此不会产生 unhandled rejection。
+     */
+    function waitDrainOrError(): Promise<void> {
+      return new Promise<void>((resolve) => {
+        if (writeError !== undefined || out.destroyed || out.closed) {
+          resolve()
+          return
+        }
+        const wake = () => {
+          out.removeListener('drain', wake)
+          out.removeListener('error', wake)
+          resolve()
+        }
+        out.once('drain', wake)
+        out.once('error', wake)
+      })
+    }
+    /** 写完并等待 finish/writeError;error 优先,绝不静默吞掉写入失败 */
+    function finishWrite(): Promise<void> {
+      return new Promise<void>((resolve, reject) => {
+        if (writeError !== undefined) {
+          reject(writeError)
+          return
+        }
+        const onError = () => {
+          out.removeListener('finish', onFinish)
+          reject(writeError ?? new Error('写入失败'))
+        }
+        const onFinish = () => {
+          out.removeListener('error', onError)
+          if (writeError !== undefined) reject(writeError)
+          else resolve()
+        }
+        out.once('error', onError)
+        out.once('finish', onFinish)
+        out.end()
+      })
+    }
     let size = 0
     let tooLarge = false
     try {
       for await (const chunk of input.stream as AsyncIterable<Buffer>) {
+        if (writeError !== undefined) throw writeError
         if (tooLarge) continue // 排空剩余 body,保证 413 确定性送达
         size += chunk.length
         if (size > options.maxUploadBytes) {
@@ -146,15 +194,12 @@ export function createFileStore(options: CreateFileStoreOptions): FileStore {
           continue
         }
         if (!out.write(chunk)) {
-          // 背压:drain 与 error 竞速,写入失败立即中止而不是挂起
-          await Promise.race([
-            once(out, 'drain'),
-            once(out, 'error').then(([error]) => {
-              throw error
-            }),
-          ])
+          // 背压:等 drain 或写错误落定,醒来统一由循环顶的 writeError
+          // 检查决定中止
+          await waitDrainOrError()
         }
       }
+      if (writeError !== undefined) throw writeError
       if (tooLarge) {
         throw new BridgeHttpError(
           413,
@@ -163,7 +208,7 @@ export function createFileStore(options: CreateFileStoreOptions): FileStore {
           {closeConnection: true},
         )
       }
-      await finishWrite(out)
+      await finishWrite()
     } catch (error) {
       // 超限或源流/写流错误:关闭并 unlink 部分文件,绝不留下半成品。
       // 若首个块就已超限,写流可能从未收到字节、open 仍在 pending:

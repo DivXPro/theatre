@@ -5,8 +5,8 @@
  * 全部使用真实 fs 临时目录;过期用可注入 clock,清理 timer 用真实
  * 计时器 + 小间隔,等待用轮询,不依赖侥幸时序。
  */
-import {promises as fsp} from 'fs'
-import {Readable} from 'stream'
+import {appendFileSync, promises as fsp} from 'fs'
+import {Readable, Writable} from 'stream'
 import {BridgeHttpError} from './errors'
 import {createFileStore} from './FileStore'
 import type {FileStore, FileStoreClock} from './FileStore'
@@ -339,5 +339,156 @@ describe('close', () => {
         mimeType: 'application/octet-stream',
       }),
     ).rejects.toThrow()
+  })
+})
+
+describe('write stream errors (fault injection)', () => {
+  /**
+   * 断言动作期间没有任何进程级错误事件(uncaughtException /
+   * unhandledRejection)。挂上自己的监听器既防止进程崩溃,又能
+   * 捕获计数;事件落定需要给异步错误留出时间窗。
+   */
+  async function expectNoProcessErrors(action: () => Promise<void>) {
+    const processEvents: string[] = []
+    const onUncaught = (error: unknown) =>
+      processEvents.push(`uncaughtException: ${String(error)}`)
+    const onUnhandled = (error: unknown) =>
+      processEvents.push(`unhandledRejection: ${String(error)}`)
+    process.on('uncaughtException', onUncaught)
+    process.on('unhandledRejection', onUnhandled)
+    try {
+      await action()
+      await new Promise((resolve) => setTimeout(resolve, 100))
+    } finally {
+      process.removeListener('uncaughtException', onUncaught)
+      process.removeListener('unhandledRejection', onUnhandled)
+    }
+    expect(processEvents).toEqual([])
+  }
+
+  /**
+   * 写入超过 failAfter 字节后异步报错的 Writable;报错前把部分字节
+   * 真实落盘,以便验证 put 的 catch 确实 unlink 了部分文件。
+   * 默认 highWaterMark(16KB)下小 chunk 的 write() 返回 true,
+   * 即"无背压"路径——旧实现此时写流没有 error 监听,会进程崩溃。
+   */
+  class FailAfterBytesStream extends Writable {
+    private written = 0
+    constructor(
+      private readonly filePath: string,
+      private readonly failAfter: number,
+    ) {
+      super()
+    }
+    _write(
+      chunk: Buffer,
+      _encoding: string,
+      callback: (error?: Error | null) => void,
+    ): void {
+      const next = this.written + chunk.length
+      if (next > this.failAfter) {
+        // 模拟 flush 阶段磁盘错误(如 ENOSPC):先落一部分字节再异步报错
+        appendFileSync(this.filePath, chunk.subarray(0, 1))
+        this.written = next
+        setImmediate(() => callback(new Error('simulated ENOSPC')))
+        return
+      }
+      this.written = next
+      appendFileSync(this.filePath, chunk)
+      setImmediate(callback)
+    }
+  }
+
+  /**
+   * highWaterMark=1 使每次 write() 都返回 false(背压),_write 延迟
+   * 完成产生多个 drain 周期;第 failOn 次写入报错——旧实现在 drain
+   * 赢得竞速后残留 once('error') 监听,错误到达时产生 unhandled
+   * rejection。
+   */
+  class BackpressuredFailStream extends Writable {
+    private count = 0
+    constructor(
+      private readonly filePath: string,
+      private readonly failOn: number,
+    ) {
+      super({highWaterMark: 1})
+    }
+    _write(
+      chunk: Buffer,
+      _encoding: string,
+      callback: (error?: Error | null) => void,
+    ): void {
+      this.count++
+      const n = this.count
+      setImmediate(() => {
+        if (n === this.failOn) {
+          callback(new Error('late write boom'))
+          return
+        }
+        appendFileSync(this.filePath, chunk)
+        callback()
+      })
+    }
+  }
+
+  /** 每块之间让出一个事件循环 tick,让异步错误有时间在循环中途落定 */
+  async function* pacedChunks(count: number, bytes: number) {
+    for (let i = 0; i < count; i++) {
+      yield Buffer.alloc(bytes, i + 1)
+      await new Promise((resolve) => setImmediate(resolve))
+    }
+  }
+
+  test('a write error while NOT backpressured rejects put without crashing the process', async () => {
+    let factorySawPath = ''
+    const store = createFileStore({
+      maxUploadBytes: 1024,
+      fileTtlMs: 60_000,
+      writeStreamFactory: (filePath) => {
+        factorySawPath = filePath
+        return new FailAfterBytesStream(filePath, 8)
+      },
+    })
+    stores.push(store)
+    await expectNoProcessErrors(async () => {
+      await expect(
+        store.put({
+          stream: Readable.from(pacedChunks(4, 8)),
+          fileName: 'enospc.bin',
+          mimeType: 'application/octet-stream',
+        }),
+      ).rejects.toThrow('simulated ENOSPC')
+    })
+    // 部分文件(第一块 8 字节 + 第二块 1 字节)必须被 unlink
+    expect(factorySawPath).not.toBe('')
+    expect(await dirEntries(store.dir)).toEqual([])
+  })
+
+  test('a write error after several drain cycles rejects cleanly with no unhandled rejection', async () => {
+    let injected: BackpressuredFailStream | undefined
+    const store = createFileStore({
+      maxUploadBytes: 1024,
+      fileTtlMs: 60_000,
+      writeStreamFactory: (filePath) => {
+        injected = new BackpressuredFailStream(filePath, 4)
+        return injected
+      },
+    })
+    stores.push(store)
+    await expectNoProcessErrors(async () => {
+      await expect(
+        store.put({
+          stream: Readable.from(pacedChunks(5, 8)),
+          fileName: 'drain-then-fail.bin',
+          mimeType: 'application/octet-stream',
+        }),
+      ).rejects.toThrow('late write boom')
+    })
+    expect(await dirEntries(store.dir)).toEqual([])
+    // 竞速落败方的监听器必须被清理:drain 监听器归零,error 上只剩
+    // put 的持久记录器一个。旧实现在每个 drain 周期泄漏一个 error
+    // 监听(实测 3 次背压后 listenerCount 涨到 6)。
+    expect(injected?.listenerCount('drain')).toBe(0)
+    expect(injected?.listenerCount('error')).toBe(1)
   })
 })
