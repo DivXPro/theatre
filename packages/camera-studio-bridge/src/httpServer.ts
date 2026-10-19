@@ -470,6 +470,15 @@ export function createHttpServer(deps: HttpServerDeps): http.Server {
           socket.destroy()
           return
         }
+        // spec 10.4:upgrade 校验 Token 和允许的来源。WS 没有 CORS 预检,
+        // Origin 是唯一来源信号:corsOrigins 为空(默认)时跳过检查
+        // (fail-open,浏览器客户端即场景);非空时要求 Origin 精确命中
+        // 白名单(匹配语义同 applyCors),不匹配或缺 Origin 一律 403
+        if (!upgradeOriginAllowed(req)) {
+          socket.write('HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n')
+          socket.destroy()
+          return
+        }
         if (session.attachUpgrade) {
           session.attachUpgrade(req, socket, head)
         } else {
@@ -482,6 +491,15 @@ export function createHttpServer(deps: HttpServerDeps): http.Server {
       () => socket.destroy(),
     )
   })
+
+  /** upgrade 来源检查:白名单为空放行;非空要求 Origin 命中(`*` 放行所有) */
+  function upgradeOriginAllowed(req: IncomingMessage): boolean {
+    const allowed = config.corsOrigins
+    if (allowed.length === 0) return true
+    const origin = req.headers.origin
+    if (typeof origin !== 'string') return false
+    return allowed.includes('*') || allowed.includes(origin)
+  }
 
   return server
 }

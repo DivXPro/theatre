@@ -135,6 +135,11 @@ CORS(鉴权在 subprotocol)。规则:
 - 浏览器侧文件请求被 CORS 拦时,页面控制台会打出提示,给出页面 origin 与桥接
   httpUrl,照它把精确 origin 加进 `corsOrigins` 即可。
 
+WS upgrade 不走 CORS 预检,但 origin 检查沿用同一份 `corsOrigins` 白名单:白名单
+为空(本地开发默认)时不做来源检查;白名单非空时,upgrade 请求的 `Origin` 头必须
+精确命中白名单,不匹配或缺失一律拒绝(403)。所以部署到远程页面时,把页面的精确
+origin 写进 `corsOrigins` 后,HTTP 与 WebSocket 两条通道的来源约束是一致的。
+
 改监听地址、端口、CORS 都靠**重启桥接**生效,浏览器场景无需重建。
 
 ## 5. HTTP 路由一览

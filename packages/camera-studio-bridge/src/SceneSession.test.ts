@@ -290,6 +290,74 @@ describe('websocket authentication', () => {
   })
 })
 
+describe('websocket origin enforcement', () => {
+  /**
+   * 带 Origin 头的连接/拒绝探针:ws 客户端默认不带 Origin(浏览器 WebSocket
+   * 总是带),headers 里传 undefined 等价于完全不发该头
+   */
+  function connectBrowserWithOrigin(
+    wsUrl: string,
+    origin: string | undefined,
+  ): Promise<WebSocket> {
+    return new Promise((resolve, reject) => {
+      const ws = new WebSocket(wsUrl, protocols(TOKEN), {
+        headers: origin === undefined ? {} : {origin},
+      })
+      cleanups.push(() => ws.terminate())
+      ws.on('open', () => resolve(ws))
+      ws.on('error', reject)
+    })
+  }
+
+  function expectUpgradeStatusWithOrigin(
+    wsUrl: string,
+    origin: string | undefined,
+  ): Promise<number> {
+    return new Promise((resolve) => {
+      const ws = new WebSocket(wsUrl, protocols(TOKEN), {
+        headers: origin === undefined ? {} : {origin},
+      })
+      cleanups.push(() => ws.terminate())
+      ws.on('open', () => resolve(101))
+      ws.on('unexpected-response', (_req, res) => resolve(res.statusCode ?? 0))
+      ws.on('error', () => resolve(-1))
+    })
+  }
+
+  const WHITELISTED = 'http://localhost:5199'
+  const whitelistedConfig = () =>
+    resolveBridgeConfig({token: TOKEN, corsOrigins: [WHITELISTED]})
+
+  test('allows any origin when corsOrigins is empty (default)', async () => {
+    const bridge = await startBridge()
+    const ws = await connectBrowserWithOrigin(
+      bridge.wsUrl,
+      'http://anywhere.example',
+    )
+    expect(ws.protocol).toBe(BRIDGE_WS_PROTOCOL)
+  })
+
+  test('allows an upgrade whose origin matches the whitelist', async () => {
+    const bridge = await startBridge({config: whitelistedConfig()})
+    const ws = await connectBrowserWithOrigin(bridge.wsUrl, WHITELISTED)
+    expect(ws.protocol).toBe(BRIDGE_WS_PROTOCOL)
+  })
+
+  test('rejects an upgrade whose origin is not whitelisted', async () => {
+    const bridge = await startBridge({config: whitelistedConfig()})
+    expect(
+      await expectUpgradeStatusWithOrigin(bridge.wsUrl, 'http://evil.example'),
+    ).toBe(403)
+  })
+
+  test('rejects an upgrade without an Origin header when the whitelist is non-empty', async () => {
+    const bridge = await startBridge({config: whitelistedConfig()})
+    expect(await expectUpgradeStatusWithOrigin(bridge.wsUrl, undefined)).toBe(
+      403,
+    )
+  })
+})
+
 describe('single scene session', () => {
   test('health/schema become available only after hello', async () => {
     const bridge = await startBridge()
