@@ -35,6 +35,110 @@ const MODEL_MIME = 'model/gltf-binary'
 const AUTH_HEADERS = {Authorization: `Bearer ${TOKEN}`}
 const TERMINAL_JOB_STATES = new Set(['succeeded', 'failed', 'cancelled'])
 
+/** 动画剪辑名:注入 Y Bot GLB 的测试剪辑,导入后以该名入库 */
+const ANIM_CLIP_NAME = 'agent-e2e-bob'
+const ANIM_MODEL_NAME = 'Y Bot (e2e animated).glb'
+/** 手指骨命名规则(与 gestureProps.isFingerBoneName 同):挑身体姿势时排除手势条目 */
+const FINGER_BONE = /Hand(?:Thumb|Index|Middle|Ring|Pinky)\d+$/
+
+/**
+ * 内置资产目录只有模型与姿势,没有动画;纯 HTTP 路径下唯一的动画来源是
+ * 导入管线从 GLB 提取动作剪辑。这里给 Y Bot.glb 注入一条
+ * mixamorigHips 平移剪辑(骨骼集合不变 → 骨架族不变),得到
+ * 含动作的合法 GLB,上传导入后即产出同族动画条目。
+ */
+function buildAnimatedGlb(source: Buffer): Buffer {
+  const jsonLength = source.readUInt32LE(12)
+  const json = JSON.parse(
+    source.subarray(20, 20 + jsonLength).toString('utf8'),
+  ) as any
+  const binLengthOffset = 20 + jsonLength
+  const binLength = source.readUInt32LE(binLengthOffset)
+  const bin = source.subarray(
+    binLengthOffset + 8,
+    binLengthOffset + 8 + binLength,
+  )
+
+  const pad4 = (n: number) => (n + 3) & ~3
+  const timesOffset = pad4(bin.length)
+  const times = new Float32Array([0, 0.5])
+  const outputOffset = timesOffset + pad4(times.byteLength)
+  const output = new Float32Array([0, 0, 0, 0, 0.25, 0])
+
+  const hipsIndex = json.nodes.findIndex(
+    (node: {name?: string}) => node.name === 'mixamorigHips',
+  )
+  if (hipsIndex < 0) throw new Error('Y Bot.glb 缺少 mixamorigHips 节点')
+
+  const timeView = json.bufferViews.length
+  json.bufferViews.push({
+    buffer: 0,
+    byteOffset: timesOffset,
+    byteLength: times.byteLength,
+  })
+  json.bufferViews.push({
+    buffer: 0,
+    byteOffset: outputOffset,
+    byteLength: output.byteLength,
+  })
+  const timeAccessor = json.accessors.length
+  json.accessors.push({
+    bufferView: timeView,
+    componentType: 5126,
+    count: 2,
+    type: 'SCALAR',
+    min: [0],
+    max: [0.5],
+  })
+  json.accessors.push({
+    bufferView: timeView + 1,
+    componentType: 5126,
+    count: 2,
+    type: 'VEC3',
+  })
+  json.animations = [
+    {
+      name: ANIM_CLIP_NAME,
+      channels: [{sampler: 0, target: {node: hipsIndex, path: 'translation'}}],
+      samplers: [
+        {
+          input: timeAccessor,
+          interpolation: 'LINEAR',
+          output: timeAccessor + 1,
+        },
+      ],
+    },
+  ]
+  // 标记节点:场景与首个导入的 Y Bot 完全一致时,导出模型字节相同 →
+  // 内容哈希去重命中,模型条目被跳过,importModel 任务以「未找到新建条目」
+  // 失败。加一个空节点让导出字节不同(不影响骨骼/顶点/骨架族)
+  const markerIndex = json.nodes.length
+  json.nodes.push({name: 'agent-e2e-marker'})
+  json.scenes[0].nodes.push(markerIndex)
+  json.buffers[0].byteLength = outputOffset + output.byteLength
+
+  const newBin = Buffer.alloc(pad4(json.buffers[0].byteLength))
+  bin.copy(newBin, 0)
+  Buffer.from(times.buffer).copy(newBin, timesOffset)
+  Buffer.from(output.buffer).copy(newBin, outputOffset)
+
+  let jsonText = JSON.stringify(json)
+  while (Buffer.byteLength(jsonText) % 4 !== 0) jsonText += ' '
+  const jsonBuf = Buffer.from(jsonText, 'utf8')
+
+  const header = Buffer.alloc(12)
+  header.write('glTF', 0, 'ascii')
+  header.writeUInt32LE(2, 4)
+  header.writeUInt32LE(12 + 8 + jsonBuf.length + 8 + newBin.length, 8)
+  const jsonHeader = Buffer.alloc(8)
+  jsonHeader.writeUInt32LE(jsonBuf.length, 0)
+  jsonHeader.writeUInt32LE(0x4e4f534a, 4) // 'JSON'
+  const binHeader = Buffer.alloc(8)
+  binHeader.writeUInt32LE(newBin.length, 0)
+  binHeader.writeUInt32LE(0x004e4942, 4) // 'BIN\0'
+  return Buffer.concat([header, jsonHeader, jsonBuf, binHeader, newBin])
+}
+
 let requestCounter = 0
 /** requestId:测试内自增,显式可复用(去重断言用同一 id 重放) */
 function nextRequestId(label: string): string {
@@ -157,8 +261,14 @@ test.describe('agent http bridge e2e', () => {
     for (const expected of [
       'scene.getSnapshot',
       'assets.importModel',
+      'assets.list',
       'models.create',
       'objects.update',
+      'poses.apply',
+      'poses.clear',
+      'animations.apply',
+      'animations.clear',
+      'animations.getStatus',
       'sequence.setLength',
       'keyframes.set',
       'sequence.seek',
@@ -200,6 +310,8 @@ test.describe('agent http bridge e2e', () => {
     expect(importFinal.state).toBe('succeeded')
     const assetId = importFinal.result.id
     expect(importFinal.result.kind).toBe('model')
+    const modelRig = importFinal.result.rig as string
+    expect(modelRig.startsWith('rig-')).toBe(true)
 
     // ── 4. models.create ────────────────────────────────
     const createRequestId = nextRequestId('models.create')
@@ -237,6 +349,135 @@ test.describe('agent http bridge e2e', () => {
     })
     const moved = (await mustCommand('objects.get', {objectId: modelId})).result
     expect(moved.props.position).toMatchObject({x: 2, y: 0, z: -1})
+
+    // ── 6b. 姿势:运行时列出 → 应用 → 读回 → 清除(spec §13.4)─
+    // 不硬编码姿势 id:assets.list 实时列出内置目录,挑身体姿势(手势条目
+    // 只含手指骨,与全身姿势按同一规则区分)。骨架族优先精确匹配——但
+    // GLB 运行时的 rigIdOf 与内置目录的 FBX 判定基准不同(seedAssetsManifest
+    // 头注:勿用 GLB joints 重算),GLB 导入的 Y Bot 与内置姿势 rig 哈希
+    // 不字面相等;poses.apply 不校验 rig(骨骼按名对齐),故无同族命中时
+    // 回退到任一身体姿势,断言仍落在 props.pose 的可观测值上
+    const poseEntries = (await mustCommand('assets.list', {kind: 'pose'}))
+      .result as Array<{
+      id: string
+      kind: string
+      rig?: string
+      bones?: Record<string, unknown>
+    }>
+    const isBodyPose = (entry: {bones?: Record<string, unknown>}) => {
+      const boneNames = Object.keys(entry.bones ?? {})
+      return (
+        boneNames.length > 0 &&
+        !boneNames.every((name) => FINGER_BONE.test(name))
+      )
+    }
+    const bodyPose =
+      poseEntries.find(
+        (entry) => entry.rig === modelRig && isBodyPose(entry),
+      ) ?? poseEntries.find(isBodyPose)
+    expect(
+      bodyPose,
+      `内置目录应含身体姿势(共 ${poseEntries.length} 条姿势,` +
+        `rig 集合: ${[...new Set(poseEntries.map((entry) => entry.rig))].join(
+          ', ',
+        )},` +
+        `模型 rig: ${modelRig})`,
+    ).toBeTruthy()
+    const poseApplied = (
+      await mustCommand('poses.apply', {
+        objectId: modelId,
+        assetId: bodyPose!.id,
+      })
+    ).result
+    expect(typeof poseApplied.revision).toBe('number')
+    const withPose = (await mustCommand('objects.get', {objectId: modelId}))
+      .result
+    expect(JSON.parse(withPose.props.pose)).toEqual({
+      kind: 'lib',
+      id: bodyPose!.id,
+    })
+    const poseCleared = (await mustCommand('poses.clear', {objectId: modelId}))
+      .result
+    expect(poseCleared.cleared).toBe(true)
+    const afterPoseClear = (
+      await mustCommand('objects.get', {objectId: modelId})
+    ).result
+    expect(afterPoseClear.props.pose ?? '').toBe('')
+
+    // ── 6c. 动画:上传带剪辑的同骨架 GLB → 导入提取 → 应用 → 状态 → 清除 ──
+    // 内置目录无动画资产;给 Y Bot.glb 注入一条剪辑(buildAnimatedGlb)
+    // 后经同一 importModel 任务入库,管线自动提取动画条目
+    const animatedGlb = buildAnimatedGlb(glb)
+    const animUpload = await fetch(`${BRIDGE_HTTP}/v1/files`, {
+      method: 'POST',
+      headers: {
+        ...AUTH_HEADERS,
+        'Content-Type': MODEL_MIME,
+        'X-File-Name': encodeURIComponent(ANIM_MODEL_NAME),
+      },
+      body: animatedGlb,
+    })
+    expect(animUpload.status).toBe(201)
+    const animFileId = (await animUpload.json()).result.fileId as string
+    const animImportJobId = await startJob('assets.importModel', {
+      file: {
+        fileId: animFileId,
+        fileName: ANIM_MODEL_NAME,
+        mimeType: MODEL_MIME,
+      },
+    })
+    const animImportFinal = await waitJob(animImportJobId)
+    expect(
+      animImportFinal.state,
+      `动画 GLB 导入任务失败: ${JSON.stringify(
+        animImportFinal.error ?? animImportFinal,
+      ).slice(0, 500)}`,
+    ).toBe('succeeded')
+
+    const animationEntries = (
+      await mustCommand('assets.list', {kind: 'animation'})
+    ).result as Array<{id: string; name: string; rig?: string}>
+    const clipEntry = animationEntries.find(
+      (entry) => entry.rig === modelRig && entry.name === ANIM_CLIP_NAME,
+    )
+    expect(clipEntry, '导入管线应从注入剪辑的 GLB 提取出动画条目').toBeTruthy()
+
+    const animApplied = (
+      await mustCommand('animations.apply', {
+        objectId: modelId,
+        assetId: clipEntry!.id,
+      })
+    ).result
+    expect(typeof animApplied.revision).toBe('number')
+    const withAnimation = (
+      await mustCommand('objects.get', {objectId: modelId})
+    ).result
+    expect(withAnimation.props.animation).toBe(clipEntry!.id)
+
+    // 运行时状态:apply 后加载登记异步完成,轮询到 loaded === true
+    // (props 有值但无登记 = 加载中,如实报,绝不伪造)
+    await expect
+      .poll(
+        async () => {
+          const status = (
+            await mustCommand('animations.getStatus', {objectId: modelId})
+          ).result
+          return {assetId: status.assetId, loaded: status.loaded}
+        },
+        {timeout: 30_000, intervals: [250, 500, 1_000]},
+      )
+      .toEqual({assetId: clipEntry!.id, loaded: true})
+
+    await mustCommand('animations.clear', {objectId: modelId})
+    const afterAnimClear = (
+      await mustCommand('animations.getStatus', {objectId: modelId})
+    ).result
+    expect(afterAnimClear.loaded).toBe(false)
+    expect(afterAnimClear.assetId).toBeUndefined()
+    const animClearedProps = (
+      await mustCommand('objects.get', {objectId: modelId})
+    ).result
+    expect(animClearedProps.props.animation ?? '').toBe('')
 
     // ── 7. sequence.setLength / keyframes.set / sequence.seek ──
     await mustCommand('sequence.setLength', {length: 4})
