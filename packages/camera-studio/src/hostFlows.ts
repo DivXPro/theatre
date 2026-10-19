@@ -10,7 +10,10 @@ import type {PlacingState} from './PlacementManager'
 import type {ModelEntry} from './assetLibrary/types'
 import type {PathPreset} from './pathPresets'
 
-export type Vec3 = {x: number; y: number; z: number}
+// Vec3 的唯一定义在 agent/types(Agent 命令 DTO 的载体);这里转出口,
+// 保持既有深导入与公开导出(index.ts)不断,且不产生第二个同名符号
+export type {Vec3} from './agent/types'
+import type {Vec3} from './agent/types'
 
 export type CameraFlows = {
   /** 点选放置:宿主选中模型后调用,进入画布放置模式 */

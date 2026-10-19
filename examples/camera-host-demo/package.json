@@ -6,7 +6,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:e2e": "playwright test --config=devEnv/playwright.config.ts"
   },
   "dependencies": {
     "@dreamerbird/camera-studio": "workspace:*"
@@ -14,6 +15,7 @@
   "devDependencies": {
     "@dreamerbird/core": "workspace:*",
     "@dreamerbird/studio": "workspace:*",
+    "@playwright/test": "^1.36.2",
     "@react-three/fiber": "^9.7.0",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.5",

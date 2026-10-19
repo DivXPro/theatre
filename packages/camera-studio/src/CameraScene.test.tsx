@@ -122,6 +122,11 @@ jest.doMock('./cameraRegistry', () => ({
   nextCameraEntry: () => ({cameraKey: 'cam-1'}),
   readCameraEntries: () => [],
   removeCamera: noop,
+  // 与真实现同语义:活动 key 在清单里取之,否则顺位第一台,空清单 null
+  resolveActiveCamera: (
+    cameras: Array<{cameraKey: string}>,
+    key: string | null,
+  ) => cameras.find((e) => e.cameraKey === key) ?? cameras[0] ?? null,
   useCamerasList: () => [],
 }))
 jest.doMock('./anchorsRegistry', () => ({

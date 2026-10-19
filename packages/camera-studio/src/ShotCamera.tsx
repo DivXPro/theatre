@@ -2,6 +2,7 @@ import {PerspectiveCamera, useCurrentSheet} from '@dreamerbird/r3f'
 import {getStudioSync, types as t, val} from '@dreamerbird/core'
 import type {ISheet, ISheetObject} from '@dreamerbird/core'
 import React, {
+  useCallback,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -46,6 +47,15 @@ import {
   aimTargetOptions,
   subscribeTargetRegistry,
 } from './aimTargets'
+import {formatSceneObjectId} from './agent/objectIds'
+import {
+  registerSceneSheetObject,
+  unregisterSceneSheetObject,
+} from './agent/runtime/objectRuntime'
+import {
+  notifyCameraReady,
+  rejectCameraMount,
+} from './agent/runtime/cameraLifecycle'
 
 /**
  * 场景摄像机(shot camera):独立于编辑主视角的"镜头",取景画面用于
@@ -324,31 +334,63 @@ export function ShotCamera({
   const frustumFill = useMemo(makeFrustumFill, [])
   const upTriangle = useMemo(makeUpTriangle, [])
 
+  // Agent 运行时登记(2026-10-17,Task 10):objRef 填充即「相机
+  // SheetObject 已挂载」信号,cameras.create 的 resolver 复核与
+  // scene/objects 查询都读这份登记;清空/卸载时按 id + 同一对象清理,
+  // 防过期 cleanup 误删新代次。editable 的 objRef 支持回调形式
+  // (与 Anchors/PlacedModelCore 同款)
+  const setCameraObjRef = useCallback(
+    (obj: ISheetObject<any> | null) => {
+      const id = formatSceneObjectId('camera', cameraKey)
+      const prev = cameraObjRef.current
+      cameraObjRef.current = obj ?? undefined
+      if (obj) {
+        registerSceneSheetObject(id, obj)
+      } else {
+        unregisterSceneSheetObject(id, prev)
+      }
+    },
+    [cameraKey, cameraObjRef],
+  )
+
   // 新相机落地即取景:添加时从导演视角捕获的种子(机位/朝向),
-  // 挂载后消费一次——此后相机数据归面板/拖拽/时间轴管,种子不再介入
+  // 挂载后消费一次——此后相机数据归面板/拖拽/时间轴管,种子不再介入。
+  // 结束时通知 Agent 挂载等待者(cameras.create 的 completion:mounted);
+  // 没有 seed 的恢复对象同样通知,不重复写值
   useLayoutEffect(() => {
     const seed = consumeCameraSeed(cameraKey)
     const camObj = cameraObjRef.current
-    if (!seed || !camObj) return
-    const studio = getStudioSync()
-    if (!studio) return
-    const scrub = studio.scrub()
-    scrub.capture(({set}) => {
-      set(camObj.props.position, seed.position)
-      set(camObj.props.rotation, seed.rotation)
-    })
-    scrub.commit()
+    if (seed && camObj) {
+      const studio = getStudioSync()
+      if (studio) {
+        const scrub = studio.scrub()
+        scrub.capture(({set}) => {
+          set(camObj.props.position, seed.position)
+          set(camObj.props.rotation, seed.rotation)
+        })
+        scrub.commit()
+      }
+    }
     // cameraObjRef 是稳定引用;子组件(editable)的 layout
-    // effect 先跑,到这里 objRef 已填好
+    // effect 先跑,到这里 objRef 已填好(Agent 登记也在那完成)
+    notifyCameraReady(cameraKey)
   }, [cameraKey])
 
   // 卸载即清空 App 侧的对象引用:editable 只填不清,注册表移除相机后
-  // ref 若仍指向已删除的对象,播种/再删除等逻辑会读到失效数据
+  // ref 若仍指向已删除的对象,播种/再删除等逻辑会读到失效数据。
+  // 同时按 id + 同一对象清 Agent 登记;挂载等待未兑现即卸载时拒绝,
+  // cameras.create 的等待方不悬挂(UI 路径无 waiter,no-op)
   useEffect(
     () => () => {
+      const prev = cameraObjRef.current
       cameraObjRef.current = undefined
+      unregisterSceneSheetObject(formatSceneObjectId('camera', cameraKey), prev)
+      rejectCameraMount(
+        cameraKey,
+        new Error(`相机挂载未完成即卸载: ${cameraKey}`),
+      )
     },
-    [cameraObjRef],
+    [cameraObjRef, cameraKey],
   )
 
   // 驱动锁(对齐 Blender 的约束语义):机位被路径接管期间,
@@ -470,6 +512,18 @@ export function ShotCamera({
         : cam.position
     const m = new Matrix4().lookAt(from, aimRef.current.position, cam.up)
     const e = new Euler().setFromRotationMatrix(m, 'XYZ')
+    // 同值守卫(与解绑定格的 alreadyFrozen 同款):cameras.setAimTarget
+    // 命令解除瞄准时已把朝向定格折进写 aimTarget 的同一事务,持久值==
+    // 此处换算结果,原样重写会多出一个同值撤销步骤(撤销陷阱)——跳过提交
+    const persisted = val(obj.props.rotation) as
+      | {x: number; y: number; z: number}
+      | undefined
+    const sameRotation =
+      !!persisted &&
+      Math.abs(persisted.x - e.x) < 1e-6 &&
+      Math.abs(persisted.y - e.y) < 1e-6 &&
+      Math.abs(persisted.z - e.z) < 1e-6
+    if (sameRotation) return
     const scrub = studio.scrub()
     scrub.capture(({set}) => set(obj.props.rotation, {x: e.x, y: e.y, z: e.z}))
     scrub.commit()
@@ -577,7 +631,7 @@ export function ShotCamera({
     <>
       <PerspectiveCamera
         theatreKey={cameraKey}
-        objRef={cameraObjRef}
+        objRef={setCameraObjRef}
         ref={camRef}
         makeDefault={makeDefault}
         manual

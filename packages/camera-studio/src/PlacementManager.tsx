@@ -1,9 +1,13 @@
 import {editable as e} from '@dreamerbird/r3f'
 import {getStudioSync, onChange, types as t, val} from '@dreamerbird/core'
 import type {IProject, IScrub, ISheet, ISheetObject} from '@dreamerbird/core'
+import type {ObjectAddressKey} from '@dreamerbird/core/types/public'
 import {privateAPI} from '@dreamerbird/core/privateAPIs'
 import {useVal} from '@dreamerbird/react'
 import {translate} from '@dreamerbird/studio/i18n'
+// 内部 Studio 通道:删除合并事务需要 stateEditors.forgetObject
+// (按地址清持久数据,不要求对象已挂载)——与 keyframeTracks 同先例
+import getStudio from '@dreamerbird/studio/getStudio'
 import {TransformControls, useFBX} from '@react-three/drei'
 import {useFrame, useThree} from '@react-three/fiber'
 import type {ThreeEvent} from '@react-three/fiber'
@@ -68,6 +72,20 @@ import {gesturePropConfigShape, resolveGestureBones} from './gestureProps'
 import {computeLegacyPoseMigration} from './poseMode/poseMigration'
 import {parsePoseValue} from './poseMode/poseValue'
 import type {ModelEntry, PoseEntry} from './assetLibrary/types'
+import {formatSceneObjectId} from './agent/objectIds'
+import {
+  registerSceneSheetObject,
+  unregisterSceneSheetObject,
+} from './agent/runtime/objectRuntime'
+import {
+  createPlacementWaiter,
+  rejectPlacement,
+  resolvePlacementPersisted,
+} from './agent/runtime/placementLifecycle'
+import {
+  clearAnimationLoadStatus,
+  setAnimationLoadStatus,
+} from './agent/runtime/animationStatus'
 
 /**
  * FBX 模型放置:页面顶部按钮选文件进入放置模式,半透明 ghost 跟随光标
@@ -116,7 +134,8 @@ export type PlacingState = {
   source: PlacementSource
 }
 
-const REGISTRY_KEY = 'Placements'
+/** 注册表对象的 theatre key(大纲顶层 "Placements" 行;Agent resolver 只读探测用) */
+export const PLACEMENTS_REGISTRY_KEY = 'Placements'
 
 // IProject 的公开类型上没有 assetStorage:它在内部 Project 实例上,
 // 由 studio attach 完成后挂上真实存储(之前是会抛错的占位实现)。
@@ -218,7 +237,7 @@ function fileConfigFor(assetId: string) {
 function getRegistry(sheet: ISheet) {
   // 注册表只是存数据的对象,不出现在大纲树
   return sheet.object(
-    REGISTRY_KEY,
+    PLACEMENTS_REGISTRY_KEY,
     {list: t.string('[]')},
     {hideFromOutline: true},
   )
@@ -401,7 +420,9 @@ export function suppressSelectBriefly() {
   suppressSelectUntil = performance.now() + 200
 }
 
-function readRegistry(
+/** 解析放置清单 JSON;坏数据一律回退空(注册表是底账,勿手改)。
+ *  导出给 Agent resolver:无副作用查询在注册表对象已存在时复用同一解析 */
+export function readRegistry(
   registry: ISheetObject<{list: string}>,
 ): PlacementEntry[] {
   try {
@@ -600,15 +621,26 @@ export function usePlacementController(project: IProject, sheet: ISheet) {
     [placing, sheet],
   )
 
-  /** 点击库卡片直接落点:跳过幽灵预览,走与 confirmPlacing 相同的落地管线 */
+  /**
+   * 点击库卡片直接落点:跳过幽灵预览,走与 confirmPlacing 相同的落地管线。
+   * 返回 {key, persisted}(2026-10-17,Task 8):Agent models.create 靠
+   * persisted 等挂载完成(completion:mounted);waiter 必须先于
+   * setPendingEntry 创建,挂载链路的 resolve/reject 都按 key 找它。
+   * UI 调用方不 await persisted —— 这里挂 noop catch 兜底,失败告警由
+   * PlacedModelErrorBoundary 负责,不产生 unhandled rejection。
+   */
   const placeLibraryEntryAt = useCallback(
     (entry: ModelEntry, point: {x: number; y: number; z: number}) => {
+      const key = uniquePlacedModelKey(sheet, entry.name)
+      const persisted = createPlacementWaiter(key)
+      persisted.catch(() => {})
       setPendingEntry({
-        key: uniquePlacedModelKey(sheet, entry.name),
+        key,
         libraryEntryId: entry.id,
         position: point,
         pending: true,
       })
+      return {key, persisted}
     },
     [sheet],
   )
@@ -1133,10 +1165,23 @@ function PlacedModelCore({
   const [sheetObject, setSheetObject] = useState<ISheetObject<any> | undefined>(
     undefined,
   )
-  const setObjRef = useCallback((obj: ISheetObject<any> | null) => {
-    objRef.current = obj ?? undefined
-    setSheetObject(obj ?? undefined)
-  }, [])
+  // Agent 运行时登记(2026-10-17,Task 8):objRef 填充即「运行时 SheetObject
+  // 已挂载」信号,models.create 的 resolver 复核与 scene/objects 查询都读
+  // 这份登记;清空/卸载时按 id + 同一对象清理,防过期 cleanup 误删新代次
+  const setObjRef = useCallback(
+    (obj: ISheetObject<any> | null) => {
+      const id = formatSceneObjectId('model', entry.key)
+      const prev = objRef.current
+      objRef.current = obj ?? undefined
+      setSheetObject(obj ?? undefined)
+      if (obj) {
+        registerSceneSheetObject(id, obj)
+      } else {
+        unregisterSceneSheetObject(id, prev)
+      }
+    },
+    [entry.key],
+  )
   // 登记为落点表面:之后的放置可以把模型摞到这个模型上
   const groupRef = useRef<Group>(null!)
   usePlacementSurface(groupRef)
@@ -1239,33 +1284,61 @@ function PlacedModelCore({
     }
   }, [sheetObject, entry.key, instance])
 
-  // animation 属性变化时加载库动画 GLB
+  // animation 属性变化时加载库动画 GLB。加载状态登记进
+  // agent/runtime/animationStatus(animations.getStatus 的唯一数据源,
+  // 不从 props 猜测):开始=loaded:false、成功=loaded:true、失败=error;
+  // cleanup(卸载或 animationId 切换)必须删 key,不留陈旧 loaded。
   useEffect(() => {
     if (!animationId) {
       setClip(null)
       return
     }
     let cancelled = false
+    setAnimationLoadStatus(entry.key, {assetId: animationId, loaded: false})
     const load = async () => {
       const animEntry = await getLibrary().getEntry(animationId)
       if (!animEntry || animEntry.kind !== 'animation') {
-        if (!cancelled) setClip(null)
+        if (!cancelled) {
+          setClip(null)
+          setAnimationLoadStatus(entry.key, {
+            assetId: animationId,
+            loaded: false,
+            error: {
+              code: 'RESOURCE_LOAD_FAILED',
+              message: `动画资产不存在或类型不符: ${animationId}`,
+              retryable: false,
+            },
+          })
+        }
         return
       }
       const url = await getLibrary().getBlobUrl(animEntry.blobId)
       const gltf = await createGLTFLoader().loadAsync(url)
       if (!cancelled) {
         setClip(gltf.animations[0] ?? null)
+        setAnimationLoadStatus(entry.key, {assetId: animationId, loaded: true})
       }
     }
     load().catch((err) => {
       console.warn('[placement] 动画加载失败', err)
-      if (!cancelled) setClip(null)
+      if (!cancelled) {
+        setClip(null)
+        setAnimationLoadStatus(entry.key, {
+          assetId: animationId,
+          loaded: false,
+          error: {
+            code: 'RESOURCE_LOAD_FAILED',
+            message: err instanceof Error ? err.message : String(err),
+            retryable: true,
+          },
+        })
+      }
     })
     return () => {
       cancelled = true
+      clearAnimationLoadStatus(entry.key)
     }
-  }, [animationId])
+  }, [animationId, entry.key])
 
   const [libResolveTick, setLibResolveTick] = useState(0)
   // 旧两字段 → 新 pose 值迁移(spec §9):一个事务(可撤销、经 saaz 同步),
@@ -1474,27 +1547,40 @@ function PlacedModelCore({
     if (!isPending) return
     const obj = objRef.current
     const studio = getStudioSync()
-    if (!obj || !studio) return
-    const registry = getRegistry(sheet)
-    const list = readRegistry(registry)
-    // 已在清单里 = 重做/同步/StrictMode 二次触发,不重复提交
-    if (list.some((e) => e.key === entry.key)) return
-    const scrub = studio.scrub()
-    scrub.capture(({set}) => {
-      const {pending: _pending, ...rest} = entry as PendingPlacementEntry
-      set(registry.props.list, JSON.stringify([...list, rest]))
-      if (sourceType === 'local' && entry.assetId) {
-        set(
-          obj.props.source as any,
-          {
-            type: 'file',
-            id: entry.assetId,
-          } as any,
-        )
+    if (obj && studio) {
+      const registry = getRegistry(sheet)
+      const list = readRegistry(registry)
+      // 已在清单里 = 重做/同步/StrictMode 二次触发,不重复提交
+      if (!list.some((e) => e.key === entry.key)) {
+        const scrub = studio.scrub()
+        scrub.capture(({set}) => {
+          const {pending: _pending, ...rest} = entry as PendingPlacementEntry
+          set(registry.props.list, JSON.stringify([...list, rest]))
+          if (sourceType === 'local' && entry.assetId) {
+            set(
+              obj.props.source as any,
+              {
+                type: 'file',
+                id: entry.assetId,
+              } as any,
+            )
+          }
+        })
+        scrub.commit()
+        onPersisted()
+        // Agent models.create 的 mounted 信号(Task 8):注册表提交 +
+        // pending 清理之后才兑现;waiter 不存在(UI 路径)时是 no-op
+        resolvePlacementPersisted(entry.key)
       }
-    })
-    scrub.commit()
-    onPersisted()
+    }
+    // pending 条目未持久化即卸载(场景拆解等):拒绝 waiter,Agent 侧
+    // 不悬挂;正常路径 waiter 已 settle 并从 Map 删除,这里是 no-op
+    return () => {
+      rejectPlacement(
+        entry.key,
+        new Error(`[placement] 模型 ${entry.key} 未持久化即卸载`),
+      )
+    }
   }, [])
 
   return (
@@ -1544,6 +1630,9 @@ class PlacedModelErrorBoundary extends React.Component<
   }
   componentDidCatch(err: unknown) {
     console.warn(`[placement] 模型 ${this.props.entry.key} 加载失败`, err)
+    // Agent models.create 正等着挂载完成(Task 8):失败必须 reject waiter,
+    // 不能悬挂;UI 路径没有 waiter,rejectPlacement 是 no-op
+    rejectPlacement(this.props.entry.key, err)
   }
   render() {
     return this.state.failed ? null : <PlacedModel {...this.props} />
@@ -1593,18 +1682,28 @@ export function useGizmoMode(): [GizmoMode, (mode: GizmoMode) => void] {
 }
 
 /**
- * 从放置清单里删除一个模型:一次 scrub 提交 = 一步撤销(撤销即模型回来)。
- * theatre 对象本身删不掉(公开 API 没有删除),会留个空壳在大纲里,
- * 刷新后消失——和撤销放置的已知行为一样。FBX 文件本体留在 IndexedDB。
+ * 从放置清单里删除一个模型:单个事务完成 forgetObject + 清单移除 =
+ * 一步撤销(2026-10-19,Task 14 合并;原先只退清单)。
+ * forgetObject 按地址清持久数据(变换/姿势/动画覆盖与轨道,同步到所有
+ * 客户端),撤销一步把清单行和覆盖一起还原;不再残留"同名重放复活旧
+ * 变换"的幽灵数据。theatre 对象本身删不掉(公开 API 没有删除),会留个
+ * 空壳在大纲里,刷新后消失——和撤销放置的已知行为一样。FBX 文件本体
+ * 留在 IndexedDB。
  */
 export function deletePlacement(sheet: ISheet, key: string) {
-  const studio = getStudioSync()
+  const studio = getStudio()
   if (!studio) return
   const registry = getRegistry(sheet)
   const list = readRegistry(registry).filter((e) => e.key !== key)
-  const scrub = studio.scrub()
-  scrub.capture(({set}) => set(registry.props.list, JSON.stringify(list)))
-  scrub.commit()
+  studio.transaction(({set, stateEditors}) => {
+    stateEditors.coreByProject.historic.sheetsById.forgetObject({
+      projectId: sheet.address.projectId,
+      sheetId: sheet.address.sheetId,
+      // 业务 key 跨适配层按不透明字符串传递,此处回到 core 的名义类型
+      objectKey: key as ObjectAddressKey,
+    })
+    set(registry.props.list, JSON.stringify(list))
+  })
 }
 
 /**

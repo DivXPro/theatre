@@ -6,6 +6,14 @@
     "resolveJsonModule": true
   },
   "include": ["src/**/*"],
+  "exclude": [
+    "**/node_modules",
+    "**/.*",
+    "**/xeno",
+    "**/dist",
+    "**/.temp",
+    "src/**/*.e2e.ts"
+  ],
   "references": [
     {"path": "../../packages/camera-studio"},
     {"path": "../../packages/core"},

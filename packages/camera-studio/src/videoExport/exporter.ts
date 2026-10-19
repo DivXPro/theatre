@@ -55,7 +55,9 @@ export function startShotExport(args: {
     encoder.onChunk = (chunk) => {
       writeChain = writeChain.then(() => sink.write(chunk))
     }
-    encoder.start()
+    // 等编码器真正启动('start' 事件)再计时:冷页面 init 实测 400ms+,
+    // 不等就开录,stop() 会抢在 'start' 前,短片段产出 0 字节(2026-10-19)
+    await encoder.start()
     await sleep(150) // 编码器热身,开头少丢帧
     try {
       sequence.position = 0

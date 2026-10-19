@@ -9,7 +9,13 @@ export interface VideoEncoder {
   readonly mimeType: string
   /** 每产出一个数据块回调一次;保证按顺序,且 stop()  resolve 前全部发完 */
   onChunk: ((chunk: Uint8Array) => void) | null
-  start(): void
+  /**
+   * 启动编码;resolve 时 MediaRecorder 的 'start' 事件已落地(编码后端
+   * 真正就绪)。必须 await:软件渲染/冷页面下 init 实测可达 400ms+,不等
+   * 就开录会让 stop() 抢在 'start' 之前——短片段整段丢失、产出 0 字节
+   * (2026-10-19,E2E 实测时间线)。启动前 'error' 事件 → reject
+   */
+  start(): Promise<void>
   /** 停止编码;resolve 时最后一个块已经通过 onChunk 发出 */
   stop(): Promise<void>
 }
@@ -55,7 +61,20 @@ export function createMediaRecorderEncoder(
     mimeType,
     onChunk: null,
     start() {
-      recorder.start(options.timesliceMs ?? 1000)
+      // 等 'start' 事件再放行:recorder.start() 只是发起,后端异步初始化
+      return new Promise<void>((resolve, reject) => {
+        recorder.addEventListener('start', () => resolve(), {once: true})
+        recorder.addEventListener(
+          'error',
+          (event) =>
+            reject(
+              (event as ErrorEvent).error ??
+                new Error('MediaRecorder 启动失败'),
+            ),
+          {once: true},
+        )
+        recorder.start(options.timesliceMs ?? 1000)
+      })
     },
     stop() {
       return new Promise((resolve) => {

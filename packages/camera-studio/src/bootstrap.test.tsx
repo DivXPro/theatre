@@ -32,8 +32,11 @@ import type {WritableLibrarySource} from './assetLibrary/source'
 
 // ── 替身盒子(doMock 工厂闭包共享;beforeEach 复位) ─────────────
 const initSpy = jest.fn(async (_opts?: unknown) => {})
+/** Scene sheet 替身:agent runtime 构造期只存引用,空对象即可 */
+const fakeSheet = {fakeSheet: true}
 const getProjectSpy = jest.fn((_name?: string, _opts?: unknown) => ({
   fake: true,
+  sheet: jest.fn(() => fakeSheet),
 }))
 // studio.ui 替身:hide/restore 翻转 isHidden(与真 UI 行为一致;
 // bootstrap 仅在 isHidden 时才 restore)
@@ -59,6 +62,35 @@ const stateUnsubSpy = jest.fn()
 const onChangeSpy = jest.fn(
   (_pointer: unknown, _cb: (v: unknown) => void) => stateUnsubSpy,
 )
+/** agent runtime 的 getStudio 惰性探针(构造期不调,替身即可) */
+const getStudioSyncSpy = jest.fn(() => undefined)
+// ── Agent API 门面替身(Task 15)──────────────────────────────
+// bootstrap 静态引入 agent/api 会拉起整条命令图(PlacementManager/
+// CameraPath/videoExport…),与本文件的极简 core 替身不兼容;会话接线
+// (activate/dispose 调用序)在这里用桩断言,真门面行为由 api.test.tsx 覆盖
+const fakeApiObject = {fakeApi: true}
+const activateApiSpy = jest.fn()
+const disposeApiSpy = jest.fn()
+const getApiSpy = jest.fn(() => fakeApiObject)
+/** 会话注册表替身(桥接接线断言用;无桥接配置时 bootstrap 不读它) */
+const fakeRegistryObject = {fakeRegistry: true}
+const getRegistrySpy = jest.fn(() => fakeRegistryObject)
+jest.doMock('./agent/api', () => ({
+  __esModule: true,
+  getCameraStudioApi: getApiSpy,
+  activateCameraStudioApi: activateApiSpy,
+  disposeCameraStudioApi: disposeApiSpy,
+  getActiveAgentRegistry: getRegistrySpy,
+}))
+// ── 桥接客户端替身(Task 6)──────────────────────────────────
+// 真客户端会拉起 WebSocket;接线契约(配置门槛、启动/关闭时序)用桩断言,
+// 客户端自身行为由 bridgeClient.test.ts 覆盖
+const bridgeClientCloseSpy = jest.fn()
+const createBridgeClientSpy = jest.fn(() => ({close: bridgeClientCloseSpy}))
+jest.doMock('./agent/bridgeClient', () => ({
+  __esModule: true,
+  createAgentBridgeClient: createBridgeClientSpy,
+}))
 const registerSpy = jest.fn()
 const unregisterSpy = jest.fn()
 /** 模拟 core 的 initState:init 首次调用翻转(与真 core 行为一致) */
@@ -86,6 +118,7 @@ jest.doMock('@dreamerbird/core', () => ({
   default: {init: initSpy},
   getProject: getProjectSpy,
   getStudio: () => ({ui: uiBox, initialized: initializedBox.promise}),
+  getStudioSync: getStudioSyncSpy,
   onChange: onChangeSpy,
 }))
 jest.doMock('@dreamerbird/core/initState', () => ({
@@ -136,6 +169,13 @@ beforeEach(async () => {
   uiBox.isHidden = false
   initializedBox.promise = Promise.resolve()
   setLeftStripHiddenSpy.mockClear()
+  getStudioSyncSpy.mockClear()
+  activateApiSpy.mockClear()
+  disposeApiSpy.mockClear()
+  getApiSpy.mockClear()
+  getRegistrySpy.mockClear()
+  createBridgeClientSpy.mockClear()
+  bridgeClientCloseSpy.mockClear()
   // react/react-dom 与被测模块同注册表,见文件头注释
   React = await import('react')
   ReactDOM = await import('react-dom/client')
@@ -212,6 +252,76 @@ test('2. 卸载:编辑器注销、state 订阅断开、ui.hide;重挂 ui.restore
   await flush()
   expect(restoreSpy).toHaveBeenCalled()
   await h2.unmount()
+})
+
+// 2b. Agent API 会话接线(Task 15):挂载激活、卸载先拆 API
+test('2b. Agent API:挂载激活门面(exposeGlobal 透传),卸载先 dispose API 再做既有清理', async () => {
+  const h = hookHost({agent: {exposeGlobal: true}})
+  await h.mount()
+  expect(h.result.current?.ready).toBe(true)
+  // 激活一次;第二参透传 exposeGlobal;runtime 持有 fakeSheet
+  expect(activateApiSpy).toHaveBeenCalledTimes(1)
+  const [runtime, opts] = activateApiSpy.mock.calls[0] as any[]
+  expect(opts).toEqual({exposeGlobal: true})
+  expect(runtime.sheet).toBe(fakeSheet)
+  // handle.api 与 BootCtx 同源(模块级单例门面)
+  expect(h.result.current?.api).toBe(fakeApiObject)
+  await h.unmount()
+  await flush()
+  // 拆解顺序:dispose API 先于编辑器注销(挂载 waiter/在途任务先被拒)
+  expect(disposeApiSpy).toHaveBeenCalledTimes(1)
+  expect(disposeApiSpy.mock.invocationCallOrder[0]).toBeLessThan(
+    unregisterSpy.mock.invocationCallOrder[0],
+  )
+})
+
+// 2c. exposeGlobal 缺省关闭:浏览器默认不挂 window 全局
+test('2c. Agent API:未配置 agent.exposeGlobal 时以 false 激活', async () => {
+  const h = hookHost({})
+  await h.mount()
+  expect(activateApiSpy).toHaveBeenCalledTimes(1)
+  expect((activateApiSpy.mock.calls[0] as any[])[1]).toEqual({
+    exposeGlobal: false,
+  })
+  await h.unmount()
+})
+
+// 2d. 桥接客户端接线(Task 6):显式配置才启动;拆解先关客户端再 dispose API
+test('2d. Agent 桥接:agent.bridge 显式配置才启动客户端;拆解顺序 close → dispose API', async () => {
+  const bridge = {
+    url: 'ws://127.0.0.1:43110',
+    token: 't',
+    httpUrl: 'http://127.0.0.1:43110',
+  }
+  const h = hookHost({agent: {bridge}})
+  await h.mount()
+  // 启动在 API 激活之后,使用会话自身注册表与 runtime
+  expect(createBridgeClientSpy).toHaveBeenCalledTimes(1)
+  const deps = (createBridgeClientSpy.mock.calls[0] as any[])[0]
+  expect(deps.config).toBe(bridge)
+  expect(deps.registry).toBe(fakeRegistryObject)
+  expect(deps.runtime).toBe((activateApiSpy.mock.calls[0] as any[])[0])
+  expect(createBridgeClientSpy.mock.invocationCallOrder[0]).toBeGreaterThan(
+    activateApiSpy.mock.invocationCallOrder[0],
+  )
+  await h.unmount()
+  await flush()
+  // 拆解:先关桥接客户端(停重连/退订任务),再 dispose API
+  expect(bridgeClientCloseSpy).toHaveBeenCalledTimes(1)
+  expect(bridgeClientCloseSpy.mock.invocationCallOrder[0]).toBeLessThan(
+    disposeApiSpy.mock.invocationCallOrder[0],
+  )
+})
+
+// 2e. 桥接缺省不连:未配置 agent.bridge 时客户端不启动、拆解不涉及
+test('2e. Agent 桥接:未配置 agent.bridge 时不启动客户端', async () => {
+  const h = hookHost({})
+  await h.mount()
+  expect(createBridgeClientSpy).not.toHaveBeenCalled()
+  expect(getRegistrySpy).not.toHaveBeenCalled()
+  await h.unmount()
+  await flush()
+  expect(bridgeClientCloseSpy).not.toHaveBeenCalled()
 })
 
 // 3. 重挂幂等

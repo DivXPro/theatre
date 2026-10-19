@@ -31,12 +31,22 @@ import {
   detachAnchorMesh,
   localOffsetForParent,
   needsParentEstablish,
+  registerAnchorHome,
   registerAnchorObject,
   resolveAnchorParent,
   shouldClearMissingParent,
   subscribeTargetRegistry,
 } from './aimTargets'
 import {useObjPropScalar} from './ShotCamera'
+import {formatSceneObjectId} from './agent/objectIds'
+import {
+  registerSceneSheetObject,
+  unregisterSceneSheetObject,
+} from './agent/runtime/objectRuntime'
+import {
+  notifyAnchorReady,
+  rejectAnchorMount,
+} from './agent/runtime/cameraLifecycle'
 
 /**
  * 「父级」下拉属性配置(模块级,按 key 缓存,对齐 ShotCamera 的
@@ -75,6 +85,12 @@ export function Anchors({
   const anchorKeys = useAnchorsList(sheet)
   // 锚点网格的"娘家":r3f 原挂载点,解绑/父级消失时挂回这里
   const homeRef = useRef<React.ElementRef<'group'>>(null!)
+  // 登记娘家给命令侧(anchors.clearParent 解绑时同步挂回,F1 修复:
+  // 定格折进命令事务后,包装器应用新 position 前节点必须已在正确父级下)
+  useEffect(() => {
+    registerAnchorHome(homeRef.current)
+    return () => registerAnchorHome(null)
+  }, [])
   return (
     <group ref={homeRef}>
       {anchorKeys.map((key) => (
@@ -132,8 +148,18 @@ function AnchorObject({
   const axesGeo = useMemo(createAnchorAxesGeometry, [])
   useEffect(() => () => axesGeo.dispose(), [axesGeo])
   const dotRef = useRef<Mesh>(null!)
+  // Agent 运行时登记(2026-10-17,Task 10):objRef 填充即「锚点
+  // SheetObject 已挂载」信号,anchors.create 的 resolver 复核与
+  // scene/objects 查询都读这份登记;清空/卸载时按 id + 同一对象清理
   const setObjRef = (obj: ISheetObject<any> | null) => {
+    const id = formatSceneObjectId('anchor', anchorKey)
+    const prev = objRef.current
     objRef.current = obj ?? undefined
+    if (obj) {
+      registerSceneSheetObject(id, obj)
+    } else {
+      unregisterSceneSheetObject(id, prev)
+    }
   }
 
   // 选中高亮:只有轴心圆点变色(浅蓝→橙),轴线恒定普通色。对齐
@@ -154,16 +180,21 @@ function AnchorObject({
     invalidate()
   }, [selected])
 
-  // 新锚点落地:消费位置种子(顶栏添加时从导演视角捕获)
+  // 新锚点落地:消费位置种子(顶栏添加时从导演视角捕获)。
+  // 结束时通知 Agent 挂载等待者(anchors.create 的 completion:mounted);
+  // 没有 seed 的恢复对象同样通知,不重复写值
   useLayoutEffect(() => {
     const seed = consumeAnchorSeed(anchorKey)
     const obj = objRef.current
-    if (!seed || !obj) return
-    const studio = getStudioSync()
-    if (!studio) return
-    const scrub = studio.scrub()
-    scrub.capture(({set}) => set(obj.props.position, seed.position))
-    scrub.commit()
+    if (seed && obj) {
+      const studio = getStudioSync()
+      if (studio) {
+        const scrub = studio.scrub()
+        scrub.capture(({set}) => set(obj.props.position, seed.position))
+        scrub.commit()
+      }
+    }
+    notifyAnchorReady(anchorKey)
   }, [anchorKey])
 
   // 登记运行时对象(瞄准解析 anchor:)与选中 gizmo;卸载清理
@@ -179,7 +210,15 @@ function AnchorObject({
       // 已绑到骨骼/模型上的锚点被删时,必须显式脱离当前父级(捕获值),
       // 否则网格残留在场景里,可见不可选,绑骨骼上还会跟动画
       detachAnchorMesh(node)
+      // Agent 登记按 id + 同一对象清理;挂载等待未兑现即卸载时拒绝,
+      // anchors.create 的等待方不悬挂(UI 路径无 waiter,no-op)
+      const prev = objRef.current
       objRef.current = undefined
+      unregisterSceneSheetObject(formatSceneObjectId('anchor', anchorKey), prev)
+      rejectAnchorMount(
+        anchorKey,
+        new Error(`锚点挂载未完成即卸载: ${anchorKey}`),
+      )
     }
   }, [anchorKey])
   // 锚点有自己的选中高亮(轴心圆点变橙),不再画包围盒
@@ -230,11 +269,25 @@ function AnchorObject({
       // 解绑(下拉选「无」/看护清除后的跟随):挂回娘家,属性=世界坐标
       const world = node.getWorldPosition(tmpWorld.current).clone()
       homeRef.current?.add(node)
-      const scrub = studio.scrub()
-      scrub.capture(({set}) =>
-        set(obj.props.position, {x: world.x, y: world.y, z: world.z}),
-      )
-      scrub.commit()
+      // 父级锚点被删时,parent 解绑 + 世界定格已折进删除的同一事务
+      // (anchorsRegistry.removeAnchor 的 children 参数):持久值已等于
+      // 此刻世界坐标,原样重写会多出一个同值撤销步骤(撤销陷阱),
+      // 同值跳过提交,只推进游标;正常解绑(持久值还是旧局部偏移)
+      // 不受影响照常定格
+      const persisted = (val(obj.props.position) as
+        | {x: number; y: number; z: number}
+        | undefined) ?? {x: 0, y: 0, z: 0}
+      const samePosition =
+        Math.abs(persisted.x - world.x) < 1e-6 &&
+        Math.abs(persisted.y - world.y) < 1e-6 &&
+        Math.abs(persisted.z - world.z) < 1e-6
+      if (!samePosition) {
+        const scrub = studio.scrub()
+        scrub.capture(({set}) =>
+          set(obj.props.position, {x: world.x, y: world.y, z: world.z}),
+        )
+        scrub.commit()
+      }
       prevParentRef.current = ''
       boundParentRef.current = null
       return
@@ -249,11 +302,23 @@ function AnchorObject({
     newParentObj.add(node)
     node.updateWorldMatrix(true, false)
     const local = localOffsetForParent(world, newParentObj, tmpWorld.current)
-    const scrub = studio.scrub()
-    scrub.capture(({set}) =>
-      set(obj.props.position, {x: local.x, y: local.y, z: local.z}),
-    )
-    scrub.commit()
+    // 同值守卫(与上面解绑路径同款):anchors.setParent 命令已把局部偏移
+    // 定格折进写 parent 的同一事务并同步换父时,持久值==此处换算结果,
+    // 原样重写会多出一个同值撤销步骤(撤销陷阱)——跳过提交,只推进游标
+    const persisted = (val(obj.props.position) as
+      | {x: number; y: number; z: number}
+      | undefined) ?? {x: 0, y: 0, z: 0}
+    const samePosition =
+      Math.abs(persisted.x - local.x) < 1e-6 &&
+      Math.abs(persisted.y - local.y) < 1e-6 &&
+      Math.abs(persisted.z - local.z) < 1e-6
+    if (!samePosition) {
+      const scrub = studio.scrub()
+      scrub.capture(({set}) =>
+        set(obj.props.position, {x: local.x, y: local.y, z: local.z}),
+      )
+      scrub.commit()
+    }
     // 游标推进放在成功路径之后:解析失败时下次提交还会走到这里重试,
     // 不会出现"推进了却什么都没做"的假成功
     prevParentRef.current = parentId

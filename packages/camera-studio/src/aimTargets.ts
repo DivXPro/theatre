@@ -6,8 +6,8 @@
  * 解析分两层:纯函数 resolveTargetObject(id, lookup) 供测试注入;
  * resolveAimTarget / resolveAnchorParent 读运行时登记表,供帧驱动调用。
  */
-import {Matrix4} from 'three'
-import type {Object3D, Vector3} from 'three'
+import {Matrix4, Vector3} from 'three'
+import type {Object3D} from 'three'
 import {translate} from '@dreamerbird/studio/i18n'
 import {val} from '@dreamerbird/core'
 import {privateAPI} from '@dreamerbird/core/privateAPIs'
@@ -24,8 +24,9 @@ import {
   getShotCameraObjects,
   readCameraEntries,
 } from './cameraRegistry'
-import type {ISheet} from '@dreamerbird/core'
+import type {ISheet, ISheetObject} from '@dreamerbird/core'
 import {getAnchorsRegistry, readAnchorKeys} from './anchorsRegistry'
+import type {AnchorChildReset} from './anchorsRegistry'
 
 export type TargetKind = 'anchor' | 'bone' | 'model' | 'camera'
 
@@ -136,6 +137,18 @@ export function registerAnchorObject(key: string, obj: Object3D | null): void {
 
 export function getAnchorObjects(): ReadonlyMap<string, Object3D> {
   return anchorObjects
+}
+
+/**
+ * 锚点网格的「娘家」挂载点(Anchors 组件的 home group):解绑/父级消失
+ * 时挂回这里。命令侧(anchors.clearParent)同步换父也需要它,故随
+ * Anchors 挂载登记进模块级(单页单场景,同 anchorObjects)。
+ */
+let anchorHome: Object3D | null = null
+
+/** Anchors 组件挂载时登记 home group;卸载清 null */
+export function registerAnchorHome(obj: Object3D | null): void {
+  anchorHome = obj
 }
 
 export function defaultTargetLookup(): TargetLookup {
@@ -291,6 +304,51 @@ export function localOffsetForParent(
 }
 
 /**
+ * 命令侧父级切换的定格计划(2026-10-19,Agent API F1 修复):
+ * anchors.setParent/clearParent 把坐标定格折进写 parent 的同一事务,
+ * 否则 AnchorObject 的看护 effect 会在属性变化后再补一笔定格提交——
+ * 两步撤销,undo 一次只回属性不回定格,锚点跳变(撤销陷阱,同
+ * removeAnchor/removePathFromRegistry 注释)。
+ *
+ * 同步读当前世界坐标,算出换父后 position 属性应取值(绑定=新父局部
+ * 偏移;解绑=世界坐标)。返回的 reparent 必须在事务提交后、同一调用栈
+ * 内执行:抢在包装器应用新 position 与看护 effect 之前完成换父,包装器
+ * 应用落在新父之下、世界坐标不变,看护的同值守卫看到 persisted==定格值
+ * 即跳过提交(只推进游标)。
+ *
+ * 返回 null = 锚点网格未登记(未挂载)或父级目标运行时对象未就绪
+ * (异步加载中)——调用方按 INVALID_STATE 拒绝(可重试),不写半悬挂
+ * 状态。
+ */
+export function planAnchorParentFreeze(
+  key: string,
+  parentId: string,
+): {position: {x: number; y: number; z: number}; reparent: () => void} | null {
+  const node = anchorObjects.get(key)
+  if (!node) return null
+  const world = node.getWorldPosition(new Vector3())
+  if (parentId === '') {
+    const home = anchorHome
+    if (!home) return null
+    return {
+      position: {x: world.x, y: world.y, z: world.z},
+      reparent: () => {
+        home.add(node)
+      },
+    }
+  }
+  const parentObj = resolveAnchorParent(parentId)
+  if (!parentObj) return null
+  const local = localOffsetForParent(world, parentObj, new Vector3())
+  return {
+    position: {x: local.x, y: local.y, z: local.z},
+    reparent: () => {
+      parentObj.add(node)
+    },
+  }
+}
+
+/**
  * 锚点卸载时脱离命令式父级(骨骼/模型上的锚点被删的清理)。
  * fiber v9 卸载按 JSX 父实例 remove,对换父后的网格是 no-op,不脱离会
  * 残留在场景里,可见不可选,绑骨骼上还会跟随动画。
@@ -327,6 +385,40 @@ export function shouldClearMissingParent(
   resolvable: boolean,
 ): boolean {
   return parentId !== '' && boundParentId === parentId && !resolvable
+}
+
+/**
+ * 删除锚点前收集以它为父级的子锚点(连同世界定格),交给
+ * anchorsRegistry.removeAnchor 折进删除的同一事务(同
+ * collectBoundCameraResets 对路径删除的作用;撤销陷阱见
+ * pathRegistry.removePathFromRegistry 注释)。
+ *
+ * 只探测不创建:子锚点对象经内部对象表 peek(getObject 不创建),
+ * 世界定格读运行时登记表(anchorObjects)的节点。节点缺失(未挂载)
+ * 的子锚点跳过——局部偏移没有世界定格可写,持久绑定留给挂载后的
+ * 重试/看护处理。
+ */
+export function collectAnchorChildResets(
+  sheet: ISheet,
+  parentKey: string,
+): AnchorChildReset[] {
+  const parentId = makeTargetId('anchor', parentKey)
+  const resets: AnchorChildReset[] = []
+  for (const key of readAnchorKeys(getAnchorsRegistry(sheet))) {
+    if (key === parentKey) continue
+    const node = anchorObjects.get(key)
+    if (!node) continue
+    const internal = (privateAPI(sheet) as any).getObject(key)
+    const obj = (internal?.publicApi ?? undefined) as
+      | ISheetObject<any>
+      | undefined
+    if (!obj) continue
+    const parent = (val(obj.props.parent) as string | undefined) ?? ''
+    if (parent !== parentId) continue
+    const world = node.getWorldPosition(new Vector3())
+    resets.push({obj, freeze: {x: world.x, y: world.y, z: world.z}})
+  }
+  return resets
 }
 
 /** 从放置注册表反查模型显示名;放置注册表未建好时回退原 key */

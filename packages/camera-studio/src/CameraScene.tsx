@@ -69,13 +69,14 @@ import {
 } from './menuModel'
 import {TopToolbar} from './TopToolbar'
 import {Anchors} from './Anchors'
-import {setAimOptionsSheet} from './aimTargets'
+import {collectAnchorChildResets, setAimOptionsSheet} from './aimTargets'
 import {
   addAnchorToRegistry,
   nextAnchorKey,
   removeAnchor,
   useAnchorsList,
 } from './anchorsRegistry'
+import type {AnchorSeed} from './anchorsRegistry'
 import {PipCameraSelector} from './PipCameraSelector'
 import {usePipBottom} from './pipLayout'
 import {bindUndoShortcuts, isInsideStudioUi} from './undoShortcuts'
@@ -89,9 +90,11 @@ import {
   nextCameraEntry,
   readCameraEntries,
   removeCamera,
+  resolveActiveCamera,
   useCamerasList,
 } from './cameraRegistry'
-import type {CameraEntry} from './cameraRegistry'
+import type {CameraEntry, CameraSeed} from './cameraRegistry'
+import type {GizmoMode} from './PlacementManager'
 import {
   addPathPoint,
   CameraPath,
@@ -115,15 +118,25 @@ import {
 } from './pathRegistry'
 import type {BoundCameraReset} from './pathRegistry'
 import {resolveBoundPathKey} from './pathBinding'
+import {deletePathDomain} from './agent/pathCommands'
+import {formatSceneObjectId} from './agent/objectIds'
+import {getSceneSheetObject} from './agent/runtime/objectRuntime'
+import type {SceneObjectKind} from './agent/types'
+import {bindCameraStudioSceneHandlers} from './agent/api'
+import type {AgentSceneRuntimeHandlers} from './agent/runtime'
+import {registerDirectorView} from './agent/runtime/directorView'
+import type {DirectorViewController} from './agent/runtime/directorView'
 import {findFreeSpot, presetPlacement} from './pathPresets'
 import type {PathPreset} from './pathPresets'
 import {PathPresetDropRig} from './PathPresetDropRig'
 import {listSinks} from './videoExport/sinks'
 import type {ExportSink} from './videoExport/sinks'
-import {startShotExport} from './videoExport/exporter'
 import type {ShotExportHandle} from './videoExport/exporter'
+import {
+  createSceneExportController,
+  registerSceneExportController,
+} from './agent/runtime/exportRuntime'
 import type {AnimationEntry, ModelEntry, PoseEntry} from './assetLibrary/types'
-import {capturePose} from './assetLibrary/pose'
 import {rigIdOf, collectBoneNames} from './assetLibrary/rig'
 import {
   cameraOutlineMenuExtensionId,
@@ -154,7 +167,9 @@ import {
   getPoseKeyframeCount,
   setPoseValue,
   writePoseKeyframe,
+  clearPoseValue,
 } from './poseMode/poseTrack'
+import {savePoseFromInstance} from './poseMode/savePose'
 import {parsePoseValue, serializeLibPose} from './poseMode/poseValue'
 import {isPoseExitGuardedTarget} from './poseMode/poseExitGuard'
 import {poseStatusText} from './poseStatusText'
@@ -229,6 +244,14 @@ function Model({url, selectLocked}: {url: string; selectLocked?: boolean}) {
     </group>
   )
 }
+
+/**
+ * 导演视角初始机位/瞄准点:PerspectiveCamera/Target 的 JSX position 与
+ * Agent view.reset(MainOrbitControls 登记的导演控制器)同源,改一处
+ * 两处一致。
+ */
+const DIRECTOR_HOME_CAMERA_POSITION: [number, number, number] = [0, 0, 16]
+const DIRECTOR_HOME_TARGET_POSITION: [number, number, number] = [0, 0, 0]
 
 /**
  * 主画面的视角控制,操作方式与 Blender 默认键位一致:
@@ -442,6 +465,84 @@ function MainOrbitControls({
       element.removeEventListener('wheel', onWheel, {capture: true} as any)
   }, [controls])
 
+  // Agent view.* 导演视角命令(Task 12):把 orbit/pan/dolly/reset 登记到
+  // directorView 模块表。四个操作都复用拖拽的事件流(start → 改机位/瞄准点
+  // → update → end),写回 theatre 的 scrub 逻辑随之复用;新位置先算好再
+  // 派生事件,零增量不产生空 scrub(同触控板 wheel 处理)。cleanup 由
+  // registerDirectorView 的同引用校验保证只解绑自己这一代。
+  useLayoutEffect(() => {
+    if (!controls) return
+    const spherical = new Spherical()
+    const offset = new Vector3()
+    const panOffset = new Vector3()
+    const homeCamera = new Vector3()
+    const EPS = 0.000001
+
+    const controller: DirectorViewController = {
+      orbit({deltaTheta, deltaPhi}) {
+        offset.copy(controls.object.position).sub(controls.target)
+        spherical.setFromVector3(offset)
+        spherical.theta += deltaTheta
+        spherical.phi += deltaPhi
+        spherical.phi = Math.max(
+          controls.minPolarAngle + EPS,
+          Math.min(controls.maxPolarAngle - EPS, spherical.phi),
+        )
+        offset.setFromSpherical(spherical).add(controls.target)
+        if (offset.distanceToSquared(controls.object.position) < EPS) return
+        controls.dispatchEvent({type: 'start'})
+        controls.object.position.copy(offset)
+        controls.update()
+        controls.dispatchEvent({type: 'end'})
+      },
+      pan({deltaX, deltaY}) {
+        const camera = controls.object
+        panOffset
+          .setFromMatrixColumn(camera.matrix, 0)
+          .multiplyScalar(deltaX)
+          .add(
+            offset.setFromMatrixColumn(camera.matrix, 1).multiplyScalar(deltaY),
+          )
+        if (panOffset.lengthSq() < EPS) return
+        controls.dispatchEvent({type: 'start'})
+        camera.position.add(panOffset)
+        controls.target.add(panOffset)
+        controls.update()
+        controls.dispatchEvent({type: 'end'})
+      },
+      dolly({delta}) {
+        offset.copy(controls.object.position).sub(controls.target)
+        const length = offset.length()
+        // 正值 = 靠近瞄准点;不小于轨道最小距离(兜底 0.01 防与瞄准点重合)
+        const next = Math.max(controls.minDistance || 0.01, length - delta)
+        if (Math.abs(next - length) < EPS) return
+        controls.dispatchEvent({type: 'start'})
+        controls.object.position.copy(
+          offset.setLength(next).add(controls.target),
+        )
+        controls.update()
+        controls.dispatchEvent({type: 'end'})
+      },
+      reset() {
+        const camera = controls.object
+        const atRest =
+          camera.position.distanceToSquared(
+            homeCamera.set(...DIRECTOR_HOME_CAMERA_POSITION),
+          ) < EPS &&
+          controls.target.distanceToSquared(
+            offset.set(...DIRECTOR_HOME_TARGET_POSITION),
+          ) < EPS
+        if (atRest) return
+        controls.dispatchEvent({type: 'start'})
+        camera.position.set(...DIRECTOR_HOME_CAMERA_POSITION)
+        controls.target.set(...DIRECTOR_HOME_TARGET_POSITION)
+        controls.update()
+        controls.dispatchEvent({type: 'end'})
+      },
+    }
+    return registerDirectorView(controller)
+  }, [controls])
+
   return (
     <OrbitControls
       ref={setControls}
@@ -641,6 +742,46 @@ function GroundGrid() {
 }
 
 /**
+ * 添加相机的默认取景种子(2026-10-17,Task 10 抽成纯函数):
+ * 新机位/朝向都取当前导演视角(用户正看着的画面);无导演相机时无种子
+ * (组件按 theatre 属性默认值落地)。UI 顶栏「添加相机」与 Agent
+ * cameras.create(fromCurrentView) 的 Scene Runtime 绑定共用。
+ */
+export function captureCameraSeed(
+  mainCam: ISheetObject<any> | undefined,
+): CameraSeed | undefined {
+  if (!mainCam) return undefined
+  return {
+    position: val(mainCam.props.position) as CameraSeed['position'],
+    rotation: val(mainCam.props.rotation) as CameraSeed['rotation'],
+  }
+}
+
+/**
+ * 添加锚点的默认落点(2026-10-17,Task 10 抽成纯函数):
+ * 落在当前导演视角前方约 5 单位(导演相机 -Z 前方,three 相机朝向约定);
+ * 无导演相机退场景中心上方。UI 顶栏「添加锚点」与 Agent
+ * anchors.create(缺省 position)的 Scene Runtime 绑定共用。
+ */
+export function captureAnchorSeed(
+  mainCam: ISheetObject<any> | undefined,
+): AnchorSeed {
+  if (!mainCam) return {position: {x: 0, y: 1, z: 0}}
+  const p = val(mainCam.props.position) as {x: number; y: number; z: number}
+  const r = val(mainCam.props.rotation) as {x: number; y: number; z: number}
+  const forward = new Vector3(0, 0, -1).applyEuler(
+    new Euler(r.x, r.y, r.z, 'XYZ'),
+  )
+  return {
+    position: {
+      x: p.x + forward.x * 5,
+      y: p.y + forward.y * 5,
+      z: p.z + forward.z * 5,
+    },
+  }
+}
+
+/**
  * 相机场景组件(spec §3 宿主唯一渲染面,2026-10-12 由 App 改名而来):
  * project 由宿主经 useCameraStudio 的 sceneProps 注入(bootstrap 内解析,
  * 字符串/IProject 实例皆由配置侧处理),组件内不再 getProject。
@@ -665,8 +806,9 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
     return refs
   }
   // 每个锚点一个 objRef(多锚点:单对 ref 会被 map 里的实例互相覆盖)。
-  // CameraScene 持有而非组件自持:右键删除时要经它取到对象传给 removeAnchor
-  // 做真删(forgetObject 清持久数据,对齐相机)
+  // CameraScene 持有而非组件自持:删除后的 ref slot 清理由下面的看护
+  // effect 按注册表清单扫(真删本身走 anchorsRegistry.removeAnchor,
+  // forgetObject 按地址清持久数据,不再依赖这里的对象句柄)
   const anchorRefsMapRef = useRef(
     new Map<string, MutableRefObject<ISheetObject<any> | undefined>>(),
   )
@@ -708,11 +850,10 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
     window.addEventListener('mousemove', onMove)
     return () => window.removeEventListener('mousemove', onMove)
   }, [pipBottom])
-  // 视频导出:进行中的导出句柄 / 导出前的视角(导完恢复)
+  // 视频导出:进行中的导出句柄由场景导出控制器(agent/runtime/exportRuntime)
+  // 同步进来(Esc 取消/相机被删中止/停止按钮共用);导出前的视角由控制器恢复
   const [exporting, setExporting] = useState(false)
   const exportHandleRef = useRef<ShotExportHandle | null>(null)
-  const prevShotViewRef = useRef(false)
-  const pendingExportSinkRef = useRef<ExportSink | null>(null)
 
   // project 来自 props(T9):宿主经 sceneProps 注入,bootstrap 已解析
   const sheet = project.sheet('Scene')
@@ -725,9 +866,9 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
   const anchors = useAnchorsList(sheet)
   // 活动相机:画中画/镜头视角/导出只对它生效(右键「查看此镜头」= 设活动)。
   // 持久化没必要(session 态);key 失效(被删)时顺位回退清单第一台
+  // (resolveActiveCamera,Task 14 抽纯函数,Agent 侧共用同一规则)
   const [activeCameraKey, setActiveCameraKey] = useState<string | null>(null)
-  const activeCamera =
-    cameras.find((e) => e.cameraKey === activeCameraKey) ?? cameras[0] ?? null
+  const activeCamera = resolveActiveCamera(cameras, activeCameraKey)
 
   // 相机被删(含对端同步):清掉它的 ref slot,不留失效引用
   useEffect(() => {
@@ -749,60 +890,19 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
     ? getShotRefs(activeCamera.cameraKey)
     : undefined
 
-  // 添加相机:新机位/朝向都取当前导演视角(用户正看着的画面)
+  // 添加相机:取景种子由 captureCameraSeed 从当前导演视角捕获
   const addCamera = useCallback(() => {
     const entry = nextCameraEntry(sheet, cameras)
-    const mainCam = cameraObjRef.current
-    const seed = mainCam
-      ? {
-          position: val(mainCam.props.position),
-          rotation: val(mainCam.props.rotation),
-        }
-      : undefined
-    addCameraToRegistry(sheet, entry, seed)
+    addCameraToRegistry(sheet, entry, captureCameraSeed(cameraObjRef.current))
     // 新相机落地即活动(用户刚加的就是他想看的)
     setActiveCameraKey(entry.cameraKey)
   }, [cameras, sheet])
 
-  // 添加锚点:落在当前导演视角前方约 5 单位(无导演相机退场景中心上方)
+  // 添加锚点:落点由 captureAnchorSeed 计算(导演视角前方约 5 单位)
   const addAnchor = useCallback(() => {
     const key = nextAnchorKey(anchors)
-    const mainCam = cameraObjRef.current
-    const pos = mainCam
-      ? (() => {
-          const p = val(mainCam.props.position) as {
-            x: number
-            y: number
-            z: number
-          }
-          const r = val(mainCam.props.rotation) as {
-            x: number
-            y: number
-            z: number
-          }
-          // 导演相机 -Z 前方 5 单位(three 相机朝向约定)
-          const forward = new Vector3(0, 0, -1).applyEuler(
-            new Euler(r.x, r.y, r.z, 'XYZ'),
-          )
-          return {
-            x: p.x + forward.x * 5,
-            y: p.y + forward.y * 5,
-            z: p.z + forward.z * 5,
-          }
-        })()
-      : {x: 0, y: 1, z: 0}
-    addAnchorToRegistry(sheet, key, {position: pos})
+    addAnchorToRegistry(sheet, key, captureAnchorSeed(cameraObjRef.current))
   }, [anchors, sheet])
-
-  // 删除相机(右键菜单):真删——持久数据清掉、大纲行消失;
-  // 活动相机被删时 activeCamera 推导自动顺位给清单第一台
-  const deleteCamera = useCallback(
-    (entry: CameraEntry) => {
-      const refs = shotRefsMapRef.current.get(entry.cameraKey)
-      removeCamera(sheet, entry, {camera: refs?.camera.current})
-    },
-    [sheet],
-  )
 
   // 大纲右键删除走宿主注册表删除流程(与画布右键同一套真删);
   // extend 按 id 幂等覆盖,重复执行安全
@@ -813,10 +913,10 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
     })
   }, [])
 
-  // 每渲染刷新菜单上下文:注册表清单 + 删除处理器(含集合名单清理)。
+  // 每渲染刷新菜单上下文:注册表清单 + 删除处理器(领域删除 + 会话
+  // 清理都走 afterSceneObjectDeleted 抽出的共用实现,与画布右键一致)。
   // CameraScene 不卸载;卸载时清 ctx,防止悬空 sheet 引用
   useEffect(() => {
-    const {projectId, sheetId, sheetInstanceId} = sheet.address
     setCameraOutlineMenuCtx({
       sheet,
       cameras,
@@ -826,45 +926,17 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
       handlers: {
         removeCamera: (entry) => {
           deleteCamera(entry)
-          pruneObjectFromOutlineCollections(
-            projectId,
-            sheetId,
-            sheetInstanceId,
-            entry.cameraKey,
-          )
         },
-        removeAnchor: (key, object) => {
-          // studio 传进来的是 publicApi;若拿到内部对象则剥一层
-          const anchorObj =
-            (object as {publicApi?: ISheetObject<any>} | undefined)
-              ?.publicApi ?? object
-          removeAnchor(sheet, key, anchorObj)
-          getStudioSync()?.setSelection([])
-          pruneObjectFromOutlineCollections(
-            projectId,
-            sheetId,
-            sheetInstanceId,
-            key,
-          )
+        removeAnchor: (key) => {
+          removeAnchor(sheet, key, collectAnchorChildResets(sheet, key))
+          afterSceneObjectDeleted('anchor', key)
         },
         removePlacement: (key) => {
           deletePlacement(sheet, key)
-          getStudioSync()?.setSelection([])
-          pruneObjectFromOutlineCollections(
-            projectId,
-            sheetId,
-            sheetInstanceId,
-            key,
-          )
+          afterSceneObjectDeleted('model', key)
         },
         removePath: (pathKey) => {
           removePath(pathKey)
-          pruneObjectFromOutlineCollections(
-            projectId,
-            sheetId,
-            sheetInstanceId,
-            pathKey,
-          )
         },
       },
     })
@@ -886,6 +958,53 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
       exportHandleRef.current?.abort()
     }
   }, [exporting, cameras])
+
+  // 场景导出控制器(Task 13):活动相机校验、ShotView 切换/恢复、canvas
+  // 获取、录制与异常恢复的共享核心在 agent/runtime/exportRuntime,UI 导出
+  // 菜单与 Agent exports.startVideo 经它走同一流程。getter 经 ref 读最新
+  // 会话态,控制器本身随 sheet 重建
+  const camerasForExportRef = useRef(cameras)
+  camerasForExportRef.current = cameras
+  const activeCameraForExportRef = useRef(activeCamera)
+  activeCameraForExportRef.current = activeCamera
+  const shotViewForExportRef = useRef(shotView)
+  shotViewForExportRef.current = shotView
+  const exportingRef = useRef(exporting)
+  exportingRef.current = exporting
+  const exportController = useMemo(
+    () =>
+      createSceneExportController({
+        sheet,
+        getActiveCameraKey: () =>
+          activeCameraForExportRef.current?.cameraKey ?? null,
+        hasCamera: (cameraKey) =>
+          camerasForExportRef.current.some((e) => e.cameraKey === cameraKey),
+        setActiveCamera: (cameraKey) => setActiveCameraKey(cameraKey),
+        isExporting: () => exportingRef.current,
+        getShotView: () => shotViewForExportRef.current,
+        setShotView,
+        // 页面上只有一个 canvas(快照编辑器的在 shadow DOM 里,查不到)
+        getCanvas: () => document.querySelector('canvas'),
+        setExporting,
+        setActiveHandle: (handle) => {
+          exportHandleRef.current = handle
+        },
+        lockExportCamera: (cameraKey) => {
+          exportCameraKeyRef.current = cameraKey
+        },
+      }),
+    [sheet],
+  )
+  // 登记给 Agent exports.startVideo(getSceneExportController);卸载先
+  // dispose(abort 在录任务 → 恢复视图 → 拒绝未完成任务)再解绑,
+  // 防过期 cleanup 抹掉新代次登记由 register 的同一引用校验兜底
+  useEffect(() => {
+    const unregister = registerSceneExportController(exportController)
+    return () => {
+      exportController.dispose()
+      unregister()
+    }
+  }, [exportController])
 
   // 运镜路径编辑模式:正在编辑的路径 metaKey(同一时刻只编辑一条,
   // 对齐 Blender 的对象/编辑模式);右键路径线或选中路径后按 Tab 进出
@@ -987,6 +1106,10 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
   // 点击模型卡片 = 立即放到默认位(原点被占沿 +X 自动错开);要指定位置用拖拽
   const placeModelAtDefault = useCallback(
     (entry: ModelEntry) => {
+      // placeLibraryEntryAt 返回 {key, persisted}(Task 8,Agent
+      // models.create 的挂载等待句柄);UI 路径不等挂载完成——失败由
+      // PlacedModelErrorBoundary 上告,persisted 的 rejection 已在
+      // placeLibraryEntryAt 内兜底,这里只触发放置、忽略返回句柄
       placeLibraryEntryAt(entry, findFreeSpot(readPlacementPositions(sheet)))
     },
     [sheet, placeLibraryEntryAt],
@@ -1019,15 +1142,85 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
   const closeCameraMenu = useCallback(() => setCameraMenu(null), [])
   const closeAnchorMenu = useCallback(() => setAnchorMenu(null), [])
 
+  // 对象删除后的会话清理(2026-10-19,Task 14 从各删除流程抽出共用;
+  // Agent objects.delete 经 runtime handler 调同一实现):项目数据已由
+  // 领域删除函数在单个事务里清完,这里只收会话态——
+  // - 路径编辑态/控制点选择随被删路径清掉(失焦式退出:不回头重选,
+  //   对象已经没了,重选会把它又建出来);
+  // - 还指着被删对象的右键菜单关掉;
+  // - 大纲伪集合(收藏/分组名单)里摘掉该对象;
+  // - studio 选区里摘除被删对象(仅当它还在选区里,其余选择保留——
+  //   注册表行已删但组件尚未卸载的窗口里,选区不得留着已失效对象)。
+  // 活动相机回退/镜头视角强制退出/导出中止由推导与看护 effect 自动完成。
+  const afterSceneObjectDeleted = useCallback(
+    (kind: SceneObjectKind, key: string) => {
+      const studio = getStudioSync()
+      const mounted = getSceneSheetObject(formatSceneObjectId(kind, key))
+      if (
+        studio &&
+        mounted &&
+        (studio.selection as unknown[]).includes(mounted)
+      ) {
+        studio.setSelection(studio.selection.filter((item) => item !== mounted))
+      }
+      if (kind === 'path') {
+        if (editingPathRef.current === key) {
+          setEditingPath(null)
+          setSelectedPathPoint(null)
+        }
+        setSelectedPathPoint((sel) => (sel?.metaKey === key ? null : sel))
+      }
+      setPathMenu((m) => (m?.metaKey === key ? null : m))
+      setCameraMenu((m) => (m?.cameraKey === key ? null : m))
+      setAnchorMenu((m) => (m?.key === key ? null : m))
+      setObjectMenu((m) => (m?.key === key ? null : m))
+      const {projectId, sheetId, sheetInstanceId} = sheet.address
+      pruneObjectFromOutlineCollections(
+        projectId,
+        sheetId,
+        sheetInstanceId,
+        key,
+      )
+    },
+    [sheet],
+  )
+
+  // 删除相机(右键菜单):真删——持久数据清掉、大纲行消失;
+  // 活动相机被删时 activeCamera 推导自动顺位给清单第一台
+  const deleteCamera = useCallback(
+    (entry: CameraEntry) => {
+      removeCamera(sheet, entry)
+      afterSceneObjectDeleted('camera', entry.cameraKey)
+    },
+    [sheet, afterSceneObjectDeleted],
+  )
+
   // 导出目标在运行环境稳定后不再变化,useMemo 避免每次渲染重建数组
   const exportSinks = useMemo(() => listSinks(), [])
+  // 导出错误提示通道:有宿主 onError 走宿主,否则 alert(既有行为)
+  const reportExportError = useCallback(
+    (message: string) => {
+      if (onError) {
+        onError({source: 'export', code: 'unknown', message})
+      } else {
+        window.alert(message)
+      }
+    },
+    [onError],
+  )
   const handlePickExportSink = useCallback(
     (sink: ExportSink) => {
-      prevShotViewRef.current = shotView
-      pendingExportSinkRef.current = sink
-      setShotView(true)
+      // UI 菜单与 Agent 共用同一场景导出流程;前置校验失败(无活动相机/
+      // 已在导出)同步抛,录制中途失败由控制器经 onError 透传(同既有行为)
+      try {
+        exportController.startVideo({sink, onError: reportExportError}).catch(
+          () => {}, // 出错已通过 onError 提示,这里只吞收尾
+        )
+      } catch (err) {
+        reportExportError(err instanceof Error ? err.message : String(err))
+      }
     },
-    [shotView],
+    [exportController, reportExportError],
   )
   const handleStopExport = useCallback(
     () => exportHandleRef.current?.finishEarly(),
@@ -1195,20 +1388,22 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
     [sheet, pathPresetHeight, enterPathEdit],
   )
 
-  // 删除整条路径:注册表真删(forgetObject + detach + 清单移除,撤销
-  // 两步完整回滚);正在编辑/选中了它的点就一并退出/清掉——用失焦式
-  // 退出(不回头重选,对象已经没了,重选会把它又建出来)
+  // 删除整条路径:领域函数在 agent/pathCommands(deletePathDomain,
+  // 最后一点删除与 objects.delete 共用同一清理);UI 侧传入自己按 refs
+  // 收集的绑定相机回退(既有行为逐行保留)。会话清理(编辑态/选中点/
+  // 菜单/大纲集合/选区)走 afterSceneObjectDeleted 的共用实现
   const removePath = useCallback(
     (metaKey: string) => {
-      removePathFromRegistry(
-        sheet,
-        {pathKey: metaKey},
-        collectBoundCameraResets(sheet, shotRefsMapRef.current, metaKey),
-      )
-      if (editingPath === metaKey) exitPathEditOnBlur()
-      if (selectedPathPoint?.metaKey === metaKey) setSelectedPathPoint(null)
+      deletePathDomain(sheet, metaKey, {
+        boundCameras: collectBoundCameraResets(
+          sheet,
+          shotRefsMapRef.current,
+          metaKey,
+        ),
+      })
+      afterSceneObjectDeleted('path', metaKey)
     },
-    [sheet, editingPath, selectedPathPoint, exitPathEditOnBlur],
+    [sheet, afterSceneObjectDeleted],
   )
 
   const deleteSelectedPathPoint = useCallback(() => {
@@ -1332,42 +1527,13 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
   const progressKeyframesRef = useRef(progressKeyframes)
   progressKeyframesRef.current = progressKeyframes
 
-  // 导出视频:先切到镜头视角(录 canvas 当前内容),再开始录制;
-  // "另存为"的系统对话框在菜单点击的调用栈里已经弹过,这里只剩录制
+  // 导出开录时机:先切到镜头视角(录 canvas 当前内容),ShotView/活动
+  // 相机切换生效(本副作用)后通知场景导出控制器开录;无挂起导出请求时
+  // 静默 no-op。流程主体(校验/canvas/录制/恢复)在 exportRuntime
   useEffect(() => {
-    const sink = pendingExportSinkRef.current
-    if (!shotView || !sink) return
-    pendingExportSinkRef.current = null
-    // 页面上只有一个 canvas(快照编辑器的在 shadow DOM 里,查不到)
-    const canvas = document.querySelector('canvas')
-    if (!canvas) return
-    exportCameraKeyRef.current = activeCamera?.cameraKey ?? null
-    const handle = startShotExport({
-      canvas,
-      sheet,
-      sink,
-      onError: (message) => {
-        if (onError) {
-          onError({source: 'export', code: 'unknown', message})
-        } else {
-          window.alert(message)
-        }
-      },
-    })
-    if (!handle) {
-      setShotView(prevShotViewRef.current)
-      return
-    }
-    exportHandleRef.current = handle
-    setExporting(true)
-    handle.done
-      .catch(() => {}) // 出错已通过 onError 提示,这里只收尾
-      .finally(() => {
-        exportHandleRef.current = null
-        setExporting(false)
-        setShotView(prevShotViewRef.current)
-      })
-  }, [shotView, sheet, activeCamera, onError])
+    if (!shotView) return
+    exportController.notifySceneReady()
+  }, [shotView, activeCamera, exportController])
 
   // 导出中按 Esc = 取消(丢弃已录内容)
   useEffect(() => {
@@ -1493,7 +1659,10 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
     [selectedPlacement],
   )
 
-  // 抽帧存姿势:从当前选中的已放置模型实例捕获骨骼状态入库
+  // 抽帧存姿势:从当前选中的已放置模型实例捕获骨骼状态入库。
+  // 入库流程(rig 解析/capturePose/putEntry/缩略图)与 Agent
+  // poses.saveCurrent 共用 poseMode/savePose.savePoseFromInstance;
+  // 这里只负责 UI 侧的名称来源(prompt)与告警。
   const onSavePose = useCallback(async () => {
     try {
       const placement = selectedPlacement
@@ -1502,36 +1671,18 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
       const instance = placement?.instance
       const entry = placement?.entry
       if (!instance) return
-      // GLB 导出会清洗骨骼名(如去掉 mixamorig:Hips 中的 ':'),
-      // 实例侧重算的 rig 与库模型条目记录的 rig 可能不一致。
-      // 优先取库模型条目的 rig,保证保存的姿势能和来源模型匹配;
-      // 本地 FBX 路径或条目缺失时回退到实例计算(legacy 路径,可能与库 rig 不一致但可接受)。
-      let rig: string | undefined
-      if (entry?.libraryEntryId) {
-        const libEntry = await getLibrary().getEntry(entry.libraryEntryId)
-        if (libEntry?.kind === 'model') rig = libEntry.rig
-      }
-      if (!rig) rig = rigIdOf(instance)
-      if (rig === 'static') return
       const poseEntries = (await getLibrary().listEntries(
         'pose',
       )) as PoseEntry[]
       const defaultName = `姿势-${poseEntries.length + 1}`
       const name = window.prompt('姿势名称', defaultName)?.trim()
       if (!name) return
-      const bones = capturePose(instance)
-      await getLibrary().putEntry({
-        id: 'lib-' + Math.random().toString(36).slice(2, 10),
-        kind: 'pose',
+      await savePoseFromInstance({
+        library: getLibrary(),
+        instance,
+        libraryEntryId: entry?.libraryEntryId,
         name,
-        rig,
-        bones,
-        createdAt: Date.now(),
       })
-      // 自存姿势顺手补缩略图(运行时离屏渲染,后台进行,失败只告警)
-      void import('./assetLibrary/poseThumbnail')
-        .then((m) => m.backfillPoseThumbnails(getLibrary()))
-        .catch((err) => console.warn('[assetLibrary] 姿势缩略图补图失败', err))
     } catch (err) {
       console.warn('[assetLibrary] 存姿势失败', err)
     }
@@ -1576,24 +1727,10 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
       writePoseKeyframe(selectedPlacement, selectedPoseJson)
   }, [selectedPlacement, selectedPoseJson])
   const onClearPose = useCallback(() => {
-    const studio = getStudioSync()
-    if (!studio || !selectedPlacement) return
-    // 两个事务(theatre API 限制,2026-10-01 冒烟暴露):单事务里
-    // unsequenceProp 之后的 unset(pose) 读到的是事务前的轨道树,错走
-    // 「删播放头帧」分支,unsequence 落下来的静态删不掉——「删轨道」与
-    // 「清静态」只能分两步;撤销同样两步(先回静态,再回轨道)。
-    // 事务1:删轨道(theatre 把当前值落为静态,姿势视觉不变)
-    studio.transaction(({unsequenceProp}) => {
-      unsequenceProp(selectedPlacement.props.pose)
-    })
-    // 事务2:清静态 → 回默认绑定(T 姿势)。unset 对不存在的 key 会
-    // 抛 TypeError 并回滚整个事务(同冒烟暴露):值非默认(非空串)才
-    // 说明有 override 可删,空值跳过——全空时事务为空,saaz 不入栈
-    studio.transaction(({unset}) => {
-      if (((val(selectedPlacement.props.pose) as string) ?? '') !== '') {
-        unset(selectedPlacement.props.pose)
-      }
-    })
+    if (!selectedPlacement) return
+    // 单事务删轨 + 清静态(一个撤销步骤),与 Agent poses.clear 共用
+    // poseTrack.clearPoseValue;空姿势是明确 no-op,不产生空撤销步
+    clearPoseValue(selectedPlacement)
   }, [selectedPlacement])
 
   // ── 宿主能力句柄(规格:host-picker-integration)────────────
@@ -1619,6 +1756,113 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
     () => createHostFlows(() => hostFlowDepsRef.current!),
     [],
   )
+
+  // ── Agent Scene Runtime 绑定(2026-10-19,Task 15)──────────────
+  // 与 HostFlowsWiring 同一 effect 生命周期:挂载即把完整 handler 集绑进
+  // 当前执行代次并 markReady(api.ready 随之兑现);卸载解绑并使该代次
+  // 就绪失效(API_NOT_READY 换代,重挂由绑定层产出新代次;会话拆解才
+  // API_DISPOSED)。无会话(直连宿主未走 bootstrap)时绑定层静默降级。
+  // deps 走 latest-ref(同 hostFlowDepsRef:绑定一次、永远读最新实现,
+  // activeCamera 切换等重渲染不重建绑定,无陈旧闭包)。
+  const agentDepsRef = useRef<{
+    cameras: CameraEntry[]
+    anchors: string[]
+    activeCameraKey: string | null
+    shotView: boolean
+    pipVisible: boolean
+    gizmoMode: GizmoMode
+    selectedPathPoint: {metaKey: string; key: string} | null
+    placeLibraryEntryAt: (
+      entry: ModelEntry,
+      point: {x: number; y: number; z: number},
+    ) => {key: string; persisted: Promise<void>}
+    enterPathEdit: (metaKey: string) => void
+    exitPathEditOnBlur: () => void
+    afterSceneObjectDeleted: (kind: SceneObjectKind, key: string) => void
+  } | null>(null)
+  agentDepsRef.current = {
+    cameras,
+    anchors,
+    activeCameraKey: activeCamera?.cameraKey ?? null,
+    shotView,
+    pipVisible,
+    gizmoMode,
+    selectedPathPoint,
+    placeLibraryEntryAt,
+    enterPathEdit,
+    exitPathEditOnBlur,
+    afterSceneObjectDeleted,
+  }
+  useEffect(() => {
+    const deps = () => agentDepsRef.current!
+    const handlers: AgentSceneRuntimeHandlers = {
+      // 模型:转发 placeLibraryEntryAt(Task 8 已返回 {key, persisted},
+      // 与 UI 点击放置同一条落地管线)
+      createModel: ({entry, position}) =>
+        deps().placeLibraryEntryAt(entry, position),
+      // 相机:Task 15 决策——生产绑定不自动 setActiveCameraKey。
+      // create/setActive 是 spec §9 的两条显式命令,Agent 调用
+      // cameras.create 不得隐性改变会话态;自动激活是 UI 顶栏
+      // addCamera 面向人类点击的 UX 糖,保留在 UI 包装层
+      createCamera: ({seed}) => {
+        const entry = nextCameraEntry(sheet, deps().cameras)
+        addCameraToRegistry(
+          sheet,
+          entry,
+          seed ?? captureCameraSeed(cameraObjRef.current),
+        )
+        return {key: entry.cameraKey}
+      },
+      setActiveCamera: ({cameraKey}) => setActiveCameraKey(cameraKey),
+      createAnchor: ({position}) => {
+        const key = nextAnchorKey(deps().anchors)
+        addAnchorToRegistry(
+          sheet,
+          key,
+          position ? {position} : captureAnchorSeed(cameraObjRef.current),
+        )
+        return {key}
+      },
+      // 按 key 取已挂载模型的运行时实例(poses.saveCurrent /
+      // poses.session.start / animations.apply 共用)
+      getModelPlacement: ({key}) => {
+        const obj = getSceneSheetObject(formatSceneObjectId('model', key))
+        return obj ? getPlacementInstanceForObject(obj) : undefined
+      },
+      openPanel: ({panel}) => openFrame(panel),
+      closePanel: ({panel}) => closeFrame(panel),
+      setGizmoMode: ({mode}) => setGizmoMode(mode),
+      getViewState: () => ({
+        activeCameraKey: deps().activeCameraKey,
+        shotView: deps().shotView,
+        pipVisible: deps().pipVisible,
+        editingPath: editingPathRef.current,
+        gizmoMode: deps().gizmoMode,
+      }),
+      setShotView: ({on}) => setShotView(on),
+      setPipVisible: ({visible}) => setPipVisible(visible),
+      startPathEditing: ({pathKey}) => deps().enterPathEdit(pathKey),
+      // 失焦式退出:清编辑态,不回头重选路径本体(与 handler 声明一致)
+      exitPathEditing: () => deps().exitPathEditOnBlur(),
+      selectPathPoint: ({pathKey, pointKey}) =>
+        setSelectedPathPoint({metaKey: pathKey, key: pointKey}),
+      getPathEditingState: () => {
+        const pathKey = editingPathRef.current
+        const selection = deps().selectedPathPoint
+        return {
+          pathKey,
+          pointKey:
+            pathKey && selection?.metaKey === pathKey ? selection.key : null,
+        }
+      },
+      clearPathPointSelection: () => setSelectedPathPoint(null),
+      afterSceneObjectDeleted: ({kind, key}) =>
+        deps().afterSceneObjectDeleted(kind, key),
+    }
+    return bindCameraStudioSceneHandlers(handlers)
+    // sheet 随 project 固定(组件实例不换 project);deps 全部走 ref
+  }, [sheet])
+
   useEffect(() => {
     setPlacingSnapshot(placing)
   }, [placing])
@@ -1633,6 +1877,8 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
     () => () => toggleFrame('path'),
     [toggleFrame],
   )
+  // 稳定引用:行为不变(setPipVisible 取反),与 handleToggleModel/Path 同模式
+  const handleTogglePip = useCallback(() => setPipVisible((v) => !v), [])
 
   return (
     <SceneI18nRoot>
@@ -1656,7 +1902,7 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
           onStopExport={handleStopExport}
           exportDisabled={!activeCamera}
           pipVisible={pipVisible}
-          onTogglePip={() => setPipVisible((v) => !v)}
+          onTogglePip={handleTogglePip}
           pipDisabled={!activeCamera}
           libraryDisabled={!!placing || modelDragging || presetDrag !== null}
         />
@@ -1776,8 +2022,7 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
                 onSelectMode: setGizmoMode,
                 onDelete: () => {
                   deletePlacement(sheet, objectMenu.key)
-                  // 被删的对象留在选中列表里没意义，顺带清掉
-                  getStudioSync()?.setSelection([])
+                  afterSceneObjectDeleted('model', objectMenu.key)
                 },
                 // 库来源模型才有姿势/动作可套(本地遗留放置体没有库 id);
                 // 骨架不匹配的置灰由框体自己兜
@@ -1875,15 +2120,15 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
             position={{x: anchorMenu.x, y: anchorMenu.y}}
             items={buildAnchorMenuItems({
               onDeleteAnchor: () => {
-                // 真删:forgetObject 清持久数据(静态覆盖/时间轴轨道),再移除
-                // 注册表(对齐相机;不传对象会残留持久态,同名重加时旧数据复活)
+                // 真删:forgetObject 按地址清持久数据(静态覆盖/时间轴
+                // 轨道,不要求挂载句柄)+ 子锚点解绑定格折进同一事务;
+                // 会话清理走共用实现
                 removeAnchor(
                   sheet,
                   anchorMenu.key,
-                  anchorRefsMapRef.current.get(anchorMenu.key)?.current,
+                  collectAnchorChildResets(sheet, anchorMenu.key),
                 )
-                // 被删的锚点留在选中列表里没意义,顺带清掉
-                getStudioSync()?.setSelection([])
+                afterSceneObjectDeleted('anchor', anchorMenu.key)
               },
             })}
             onClose={closeAnchorMenu}
@@ -2005,7 +2250,7 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
               objRef={cameraObjRef}
               hideFromOutline
               makeDefault={!shotView}
-              position={[0, 0, 16]}
+              position={DIRECTOR_HOME_CAMERA_POSITION}
               fov={75}
               lookAt={cameraTargetRef}
             />
@@ -2014,7 +2259,7 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
               theatreKey="Camera / Target"
               objRef={targetObjRef}
               hideFromOutline
-              position={[0, 0, 0]}
+              position={DIRECTOR_HOME_TARGET_POSITION}
               visible="editor"
             >
               <boxGeometry attach="geometry" />

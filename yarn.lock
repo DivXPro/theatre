@@ -5248,6 +5248,20 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@dreamerbird/camera-studio-bridge@workspace:packages/camera-studio-bridge":
+  version: 0.0.0-use.local
+  resolution: "@dreamerbird/camera-studio-bridge@workspace:packages/camera-studio-bridge"
+  dependencies:
+    "@types/jest": ^26.0.23
+    "@types/node": ^18.19.0
+    "@types/ws": ^8.5.10
+    typescript: 5.6.3
+    ws: ^8.18.0
+  bin:
+    camera-studio-bridge: dist/cli.js
+  languageName: unknown
+  linkType: soft
+
 "@dreamerbird/camera-studio@workspace:*, @dreamerbird/camera-studio@workspace:packages/camera-studio":
   version: 0.0.0-use.local
   resolution: "@dreamerbird/camera-studio@workspace:packages/camera-studio"
@@ -11168,6 +11182,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/node@npm:^18.19.0":
+  version: 18.19.130
+  resolution: "@types/node@npm:18.19.130"
+  dependencies:
+    undici-types: ~5.26.4
+  checksum: b7032363581c416e721a88cffdc2b47662337cacd20f8294f5619a1abf79615c7fef1521964c2aa9d36ed6aae733e1a03e8c704661bd5a0c2f34b390f41ea395
+  languageName: node
+  linkType: hard
+
 "@types/normalize-package-data@npm:^2.4.0":
   version: 2.4.0
   resolution: "@types/normalize-package-data@npm:2.4.0"
@@ -11555,6 +11578,15 @@ __metadata:
   dependencies:
     "@types/node": "*"
   checksum: 0ce46f850d41383fcdc2149bcacc86d7232fa7a233f903d2246dff86e31701a02f8566f40af5f8b56d1834779255c04ec6ec78660fe0f9b2a69cf3d71937e4ae
+  languageName: node
+  linkType: hard
+
+"@types/ws@npm:^8.5.10":
+  version: 8.18.2
+  resolution: "@types/ws@npm:8.18.2"
+  dependencies:
+    "@types/node": "*"
+  checksum: 6b92ac97d46f9f7c87c209c28d7c10fc762dd8604e2e5440239ff6eb33410dc142a16d84c76943295f35f29294e67f97f8390f785c60f30308c4c302368b85ee
   languageName: node
   linkType: hard
 
@@ -15262,6 +15294,7 @@ __metadata:
     "@dreamerbird/camera-studio": "workspace:*"
     "@dreamerbird/core": "workspace:*"
     "@dreamerbird/studio": "workspace:*"
+    "@playwright/test": ^1.36.2
     "@react-three/fiber": ^9.7.0
     "@types/react": ^19.2.18
     "@types/react-dom": ^19.2.5
@@ -39772,6 +39805,21 @@ fsevents@^1.2.7:
     utf-8-validate:
       optional: true
   checksum: 53e991bbf928faf5dc6efac9b8eb9ab6497c69feeb94f963d648b7a3530a720b19ec2e0ec037344257e05a4f35bd9ad04d9de6f289615ffb133282031b18c61c
+  languageName: node
+  linkType: hard
+
+"ws@npm:^8.18.0":
+  version: 8.22.0
+  resolution: "ws@npm:8.22.0"
+  peerDependencies:
+    bufferutil: ^4.0.1
+    utf-8-validate: ">=5.0.2"
+  peerDependenciesMeta:
+    bufferutil:
+      optional: true
+    utf-8-validate:
+      optional: true
+  checksum: ba8819b01815b2f76e4d54024010e661e38174c2e4a5b196c39d1c1b745046d23c6b4d84470a46cc1921079e397abd61b18a4b934ba3c3f4f77659b0c7ca22d2
   languageName: node
   linkType: hard
 

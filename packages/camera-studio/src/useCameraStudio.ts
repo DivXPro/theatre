@@ -23,6 +23,7 @@ import {
   resolveSceneProps,
 } from './bootstrap'
 import type {BootCtx} from './bootstrap'
+import {getCameraStudioApi} from './agent/api'
 
 type Phase = {
   ready: boolean
@@ -98,5 +99,11 @@ export function useCameraStudio(
     return resolveSceneProps(cfg)
   }, [])
   const sceneProps = phase.ctx?.sceneProps ?? earlySceneProps
-  return {ready: phase.ready, error: phase.error, sceneProps}
+  // api 是模块级单例:首帧(占位)与 boot 完成后返回同一对象(Task 15)
+  return {
+    ready: phase.ready,
+    error: phase.error,
+    sceneProps,
+    api: getCameraStudioApi(),
+  }
 }
