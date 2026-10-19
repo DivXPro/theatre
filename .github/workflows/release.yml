@@ -1,0 +1,66 @@
+name: Release
+
+# Publishes @dreamerbird packages to npm when a version tag (v1.2.3) is pushed.
+# The tag must match the package.json version of at least one publishable
+# package; packages whose version already exists on npm are skipped, so
+# re-running a failed release is safe.
+#
+# Requires the NPM_TOKEN repository secret (npm automation token with
+# publish rights on the @dreamerbird scope).
+on:
+  push:
+    tags: ['v*']
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.9
+
+      - name: Restore node_modules cache
+        id: yarn-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            **/node_modules
+            .yarn/cache
+          key: ${{ runner.os }}-yarn-release-${{ hashFiles('yarn.lock', '.yarnrc.yml', 'package.json', '*/package.json', '*/*/package.json') }}
+
+      - name: Install dependencies
+        if: steps.yarn-cache.outputs.cache-hit != 'true'
+        run: yarn install --immutable --inline-builds
+        env:
+          YARN_NM_MODE: hardlinks-local
+
+      - name: Build all packages
+        run: |
+          yarn cli build
+          yarn workspace @dreamerbird/camera-studio run build:ts
+          yarn workspace @dreamerbird/camera-studio-bridge run build:ts
+
+      - name: Typecheck
+        run: yarn typecheck
+
+      - name: Test agent-facing packages
+        # The full `yarn test` suite carries known environment-sensitive
+        # failures (docker-compose check, studio integration tests); the
+        # release gate covers the packages this workflow ships plus the
+        # agent API surface.
+        run: yarn test packages/camera-studio packages/camera-studio-bridge --runInBand
+
+      - name: Update .yarnrc.yml with the auth config for the npmPublishRegistry
+        run: cat .github/.yarnrc.publish.yml >> .yarnrc.yml
+
+      - name: Publish packages whose version is missing from npm
+        id: publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: node scripts/stable-release.mjs
