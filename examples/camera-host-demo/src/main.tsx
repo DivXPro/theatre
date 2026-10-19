@@ -14,9 +14,28 @@ import ReactDOM from 'react-dom/client'
 import {
   useCameraStudio,
   CameraScene,
+  type CameraStudioAgentBridgeConfig,
   type CameraStudioError,
 } from '@dreamerbird/camera-studio'
 import {MemorySource} from './memorySource'
+
+/**
+ * Agent HTTP 桥接(可选,默认关闭):三个 Vite 环境变量齐全才连接本机桥接
+ * 进程,任一缺失都保持浏览器默认行为(不连桥接、不挂全局),demo 照常可用。
+ * 部署方式与 curl 示例见 docs/guides/camera-studio-agent-http.md。
+ *
+ *   VITE_CAMERA_STUDIO_AGENT_WS    桥接 WebSocket 地址(ws://127.0.0.1:43110)
+ *   VITE_CAMERA_STUDIO_AGENT_HTTP  桥接 HTTP 地址(http://127.0.0.1:43110)
+ *   VITE_CAMERA_STUDIO_AGENT_TOKEN Bearer 凭据(部署方注入,勿提交真实密钥)
+ */
+function bridgeConfigFromEnv(): CameraStudioAgentBridgeConfig | undefined {
+  const url = import.meta.env.VITE_CAMERA_STUDIO_AGENT_WS
+  const httpUrl = import.meta.env.VITE_CAMERA_STUDIO_AGENT_HTTP
+  const token = import.meta.env.VITE_CAMERA_STUDIO_AGENT_TOKEN
+  if (!url || !httpUrl || !token) return undefined
+  return {url, httpUrl, token}
+}
+const agentBridge = bridgeConfigFromEnv()
 
 // 宿主视觉决定:页面底色(库不替宿主页面着色)
 document.body.style.backgroundColor = '#171717'
@@ -110,6 +129,8 @@ function StudioRoute() {
     // assets: {baseUrl: 'https://cdn.example.com/camera-assets/'} ← §4 CDN 写法
     sync: false,
     onError: setNotice,
+    // 桥接配置缺失时是 undefined:浏览器默认不连桥接(spec §4/§10.4)
+    ...(agentBridge ? {agent: {bridge: agentBridge}} : {}),
   })
   if (error) throw error
   if (!ready) return null

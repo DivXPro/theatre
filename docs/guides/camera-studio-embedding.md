@@ -35,8 +35,8 @@ npm install react react-dom three @react-three/fiber
 `@phosphor-icons/react`、`@gltf-transform/*`、`draco3dgltf`、`@dreamerbird/threeik`
 等)已列入包自身 dependencies,随包安装,无需宿主操心。
 
-运行时导出的 `CAMERA_STUDIO_VERSION` 与 `package.json` 的 `version` 同源(包内直接读
-package.json),排查版本时不需要核对第二个版本号。
+运行时导出的 `CAMERA_STUDIO_VERSION` 与 `package.json` 的 `version` 同源(包内直
+接读package.json),排查版本时不需要核对第二个版本号。
 
 ### monorepo 消费方(theatre 仓库内,含本示例)
 
@@ -89,10 +89,10 @@ export function CameraPage() {
 }
 ```
 
-`useCameraStudio(config)` 返回 `{ready, error, sceneProps, api}`;`sceneProps` 对宿主
-**不透明**(当前 = `{project, onFlows, onError}` 的转发),不要解构它。`api` 是
-Agent JS 命令面门面的模块级单例(首帧即稳定),页内自动化/Agent 场景见
-§9 与[专项指南](./camera-studio-agent-js-api.md)。
+`useCameraStudio(config)` 返回 `{ready, error, sceneProps, api}`;`sceneProps` 对
+宿主 **不透明**(当前 = `{project, onFlows, onError}` 的转发),不要解构它。`api`
+是Agent JS 命令面门面的模块级单例(首帧即稳定),页内自动化/Agent 场景见§9
+与[专项指南](./camera-studio-agent-js-api.md)。
 
 ### config 全字段参考
 
@@ -100,21 +100,22 @@ Agent JS 命令面门面的模块级单例(首帧即稳定),页内自动化/Agen
 | -------------------- | -------------------------------------------------------- | --------------- | ---------------------------------------------------------------------------------------------------- |
 | `project`            | `string \| IProject`                                     | `'Space'`       | 场景 id 字符串(getProject),或宿主自建的 IProject 实例(传实例时 `state.initialState` 被忽略)          |
 | `state`              | `{initialState?, onStateChange?, throttleMs?}`           | 不传            | 传了 = **宿主接管场景状态**,同时关掉 theatre 本地持久化(见 §5)                                       |
-| `onError`            | `(error: CameraStudioError) => void`                     | 不传            | 库存储/启动清理/视频导出错误上告给宿主提示组件(见下节)                                              |
+| `onError`            | `(error: CameraStudioError) => void`                     | 不传            | 库存储/启动清理/视频导出错误上告给宿主提示组件(见下节)                                               |
 | `storage`            | `WritableLibrarySource \| {namespace?: string} \| false` | 内置 IndexedDB  | 可写源实例 / 「namespace」简写(库名 `toybox-asset-library[-namespace]`)/ `false` 纯查看器(见 §3、§8) |
 | `assets.baseUrl`     | `string`                                                 | 包内 `assets/`  | 内置目录文件根(见 §4)                                                                                |
 | `sync`               | `{serverUrl?: string} \| false`                          | `false`         | 协作端点(见 §6)                                                                                      |
 | `ui.portalContainer` | `HTMLElement`                                            | `document.body` | 模块停靠框的 portal 挂载点                                                                           |
 | `ui.zIndexBase`      | `number`                                                 | `1000`          | 模块停靠框 z-index 基准(见 §7 层级地图)                                                              |
 | `ui.locale`          | `string`                                                 | 不生效          | 仅当宿主**未**包 I18nProvider 时应用,一次性 setLanguage(见 §7)                                       |
-| `ui.hideLeftStrip`   | `boolean`                                                | `false`         | 隐藏 studio 左上角带 logo 的整条 LeftStrip(应用 logo + 工作区按钮);boot 级一次性应用,换值需整页刷新 |
+| `ui.hideLeftStrip`   | `boolean`                                                | `false`         | 隐藏 studio 左上角带 logo 的整条 LeftStrip(应用 logo + 工作区按钮);boot 级一次性应用,换值需整页刷新  |
 | `flows.onFlows`      | `(flows: CameraFlows) => void`                           | 不传            | 接管「添加模型/添加路径/添加相机」入口,拿到模块的 flows 句柄                                         |
-| `agent.exposeGlobal` | `boolean`                                                | `false`         | 场景 ready 后把 Agent JS API 门面挂到 `window.__cameraStudioApi`,dispose 时删除(见 §9)              |
+| `agent.exposeGlobal` | `boolean`                                                | `false`         | 场景 ready 后把 Agent JS API 门面挂到 `window.__cameraStudioApi`,dispose 时删除(见 §9)               |
+| `agent.bridge`       | `{url, token, httpUrl}`                                  | 不传            | 连接本机 Agent HTTP 桥接(`url` 是 WS 命令通道,`httpUrl` 走文件传输);缺省不连桥接(见 §9)              |
 
 ### 错误提示:onError 交给宿主组件
 
-模块不内置错误条;运行期可展示错误统一转成 `CameraStudioError`,经 `onError`
-交给你自己的提示组件:
+模块不内置错误条;运行期可展示错误统一转成 `CameraStudioError`,经 `onError` 交给
+你自己的提示组件:
 
 ```tsx
 import {useState} from 'react'
@@ -148,8 +149,8 @@ function CameraPage() {
 
 `CameraStudioError` 形状:`{source, code, message, cause?}`。`source: 'library'`
 = 库存储与启动清理错误,`code` 沿用 `LibraryError` 六码(`auth` / `quota` /
-`network` / `conflict` / `not-found` / `unknown`);`source: 'export'` = 视频导出错
-误,当前 `code` 为 `unknown`。不传 `onError` 时保持旧行为:库错误按原路径静默或
+`network` / `conflict` / `not-found` / `unknown`);`source: 'export'` = 视频导出
+错误,当前 `code` 为 `unknown`。不传 `onError` 时保持旧行为:库错误按原路径静默或
 console 留痕,视频导出错误用浏览器 `alert`。初始化失败不走 `onError`,仍从 hook 的
 `error` 返回。
 
@@ -206,8 +207,8 @@ interface WritableLibrarySource extends LibrarySource {
 - **错误码**(契约未覆盖):抛 `LibraryError`(code ∈ `auth` / `quota` / `network` /
   `conflict` / `not-found` / `unknown`),不要把业务错误混成 `unknown`。透出现
   状:Library 聚合错误经配置的顶层 `onError` 转成 `CameraStudioError`(source =
-  `library`)上告,宿主用自己的提示组件渲染(见 §2);不传 `onError` 则保持库层原
-  有静默/console 语义。
+  `library`)上告,宿主用自己的提示组件渲染(见 §2);不传 `onError` 则保持库层原有静
+  默/console 语义。
 - **id 命名空间**(契约未覆盖):你的源**不得**返回 `seed-pose-*` / `seed-model-*`
   前缀条目(内置目录专属,聚合层会拒绝并报 conflict)。源 id 同样占用命名空
   间:`catalog`(内置目录)与 `idb`(内置 IndexedDB)是保留名,宿主源自定义id 勿用——撞
@@ -566,8 +567,8 @@ process.on('SIGTERM', () => {
   灰)——预期行为。完全省略 `storage` 走的是内置 IndexedDB 可写源,入口都在。
 - **保存/导出错想进自己的提示组件?** 配顶层 `onError`:库存储与启动清理错误
   (`source: 'library'`)带 `LibraryError` 六码,视频导出错误(`source: 'export'`)
-  当前为 `unknown`;`message` 可直接展示。不传时保持旧行为——库存储按原路径静默
-  或 console 留痕,导出用浏览器 `alert`。
+  当前为 `unknown`;`message` 可直接展示。不传时保持旧行为——库存储按原路径静默或
+  console 留痕,导出用浏览器 `alert`。
 - **`seed-*` id 前缀的条目写不进/读不出?** `seed-pose-*` / `seed-model-*` 是内置
   目录专属前缀,可写源返回它们会被聚合层拒绝(conflict)。旧浏览器里历史播种留下的
   `seed-*` 条目,模块启动时会静默清理一次(仅内置 IDB缺省库名分支)。
@@ -575,6 +576,12 @@ process.on('SIGTERM', () => {
   `poseThumbs/...` 404。多数是 CDN 拷贝不全(少了 `models/`、`poseThumbs/` 子目
   录)或路径段拼错;模块是**纯拼接、不探测** 的,配错不会启动期报错,只在使用时显
   形。
+- **导入 Draco 压缩的 GLB 卡住,网络面板 `/draco/draco_wasm_wrapper.js` 404**: 解
+  码器 wasm 按页面 origin 的 `/draco/` 路径加载,宿主必须把解码器文件伺服在该路径
+  下(5 个文件:3 个来自 `three/examples/jsm/libs/draco/gltf/`,2 个
+  `_gltf.wasm`/encoder 来自 `draco3dgltf` 包;现成的一份在
+  `examples/camera-host-demo/public/draco/`——Vite 宿主放 `public/draco/` 即可,
+  构建会原样拷贝)。未压缩的 GLB 不触发该加载,所以问题只在导入压缩模型时显形。
 - **旧浏览器出现两个 Y Bot?** 2026-10-10 前用过旧版(播种制)的浏览器, 模型库可能
   同时有「旧播种 Y Bot」和「内置目录 Y Bot」。这是刻意保留: 旧播种是浏览器内
   FBX→GLB 转换的非确定性产物,内容哈希与出货文件不同, 内容寻址下视为另一份资产;旧
@@ -586,10 +593,9 @@ process.on('SIGTERM', () => {
 
 ## 9. Agent JS API(浏览器命令面)
 
-除了编辑器 UI,模块还暴露一个稳定的浏览器 JS 命令面,供页内自动化与 Agent 驱动
-场景:18 个命名空间、71 条命令(`scene / objects / models / assets / poses /
-animations / cameras / anchors / paths / sequence / keyframes / history /
-view / ui / project / exports / jobs`)。
+除了编辑器 UI,模块还暴露一个稳定的浏览器 JS 命令面,供页内自动化与 Agent 驱动场
+景:18 个命名空间、71 条命令
+(`scene / objects / models / assets / poses / animations / cameras / anchors / paths / sequence / keyframes / history / view / ui / project / exports / jobs`)。
 
 ```ts
 const {ready, sceneProps, api} = useCameraStudio({project: 'Space'})
@@ -610,11 +616,15 @@ await api.objects.update({
   Scene Runtime 就位后兑现,命令调用也会自动等它。
 - `objects.update` 只写静态属性(已建轨报 `INVALID_STATE`);做动画显式走
   `keyframes.set`。
-- 项目写命令可选 `expectedRevision` 乐观并发,冲突返回 `REVISION_CONFLICT` 且不执行
-  写入。
-- `models.create` / `cameras.create` / `anchors.create` 等到对象**挂载完成**才返回;
-  `assets.importModel` / `exports.startVideo` 返回任务句柄,用 `jobs.get` 轮询、
-  `jobs.cancel` 取消。
+- 项目写命令可选 `expectedRevision` 乐观并发,冲突返回 `REVISION_CONFLICT` 且不执
+  行写入。
+- `models.create` / `cameras.create` / `anchors.create` 等到对象**挂载完成**才返
+  回; `assets.importModel` / `exports.startVideo` 返回任务句柄,用 `jobs.get` 轮
+  询、 `jobs.cancel` 取消。
 - 资产操作不可 undo;`history.undo`/`redo` 只管 Theatre 项目状态。
 - 默认不挂 window 全局;`agent: {exposeGlobal: true}` 时场景 ready 后挂载
   `window.__cameraStudioApi`,dispose 时删除。
+- 外部进程(宿主导航之外的 Agent)走本机 HTTP 桥接:`agent.bridge` 给出桥接的WS 命
+  令通道地址(`url`)、Bearer token 与文件传输地址(`httpUrl`),页面才会连接;桥接进
+  程的启动、鉴权、CORS、文件与任务语义见
+  [Agent HTTP 桥接部署指南](./camera-studio-agent-http.md)。
