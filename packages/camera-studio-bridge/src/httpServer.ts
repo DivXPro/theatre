@@ -5,8 +5,9 @@
  * - `GET /v1/health` / `GET /v1/schema`;
  * - `POST /v1/commands` 的 body 解析、形状校验和结果透传(requestId
  *   去重、WebSocket 转发在 Task 4 的 SceneSession/RequestDeduplicator);
- * - `/v1/files`、`/v1/jobs` 路由分别在 Task 3、Task 5 接入,此处只
- *   预留依赖接口形状。
+ * - `POST /v1/files` / `GET /v1/files/:id` 的有界二进制传输(Task 3,
+ *   FileStore 负责磁盘与过期,这里只做 header 适配与流转发);
+ * - `/v1/jobs` 路由在 Task 5 接入,此处只预留依赖接口形状。
  *
  * 约束:
  * - URL 精确匹配,不用正则执行用户输入;
@@ -19,7 +20,6 @@
 import http from 'http'
 import type {IncomingMessage, ServerResponse} from 'http'
 import type {Duplex} from 'stream'
-import type {Readable} from 'stream'
 import {authorizeRequest} from './auth'
 import type {ResolvedBridgeConfig} from './config'
 import {
@@ -28,6 +28,7 @@ import {
   writeCommandResponse,
   writeJson,
 } from './errors'
+import type {FileStore} from './FileStore'
 import type {BridgeJobSnapshot, CommandRequest, CommandResponse} from './types'
 
 /** 场景连接状态(`GET /v1/health` 的 result 片段) */
@@ -49,25 +50,11 @@ export type BridgeSessionHandle = {
   attachUpgrade?(req: IncomingMessage, socket: Duplex, head: Buffer): void
 }
 
-/** Task 3 的文件传输依赖形状(FileStore);本任务不挂 /v1/files 路由 */
-export type BridgeFileDescriptor = {
-  fileId: string
-  fileName: string
-  mimeType: string
-  size: number
-}
-
-export type BridgeFilesHandle = {
-  put(input: {
-    stream: Readable
-    fileName: string
-    mimeType: string
-  }): Promise<BridgeFileDescriptor>
-  get(fileId: string): BridgeFileDescriptor
-  openReadStream(fileId: string): Readable
-  delete(fileId: string): Promise<void>
-  close(): Promise<void>
-}
+/**
+ * Task 3 的文件传输依赖:真实实现是 ./FileStore 的 createFileStore。
+ * 未注入时 /v1/files 路由按未知路由 404 处理。
+ */
+export type {FileDescriptor, FileStore} from './FileStore'
 
 /** Task 5 的任务投影依赖形状(JobStore);本任务不挂 /v1/jobs 路由 */
 export type BridgeJobsHandle = {
@@ -78,7 +65,7 @@ export type BridgeJobsHandle = {
 export type HttpServerDeps = {
   config: ResolvedBridgeConfig
   session: BridgeSessionHandle
-  files?: BridgeFilesHandle
+  files?: FileStore
   jobs?: BridgeJobsHandle
 }
 
@@ -121,6 +108,14 @@ function writeUnauthorized(res: ServerResponse): void {
     message: '缺少或无效的鉴权凭据',
     retryable: false,
   })
+}
+
+/**
+ * 未知路由(含未注入依赖的 /v1/files、/v1/jobs);NOT_FOUND 是传输层
+ * 代码,不在领域错误码表内,状态显式给出
+ */
+function notFound(): BridgeHttpError {
+  return new BridgeHttpError(404, 'NOT_FOUND', '未知路由')
 }
 
 /**
@@ -199,7 +194,7 @@ function writeInternalError(res: ServerResponse): void {
 }
 
 export function createHttpServer(deps: HttpServerDeps): http.Server {
-  const {config, session} = deps
+  const {config, session, files} = deps
 
   async function handleCommand(req: IncomingMessage, res: ServerResponse) {
     const body = await readJsonBody(req, config.maxCommandBytes)
@@ -212,6 +207,58 @@ export function createHttpServer(deps: HttpServerDeps): http.Server {
       return
     }
     writeCommandResponse(res, response)
+  }
+
+  /**
+   * 上传:不解析 multipart,body 即原始字节;文件名来自
+   * `X-File-Name`(encodeURIComponent 编码,保留中文名),MIME 来自
+   * Content-Type 或 application/octet-stream。大小上限与部分文件
+   * 清理由 FileStore 负责;超限抛 413 BridgeHttpError 由外层统一应答。
+   */
+  async function handleFileUpload(req: IncomingMessage, res: ServerResponse) {
+    if (files === undefined) throw notFound()
+    const rawName = req.headers['x-file-name']
+    let fileName = ''
+    if (typeof rawName === 'string' && rawName !== '') {
+      try {
+        fileName = decodeURIComponent(rawName)
+      } catch {
+        throw new BridgeHttpError(
+          400,
+          'INVALID_ARGUMENT',
+          'X-File-Name 不是合法的百分号编码',
+        )
+      }
+    }
+    const contentType = req.headers['content-type']
+    const mimeType =
+      typeof contentType === 'string' && contentType !== ''
+        ? contentType
+        : 'application/octet-stream'
+    const descriptor = await files.put({stream: req, fileName, mimeType})
+    writeJson(res, 201, {ok: true, result: descriptor})
+  }
+
+  /**
+   * 下载:fileId 是 `/v1/files/` 之后的整段(URL 不解码 %2F,编码斜线
+   * 只按单个 fileId 处理);存在/过期判定与磁盘路径安全在 FileStore。
+   * 响应头:Content-Type / Content-Length /
+   * `Content-Disposition: attachment; filename*=UTF-8''<encoded>`。
+   */
+  function handleFileDownload(fileId: string, res: ServerResponse): void {
+    if (files === undefined) throw notFound()
+    const descriptor = files.get(fileId)
+    const stream = files.openReadStream(fileId)
+    res.statusCode = 200
+    res.setHeader('Content-Type', descriptor.mimeType)
+    res.setHeader('Content-Length', descriptor.size)
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename*=UTF-8''${encodeURIComponent(descriptor.fileName)}`,
+    )
+    // 读流在响应后出错(如磁盘故障)只能断开,无法改状态码
+    stream.on('error', () => res.destroy())
+    stream.pipe(res)
   }
 
   async function handleRequest(
@@ -261,18 +308,17 @@ export function createHttpServer(deps: HttpServerDeps): http.Server {
       await handleCommand(req, res)
       return
     }
+    if (req.method === 'POST' && pathname === '/v1/files') {
+      await handleFileUpload(req, res)
+      return
+    }
+    if (req.method === 'GET' && pathname.startsWith('/v1/files/')) {
+      handleFileDownload(pathname.slice('/v1/files/'.length), res)
+      return
+    }
 
-    // 未知路由(含 /v1/files、/v1/jobs,由各自任务接入);
-    // NOT_FOUND 是传输层代码,不在领域错误码表内,状态显式给出
-    writeAgentError(
-      res,
-      {
-        code: 'NOT_FOUND',
-        message: '未知路由',
-        retryable: false,
-      },
-      404,
-    )
+    // 未知路由(含未接入的 /v1/jobs,由 Task 5 接入)
+    throw notFound()
   }
 
   const server = http.createServer((req, res) => {
