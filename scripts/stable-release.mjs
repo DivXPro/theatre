@@ -144,22 +144,24 @@ for (const p of todo) {
   // yarn 3.6 在非 TTY 下遭遇 npm 的二次认证(安全密钥)挑战时会打印
   // "Open https://www.npmjs.com/login/…" 然后**以退出码 0 假成功**,
   // 什么都没发出去。必须发后查证,把静默哑炮变成显式失败。
-  // 查证要带重试:npm 返回 200 后 CDN 传播有几秒延迟,立刻 npm view
-  // 可能 404(首发实测 ~3s 后才可见),不能把真成功误判成哑炮。
+  // 查证要带长窗口重试:npm 对已存在的包发新版本几秒内可查,但对
+  // **全新包名**的首发有异步审核/索引,实测 ~7.5 分钟才 200——窗口
+  // 给 20 分钟,不能把真成功误判成哑炮。
   let landed = false
-  for (let attempt = 0; attempt < 10; attempt++) {
+  for (let attempt = 0; attempt < 40; attempt++) {
     if (existsOnRegistry(p.name, p.version)) {
       landed = true
       break
     }
-    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 3000)
+    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 30_000)
   }
   if (!landed) {
     fail(
-      `${p.name}@${p.version} did not land on npm although the publish ` +
-        `command exited 0. npm likely demanded a second factor (security ` +
-        `key) — the NPM_TOKEN secret must be a 2FA-exempt Automation token. ` +
-        `Already published in this run: ${published.slice(0, -1).join(', ') || '(none)'}.`,
+      `${p.name}@${p.version} did not land on npm within 20 minutes ` +
+        `although the publish command exited 0. npm likely demanded a ` +
+        `second factor (security key) — the NPM_TOKEN secret must be a ` +
+        `2FA-exempt Automation token. Already published in this run: ` +
+        `${published.slice(0, -1).join(', ') || '(none)'}.`,
     )
   }
 }
