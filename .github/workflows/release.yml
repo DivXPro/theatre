@@ -40,6 +40,13 @@ jobs:
         env:
           YARN_NM_MODE: hardlinks-local
 
+      - name: Run postinstall
+        # node_modules 缓存命中时 Install 整步跳过,但 prisma client 生成在
+        # 源码树(packages/*/prisma/client-generated,不入缓存也不入 git),
+        # 缺了它 Build 的 tsc 直接 TS2307。共享 action yarn-nm-install 同样
+        # 无条件跑 postinstall,这里对齐。
+        run: yarn postinstall
+
       - name: Build all packages
         run: |
           yarn cli build
