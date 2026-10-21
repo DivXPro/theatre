@@ -4,28 +4,41 @@ import {GLTFExporter} from 'three-stdlib'
 import {compressGLBDraco} from './draco'
 
 /**
- * 归一化目标尺寸:入库模型的最长边统一烘成这么多个场景单位。
- * 场景约定「人高 = 5 单位 = 一个粗格」(网格 sectionSize、运镜预设半径、
- * 主光位置都按此校准);PlacementManager 的 useNormalizedModel 用同一
- * 常量兜底未烘焙来源,两处必须一致。
+ * 场景单位 = 米(2026-10-21 起,替代此前「最长边统一拉成 5 单位」的
+ * 归一化约定)。glTF 标准本来就是米,人高 1.8 单位、网格 1 小格 = 1 米,
+ * 模型之间保持真实世界的相对大小(车 4.5 / 人 1.8 / 杯子 0.1)。
+ * PlacementManager 的 useNormalizedModel 用同一套换算兜底未烘焙来源。
  */
-export const NORMALIZED_MAX_DIM = 5
+export const SCENE_UNIT_METERS = 1
 
 /**
- * 把「源单位 → 场景单位」的换算系数烘进根节点 scale(入库前置)。
- * 源文件单位五花八门(Mixamo FBX 是厘米、GLB 多是米),烘过之后任何
- * 模型量出来最长边都是 NORMALIZED_MAX_DIM,放置时 theatre 对象的
- * 缩放属性才能以 1 为干净基线(1 = 设计大小,2 = 两倍大)。
- * 只动根节点变换:蒙皮随骨骼世界变换正确缩放,骨骼局部数据(动画
- * 轨道寻址的那层)不受影响。返回应用的系数(1 = 本来就达标,没动)。
+ * 厘米源判定阈值:最长边超过这个数就按厘米源处理(÷100)。
+ * Mixamo 等 FBX 是厘米(人 180),标准 GLB 是米(人 1.8)。取 50 是因为
+ * 米制模型最长边到 50(=50 米,一栋楼)在本系统里罕见,而厘米源几乎
+ * 都远超(一个人就 180)。猜错的入口(超大道具/建筑)保留手动改缩放。
  */
-export function bakeNormalizedScale(root: Object3D): number {
+export const CENTIMETER_SOURCE_THRESHOLD = 50
+
+/** 源尺寸最长边 → 米制换算系数(米源返回 1,厘米源返回 0.01) */
+export function metricScaleFactor(maxDim: number): number {
+  return maxDim > CENTIMETER_SOURCE_THRESHOLD ? 0.01 : SCENE_UNIT_METERS
+}
+
+/**
+ * 把「源单位 → 米」的换算系数烘进根节点 scale(入库前置)。
+ * 源文件单位五花八门(Mixamo FBX 是厘米、GLB 多是米),烘过之后任何
+ * 模型都是真实米制尺寸,放置时 theatre 对象的缩放属性才能以 1 为
+ * 干净基线(1 = 真实大小,2 = 两倍大)。只动根节点变换:蒙皮随骨骼
+ * 世界变换正确缩放,骨骼局部数据(动画轨道寻址的那层)不受影响。
+ * 返回应用的系数(1 = 本来就是米,没动)。
+ */
+export function bakeMetricScale(root: Object3D): number {
   const box = new Box3().setFromObject(root)
   const size = box.getSize(new Vector3())
   const maxDim = Math.max(size.x, size.y, size.z)
   if (!(maxDim > 0)) return 1
-  const factor = NORMALIZED_MAX_DIM / maxDim
-  if (Math.abs(1 - factor) < 1e-6) return 1
+  const factor = metricScaleFactor(maxDim)
+  if (factor === 1) return 1
   root.scale.multiplyScalar(factor)
   return factor
 }
@@ -116,12 +129,12 @@ export function exportModelGLB(root: Object3D): Promise<ArrayBuffer> {
       `[assetLibrary] ${stripped} 张贴图数据无效(源文件引用的贴图缺失或加载失败),已移除后继续导出,模型将以灰模/部分贴图入库`,
     )
   }
-  const factor = bakeNormalizedScale(root)
+  const factor = bakeMetricScale(root)
   if (factor !== 1) {
     console.info(
-      `[assetLibrary] 已把源尺寸换算烘进模型(系数 ${factor.toFixed(
+      `[assetLibrary] 已把源尺寸换算成米烘进模型(系数 ${factor.toFixed(
         4,
-      )}),入库模型最长边 ${NORMALIZED_MAX_DIM} 场景单位`,
+      )}),放置时缩放基线为 1 = 真实大小`,
     )
   }
   return exportGLB(root, []).then(compressGLBDraco)

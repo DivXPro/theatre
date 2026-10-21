@@ -34,7 +34,7 @@ import {SkeletonUtils} from 'three-stdlib'
 import {registerBoneAnchors, unregisterBoneAnchors} from './boneAnchors'
 import {notifyTargetRegistryChange, sheetObjectExists} from './aimTargets'
 import {createGLTFLoader} from './assetLibrary/gltfLoader'
-import {NORMALIZED_MAX_DIM} from './assetLibrary/exportGLB'
+import {metricScaleFactor} from './assetLibrary/exportGLB'
 import {getLibrary} from './assetLibrary/library'
 import type {Library} from './assetLibrary/library'
 import {LibraryError} from './assetLibrary/source'
@@ -503,16 +503,18 @@ function usePlacementsList(sheet: ISheet): PlacementEntry[] {
   return list
 }
 
-/** 归一化兜底:入库时缩放已烘进资产(exportGLB.bakeNormalizedScale),
+/** 米制兜底:入库时源单位已换算成米烘进资产(exportGLB.bakeMetricScale),
  * 这里只对未烘焙来源(local 直接拖文件、旧库存)纠偏——已烘焙资产算出
- * 的系数恰好是 1,theatre 缩放属性得以 1 为干净基线。底部对齐落点 */
+ * 的系数恰好是 1,theatre 缩放属性得以 1 为干净基线。底部对齐落点。
+ * ⚠️ 旧库存是「归一化成 5 单位」时代的资产(2026-10-21 前),量出来
+ * maxDim=5 不会触发厘米换算,放出来是 5 米高的巨人——重新导入即得米制。 */
 function useNormalizedModel(fbx: Group) {
   return useMemo(() => {
     const box = new Box3().setFromObject(fbx)
     const size = box.getSize(new Vector3())
     const maxDim = Math.max(size.x, size.y, size.z)
     return {
-      scale: maxDim > 0 ? NORMALIZED_MAX_DIM / maxDim : 1,
+      scale: maxDim > 0 ? metricScaleFactor(maxDim) : 1,
       // lift 是模型局部单位,放进 scale 过的组里后底部正好落在 y=0
       lift: -box.min.y,
     }

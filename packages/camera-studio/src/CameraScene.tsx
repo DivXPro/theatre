@@ -248,10 +248,11 @@ function Model({url, selectLocked}: {url: string; selectLocked?: boolean}) {
 /**
  * 导演视角初始机位/瞄准点:PerspectiveCamera/Target 的 JSX position 与
  * Agent view.reset(MainOrbitControls 登记的导演控制器)同源,改一处
- * 两处一致。
+ * 两处一致。场景单位 = 米:机位 4.5 米外、1.7 米高,瞄准胸口(0.9 米),
+ * 一个 1.8 米的人占画面约四成高,是舒服的工作取景。
  */
-const DIRECTOR_HOME_CAMERA_POSITION: [number, number, number] = [0, 0, 16]
-const DIRECTOR_HOME_TARGET_POSITION: [number, number, number] = [0, 0, 0]
+const DIRECTOR_HOME_CAMERA_POSITION: [number, number, number] = [0, 1.7, 4.5]
+const DIRECTOR_HOME_TARGET_POSITION: [number, number, number] = [0, 0.9, 0]
 
 /**
  * 主画面的视角控制,操作方式与 Blender 默认键位一致:
@@ -724,6 +725,7 @@ const BACKGROUND = new Color().setRGB(
 function GroundGrid() {
   const ref = useRef<Mesh>(null!)
   useEffect(() => registerEditorOnly(ref.current), [])
+  // 场景单位 = 米:小格 1 米、粗线 5 米
   return (
     <Grid
       ref={ref}

@@ -1,17 +1,20 @@
 import {
   Bone,
+  Box3,
   BoxGeometry,
   Group,
   Mesh,
   MeshBasicMaterial,
   MeshStandardMaterial,
   Texture,
+  Vector3,
 } from 'three'
 import {
-  NORMALIZED_MAX_DIM,
-  bakeNormalizedScale,
+  CENTIMETER_SOURCE_THRESHOLD,
+  bakeMetricScale,
   cloneBoneTree,
   exportModelGLB,
+  metricScaleFactor,
   stripInvalidTextures,
 } from './exportGLB'
 
@@ -93,42 +96,52 @@ describe('exportModelGLB', () => {
     expect(mat.map).toBeNull()
   })
 
-  it('入库时把源单位换算烘进根节点缩放(放置时缩放基线才是 1)', async () => {
+  it('入库时把厘米源换算成米烘进根节点缩放(放置时缩放基线才是 1)', async () => {
     // 模拟 Mixamo FBX 厘米单位:180 单位高的人
     const root = new Group()
     root.add(new Mesh(new BoxGeometry(50, 180, 30), new MeshBasicMaterial()))
 
     const glb = await exportModelGLB(root)
     expect(glb.byteLength).toBeGreaterThan(0)
-    expect(root.scale.x).toBeCloseTo(NORMALIZED_MAX_DIM / 180, 6)
+    expect(root.scale.x).toBeCloseTo(0.01, 6)
     expect(root.scale.y).toBe(root.scale.x)
     expect(root.scale.z).toBe(root.scale.x)
   })
 })
 
-describe('bakeNormalizedScale', () => {
-  it('最长边烘成 NORMALIZED_MAX_DIM,按最长边而非高度', () => {
-    const root = new Group()
-    root.add(new Mesh(new BoxGeometry(12, 3, 4), new MeshBasicMaterial()))
-    expect(bakeNormalizedScale(root)).toBeCloseTo(NORMALIZED_MAX_DIM / 12, 6)
-    expect(root.scale.x).toBeCloseTo(NORMALIZED_MAX_DIM / 12, 6)
+describe('metricScaleFactor', () => {
+  it('厘米源(超过阈值)换算 0.01,米源不动', () => {
+    expect(metricScaleFactor(180)).toBe(0.01)
+    expect(metricScaleFactor(1.8)).toBe(1)
   })
 
-  it('已达标模型不动(幂等,重烘已烘焙资产系数为 1)', () => {
+  it('阈值边界:恰好阈值按米,超过才按厘米', () => {
+    expect(metricScaleFactor(CENTIMETER_SOURCE_THRESHOLD)).toBe(1)
+    expect(metricScaleFactor(CENTIMETER_SOURCE_THRESHOLD + 0.01)).toBe(0.01)
+  })
+})
+
+describe('bakeMetricScale', () => {
+  it('厘米源烘成米制真实尺寸(180 高的人 → 1.8)', () => {
     const root = new Group()
-    root.add(
-      new Mesh(
-        new BoxGeometry(NORMALIZED_MAX_DIM, 1, 1),
-        new MeshBasicMaterial(),
-      ),
-    )
-    expect(bakeNormalizedScale(root)).toBe(1)
+    root.add(new Mesh(new BoxGeometry(50, 180, 30), new MeshBasicMaterial()))
+    expect(bakeMetricScale(root)).toBeCloseTo(0.01, 6)
+    expect(root.scale.x).toBeCloseTo(0.01, 6)
+    // 烘完最长边 = 1.8 场景单位(米),人高占比不变
+    const box = new Box3().setFromObject(root)
+    expect(box.getSize(new Vector3()).y).toBeCloseTo(1.8, 6)
+  })
+
+  it('米制模型不动(幂等,重烘已烘焙资产系数为 1)', () => {
+    const root = new Group()
+    root.add(new Mesh(new BoxGeometry(1.8, 1.8, 1.8), new MeshBasicMaterial()))
+    expect(bakeMetricScale(root)).toBe(1)
     expect(root.scale.x).toBe(1)
   })
 
   it('空模型(无边几何时)返回 1 且不动缩放', () => {
     const root = new Group()
-    expect(bakeNormalizedScale(root)).toBe(1)
+    expect(bakeMetricScale(root)).toBe(1)
     expect(root.scale.x).toBe(1)
   })
 
@@ -141,8 +154,8 @@ describe('bakeNormalizedScale', () => {
     hips.add(mesh)
     root.add(hips)
 
-    bakeNormalizedScale(root)
+    bakeMetricScale(root)
     expect(hips.position.y).toBe(90) // 只有根节点 scale 变了
-    expect(root.scale.x).toBeCloseTo(NORMALIZED_MAX_DIM / 180, 6)
+    expect(root.scale.x).toBeCloseTo(0.01, 6)
   })
 })
