@@ -11,10 +11,10 @@ services:
     plan: free
     region: frankfurt
     buildCommand:
-      YARN_NM_MODE=hardlinks-local yarn install && yarn workspace @dreamerbird/app
+      pnpm install --frozen-lockfile && pnpm --filter @dreamerbird/app
       run cli prod build
     # todo
-    startCommand: yarn workspace @dreamerbird/app run start
+    startCommand: pnpm --filter @dreamerbird/app run start
     healthCheckPath: /
     envVars:
       - key: DATABASE_URL
@@ -49,9 +49,9 @@ services:
     plan: free
     region: frankfurt
     buildCommand:
-      YARN_NM_MODE=hardlinks-local yarn install && yarn workspace
+      pnpm install --frozen-lockfile && pnpm --filter
       @dreamerbird/sync-server run cli prod build
-    startCommand: yarn workspace @dreamerbird/sync-server run cli prod start
+    startCommand: pnpm --filter @dreamerbird/sync-server run cli prod start
     healthCheckPath: /
     envVars:
       - key: DATABASE_URL

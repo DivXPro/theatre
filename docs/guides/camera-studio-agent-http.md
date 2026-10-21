@@ -58,7 +58,7 @@ await bridge.close() // 幂等:场景会话、HTTP、任务投影、临时文件
 ### 2.2 CLI
 
 ```bash
-yarn workspace @dreamerbird/camera-studio-bridge build:ts   # 先产出 dist
+pnpm --filter @dreamerbird/camera-studio-bridge build:ts   # 先产出 dist
 CAMERA_STUDIO_BRIDGE_TOKEN='<由部署方提供>' \
   node packages/camera-studio-bridge/dist/cli.js \
   --port 43110 \
@@ -255,7 +255,7 @@ HTTP 上它会被嗅探。远程部署请把桥接放在反向代理(TLS 终止 
 ## 11. 完整 curl 工作流(验收级)
 
 以下序列就是 `examples/camera-host-demo` 端到端测试
-(`yarn workspace camera-host-demo test:e2e`)走的那条主流程,全程纯 HTTP:
+(`pnpm --filter camera-host-demo test:e2e`)走的那条主流程,全程纯 HTTP:
 
 ```bash
 export CAMERA_STUDIO_API_URL=http://127.0.0.1:43110
@@ -370,5 +370,5 @@ node .claude/skills/camera-studio-agent/scripts/scene-api.mjs schema
 下的 `commands.md` 由它生成(`scripts/schema-to-markdown.mjs`),供离线阅读,以运行
 时输出为准。工作流配方与错误恢复规则见同目录的 `workflows.md` 与 `errors.md`;
 SKILL 的端到端验收(真实浏览器 + 真实桥接,全程经该 CLI 驱动)是
-`examples/camera-host-demo/src/agent-skill.e2e.ts`(`yarn workspace camera-host-demo
+`examples/camera-host-demo/src/agent-skill.e2e.ts`(`pnpm --filter camera-host-demo
 test:e2e --grep "agent skill"`)。

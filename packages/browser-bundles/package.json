@@ -16,9 +16,9 @@
     "dist/**/*"
   ],
   "scripts": {
-    "build": "yarn run build:js",
+    "build": "pnpm run build:js",
     "build:js": "tsx ./devEnv/build.ts",
-    "prepublish": "node ../../devEnv/ensurePublishing.js",
+    "prepublishOnly": "node ../../devEnv/ensurePublishing.js",
     "clean": "rm -rf ./dist && rm -f tsconfig.tsbuildinfo"
   },
   "devDependencies": {

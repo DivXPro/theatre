@@ -11,7 +11,7 @@
     "serve": "vite",
     "serve:ci": "vite build && vite preview",
     "build": "vite build --force",
-    "build:static": "echo 'building for vercel' && yarn run build",
+    "build:static": "echo 'building for vercel' && pnpm run build",
     "typecheck": "tsc --noEmit",
     "test": "playwright test --config=devEnv/playwright.config.ts",
     "test:ci": "playwright test --reporter=dot --config=devEnv/playwright.config.ts --project=chromium"

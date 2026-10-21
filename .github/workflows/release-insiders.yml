@@ -103,17 +103,16 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18.x
+          registry-url: 'https://registry.npmjs.org'
 
-      - uses: ./.github/actions/yarn-nm-install
+      - uses: ./.github/actions/pnpm-install
       - name: Build the Theatre.js packages
-        run: yarn cli build
-      - name: Update .yarnrc.yml with the auth config for the npmPublishRegistry
-        run: cat .github/.yarnrc.publish.yml >> .yarnrc.yml
+        run: pnpm cli build
       - name: Publish the Theatre.js packages
         id: publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: yarn zx scripts/prerelease.mjs
+        run: pnpm exec zx scripts/prerelease.mjs
 
       - name: Update the comment
         id: update-comment

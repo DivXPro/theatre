@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "serve": "tsx devEnv/serveBenchmarks.ts",
-    "typecheck": "yarn run build",
+    "typecheck": "pnpm run build",
     "build": "tsc --build ./tsconfig.json"
   },
   "devDependencies": {

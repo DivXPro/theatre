@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "yarn cli build",
+    "build": "pnpm cli build",
     "cli": "tsx devEnv/cli.ts",
-    "prebuild": "yarn cli prebuild",
+    "prebuild": "pnpm cli prebuild",
     "postinstall": "prisma generate"
   },
   "prisma": {

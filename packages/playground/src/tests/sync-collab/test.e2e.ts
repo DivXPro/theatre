@@ -69,7 +69,7 @@ test.setTimeout(60000)
 test('two browsers sync via self-hosted sync-server', async ({browser}) => {
   const port = await findOpenPort()
   const server = spawn(
-    'yarn',
+    'pnpm',
     [
       'exec',
       'tsx',
@@ -88,8 +88,8 @@ test('two browsers sync via self-hosted sync-server', async ({browser}) => {
         AUTH_DISABLED: 'true',
       },
       stdio: ['ignore', 'pipe', 'pipe'],
-      // Make the spawned yarn/tsx/node a process-group leader so SIGTERM
-      // below reaches the whole tree; killing the yarn wrapper alone leaves
+      // Make the spawned pnpm/tsx/node a process-group leader so SIGTERM
+      // below reaches the whole tree; killing the pnpm wrapper alone leaves
       // the tsx/node sync-server grandchild running as an orphan.
       detached: true,
     },

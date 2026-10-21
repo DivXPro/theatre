@@ -13,18 +13,15 @@
 *.tsbuildinfo
 .eslintcache
 
-.yarn/*
-# !.yarn/cache
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/sdks
-!.yarn/versions
+# pnpm 本地调试日志
+pnpm-debug.log*
 
 # Required by the `parcel_v2`
 # compatibility tests
 .parcel-cache
 
+# compat-tests 的 fixture 有意保留 yarn/npm 安装路径(测的就是消费端
+# 用各种包管理器安装),主仓本身已迁移 pnpm。
 /compat-tests/*/.yarn
 /compat-tests/*/build
 /TODO.md

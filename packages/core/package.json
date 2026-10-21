@@ -20,12 +20,12 @@
     "dist/*"
   ],
   "scripts": {
-    "prepublish": "node ../../devEnv/ensurePublishing.js",
+    "prepublishOnly": "node ../../devEnv/ensurePublishing.js",
     "typecheck": "tsc --build",
     "cli": "tsx devEnv/cli.ts",
-    "build": "yarn cli build",
+    "build": "pnpm cli build",
     "clean": "rm -rf ./dist && rm -f tsconfig.tsbuildinfo",
-    "build:api-json": "yarn cli build ts && api-extractor run --local --config devEnv/api-extractor.json"
+    "build:api-json": "pnpm cli build ts && api-extractor run --local --config devEnv/api-extractor.json"
   },
   "sideEffects": true,
   "devDependencies": {

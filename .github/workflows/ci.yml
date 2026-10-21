@@ -20,9 +20,9 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-      - uses: ./.github/actions/yarn-nm-install
+      - uses: ./.github/actions/pnpm-install
 
-      - run: yarn cli build
+      - run: pnpm cli build
   Lint:
     runs-on: buildjet-8vcpu-ubuntu-2204
 
@@ -36,11 +36,11 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-      - uses: ./.github/actions/yarn-nm-install
+      - uses: ./.github/actions/pnpm-install
 
       - run: |
           export NODE_OPTIONS="--max_old_space_size=4096"
-          yarn lint:all --max-warnings 0
+          pnpm lint:all --max-warnings 0
 
   Test:
     runs-on: buildjet-8vcpu-ubuntu-2204
@@ -55,12 +55,12 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-      - uses: ./.github/actions/yarn-nm-install
+      - uses: ./.github/actions/pnpm-install
 
-      - run: yarn test
+      - run: pnpm test
 
       - name: API report in sync
-        run: yarn workspace @dreamerbird/core run build:api-json && git diff --exit-code packages/core/etc/core.api.md
+        run: pnpm --filter @dreamerbird/core run build:api-json && git diff --exit-code packages/core/etc/core.api.md
 
   VisualRegression:
     # skip this until the new API is ready
@@ -78,10 +78,10 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-      - uses: ./.github/actions/yarn-nm-install
+      - uses: ./.github/actions/pnpm-install
 
       - name: Run e2e tests
-        run: yarn test:e2e:ci
+        run: pnpm test:e2e:ci
 
   Compatibility-Tests:
     # skip this until the new API is ready
@@ -98,10 +98,10 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-      - uses: ./.github/actions/yarn-nm-install
+      - uses: ./.github/actions/pnpm-install
       # re-enable the following line if we start to get EINTEGRITY errors again
       # - run: npm cache clean || npm cache verify
       # This will test whether `npm install`/`yarn install` can actually run on each compatibility test fixture. See `compat-tests/README.md` for more info.
-      - run: yarn workspace @dreamerbird/compat-tests run install-fixtures --verbose
+      - run: pnpm --filter @dreamerbird/compat-tests run install-fixtures --verbose
       # after that, we run the jest tests for each fixture
-      - run: yarn test:compat:run --verbose
+      - run: pnpm test:compat:run --verbose

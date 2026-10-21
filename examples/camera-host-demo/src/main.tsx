@@ -1,7 +1,7 @@
 /**
  * camera-studio 最小宿主 demo:顶部宿主导航条 + 整页 CameraScene。
  * 集成指南(docs/guides/camera-studio-embedding.md)的配套可跑示例,
- * 运行(仓库根):yarn workspace camera-host-demo dev
+ * 运行(仓库根):pnpm --filter camera-host-demo dev
  *
  * 演示点:
  * - storage: 自定义可写存储(内存版,刷新即失;生产换 HTTP 实现);

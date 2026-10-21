@@ -1,7 +1,6 @@
 import sade from 'sade'
 import {$, fs, path, question} from '@cspotcode/zx'
 import * as core from '@actions/core'
-import * as os from 'os'
 
 const root = path.join(__dirname, '..')
 
@@ -63,15 +62,15 @@ prog
     const packages = [...packagesToBuild]
 
     await Promise.all([
-      ...packages.map((workspace) => $`yarn workspace ${workspace} run clean`),
+      ...packages.map((workspace) => $`pnpm --filter ${workspace} run clean`),
     ])
   })
 
 prog.command('build', 'Builds all the main packages').action(async () => {
   async function build() {
-    await $`yarn run build:ts`
+    await $`pnpm run build:ts`
     for (const workspace of packagesToBuild) {
-      await $`yarn workspace ${workspace} run build`
+      await $`pnpm --filter ${workspace} run build`
     }
   }
 
@@ -105,7 +104,7 @@ prog
     ]
 
     // our packages will check for this env variable to make sure their
-    // prepublish script is only called from the `$ cd /path/to/monorepo; yarn run release`
+    // prepublishOnly script is only called from the `$ cd /path/to/monorepo; pnpm run release`
     // @ts-ignore ignore
     process.env.THEATRE_IS_PUBLISHING = true
 
@@ -115,7 +114,7 @@ prog
 
       if (typeof version !== 'string') {
         console.error(
-          `You need to specify a version, like: $ yarn cli release 1.2.0-rc.4`,
+          `You need to specify a version, like: $ pnpm cli release 1.2.0-rc.4`,
         )
         process.exit(1)
       } else if (
@@ -197,7 +196,7 @@ prog
       $.verbose = true
       if (opts['skip-lint'] !== true) {
         console.log('Running a typecheck and lint pass')
-        await Promise.all([$`yarn run typecheck`, $`yarn run lint:all`])
+        await Promise.all([$`pnpm run typecheck`, $`pnpm run lint:all`])
       } else {
         console.log('Skipping typecheck and lint')
       }
@@ -211,8 +210,8 @@ prog
       await Promise.all(
         packagesToBuild.map((workspace) =>
           skipTypescriptEmit
-            ? $`yarn workspace ${workspace} run build:js`
-            : $`yarn workspace ${workspace} run build`,
+            ? $`pnpm --filter ${workspace} run build:js`
+            : $`pnpm --filter ${workspace} run build`,
         ),
       )
 
@@ -254,10 +253,9 @@ prog
         const tarballsDir = path.join(root, 'dist', 'tarballs')
         fs.mkdirSync(tarballsDir, {recursive: true})
         for (const workspace of packagesToPublish) {
-          await $`yarn workspace ${workspace} pack --out ${path.join(
-            tarballsDir,
-            '%s-%v.tgz',
-          )}`
+          // pnpm pack 没有 yarn 的 --out 文件名模板,用 --pack-destination
+          // 指定目录,产物同样是 <name>-<version>.tgz。
+          await $`pnpm --filter ${workspace} pack --pack-destination ${tarballsDir}`
         }
         console.log(
           'Dry-run complete. Tarballs in dist/tarballs/. Nothing published.',
@@ -287,7 +285,7 @@ prog
       await Promise.all(
         packagesToPublish.map(
           (workspace) =>
-            $`yarn workspace ${workspace} npm publish --access public --tag ${npmTag}`,
+            $`pnpm --filter ${workspace} publish --access public --tag ${npmTag} --no-git-checks`,
         ),
       )
     }
@@ -424,7 +422,7 @@ prog
         // so we need to generate version numbers independently for each package
         version = getNewVersionName(workspaceData.name, latestCommitHash)
         assignedVersionByPackageName[workspaceData.name] = version
-        // Normally we don't have to override the package versions in dependencies because yarn would already convert
+        // Normally we don't have to override the package versions in dependencies because pnpm would already convert
         // all the "workspace:*" versions to a fixed version before publishing. However, packages like @dreamerbird/studio
         // have a peerDependency on @dreamerbird/core set to "*" (meaning they would work with any version of @dreamerbird/core).
         // This is not the desired behavior in pre-release versions, so here, we'll fix those "*" versions to the set version.
@@ -478,12 +476,15 @@ prog
         fakeMergeCommitHashLength,
       )
 
-      const workspacesListString = await $`yarn workspaces list --json`
-      const workspacesListObjects = workspacesListString.stdout
-        .split(os.EOL)
-        // strip out empty lines
-        .filter(Boolean)
-        .map((x) => JSON.parse(x))
+      // pnpm 输出是单个 JSON 数组且 path 为绝对路径;统一映射成
+      // yarn workspaces list 的 {name, location(相对根)} 形状。
+      const workspacesListString = await $`pnpm ls -r --depth -1 --json`
+      const workspacesListObjects = (
+        JSON.parse(workspacesListString.stdout) as {
+          name: string
+          path: string
+        }[]
+      ).map((w) => ({name: w.name, location: path.relative(root, w.path)}))
 
       const assignedVersionByPackageName = await writeVersionsToPackageJSONs(
         workspacesListObjects,
@@ -494,7 +495,7 @@ prog
         packagesToPublish.map(async (workspaceName) => {
           const npmTag = 'insiders'
           if (process.env.GITHUB_ACTIONS) {
-            await $`yarn workspace ${workspaceName} npm publish --access public --tag ${npmTag}`
+            await $`pnpm --filter ${workspaceName} publish --access public --tag ${npmTag} --no-git-checks`
           }
         }),
       )
@@ -519,9 +520,9 @@ prog
 
 {
   const allDevCommands = [
-    `yarn workspace playground run serve`,
-    `yarn workspace @dreamerbird/app run cli dev all`,
-    `yarn workspace @dreamerbird/sync-server run cli dev all`,
+    `pnpm --filter playground run serve`,
+    `pnpm --filter @dreamerbird/app run cli dev all`,
+    `pnpm --filter @dreamerbird/sync-server run cli dev all`,
   ]
 
   prog
@@ -575,7 +576,7 @@ prog
      * A handy utility to check for unused or unlisted dependencies.
      * We could also include this in the CI checks, but the current config reports some false positives. Once that's fixed, we can add it to the CI (low priority).
      */
-    await $`yarn knip --config ./knip.config.json --include unlisted,dependencies --no-exit-code`
+    await $`pnpm exec knip --config ./knip.config.json --include unlisted,dependencies --no-exit-code`
   })
 
 prog.parse(process.argv)

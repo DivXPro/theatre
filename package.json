@@ -2,24 +2,19 @@
   "name": "theatre-monorepo",
   "license": "Apache-2.0",
   "version": "0.7.0",
-  "workspaces": [
-    "packages/*",
-    "examples/*",
-    "compat-tests"
-  ],
   "scripts": {
     "cli": "tsx devEnv/cli.ts",
-    "playground": "yarn workspace playground run serve",
-    "benchmarks": "yarn workspace benchmarks run serve",
-    "sync-server": "yarn workspace @dreamerbird/sync-server run cli dev start",
-    "test:e2e": "yarn workspace playground run test",
-    "test:e2e:ci": "yarn workspace playground run test:ci",
-    "typecheck": "yarn run build:ts",
+    "playground": "pnpm --filter playground run serve",
+    "benchmarks": "pnpm --filter benchmarks run serve",
+    "sync-server": "pnpm --filter @dreamerbird/sync-server run cli dev start",
+    "test:e2e": "pnpm --filter playground run test",
+    "test:e2e:ci": "pnpm --filter playground run test:ci",
+    "typecheck": "pnpm run build:ts",
     "build:ts": "tsc --build ./devEnv/typecheck-all-projects/tsconfig.all.json",
     "test": "jest",
-    "test:compat:install": "yarn workspace @dreamerbird/compat-tests run install-fixtures",
+    "test:compat:install": "pnpm --filter @dreamerbird/compat-tests run install-fixtures",
     "test:compat:run": "jest --config jest.compat-tests.config.js",
-    "postinstall": "husky install && yarn workspace @dreamerbird/app run prisma generate && yarn workspace @dreamerbird/sync-server run prisma generate",
+    "postinstall": "husky install && pnpm --filter @dreamerbird/app exec prisma generate && pnpm --filter @dreamerbird/sync-server exec prisma generate",
     "lint:all": "eslint . --ext ts,tsx --ignore-path=.gitignore --rulesdir ./devEnv/eslint/rules"
   },
   "lint-staged": {
@@ -64,7 +59,7 @@
     "typescript": "5.6.3",
     "yaml": "^2.3.1"
   },
-  "packageManager": "yarn@3.6.3",
+  "packageManager": "pnpm@10.34.7",
   "engines": {
     "node": ">=18"
   },

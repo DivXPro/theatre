@@ -19,10 +19,10 @@
     "dist/*"
   ],
   "scripts": {
-    "prepublish": "node ../../devEnv/ensurePublishing.js",
+    "prepublishOnly": "node ../../devEnv/ensurePublishing.js",
     "typecheck": "tsc --build",
     "cli": "tsx devEnv/cli.ts",
-    "build": "yarn cli build",
+    "build": "pnpm cli build",
     "clean": "rm -rf ./dist && rm -f tsconfig.tsbuildinfo"
   },
   "sideEffects": true,

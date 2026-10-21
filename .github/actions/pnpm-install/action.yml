@@ -1,0 +1,44 @@
+name: pnpm-install
+description: Installs deps via pnpm and re-uses the store cache
+runs:
+  using: composite
+  steps:
+    # pnpm 版本由根 package.json 的 packageManager 字段锁定(pnpm@10.x)。
+    - name: Set up pnpm
+      uses: pnpm/action-setup@v4
+
+    # pnpm 的全局 store 是内容寻址的,缓存它即可让 install 接近瞬时;
+    # 不需要像 yarn 时代那样缓存 node_modules 并跳过 install。
+    - name: Cache pnpm store
+      id: pnpm-store-cache
+      uses: buildjet/cache@v3
+      with:
+        path: ~/.local/share/pnpm/store
+        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+
+    - run: pnpm install --frozen-lockfile
+      shell: bash
+
+    # Thanks to https://github.com/rafaelbiten for this step https://github.com/microsoft/playwright/issues/7249#issuecomment-1385567519
+    - name: Cache Playwright Browsers for Playwright's Version
+      id: cache-playwright-browsers
+      uses: buildjet/cache@v3
+      with:
+        path: ~/.cache/ms-playwright
+        key: ${{ runner.os }}-playwright-${{ hashFiles('pnpm-lock.yaml') }}
+
+    # This step is only needed if the job runs playwright tests. But we have
+    # to include it in all jobs. The reason is, both `pnpm install` and `pnpm run playwright install`
+    # modify the `~/.cache/ms-playwright` folder. If we don't include this step in all jobs,
+    # then the cache will change in some jobs and not in others, which would make the cache useless.
+    - name: Download playwright
+      if: steps.cache-playwright-browsers.outputs.cache-hit != 'true'
+      shell: bash
+      run: pnpm --filter playground exec playwright install --with-deps
+
+    # prisma client 生成在源码树(packages/*/prisma/client-generated,不入
+    # git 也不入任何缓存),每次都必须补跑——yarn 时代缓存命中跳过
+    # install 曾因此炸过 Build,这里保持无条件执行。
+    - name: Run postinstall
+      shell: bash
+      run: pnpm postinstall

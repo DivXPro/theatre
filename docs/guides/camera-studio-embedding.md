@@ -520,7 +520,7 @@ process.on('SIGTERM', () => {
   `studioAuth` 换成你的会话验权(参考实现里 `ctx.requireValidSession` 的位置)。
 - **资产库不过 sync**:sync 只同步场景文档增量 + presence;模型/姿势数据的一致性
   是**存储服务**的职责(§3 的统一数据源天然解决「A 导入的模型 B 看不
-  见」)。monorepo 里联调可直接跑现成服务:`yarn sync-server`。
+  见」)。monorepo 里联调可直接跑现成服务:`pnpm sync-server`。
 
 ## 7. 约束(接入前必读)
 

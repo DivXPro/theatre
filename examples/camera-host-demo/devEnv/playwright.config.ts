@@ -70,7 +70,7 @@ const config: PlaywrightTestConfig = {
     {
       // demo Vite;reuseExistingServer 必须 false:复用到未注入
       // VITE_CAMERA_STUDIO_AGENT_* 的旧服务器会让测试挂得莫名其妙
-      command: `yarn dev --port ${DEMO_PORT} --strictPort`,
+      command: `pnpm dev --port ${DEMO_PORT} --strictPort`,
       url: DEMO_ORIGIN,
       reuseExistingServer: false,
       timeout: 180_000,
@@ -79,7 +79,7 @@ const config: PlaywrightTestConfig = {
       // 测试桥接:先增量重建 dist(tsc -b,源码与产物不脱节),再起 CLI。
       // --token-env 只传环境变量名;--cors-origin 精确放行 demo origin
       command:
-        `yarn workspace @dreamerbird/camera-studio-bridge build:ts && ` +
+        `pnpm --filter @dreamerbird/camera-studio-bridge build:ts && ` +
         `node packages/camera-studio-bridge/dist/cli.js ` +
         `--port ${BRIDGE_PORT} --token-env ${E2E_TOKEN_ENV} ` +
         `--cors-origin ${DEMO_ORIGIN}`,

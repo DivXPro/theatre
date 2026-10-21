@@ -38,12 +38,12 @@
     }
   },
   "scripts": {
-    "prepack": "yarn run build",
-    "typecheck": "yarn run build",
+    "prepack": "pnpm run build",
+    "typecheck": "pnpm run build",
     "build": "run-s build:ts build:js",
     "build:js": "tsx devEnv/bundle.ts",
     "build:ts": "tsc --build ./tsconfig.json",
-    "prepublish": "yarn run build",
+    "prepublishOnly": "pnpm run build",
     "clean": "rm -rf ./dist && rm -f tsconfig.tsbuildinfo"
   },
   "devDependencies": {

@@ -12,8 +12,8 @@
  * Idempotent by design: versions already on npm are skipped, so re-running
  * a failed release only attempts the packages that did not make it.
  *
- * Auth: in CI the token comes from `.github/.yarnrc.publish.yml` +
- * NODE_AUTH_TOKEN (appended to .yarnrc.yml by the workflow). The token is
+ * Auth: in CI the token reaches pnpm via ~/.npmrc, written by
+ * actions/setup-node's registry-url + NODE_AUTH_TOKEN. The token is
  * never printed.
  */
 import {execFileSync} from 'node:child_process'
@@ -111,24 +111,26 @@ if (todo.length === 0) {
 if (dryRun) process.exit(0)
 
 // --- publish ---------------------------------------------------------------
-// 各包 prepublish 钩子(devEnv/ensurePublishing.js)只认这个哨兵变量,
-// 与 devEnv/cli.ts 的 release/prerelease 通道同一约定。
+// 各包 prepublishOnly/prepack 钩子(devEnv/ensurePublishing.js)只认这个哨兵
+// 变量,与 devEnv/cli.ts 的 release/prerelease 通道同一约定。
 const publishEnv = {...process.env, THEATRE_IS_PUBLISHING: 'true'}
 const published = []
 for (const p of todo) {
   console.log(`Publishing ${p.name}@${p.version} …`)
   try {
+    // --no-git-checks:tag 触发的 CI 检出是 detached HEAD,pnpm 的
+    // 分支/工作区检查会误拦;发后 registry 查证才是真正的闸门。
     execFileSync(
-      'yarn',
+      'pnpm',
       [
-        'workspace',
+        '--filter',
         p.name,
-        'npm',
         'publish',
         '--access',
         'public',
         '--tag',
         'latest',
+        '--no-git-checks',
       ],
       {cwd: repoRoot, stdio: 'inherit', env: publishEnv},
     )
@@ -141,9 +143,8 @@ for (const p of todo) {
   }
   published.push(`${p.name}@${p.version}`)
 
-  // yarn 3.6 在非 TTY 下遭遇 npm 的二次认证(安全密钥)挑战时会打印
-  // "Open https://www.npmjs.com/login/…" 然后**以退出码 0 假成功**,
-  // 什么都没发出去。必须发后查证,把静默哑炮变成显式失败。
+  // 发后查证仍是硬闸(yarn 3.6 曾在非 TTY 下把 npm 的二次认证挑战静默
+  // 当成功;pnpm 无此问题,但查证成本极低,保留兜底)。
   // 查证要带长窗口重试:npm 对已存在的包发新版本几秒内可查,但对
   // **全新包名**的首发有异步审核/索引,实测 ~7.5 分钟才 200——窗口
   // 给 20 分钟,不能把真成功误判成哑炮。

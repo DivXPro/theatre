@@ -1,0 +1,22 @@
+packages:
+  - 'packages/*'
+  - 'examples/*'
+  - 'compat-tests'
+
+# 从 yarn node-modules 模式迁移过来的过渡配置:老代码存在依赖提升
+# (phantom dependency)的隐性依赖,先全量提升到根 node_modules 保持
+# 与 yarn nm 模式等价,后续再收紧为默认的隔离布局。
+shamefully-hoist: true
+
+# pnpm 10 默认不跑依赖的安装期脚本(yarn 会全跑)。下列是确实需要的:
+# esbuild 0.12 靠 postinstall 放置二进制;deasync/fsevents 是原生模块要
+# 编译;prisma 三件套负责引擎下载;@swc/core 是原生转译器。
+# core-js/ejs/parcel-bundler/playwright 维持拦停(横幅或 CI 显式安装)。
+onlyBuiltDependencies:
+  - esbuild
+  - deasync
+  - fsevents
+  - prisma
+  - '@prisma/client'
+  - '@prisma/engines'
+  - '@swc/core'

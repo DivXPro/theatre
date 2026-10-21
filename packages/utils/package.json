@@ -20,15 +20,15 @@
   ],
   "scripts": {
     "prepack": "node ../../devEnv/ensurePublishing.js",
-    "typecheck": "yarn run build:ts",
+    "typecheck": "pnpm run build:ts",
     "build": "run-s build:ts build:js build:api-json",
     "build:ts": "tsc --build ./tsconfig.json",
     "build:js": "tsx ./devEnv/build.ts",
     "build:api-json": "api-extractor run --local --config devEnv/api-extractor.json",
-    "prepublish": "node ../../devEnv/ensurePublishing.js",
+    "prepublishOnly": "node ../../devEnv/ensurePublishing.js",
     "clean": "rm -rf ./dist && rm -f tsconfig.tsbuildinfo",
     "docs": "typedoc src/index.ts --out api --plugin typedoc-plugin-markdown --readme none",
-    "precommit": "yarn run docs"
+    "precommit": "pnpm run docs"
   },
   "devDependencies": {
     "@dreamerbird/dataverse": "workspace:*",

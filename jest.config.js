@@ -67,8 +67,12 @@ module.exports = {
   },
   transformIgnorePatterns: [
     // three/examples/jsm:threeik 0.1.0 操纵器换芯 TransformControls 后
-    // 依赖链上的纯 ESM(three 主包走 require 条件是 CJS,无需例外)
-    'node_modules/(?!(property-graph|@gltf-transform|@dreamerbird/threeik|three/examples)/)',
+    // 依赖链上的纯 ESM(three 主包走 require 条件是 CJS,无需例外)。
+    // pnpm 布局:jest 按 realpath 取路,真实路径带 .pnpm 段且作用域编码
+    // 为 +(如 @dreamerbird+threeik@0.2.1),例外名单要按编码后的写法给。
+    'node_modules/\\.pnpm/(?!(property-graph@|three@|@gltf-transform\\+|@dreamerbird\\+threeik@))',
+    // 直接布局(npm/yarn 或 symlink 未被 realpath 时)
+    'node_modules/(?!\\.pnpm)(?!(property-graph|@gltf-transform|@dreamerbird/threeik|three/examples)/)',
   ],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'mjs', 'json', 'node'],
 }

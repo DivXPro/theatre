@@ -89,7 +89,7 @@ module.exports = {
       parser: 'espree',
       parserOptions: {
         sourceType: 'module',
-        ecmaVersion: 2021,
+        ecmaVersion: 2022,
         ecmaFeatures: {
           jsx: true,
         },
