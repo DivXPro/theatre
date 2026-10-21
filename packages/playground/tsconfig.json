@@ -7,7 +7,36 @@
     "types": ["jest", "node", "vite/client"],
     "emitDeclarationOnly": false,
     "composite": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    // paths 钉版原因见 camera-studio/tsconfig.json 同名注释;@dreamerbird/*
+    // 段照抄 tsconfig.base.json(paths 派生全量替换不合并)。
+    "paths": {
+      "react": ["./node_modules/@types/react"],
+      "react/jsx-runtime": ["./node_modules/@types/react/jsx-runtime"],
+      "react/jsx-dev-runtime": ["./node_modules/@types/react/jsx-dev-runtime"],
+      "react-dom": ["./node_modules/@types/react-dom"],
+      "react-dom/client": ["./node_modules/@types/react-dom/client"],
+      "@dreamerbird/camera-studio": ["../../packages/camera-studio/src/index.ts"],
+      "@dreamerbird/camera-studio/contract-tests": ["../../packages/camera-studio/src/assetLibrary/contractTests.ts"],
+      "@dreamerbird/camera-studio/*": ["../../packages/camera-studio/src/*"],
+      "@dreamerbird/core": ["../../packages/core/src/index.ts"],
+      "@dreamerbird/core/*": ["../../packages/core/src/*"],
+      "@dreamerbird/studio": ["../../packages/studio/src/index.ts"],
+      "@dreamerbird/studio/*": ["../../packages/studio/src/*"],
+      "@dreamerbird/utils": ["../../packages/utils/src/index.ts"],
+      "@dreamerbird/utils/*": ["../../packages/utils/src/*"],
+      "@dreamerbird/saaz": ["../../packages/saaz/src/index.ts"],
+      "@dreamerbird/app/*": ["../../packages/app/src/*"],
+      "@dreamerbird/sync-server/*": ["../../packages/sync-server/src/*"],
+      "@dreamerbird/dataverse": ["../../packages/dataverse/src/index.ts"],
+      "@dreamerbird/react": ["../../packages/react/src/index.ts"],
+      "@dreamerbird/r3f": ["../../packages/r3f/src/index.ts"],
+      "@dreamerbird/r3f/dist/extension": ["../../packages/r3f/src/extension/index.ts"],
+      "@dreamerbird/dataverse-experiments": [
+        "../../packages/dataverse-experiments/src/index.ts"
+      ],
+      "@dreamerbird/theatric": ["../../packages/theatric/src/index.ts"]
+    }
   },
   "references": [
     {"path": "../camera-studio"},

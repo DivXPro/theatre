@@ -3,7 +3,7 @@
 import {type Session} from 'next-auth'
 import {SessionProvider as NextAuthSessionProvider} from 'next-auth/react'
 
-export default async function SessionProvider({
+export default function SessionProvider({
   children,
   session,
 }: {

@@ -26,7 +26,12 @@
     "paths": {
       "@prisma/client": ["./prisma/client-generated"],
       "~/*": ["./src/*"],
-      "@dreamerbird/utils/*": ["../utils/src/*"]
+      "@dreamerbird/utils/*": ["../utils/src/*"],
+      "react": ["./node_modules/@types/react"],
+      "react/jsx-runtime": ["./node_modules/@types/react/jsx-runtime"],
+      "react/jsx-dev-runtime": ["./node_modules/@types/react/jsx-dev-runtime"],
+      "react-dom": ["./node_modules/@types/react-dom"],
+      "react-dom/client": ["./node_modules/@types/react-dom/client"]
     },
     "noEmit": false
   },

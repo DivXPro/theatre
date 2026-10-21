@@ -6,7 +6,43 @@
     "rootDir": "src",
     "types": ["jest", "node"],
     "target": "es2020",
-    "composite": true
+    "composite": true,
+    // paths 在派生 tsconfig 里是全量替换(不合并),所以 @dreamerbird/*
+    // 段照抄 tsconfig.base.json;新增的是 react 类型钉版:
+    // pnpm 布局下 styled-components/@react-three/fiber 等第三方 d.ts
+    // 不带 @types/react 依赖,类型解析会顺 node_modules 上爬,抓到哪个
+    // 主版本全凭提升运气(实测抓到 18.3.31)。18 类型自带全局 JSX
+    // 命名空间(只有 DOM 元素),会屏蔽 fiber 对本包 React 19 类型的
+    // 模块级 JSX 增强,导致 <group>/<primitive> 等 R3F 元素全部报
+    // TS2339;ReactNode 双主版本并存还会报 TS2769。把整个编译程序的
+    // react 类型解析钉到本包自己的 19.2.18,单一类型身份。
+    "paths": {
+      "react": ["./node_modules/@types/react"],
+      "react/jsx-runtime": ["./node_modules/@types/react/jsx-runtime"],
+      "react/jsx-dev-runtime": ["./node_modules/@types/react/jsx-dev-runtime"],
+      "react-dom": ["./node_modules/@types/react-dom"],
+      "react-dom/client": ["./node_modules/@types/react-dom/client"],
+      "@dreamerbird/camera-studio": ["../../packages/camera-studio/src/index.ts"],
+      "@dreamerbird/camera-studio/contract-tests": ["../../packages/camera-studio/src/assetLibrary/contractTests.ts"],
+      "@dreamerbird/camera-studio/*": ["../../packages/camera-studio/src/*"],
+      "@dreamerbird/core": ["../../packages/core/src/index.ts"],
+      "@dreamerbird/core/*": ["../../packages/core/src/*"],
+      "@dreamerbird/studio": ["../../packages/studio/src/index.ts"],
+      "@dreamerbird/studio/*": ["../../packages/studio/src/*"],
+      "@dreamerbird/utils": ["../../packages/utils/src/index.ts"],
+      "@dreamerbird/utils/*": ["../../packages/utils/src/*"],
+      "@dreamerbird/saaz": ["../../packages/saaz/src/index.ts"],
+      "@dreamerbird/app/*": ["../../packages/app/src/*"],
+      "@dreamerbird/sync-server/*": ["../../packages/sync-server/src/*"],
+      "@dreamerbird/dataverse": ["../../packages/dataverse/src/index.ts"],
+      "@dreamerbird/react": ["../../packages/react/src/index.ts"],
+      "@dreamerbird/r3f": ["../../packages/r3f/src/index.ts"],
+      "@dreamerbird/r3f/dist/extension": ["../../packages/r3f/src/extension/index.ts"],
+      "@dreamerbird/dataverse-experiments": [
+        "../../packages/dataverse-experiments/src/index.ts"
+      ],
+      "@dreamerbird/theatric": ["../../packages/theatric/src/index.ts"]
+    }
   },
   "references": [
     {"path": "../core"},
