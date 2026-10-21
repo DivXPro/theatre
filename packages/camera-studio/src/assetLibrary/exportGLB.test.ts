@@ -7,7 +7,13 @@ import {
   MeshStandardMaterial,
   Texture,
 } from 'three'
-import {cloneBoneTree, exportModelGLB, stripInvalidTextures} from './exportGLB'
+import {
+  NORMALIZED_MAX_DIM,
+  bakeNormalizedScale,
+  cloneBoneTree,
+  exportModelGLB,
+  stripInvalidTextures,
+} from './exportGLB'
 
 describe('cloneBoneTree', () => {
   it('只保留骨骼节点(名字/变换),剔除网格', () => {
@@ -85,5 +91,58 @@ describe('exportModelGLB', () => {
     const glb = await exportModelGLB(root)
     expect(glb.byteLength).toBeGreaterThan(0)
     expect(mat.map).toBeNull()
+  })
+
+  it('入库时把源单位换算烘进根节点缩放(放置时缩放基线才是 1)', async () => {
+    // 模拟 Mixamo FBX 厘米单位:180 单位高的人
+    const root = new Group()
+    root.add(new Mesh(new BoxGeometry(50, 180, 30), new MeshBasicMaterial()))
+
+    const glb = await exportModelGLB(root)
+    expect(glb.byteLength).toBeGreaterThan(0)
+    expect(root.scale.x).toBeCloseTo(NORMALIZED_MAX_DIM / 180, 6)
+    expect(root.scale.y).toBe(root.scale.x)
+    expect(root.scale.z).toBe(root.scale.x)
+  })
+})
+
+describe('bakeNormalizedScale', () => {
+  it('最长边烘成 NORMALIZED_MAX_DIM,按最长边而非高度', () => {
+    const root = new Group()
+    root.add(new Mesh(new BoxGeometry(12, 3, 4), new MeshBasicMaterial()))
+    expect(bakeNormalizedScale(root)).toBeCloseTo(NORMALIZED_MAX_DIM / 12, 6)
+    expect(root.scale.x).toBeCloseTo(NORMALIZED_MAX_DIM / 12, 6)
+  })
+
+  it('已达标模型不动(幂等,重烘已烘焙资产系数为 1)', () => {
+    const root = new Group()
+    root.add(
+      new Mesh(
+        new BoxGeometry(NORMALIZED_MAX_DIM, 1, 1),
+        new MeshBasicMaterial(),
+      ),
+    )
+    expect(bakeNormalizedScale(root)).toBe(1)
+    expect(root.scale.x).toBe(1)
+  })
+
+  it('空模型(无边几何时)返回 1 且不动缩放', () => {
+    const root = new Group()
+    expect(bakeNormalizedScale(root)).toBe(1)
+    expect(root.scale.x).toBe(1)
+  })
+
+  it('骨骼局部数据不受影响(动画轨道寻址的那层)', () => {
+    const root = new Group()
+    const hips = new Bone()
+    hips.name = 'Hips'
+    hips.position.set(0, 90, 0)
+    const mesh = new Mesh(new BoxGeometry(50, 180, 30), new MeshBasicMaterial())
+    hips.add(mesh)
+    root.add(hips)
+
+    bakeNormalizedScale(root)
+    expect(hips.position.y).toBe(90) // 只有根节点 scale 变了
+    expect(root.scale.x).toBeCloseTo(NORMALIZED_MAX_DIM / 180, 6)
   })
 })

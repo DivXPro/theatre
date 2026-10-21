@@ -32,7 +32,7 @@ export const seedAssetsManifest: SeedAssetsManifest = {
     {
       key: 'y-bot',
       file: 'Y Bot.glb',
-      contentHash: '95cbcdd2192dbe68',
+      contentHash: 'd1b47880a8a72b81',
       name: 'Y Bot',
       rig: 'rig-16a71e249f45355b',
       boneCount: 117,
