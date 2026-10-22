@@ -35,6 +35,7 @@ import {registerBoneAnchors, unregisterBoneAnchors} from './boneAnchors'
 import {notifyTargetRegistryChange, sheetObjectExists} from './aimTargets'
 import {createGLTFLoader} from './assetLibrary/gltfLoader'
 import {metricScaleFactor} from './assetLibrary/exportGLB'
+import {getFirstScreenGate} from './firstScreenGate'
 import {getLibrary} from './assetLibrary/library'
 import type {Library} from './assetLibrary/library'
 import {LibraryError} from './assetLibrary/source'
@@ -942,6 +943,17 @@ export function PlacedModels({
     pendingEntry && !list.some((e) => e.key === pendingEntry.key)
       ? [...list, pendingEntry]
       : list
+  // 首屏闸门(firstScreenGate 机制):先登记本批要等的模型、再报工程就绪,
+  // 顺序不可换——先报就绪而 pending 为空会提前揭幕。已落定的 key gate
+  // 内部防回加,清单变化重跑只补登新条目;落定后全部调用是 no-op
+  const entriesKey = entries.map((e) => e.key).join('|')
+  useEffect(() => {
+    if (!ready) return
+    const gate = getFirstScreenGate()
+    for (const e of entries) gate.expect(e.key)
+    gate.setProjectReady()
+    // entries 用 join 串做依赖:内容没变不重复跑
+  }, [ready, entriesKey])
   if (!ready) return null
   return (
     <>
@@ -1141,6 +1153,12 @@ function PlacedModelCore({
   selectLocked?: boolean
   onObjectMenu?: (key: string, x: number, y: number) => void
 }) {
+  // 两条加载路径(库 GLB / 本地 FBX)都在这里汇合:挂载即「这个模型
+  // 落定了」,上报首屏闸门(失败路径由 PlacedModelErrorBoundary 上报)
+  useEffect(() => {
+    getFirstScreenGate().settle(entry.key)
+    // entry.key 挂载期内不变
+  }, [])
   const additionalProps = useMemo(() => {
     const modelEntryId =
       sourceType === 'library' ? entry.libraryEntryId : undefined
@@ -1635,6 +1653,8 @@ class PlacedModelErrorBoundary extends React.Component<
   }
   componentDidCatch(err: unknown) {
     console.warn(`[placement] 模型 ${this.props.entry.key} 加载失败`, err)
+    // 失败也是落定:首屏闸门不能因一个坏模型一直挂遮罩
+    getFirstScreenGate().settle(this.props.entry.key)
     // Agent models.create 正等着挂载完成(Task 8):失败必须 reject waiter,
     // 不能悬挂;UI 路径没有 waiter,rejectPlacement 是 no-op
     rejectPlacement(this.props.entry.key, err)

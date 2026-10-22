@@ -156,6 +156,12 @@ import {resolveControlSpec} from './poseMode/controlSpec'
 import type {CameraSceneProps} from './config'
 import {getUiConfig} from './uiConfig'
 import {
+  createFirstScreenGate,
+  getFirstScreenGate,
+  installFirstScreenGate,
+  resetFirstScreenGate,
+} from './firstScreenGate'
+import {
   enterPoseSession,
   getPoseSession,
   isModelDoubleClick,
@@ -173,6 +179,26 @@ import {savePoseFromInstance} from './poseMode/savePose'
 import {parsePoseValue, serializeLibPose} from './poseMode/poseValue'
 import {isPoseExitGuardedTarget} from './poseMode/poseExitGuard'
 import {poseStatusText} from './poseStatusText'
+
+/** 首屏闸门里场景内置模型(scene.glb)的登记 key */
+const SCENE_MODEL_GATE_KEY = 'scene-glb'
+
+/**
+ * 加载探针:Suspense 未解决时子树不挂载,mount effect 触发即
+ * 「这个资源落定了」,上报首屏闸门(firstScreenGate 机制)
+ */
+function InitialLoadProbe({
+  gateKey,
+  children,
+}: {
+  gateKey: string
+  children: React.ReactNode
+}) {
+  useEffect(() => {
+    getFirstScreenGate().settle(gateKey)
+  }, [gateKey])
+  return <>{children}</>
+}
 
 function Model({url, selectLocked}: {url: string; selectLocked?: boolean}) {
   const {nodes} = useGLTF(url) as any
@@ -1882,6 +1908,29 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
   // 稳定引用:行为不变(setPipVisible 取反),与 handleToggleModel/Path 同模式
   const handleTogglePip = useCallback(() => setPipVisible((v) => !v), [])
 
+  // 首屏闸门(firstScreenGate 机制):创建即安装——子树 effect 先于父 effect
+  // 运行,useState 初始化器(渲染期)是子树 effect 能拿到闸门的最早时机;
+  // 卸载时若单值仍是本闸门则复位(重挂载由新实例重装)
+  const [firstScreenReady, setFirstScreenReady] = useState(false)
+  const [coverGone, setCoverGone] = useState(false)
+  const [firstScreenGate] = useState(() => {
+    const gate = createFirstScreenGate(() => setFirstScreenReady(true))
+    gate.expect(SCENE_MODEL_GATE_KEY)
+    installFirstScreenGate(gate)
+    return gate
+  })
+  useEffect(() => {
+    return () => {
+      if (getFirstScreenGate() === firstScreenGate) resetFirstScreenGate()
+    }
+  }, [firstScreenGate])
+  // 遮罩淡出(0.3s)+ 余量后卸载,不依赖 transitionend 单一路径
+  useEffect(() => {
+    if (!firstScreenReady) return
+    const t = setTimeout(() => setCoverGone(true), 600)
+    return () => clearTimeout(t)
+  }, [firstScreenReady])
+
   return (
     <SceneI18nRoot>
       <div
@@ -2268,7 +2317,9 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
               <meshPhongMaterial attach="material" color="red" />
             </e.mesh>
             <Suspense fallback={null}>
-              <Model url={sceneGLB} selectLocked={!!placing} />
+              <InitialLoadProbe gateKey={SCENE_MODEL_GATE_KEY}>
+                <Model url={sceneGLB} selectLocked={!!placing} />
+              </InitialLoadProbe>
             </Suspense>
             {placing && (
               <Suspense fallback={null}>
@@ -2315,6 +2366,38 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
             <GroundGrid />
           </SheetProvider>
         </Canvas>
+        {/* 首屏遮罩(firstScreenGate 机制):工程就绪 + 首批模型落定前盖住
+          全场,避免顶栏/轴向控制器等同步部件先蹦出来的参差开场;落定后
+          淡出卸载,之后不再遮盖(后续放置走各自的加载态) */}
+        {!coverGone && (
+          <div
+            aria-hidden
+            style={{
+              position: 'absolute',
+              inset: 0,
+              zIndex: getUiConfig().zIndexBase + 100,
+              background: '#454545',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              opacity: firstScreenReady ? 0 : 1,
+              transition: 'opacity 0.3s ease',
+              pointerEvents: firstScreenReady ? 'none' : 'auto',
+            }}
+          >
+            <style>{`@keyframes cameraStudioFirstScreenSpin{to{transform:rotate(360deg)}}`}</style>
+            <div
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: '50%',
+                border: '3px solid rgba(255,255,255,0.25)',
+                borderTopColor: '#ffffff',
+                animation: 'cameraStudioFirstScreenSpin 0.8s linear infinite',
+              }}
+            />
+          </div>
+        )}
       </div>
     </SceneI18nRoot>
   )
