@@ -21,7 +21,11 @@ export type {
   CameraStudioErrorSource,
 } from './errors'
 // 测试与高级宿主可用:绕过 hook 直接管 init/dispose 生命周期
-export {initCameraStudio, disposeCameraStudio} from './bootstrap'
+export {
+  initCameraStudio,
+  disposeCameraStudio,
+  resetCameraStudio,
+} from './bootstrap'
 export type {BootCtx} from './bootstrap'
 // Agent JS API(spec §7/§9):门面、命名空间类型、DTO 与错误族。
 // 内部接线口(activate/dispose/bindSceneHandlers/getActiveAgentRuntime)

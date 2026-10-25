@@ -3,8 +3,8 @@
  *
  * - config 只在首帧取一次(useRef 锁存):后续渲染传新配置不热更,
  *   与 theatre.init 的一次性语义对齐;已 boot 后重挂换 config 不生效
- *   (模块级 promise 复用首 boot),console.warn 点名差异键,换配置需
- *   整页刷新。
+ *   (模块级 promise 复用首 boot),console.warn 点名差异键;换配置需
+ *   整页刷新,或在全部消费者卸载后显式 resetCameraStudio。
  * - 状态机:idle → initializing → ready / error;init 挂 bootstrap 的
  *   共享 promise,StrictMode 双跑/重复触发只复用。
  * - 单页单实例(studio 全局单例):同页第二个实例不占位、直接 error。

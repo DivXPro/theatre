@@ -124,6 +124,13 @@ export namespace stateEditors {
     draft.ephemeral ??= initialState.ephemeral
     return draft as Required<StudioState>
   }
+  export function deleteProject(draft: Draft, api: API, p: ProjectAddress) {
+    const state = _ensureAll(draft)
+    delete state.historic.coreByProject[p.projectId]
+    delete state.historic.projects.stateByProjectId[p.projectId]
+    delete state.ahistoric.projects.stateByProjectId[p.projectId]
+    delete state.ephemeral.projects.stateByProjectId[p.projectId]
+  }
   export namespace studio {
     export namespace historic {
       export namespace panelPositions {

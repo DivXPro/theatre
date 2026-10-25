@@ -36,6 +36,7 @@ const initSpy = jest.fn(async (_opts?: unknown) => {})
 const fakeSheet = {fakeSheet: true}
 const getProjectSpy = jest.fn((_name?: string, _opts?: unknown) => ({
   fake: true,
+  address: {projectId: _name},
   sheet: jest.fn(() => fakeSheet),
 }))
 // studio.ui 替身:hide/restore 翻转 isHidden(与真 UI 行为一致;
@@ -780,4 +781,63 @@ test('ui.panels hides only the requested panel without changing timeline visibil
   })
   expect(studio.atomP.ahistoric.visibilityState).toBe('everythingIsVisible')
   await h.unmount()
+})
+
+test('resetCameraStudio clears retained project/state config across A→B→A remounts', async () => {
+  const stateA = {objects: {a: {position: [1, 0, 0]}}}
+  const stateB = {objects: {b: {position: [2, 0, 0]}}}
+  const stateA2 = {objects: {a2: {position: [3, 0, 0]}}}
+  const onA = jest.fn()
+  const onB = jest.fn()
+  const onA2 = jest.fn()
+
+  const a = hookHost({
+    project: 'SceneA',
+    storage: false,
+    state: {initialState: stateA, onStateChange: onA},
+  })
+  await a.mount()
+  const projectA = a.result.current?.sceneProps.project
+  expect(projectA).toBeDefined()
+  await a.unmount()
+  await bootstrap.resetCameraStudio()
+
+  const b = hookHost({
+    project: 'SceneB',
+    storage: false,
+    state: {initialState: stateB, onStateChange: onB},
+  })
+  await b.mount()
+  expect(b.result.current?.sceneProps.project).not.toBe(projectA)
+  const projectB = b.result.current?.sceneProps.project
+  const stateCallbackB = onChangeSpy.mock.calls.at(-1)?.[1] as (
+    content: unknown,
+  ) => void
+  stateCallbackB({scene: 'B'})
+  await b.result.current!.flushState()
+  expect(onB).toHaveBeenCalledWith({scene: 'B'})
+  expect(onA).not.toHaveBeenCalled()
+  await b.unmount()
+  await bootstrap.resetCameraStudio()
+
+  const a2 = hookHost({
+    project: 'SceneA',
+    storage: false,
+    state: {initialState: stateA2, onStateChange: onA2},
+  })
+  await a2.mount()
+  expect(a2.result.current?.sceneProps.project).not.toBe(projectA)
+  expect(a2.result.current?.sceneProps.project).not.toBe(projectB)
+  const stateCallbackA2 = onChangeSpy.mock.calls.at(-1)?.[1] as (
+    content: unknown,
+  ) => void
+  stateCallbackA2({scene: 'A2'})
+  await a2.result.current!.flushState()
+  expect(onA2).toHaveBeenCalledWith({scene: 'A2'})
+  expect(onB).toHaveBeenCalledTimes(1)
+  await a2.unmount()
+
+  expect(getProjectSpy).toHaveBeenCalledWith('SceneA', {state: stateA})
+  expect(getProjectSpy).toHaveBeenCalledWith('SceneB', {state: stateB})
+  expect(getProjectSpy).toHaveBeenCalledWith('SceneA', {state: stateA2})
 })
