@@ -251,7 +251,16 @@ async function describeImportFailure(
   } catch {
     // 连列举都失败时不掩盖原始错误
   }
-  const cause = error instanceof Error ? error.message : String(error)
+  const structured = error as {
+    failedItems?: Array<{file: string; message: string}>
+    cause?: unknown
+  }
+  const failedItems = Array.isArray(structured?.failedItems)
+    ? structured.failedItems
+    : undefined
+  const sourceError = structured?.cause ?? error
+  const cause =
+    sourceError instanceof Error ? sourceError.message : String(sourceError)
   if (createdAssetIds.length > 0) {
     return new AgentApiError(
       'PARTIAL_FAILURE',
@@ -259,12 +268,26 @@ async function describeImportFailure(
       {
         details: {
           createdAssetIds,
-          failedItems: files.map((file) => ({file: file.name, message: cause})),
+          failedItems:
+            failedItems ??
+            files.map((file) => ({file: file.name, message: cause})),
         },
       },
     )
   }
-  return mapLibraryError(error)
+  const normalized = mapLibraryError(sourceError)
+  if (failedItems) {
+    return new AgentApiError(normalized.code, normalized.message, {
+      retryable: normalized.retryable,
+      details: {
+        ...(typeof normalized.details === 'object' && normalized.details
+          ? normalized.details
+          : {}),
+        failedItems,
+      },
+    })
+  }
+  return normalized
 }
 
 export function registerAssetCommands(

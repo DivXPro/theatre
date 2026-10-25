@@ -1,4 +1,6 @@
+import {BoxGeometry, Group, Mesh, MeshBasicMaterial} from 'three'
 import {importModelFiles} from './importModelFiles'
+import type {ImportDeps} from './importPipeline'
 import {Library} from './library'
 import type {LibraryBackend, LibraryEntry} from './types'
 
@@ -82,6 +84,20 @@ function memoryBackend() {
     putRigAlias: async () => {},
   } as LibraryBackend
   return {backend, entries, blobs}
+}
+
+function modelDeps(names: string[]): ImportDeps {
+  return {
+    load: async (file) => {
+      if (!names.includes(file.name)) throw new Error('无法解析')
+      const root = new Group()
+      root.name = file.name
+      root.add(new Mesh(new BoxGeometry(), new MeshBasicMaterial()))
+      return {root, animations: []}
+    },
+    exportModel: async (root) => new TextEncoder().encode(root.name).buffer,
+    exportAnimation: async () => new TextEncoder().encode('anim').buffer,
+  }
 }
 
 function gltfJsonChunk(glb: ArrayBuffer) {
@@ -209,5 +225,38 @@ describe('importModelFiles', () => {
     expect(URL.revokeObjectURL).toHaveBeenCalledWith(
       expect.stringMatching(/^blob:test-/),
     )
+  })
+
+  it('多个模型根全部成功时按原数组契约返回全部新条目', async () => {
+    const {backend} = memoryBackend()
+    const library = new Library({sources: [backend]})
+
+    const imported = await importModelFiles(
+      [new File(['a'], 'a.gltf'), new File(['b'], 'b.gltf')],
+      library,
+      modelDeps(['a.gltf', 'b.gltf']),
+    )
+
+    expect(imported.map((entry) => entry.name)).toEqual(['a', 'b'])
+    expect(await library.listEntries('model')).toHaveLength(2)
+  })
+
+  it('混合成功时保留成功条目并报告失败文件及原因', async () => {
+    const {backend} = memoryBackend()
+    const library = new Library({sources: [backend]})
+
+    await expect(
+      importModelFiles(
+        [new File(['a'], 'a.gltf'), new File(['x'], 'broken.gltf')],
+        library,
+        modelDeps(['a.gltf']),
+      ),
+    ).rejects.toMatchObject({
+      entries: [expect.objectContaining({kind: 'model', name: 'a'})],
+      failedItems: [{file: 'broken.gltf', message: expect.any(String)}],
+    })
+    expect(
+      (await library.listEntries('model')).map((entry) => entry.name),
+    ).toEqual(['a'])
   })
 })

@@ -252,4 +252,34 @@ describe('executeImport', () => {
     await executeImport(plan, ['keep'], lib)
     expect((await backend.listEntries('model')).length).toBe(1)
   })
+
+  it('第二个模型写库失败时保留实际失败项与原始错误', async () => {
+    const backend = memoryBackend()
+    let writes = 0
+    backend.putBlob = async () => {
+      writes++
+      if (writes === 2) throw new Error('disk full')
+      return `blob-${writes}`
+    }
+    const lib = new Library({sources: [backend]})
+    const deps = depsFor({
+      'a.fbx': {root: skinnedModel('Hips'), animations: []},
+      'b.fbx': {root: skinnedModel('Spine'), animations: []},
+    })
+    deps.exportModel = async (root) => {
+      const names: string[] = []
+      root.traverse((object) => names.push(object.name))
+      return new TextEncoder().encode(names.join('|')).buffer
+    }
+    const plan = await planImportZh(
+      [file('a.fbx'), file('b.fbx')],
+      backend,
+      deps,
+    )
+
+    await expect(executeImport(plan, [], lib)).rejects.toMatchObject({
+      item: {name: 'b', sourceFile: 'b.fbx'},
+      cause: new Error('disk full'),
+    })
+  })
 })
