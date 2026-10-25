@@ -2,6 +2,7 @@ import type {AnimationClip, Group, Object3D} from 'three'
 import {translate, type TFunction} from '@dreamerbird/studio/i18n'
 import {classifyModel, validatePoseJson} from './classify'
 import {createGLTFLoader} from './gltfLoader'
+import {createResourceUrlModifier} from './gltfResourceSet'
 import {exportAnimationGLB, exportModelGLB} from './exportGLB'
 import {hashBytes} from './hash'
 import type {Library} from './library'
@@ -17,15 +18,30 @@ export type ImportDeps = {
   exportAnimation: (root: Object3D, clip: AnimationClip) => Promise<ArrayBuffer>
 }
 
-export const realImportDeps: () => ImportDeps = () => ({
-  load: defaultLoad,
+export const realImportDeps: (files?: File[]) => ImportDeps = (files) => ({
+  load: (file) => defaultLoad(file, files),
   exportModel: exportModelGLB,
   exportAnimation: exportAnimationGLB,
 })
 
-async function defaultLoad(file: File): Promise<LoadedModel> {
+async function defaultLoad(
+  file: File,
+  resourceFiles?: File[],
+): Promise<LoadedModel> {
   const {FBXLoader} = await import('three-stdlib')
   const {LoadingManager} = await import('three')
+  if (resourceFiles && /\.gltf$/i.test(file.name)) {
+    const resources = createResourceUrlModifier(resourceFiles)
+    try {
+      const gltf = await createGLTFLoader(resources.manager).parseAsync(
+        await file.text(),
+        '',
+      )
+      return {root: gltf.scene as Group, animations: gltf.animations}
+    } finally {
+      resources.dispose()
+    }
+  }
   const url = URL.createObjectURL(file)
   try {
     if (/\.glb$|\.gltf$/i.test(file.name)) {

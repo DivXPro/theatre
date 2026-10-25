@@ -99,3 +99,4 @@ export type {
   LibraryEntry,
 } from './assetLibrary/types'
 export {IndexedDBBackend} from './assetLibrary/indexedDBBackend'
+export {importModelFiles} from './assetLibrary/importModelFiles'

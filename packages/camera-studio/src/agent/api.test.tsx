@@ -329,6 +329,11 @@ const FACADE_COMMANDS: ReadonlyArray<{
     args: {file: {name: 'm.glb'}},
   },
   {
+    path: 'assets.importModels',
+    command: 'assets.importModels',
+    args: {files: [{name: 'm.gltf'}, {name: 'm.bin'}]},
+  },
+  {
     path: 'assets.rename',
     command: 'assets.rename',
     args: {assetId: 'asset-1', name: '新名字'},
