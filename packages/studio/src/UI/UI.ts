@@ -1,4 +1,5 @@
 import type {Studio} from '@dreamerbird/studio/Studio'
+import type {StudioPanelVisibility} from '@dreamerbird/core/types/public'
 import {val} from '@dreamerbird/dataverse'
 
 const NonSSRBitsClass =
@@ -59,6 +60,13 @@ export default class UI {
    */
   setLeftStripHidden(hidden: boolean) {
     this.studio.ephemeralAtom.setByPointer((p) => p.leftStripHidden, hidden)
+  }
+
+  setPanelVisibility(visibility: StudioPanelVisibility) {
+    this.studio.ephemeralAtom.setByPointer((p) => p.hiddenPanels, {
+      outline: visibility.outline === false,
+      details: visibility.details === false,
+    })
   }
 
   renderToolset(toolsetId: string, htmlNode: HTMLElement) {

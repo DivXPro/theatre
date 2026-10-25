@@ -64,7 +64,7 @@ export interface BootCtx {
   library: Library
   unregisterEditors: () => void
   /** 节流通道手动 flush:dispose 时调用,尾部变更不丢 */
-  flushState: () => void
+  flushState: () => Promise<void>
   /**
    * 状态通道入口:生产由 project 历史指针订阅喂入,测试可直接调。
    * 尾部节流(缺省 1000ms)后转给 config.state.onStateChange。
@@ -266,6 +266,10 @@ async function boot(config: CameraStudioConfig): Promise<BootCtx> {
   if (config.ui?.hideLeftStrip) {
     withStudioUi((ui) => ui.setLeftStripHidden(true))
   }
+  if (config.ui?.panels) {
+    const panels = config.ui.panels
+    withStudioUi((ui) => ui.setPanelVisibility(panels))
+  }
 
   // 1. 数据源:可写源(若有) + 内置目录,聚合进 Library 单例
   const {sources, idbName} = resolveSources(config)
@@ -328,7 +332,7 @@ async function boot(config: CameraStudioConfig): Promise<BootCtx> {
   let pendingContent: unknown
   let hasPending = false
   let timer: ReturnType<typeof setTimeout> | undefined
-  const flushState = (): void => {
+  const flushState = async (): Promise<void> => {
     if (timer !== undefined) {
       clearTimeout(timer)
       timer = undefined
@@ -337,7 +341,7 @@ async function boot(config: CameraStudioConfig): Promise<BootCtx> {
     hasPending = false
     const content = pendingContent
     pendingContent = undefined
-    config.state?.onStateChange?.(content)
+    await config.state?.onStateChange?.(content)
   }
   const notifyStateChange = (content: unknown): void => {
     if (!config.state?.onStateChange) return
@@ -445,7 +449,7 @@ function acquireSession(ctx: BootCtx): void {
     ctx.unregisterEditors()
     unsubState?.()
     // 先断订阅再 flush:尾部变更带给宿主,不丢
-    ctx.flushState()
+    await ctx.flushState()
     withStudioUi((ui) => ui.hide())
   }
 }

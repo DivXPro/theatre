@@ -105,5 +105,6 @@ export function useCameraStudio(
     error: phase.error,
     sceneProps,
     api: getCameraStudioApi(),
+    flushState: () => phase.ctx?.flushState() ?? Promise.resolve(),
   }
 }

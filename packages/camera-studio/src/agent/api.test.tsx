@@ -657,6 +657,48 @@ function commandOf(row: {command: string}): string {
   return row.command
 }
 
+test('subscribe receives historic and selection changes and stops after unsubscribe', () => {
+  let notifyHistoric = () => {}
+  let notifySelection = () => {}
+  const unsubscribeSelection = jest.fn(() => {
+    notifySelection = () => {}
+  })
+  const runtime = createAgentRuntime({
+    project: {} as never,
+    sheet: {} as never,
+    library: {} as never,
+    getStudio: () =>
+      ({
+        onSelectionChange: (listener: () => void) => {
+          notifySelection = listener
+          return unsubscribeSelection
+        },
+      }) as never,
+    subscribeHistoric: (listener) => {
+      notifyHistoric = listener
+      return () => {
+        notifyHistoric = () => {}
+      }
+    },
+  })
+  const controller = createCameraStudioApi()
+  controller.activate(runtime)
+  const listener = jest.fn()
+  const unsubscribe = controller.api.subscribe(listener)
+
+  notifyHistoric()
+  notifySelection()
+  expect(listener).toHaveBeenCalledTimes(2)
+
+  listener.mockClear()
+  unsubscribe()
+  notifyHistoric()
+  notifySelection()
+  expect(listener).not.toHaveBeenCalled()
+  expect(unsubscribeSelection).toHaveBeenCalledTimes(1)
+  controller.dispose()
+})
+
 // ── suite 2:ready / dispose / remount ──────────────────────────
 describe('生命周期', () => {
   test('handlers 未绑定时不 ready:ready 与调用都挂起;绑定后 resolve,挂起调用继续执行', async () => {

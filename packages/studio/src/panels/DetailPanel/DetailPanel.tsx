@@ -94,6 +94,7 @@ export const contextMenuShownContext = createContext<
 
 const DetailPanel: React.FC<{}> = (props) => {
   const pin = useVal(getStudio().atomP.ahistoric.pinDetails) !== false
+  const hidden = useVal(getStudio().ephemeralAtom.pointer.hiddenPanels.details)
 
   const hotspotActive = useHotspot('right')
 
@@ -117,6 +118,8 @@ const DetailPanel: React.FC<{}> = (props) => {
   usePresenceListenersOnRootElement(containerElt)
 
   return usePrism(() => {
+    if (hidden) return null
+
     const selection = outlineSelection.getValue()
 
     const obj = selection.find(isSheetObject)

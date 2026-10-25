@@ -41,6 +41,7 @@ const getProjectSpy = jest.fn((_name?: string, _opts?: unknown) => ({
 // studio.ui 替身:hide/restore 翻转 isHidden(与真 UI 行为一致;
 // bootstrap 仅在 isHidden 时才 restore)
 const setLeftStripHiddenSpy = jest.fn()
+const setPanelVisibilitySpy = jest.fn()
 const uiBox = {
   isHidden: false,
   hide: jest.fn(() => {
@@ -50,6 +51,7 @@ const uiBox = {
     uiBox.isHidden = false
   }),
   setLeftStripHidden: setLeftStripHiddenSpy,
+  setPanelVisibility: setPanelVisibilitySpy,
 }
 const hideSpy = uiBox.hide
 const restoreSpy = uiBox.restore
@@ -113,6 +115,10 @@ initSpy.mockImplementation(async (opts?: unknown) => {
 jest.doMock('@dreamerbird/studio', () => ({
   __esModule: true,
 }))
+jest.doMock('@dreamerbird/studio/UI/UINonSSRBits', () => ({
+  __esModule: true,
+  default: class {},
+}))
 jest.doMock('@dreamerbird/core', () => ({
   __esModule: true,
   default: {init: initSpy},
@@ -169,6 +175,7 @@ beforeEach(async () => {
   uiBox.isHidden = false
   initializedBox.promise = Promise.resolve()
   setLeftStripHiddenSpy.mockClear()
+  setPanelVisibilitySpy.mockClear()
   getStudioSyncSpy.mockClear()
   activateApiSpy.mockClear()
   disposeApiSpy.mockClear()
@@ -705,5 +712,72 @@ test('14. ui.hideLeftStrip → boot 经 studio.ui.setLeftStripHidden(true) 应�
   expect(h.result.current?.ready).toBe(true)
   await flush()
   expect(setLeftStripHiddenSpy).toHaveBeenCalledWith(true)
+  await h.unmount()
+})
+
+test('flushState emits the pending throttled state exactly once', async () => {
+  let resolveState!: () => void
+  const onStateChange = jest.fn(
+    () =>
+      new Promise<void>((resolve) => {
+        resolveState = resolve
+      }),
+  )
+  const h = hookHost({state: {onStateChange, throttleMs: 60_000}})
+  await h.mount()
+  const historicCallback = onChangeSpy.mock.calls[1][1] as (
+    content: unknown,
+  ) => void
+  historicCallback({rev: 1})
+
+  let flushed = false
+  const firstFlush = h.result.current!.flushState().then(() => {
+    flushed = true
+  })
+  await Promise.resolve()
+  expect(onStateChange).toHaveBeenCalledTimes(1)
+  expect(onStateChange).toHaveBeenCalledWith({rev: 1})
+  expect(flushed).toBe(false)
+  resolveState()
+  await firstFlush
+  await h.result.current!.flushState()
+  expect(onStateChange).toHaveBeenCalledTimes(1)
+  await h.unmount()
+})
+
+test('ui.panels hides only the requested panel without changing timeline visibility', async () => {
+  const h = hookHost({ui: {panels: {outline: false, details: true}}})
+  await h.mount()
+  await flush()
+
+  expect(setPanelVisibilitySpy).toHaveBeenCalledWith({
+    outline: false,
+    details: true,
+  })
+  expect(hideSpy).not.toHaveBeenCalled()
+  expect(restoreSpy).not.toHaveBeenCalled()
+
+  const [{default: UI}, {Atom, val}] = await Promise.all([
+    import('@dreamerbird/studio/UI/UI'),
+    import('@dreamerbird/dataverse'),
+  ])
+  const studio = {
+    ephemeralAtom: new Atom<{
+      hiddenPanels?: {outline?: boolean; details?: boolean}
+    }>({}),
+    atomP: {ahistoric: {visibilityState: 'everythingIsVisible'}},
+  }
+  UI.prototype.setPanelVisibility.call(
+    {studio} as unknown as InstanceType<typeof UI>,
+    {
+      outline: false,
+      details: true,
+    },
+  )
+  expect(val(studio.ephemeralAtom.pointer.hiddenPanels)).toEqual({
+    outline: true,
+    details: false,
+  })
+  expect(studio.atomP.ahistoric.visibilityState).toBe('everythingIsVisible')
   await h.unmount()
 })

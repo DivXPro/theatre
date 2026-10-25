@@ -4,7 +4,7 @@
  * CameraFlows 类型取自 ./hostFlows(定义所在);简报草样写 './App',
  * 但 App.tsx 只默认导出组件、不转出口该类型,从定义处引入才编译得过。
  */
-import type {IProject} from '@dreamerbird/core'
+import type {IProject, StudioPanelVisibility} from '@dreamerbird/core'
 import type {WritableLibrarySource} from './assetLibrary/source'
 import type {CameraStudioErrorHandler} from './errors'
 import type {CameraFlows} from './hostFlows'
@@ -63,6 +63,7 @@ export interface CameraStudioConfig {
     locale?: string
     /** 隐藏 studio 左上角带 logo 的整条 LeftStrip(应用 logo + 工作区按钮) */
     hideLeftStrip?: boolean
+    panels?: StudioPanelVisibility
   }
   flows?: {onFlows?: (flows: CameraFlows) => void}
   /** Agent JS API 行为配置;缺省不挂 window 全局 */
@@ -85,4 +86,5 @@ export interface CameraStudioHandle {
    * 同一对象);`api.ready` 在 project+studio+Scene Runtime 就位后兑现
    */
   api: CameraStudioApi
+  flushState(): Promise<void>
 }

@@ -1274,6 +1274,8 @@ export type PaneInstance<ClassName extends string> = {
   definition: PaneClassDefinition
 }
 
+export type StudioPanelVisibility = {outline?: boolean; details?: boolean}
+
 export interface IStudioUI {
   /**
    * Temporarily hides the studio
@@ -1293,6 +1295,8 @@ export interface IStudioUI {
    * 宿主嵌入场景可用它去掉左上角的 logo 条;缺省为显示。
    */
   setLeftStripHidden(hidden: boolean): void
+
+  setPanelVisibility(visibility: StudioPanelVisibility): void
 
   renderToolset(toolsetId: string, htmlNode: HTMLElement): () => void
 }

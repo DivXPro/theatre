@@ -54,6 +54,7 @@ export type CameraStudioApi = {
   readonly ready: Promise<void>
   /** 当前会话的命令清单与元数据(spec 8.1);未激活 API_NOT_READY,已拆解 API_DISPOSED */
   describe(): RegistryDescription
+  subscribe(listener: () => void): () => void
   readonly scene: SceneApi
   readonly selection: SelectionApi
   readonly objects: ObjectsApi
@@ -232,6 +233,18 @@ export function createCameraStudioApi(
         'API_NOT_READY',
         'Camera Studio API 尚未激活(场景未挂载)',
       )
+    },
+    subscribe(listener: () => void): () => void {
+      const captured = session
+      if (!captured) return () => {}
+      const studio = captured.runtime.getStudio()
+      const offSelection =
+        studio?.onSelectionChange(() => listener()) ?? (() => {})
+      const offHistoric = captured.runtime.subscribeHistoric(listener)
+      return () => {
+        offSelection()
+        offHistoric()
+      }
     },
     scene: {
       getSnapshot: () => invoke('scene.getSnapshot', undefined),
