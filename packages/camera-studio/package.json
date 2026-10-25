@@ -12,6 +12,10 @@
     "./contract-tests": {
       "types": "./dist/assetLibrary/contractTests.d.ts",
       "default": "./dist/assetLibrary/contractTests.js"
+    },
+    "./library-source": {
+      "types": "./dist/assetLibrary/source.d.ts",
+      "default": "./dist/assetLibrary/source.js"
     }
   },
   "files": [
