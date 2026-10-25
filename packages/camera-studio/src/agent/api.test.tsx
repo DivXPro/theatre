@@ -5,7 +5,7 @@
  * 公开 JS API 门面与启动生命周期(2026-10-19,Task 15,spec §7):
  *
  * suite 1 命名空间转发:fake runtime + stub registry,遍历 spec §9 全部
- *   72 条命令对应的门面方法,断言转发到同名命令、参数原样透传(同引用)、
+ *   75 条命令对应的门面方法,断言转发到同名命令、参数原样透传(同引用)、
  *   返回原始领域结果(绝不包装 {ok,result}),错误以 AgentApiError 原样抛出;
  *   另用真实 registerAllAgentCommands 断言注册清单与 spec 命令面一致、
  *   门面映射与注册表零漂移。
@@ -306,6 +306,20 @@ const FACADE_COMMANDS: ReadonlyArray<{
     path: 'primitives.create',
     command: 'primitives.create',
     args: {kind: 'box', position: {x: 0, y: 0, z: 0}},
+  },
+  {
+    path: 'materials.list',
+    command: 'materials.list',
+    args: {objectId: 'model:M'},
+  },
+  {
+    path: 'materials.update',
+    command: 'materials.update',
+    args: {
+      objectId: 'model:M',
+      slotId: 'root:0',
+      values: {roughness: 0.5},
+    },
   },
   {path: 'assets.list', command: 'assets.list'},
   {path: 'assets.get', command: 'assets.get', args: {assetId: 'asset-1'}},

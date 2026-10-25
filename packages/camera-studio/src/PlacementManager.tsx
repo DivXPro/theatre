@@ -77,6 +77,12 @@ import {parsePoseValue} from './poseMode/poseValue'
 import type {ModelEntry, PoseEntry} from './assetLibrary/types'
 import {createPrimitive} from './primitives'
 import type {PrimitiveKind} from './primitives'
+import {
+  cloneModelMaterials,
+  collectMaterialSlots,
+  createMaterialOverridesConfig,
+} from './materials/modelMaterials'
+import {useModelMaterials} from './materials/useModelMaterials'
 import {formatSceneObjectId} from './agent/objectIds'
 import {
   registerSceneSheetObject,
@@ -1218,6 +1224,19 @@ function PlacedModelCore({
     getFirstScreenGate().settle(entry.key)
     // entry.key 挂载期内不变
   }, [])
+  const instance = useMemo(() => {
+    const cloned = SkeletonUtils.clone(group) as Group
+    cloneModelMaterials(cloned)
+    return cloned
+  }, [group])
+  const materialSlots = useMemo(
+    () => collectMaterialSlots(instance),
+    [instance],
+  )
+  const materialOverrides = useMemo(
+    () => createMaterialOverridesConfig(materialSlots),
+    [materialSlots],
+  )
   const additionalProps = useMemo(() => {
     const modelEntryId =
       sourceType === 'library' ? entry.libraryEntryId : undefined
@@ -1236,12 +1255,13 @@ function PlacedModelCore({
         label: () => translate('pg.props.poseOverride'),
         hidden: true,
       }),
+      materialOverrides,
     }
     if (sourceType === 'local' && entry.assetId) {
       props.source = fileConfigFor(entry.assetId)
     }
     return props
-  }, [sourceType, entry.assetId, entry.libraryEntryId])
+  }, [sourceType, entry.assetId, entry.libraryEntryId, materialOverrides])
   const {scale, lift} = useNormalizedModel(group)
   const objRef = useRef<ISheetObject<any> | undefined>(undefined)
   const [sheetObject, setSheetObject] = useState<ISheetObject<any> | undefined>(
@@ -1272,6 +1292,7 @@ function PlacedModelCore({
   // 登记为选中 gizmo 的附着目标:被选中时身上挂三轴移动箭头
   useSelectionGizmoTarget(objRef, groupRef)
   const invalidate = useThree((s) => s.invalidate)
+  useModelMaterials({instance, sheetObject, slots: materialSlots, invalidate})
 
   // 主画面点选:和 App 里 Model 的 selectThingy 同款。放置模式下点击是
   // 确认落点,不选中、不拦截;点 gizmo 箭头穿透过来的误点也要吞掉。
@@ -1321,10 +1342,6 @@ function PlacedModelCore({
     enterPoseSession(entry.key)
   }
 
-  // 骨架动画:加载结果按 URL 缓存,同一文件放多个会共享同一份骨架,
-  // 互相打架(多个 <primitive> 挂同一个 Object3D 也只有最后一个能显示)。
-  // 所以每个实例克隆一份(SkinnedMesh 安全),配独立的 AnimationMixer。
-  const instance = useMemo(() => SkeletonUtils.clone(group) as Group, [group])
   const mixer = useMemo(() => new AnimationMixer(instance), [instance])
   // 登记进 placedInstances 表:锚点父级绑定的 model: 解析用
   usePlacedInstance(entry.key, instance)

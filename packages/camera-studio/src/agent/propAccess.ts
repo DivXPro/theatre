@@ -29,6 +29,7 @@ const domainOwnedProps = new Set([
   'gestureL',
   'gestureR',
   'animation',
+  'materialOverrides',
   'aimTarget',
   'pathKey',
   'parent',

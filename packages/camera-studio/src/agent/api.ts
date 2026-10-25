@@ -30,6 +30,7 @@ import type {SceneApi, ObjectsApi} from './commands/scene'
 import type {SelectionApi} from './commands/selection'
 import type {ModelsApi} from './commands/models'
 import type {PrimitivesApi} from './commands/primitives'
+import type {MaterialsApi} from './commands/materials'
 import type {AssetsApi} from './commands/assets'
 import type {PosesApi, PosesSessionApi} from './commands/poses'
 import type {AnimationsApi} from './commands/animations'
@@ -61,6 +62,7 @@ export type CameraStudioApi = {
   readonly objects: ObjectsApi
   readonly models: ModelsApi
   readonly primitives: PrimitivesApi
+  readonly materials: MaterialsApi
   readonly assets: AssetsApi
   readonly poses: PosesApi & {readonly session: PosesSessionApi}
   readonly animations: AnimationsApi
@@ -267,6 +269,10 @@ export function createCameraStudioApi(
     },
     primitives: {
       create: (args) => invoke('primitives.create', args),
+    },
+    materials: {
+      list: (args) => invoke('materials.list', args),
+      update: (args) => invoke('materials.update', args),
     },
     assets: {
       list: (args) => invoke('assets.list', args),

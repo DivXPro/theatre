@@ -1,0 +1,47 @@
+import type {ISheetObject} from '@dreamerbird/core'
+import {useVal} from '@dreamerbird/react'
+import {useEffect, useRef} from 'react'
+import {TextureLoader, type Group} from 'three'
+import {getLibrary} from '../assetLibrary/library'
+import {
+  applyMaterialScalars,
+  createMaterialTextureController,
+} from './modelMaterials'
+import type {MaterialSlot, MaterialValues} from './types'
+
+export function useModelMaterials({
+  instance,
+  sheetObject,
+  slots,
+  invalidate,
+}: {
+  instance: Group
+  sheetObject: ISheetObject<any> | undefined
+  slots: MaterialSlot[]
+  invalidate(): void
+}): void {
+  const overrides =
+    (useVal(sheetObject?.props.materialOverrides) as
+      | Record<string, MaterialValues>
+      | undefined) ?? {}
+  const controllerRef = useRef<ReturnType<
+    typeof createMaterialTextureController
+  > | null>(null)
+  if (!controllerRef.current) {
+    const loader = new TextureLoader()
+    controllerRef.current = createMaterialTextureController({
+      getBlobUrl: (blobId) => getLibrary().getBlobUrl(blobId),
+      loadTexture: (url) => loader.loadAsync(url),
+      invalidate,
+    })
+  }
+  const controller = controllerRef.current
+
+  useEffect(() => {
+    applyMaterialScalars(instance, slots, overrides)
+    invalidate()
+    void controller.update(instance, slots, overrides)
+  }, [instance, slots, overrides, controller, invalidate])
+
+  useEffect(() => () => controller.dispose(), [controller])
+}
