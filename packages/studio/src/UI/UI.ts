@@ -63,9 +63,16 @@ export default class UI {
   }
 
   setPanelVisibility(visibility: StudioPanelVisibility) {
+    const current = val(this.studio.ephemeralAtom.pointer.hiddenPanels)
     this.studio.ephemeralAtom.setByPointer((p) => p.hiddenPanels, {
-      outline: visibility.outline === false,
-      details: visibility.details === false,
+      outline:
+        visibility.outline === undefined
+          ? current?.outline
+          : visibility.outline === false,
+      details:
+        visibility.details === undefined
+          ? current?.details
+          : visibility.details === false,
     })
   }
 

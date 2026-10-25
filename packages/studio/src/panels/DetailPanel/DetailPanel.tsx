@@ -168,7 +168,7 @@ const DetailPanel: React.FC<{}> = (props) => {
     // 无选中物体时不显示面板(项目行选中也不再弹 ProjectDetails 空面板,
     // 2026-10-16 用户定夺:整块去掉,Export to JSON 入口随之移除)
     return null
-  }, [showDetailsPanel])
+  }, [showDetailsPanel, hidden])
 }
 
 export default () => {
