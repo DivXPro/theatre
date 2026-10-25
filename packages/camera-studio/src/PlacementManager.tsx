@@ -1544,7 +1544,7 @@ function PlacedModelCore({
       pendingUncachesRef.current = []
       mixer.stopAllAction()
       mixer.uncacheRoot(instance)
-      disposeObjectTree(instance)
+      disposeObjectTree(instance, {disposeTextures: false})
     }
   }, [mixer, instance])
 

@@ -8,6 +8,7 @@ import {
   createMaterialTextureController,
 } from './modelMaterials'
 import type {MaterialValues} from './types'
+import {disposeObjectTree} from '../assetLibrary/dispose'
 
 function modelWithTwoMeshes() {
   const root = new Group()
@@ -154,4 +155,40 @@ test('stale texture loads cannot overwrite a newer selection and are disposed', 
   expect((a.material as MeshStandardMaterial).map).toBe(current)
   expect(staleDispose).toHaveBeenCalledTimes(1)
   controller.dispose()
+})
+
+test('placed-instance teardown preserves shared original textures and disposes overrides once', async () => {
+  const {root, a, b} = modelWithTwoMeshes()
+  const original = new Texture()
+  ;(a.material as MeshStandardMaterial).map = original
+  ;(b.material as MeshStandardMaterial).map = original
+  const first = SkeletonUtils.clone(root) as Group
+  const second = SkeletonUtils.clone(root) as Group
+  cloneModelMaterials(first)
+  cloneModelMaterials(second)
+  const slots = collectMaterialSlots(first)
+  const override = new Texture()
+  const originalDispose = jest.spyOn(original, 'dispose')
+  const overrideDispose = jest.spyOn(override, 'dispose')
+  const firstMaterial = (first.children[0] as Mesh)
+    .material as MeshStandardMaterial
+  const secondMaterial = (second.children[0] as Mesh)
+    .material as MeshStandardMaterial
+  const materialDispose = jest.spyOn(firstMaterial, 'dispose')
+  const controller = createMaterialTextureController({
+    getBlobUrl: async (blobId) => blobId,
+    loadTexture: async () => override,
+    invalidate: () => {},
+  })
+  await controller.update(first, slots, {
+    [slots[0]!.slotKey]: {mapBlobId: 'override'},
+  })
+
+  controller.dispose()
+  disposeObjectTree(first, {disposeTextures: false})
+
+  expect(originalDispose).not.toHaveBeenCalled()
+  expect(secondMaterial.map).toBe(original)
+  expect(overrideDispose).toHaveBeenCalledTimes(1)
+  expect(materialDispose).toHaveBeenCalledTimes(1)
 })
