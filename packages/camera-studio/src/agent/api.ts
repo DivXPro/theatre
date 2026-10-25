@@ -25,6 +25,7 @@ import {AgentCommandRegistry} from './registry'
 import type {RegistryDescription} from './registry'
 import type {AgentRuntime, AgentSceneRuntimeHandlers} from './runtime'
 import {isGenerationSupersededError} from './runtime'
+import {subscribeSceneSheetObjects} from './runtime/objectRuntime'
 import {registerAllAgentCommands} from './registerCommands'
 import type {SceneApi, ObjectsApi} from './commands/scene'
 import type {SelectionApi} from './commands/selection'
@@ -245,9 +246,11 @@ export function createCameraStudioApi(
       const offSelection =
         studio?.onSelectionChange(() => listener()) ?? (() => {})
       const offHistoric = captured.runtime.subscribeHistoric(listener)
+      const offSceneObjects = subscribeSceneSheetObjects(listener)
       return () => {
         offSelection()
         offHistoric()
+        offSceneObjects()
       }
     },
     scene: {

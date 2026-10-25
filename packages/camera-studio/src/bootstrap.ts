@@ -49,6 +49,7 @@ import {
   GesturePropEditorRight,
 } from './gesturePropsEditor'
 import {createAgentRuntime} from './agent/runtime'
+import {clearSceneSheetObjects} from './agent/runtime/objectRuntime'
 import {
   activateCameraStudioApi,
   disposeCameraStudioApi,
@@ -515,6 +516,7 @@ export function resetCameraStudio(): Promise<void> {
       )
     }
     await sessionTeardown?.()
+    clearSceneSheetObjects()
     if (previousCtx) {
       const projectId = previousCtx.sceneProps.project.address.projectId
       projectsSingleton.remove(projectId)

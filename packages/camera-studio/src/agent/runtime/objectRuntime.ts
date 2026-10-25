@@ -11,6 +11,21 @@ import type {ISheetObject} from '@dreamerbird/core'
 import type {SceneObjectId} from '../types'
 
 const sceneSheetObjects = new Map<SceneObjectId, ISheetObject<any>>()
+const listeners = new Set<() => void>()
+
+function emitChange(): void {
+  listeners.forEach((listener) => listener())
+}
+
+export function subscribeSceneSheetObjects(listener: () => void): () => void {
+  listeners.add(listener)
+  return () => listeners.delete(listener)
+}
+
+export function clearSceneSheetObjects(): void {
+  sceneSheetObjects.clear()
+  emitChange()
+}
 
 /** 登记某业务对象当前挂载的 SheetObject(objRef 填充时) */
 export function registerSceneSheetObject(
@@ -18,6 +33,7 @@ export function registerSceneSheetObject(
   obj: ISheetObject<any>,
 ): void {
   sceneSheetObjects.set(id, obj)
+  emitChange()
 }
 
 /**
@@ -29,7 +45,7 @@ export function unregisterSceneSheetObject(
   obj?: ISheetObject<any>,
 ): void {
   if (obj && sceneSheetObjects.get(id) !== obj) return
-  sceneSheetObjects.delete(id)
+  if (sceneSheetObjects.delete(id)) emitChange()
 }
 
 /** 当前挂载的 SheetObject;未挂载(注册表有条目但组件未起)为 undefined */

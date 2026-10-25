@@ -126,10 +126,18 @@ export namespace stateEditors {
   }
   export function deleteProject(draft: Draft, api: API, p: ProjectAddress) {
     const state = _ensureAll(draft)
-    delete state.historic.coreByProject[p.projectId]
-    delete state.historic.projects.stateByProjectId[p.projectId]
-    delete state.ahistoric.projects.stateByProjectId[p.projectId]
-    delete state.ephemeral.projects.stateByProjectId[p.projectId]
+    if (state.historic.coreByProject?.[p.projectId] !== undefined) {
+      delete state.historic.coreByProject[p.projectId]
+    }
+    if (state.historic.projects.stateByProjectId[p.projectId] !== undefined) {
+      delete state.historic.projects.stateByProjectId[p.projectId]
+    }
+    if (state.ahistoric.projects.stateByProjectId[p.projectId] !== undefined) {
+      delete state.ahistoric.projects.stateByProjectId[p.projectId]
+    }
+    if (state.ephemeral.projects.stateByProjectId[p.projectId] !== undefined) {
+      delete state.ephemeral.projects.stateByProjectId[p.projectId]
+    }
   }
   export namespace studio {
     export namespace historic {
