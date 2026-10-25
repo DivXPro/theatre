@@ -24,12 +24,13 @@ import {
   AnimationMixer,
   Box3,
   BoxGeometry,
+  Group,
   Mesh,
   MeshBasicMaterial,
   Raycaster,
   Vector3,
 } from 'three'
-import type {Group, Object3D, AnimationClip, AnimationAction} from 'three'
+import type {Object3D, AnimationClip, AnimationAction} from 'three'
 import {SkeletonUtils} from 'three-stdlib'
 import {registerBoneAnchors, unregisterBoneAnchors} from './boneAnchors'
 import {notifyTargetRegistryChange, sheetObjectExists} from './aimTargets'
@@ -74,6 +75,8 @@ import {gesturePropConfigShape, resolveGestureBones} from './gestureProps'
 import {computeLegacyPoseMigration} from './poseMode/poseMigration'
 import {parsePoseValue} from './poseMode/poseValue'
 import type {ModelEntry, PoseEntry} from './assetLibrary/types'
+import {createPrimitive} from './primitives'
+import type {PrimitiveKind} from './primitives'
 import {formatSceneObjectId} from './agent/objectIds'
 import {
   registerSceneSheetObject,
@@ -120,6 +123,7 @@ export type PlacementEntry = {
   assetId?: string
   /** 库来源条目的 id;存在时优先从资产库加载 GLB */
   libraryEntryId?: string
+  primitive?: PrimitiveKind
   position: {x: number; y: number; z: number}
 }
 
@@ -651,6 +655,17 @@ export function usePlacementController(project: IProject, sheet: ISheet) {
     [sheet],
   )
 
+  const placePrimitiveAt = useCallback(
+    (kind: PrimitiveKind, point: {x: number; y: number; z: number}) => {
+      const key = uniquePlacedModelKey(sheet, kind)
+      const persisted = createPlacementWaiter(key)
+      persisted.catch(() => {})
+      setPendingEntry({key, primitive: kind, position: point, pending: true})
+      return {key, persisted}
+    },
+    [sheet],
+  )
+
   const clearPending = useCallback(() => setPendingEntry(null), [])
 
   return {
@@ -661,6 +676,7 @@ export function usePlacementController(project: IProject, sheet: ISheet) {
     cancelPlacing,
     confirmPlacing,
     placeLibraryEntryAt,
+    placePrimitiveAt,
     clearPending,
   }
 }
@@ -988,6 +1004,17 @@ function PlacedModel({
   selectLocked?: boolean
   onObjectMenu?: (key: string, x: number, y: number) => void
 }) {
+  if (entry.primitive) {
+    return (
+      <PrimitivePlacedModel
+        entry={entry}
+        sheet={sheet}
+        onPersisted={onPersisted}
+        selectLocked={selectLocked}
+        onObjectMenu={onObjectMenu}
+      />
+    )
+  }
   if (entry.libraryEntryId) {
     return (
       <LibraryPlacedModel
@@ -1005,6 +1032,38 @@ function PlacedModel({
       entry={entry}
       project={project}
       sheet={sheet}
+      onPersisted={onPersisted}
+      selectLocked={selectLocked}
+      onObjectMenu={onObjectMenu}
+    />
+  )
+}
+
+function PrimitivePlacedModel({
+  entry,
+  sheet,
+  onPersisted,
+  selectLocked,
+  onObjectMenu,
+}: {
+  entry: PlacementEntry | PendingPlacementEntry
+  sheet: ISheet
+  onPersisted: () => void
+  selectLocked?: boolean
+  onObjectMenu?: (key: string, x: number, y: number) => void
+}) {
+  const group = useMemo(() => {
+    const primitiveGroup = new Group()
+    primitiveGroup.add(createPrimitive(entry.primitive!))
+    return primitiveGroup
+  }, [entry.primitive])
+  return (
+    <PlacedModelCore
+      entry={entry}
+      sheet={sheet}
+      group={group}
+      animations={[]}
+      sourceType="primitive"
       onPersisted={onPersisted}
       selectLocked={selectLocked}
       onObjectMenu={onObjectMenu}
@@ -1148,12 +1207,12 @@ function PlacedModelCore({
   sheet: ISheet
   group: Group
   animations: AnimationClip[]
-  sourceType: 'local' | 'library'
+  sourceType: 'local' | 'library' | 'primitive'
   onPersisted: () => void
   selectLocked?: boolean
   onObjectMenu?: (key: string, x: number, y: number) => void
 }) {
-  // 两条加载路径(库 GLB / 本地 FBX)都在这里汇合:挂载即「这个模型
+  // 三条来源路径(库 GLB / 本地 FBX / 基础几何体)都在这里汇合:挂载即「这个模型
   // 落定了」,上报首屏闸门(失败路径由 PlacedModelErrorBoundary 上报)
   useEffect(() => {
     getFirstScreenGate().settle(entry.key)

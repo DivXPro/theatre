@@ -50,6 +50,8 @@ export type {
 } from './agent/commands/scene'
 export type {SelectionApi} from './agent/commands/selection'
 export type {ModelsApi} from './agent/commands/models'
+export type {PrimitivesApi} from './agent/commands/primitives'
+export type {PrimitiveKind} from './primitives'
 export type {AssetsApi} from './agent/commands/assets'
 export type {PosesApi, PosesSessionApi} from './agent/commands/poses'
 export type {

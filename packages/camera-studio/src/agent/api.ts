@@ -29,6 +29,7 @@ import {registerAllAgentCommands} from './registerCommands'
 import type {SceneApi, ObjectsApi} from './commands/scene'
 import type {SelectionApi} from './commands/selection'
 import type {ModelsApi} from './commands/models'
+import type {PrimitivesApi} from './commands/primitives'
 import type {AssetsApi} from './commands/assets'
 import type {PosesApi, PosesSessionApi} from './commands/poses'
 import type {AnimationsApi} from './commands/animations'
@@ -59,6 +60,7 @@ export type CameraStudioApi = {
   readonly selection: SelectionApi
   readonly objects: ObjectsApi
   readonly models: ModelsApi
+  readonly primitives: PrimitivesApi
   readonly assets: AssetsApi
   readonly poses: PosesApi & {readonly session: PosesSessionApi}
   readonly animations: AnimationsApi
@@ -262,6 +264,9 @@ export function createCameraStudioApi(
     },
     models: {
       create: (args) => invoke('models.create', args),
+    },
+    primitives: {
+      create: (args) => invoke('primitives.create', args),
     },
     assets: {
       list: (args) => invoke('assets.list', args),

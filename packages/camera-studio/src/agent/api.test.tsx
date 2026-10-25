@@ -5,7 +5,7 @@
  * 公开 JS API 门面与启动生命周期(2026-10-19,Task 15,spec §7):
  *
  * suite 1 命名空间转发:fake runtime + stub registry,遍历 spec §9 全部
- *   71 条命令对应的门面方法,断言转发到同名命令、参数原样透传(同引用)、
+ *   72 条命令对应的门面方法,断言转发到同名命令、参数原样透传(同引用)、
  *   返回原始领域结果(绝不包装 {ok,result}),错误以 AgentApiError 原样抛出;
  *   另用真实 registerAllAgentCommands 断言注册清单与 spec 命令面一致、
  *   门面映射与注册表零漂移。
@@ -174,6 +174,7 @@ jest.doMock('../PlacementManager', () => ({
     startPlacingFromLibrary: async () => {},
     // 与生产形状一致:Agent createModel handler 的 {key, persisted} 契约
     placeLibraryEntryAt: () => ({key: 'm1', persisted: Promise.resolve()}),
+    placePrimitiveAt: () => ({key: 'box', persisted: Promise.resolve()}),
     cancelPlacing: noop,
     confirmPlacing: noop,
     clearPending: noop,
@@ -300,6 +301,11 @@ const FACADE_COMMANDS: ReadonlyArray<{
     path: 'models.create',
     command: 'models.create',
     args: {assetId: 'asset-1', position: {x: 0, y: 0, z: 0}},
+  },
+  {
+    path: 'primitives.create',
+    command: 'primitives.create',
+    args: {kind: 'box', position: {x: 0, y: 0, z: 0}},
   },
   {path: 'assets.list', command: 'assets.list'},
   {path: 'assets.get', command: 'assets.get', args: {assetId: 'asset-1'}},
@@ -496,6 +502,7 @@ const FACADE_COMMANDS: ReadonlyArray<{
 /** CameraScene 生产绑定必须提供的完整 handler 集(命令侧 SCENE_UNAVAILABLE 的依据) */
 const HANDLER_KEYS = [
   'createModel',
+  'createPrimitive',
   'createCamera',
   'setActiveCamera',
   'createAnchor',
