@@ -6,9 +6,9 @@
  * rename/delete 直等 Library 完成并返回更新后的条目 / {deleted:true};
  * 无 writable 源或条目属于只读源时返回 INVALID_STATE,不静默成功。
  *
- * importModel 是任务型命令(kind:job, completion:loaded):经
- * runtime.jobs.start 调用 importModelFile(file, library),任务结果即
- * ModelEntry;管线逐项落库,中途失败时 diff 出已创建条目,报
+ * importModel/importModels 是任务型命令(kind:job, completion:loaded):经
+ * runtime.jobs.start 调用单/多文件导入,任务结果分别为 ModelEntry 与
+ * ModelEntry[];管线逐项落库,中途失败时 diff 出已创建条目,报
  * PARTIAL_FAILURE(details 含 createdAssetIds 与失败项);Library 的
  * quota/network 等结构化错误分别保留为 STORAGE_ERROR / NETWORK_ERROR,
  * 不统一吞成 unknown。
@@ -19,6 +19,7 @@
  * fileRef 不许绕过传输适配直接进入 Library。
  */
 import {importModelFile} from '../../assetLibrary/importModelFile'
+import {importModelFiles} from '../../assetLibrary/importModelFiles'
 import {LibraryError} from '../../assetLibrary/source'
 import type {Library} from '../../assetLibrary/library'
 import type {
@@ -37,6 +38,7 @@ export type AssetsApi = {
   list(args?: {kind?: EntryKind}): Promise<LibraryEntry[]>
   get(args: {assetId: string}): Promise<LibraryEntry>
   importModel(args: {file: File}): Promise<{jobId: string}>
+  importModels(args: {files: File[]}): Promise<{jobId: string}>
   rename(args: {assetId: string; name: string}): Promise<LibraryEntry>
   delete(args: {assetId: string}): Promise<{deleted: true}>
 }
@@ -57,7 +59,7 @@ const libraryEntrySchema: JsonSchema = {
   required: ['id', 'kind', 'name'],
 }
 
-/** ModelEntry 形状(importModel 的 jobResult) */
+/** ModelEntry 形状(importModel/importModels 的 jobResult 元素) */
 const modelEntrySchema: JsonSchema = {
   type: 'object',
   properties: {
@@ -113,23 +115,29 @@ const renameInput: JsonSchema = {
 }
 
 /** HTTP 传输形状:桥接把 fileId 水合成 File 后才进 validator */
+const fileRefSchema: JsonSchema = {
+  type: 'object',
+  description: 'HTTP:经 POST /v1/files 上传后的引用;JS:直接传 hydrated File',
+  properties: {
+    fileId: {type: 'string', description: '桥接上传返回的文件 id'},
+    fileName: {type: 'string'},
+    mimeType: {type: 'string'},
+  },
+  required: ['fileId'],
+  additionalProperties: false,
+}
+
 const importModelInput: JsonSchema = {
   type: 'object',
-  properties: {
-    file: {
-      type: 'object',
-      description:
-        'HTTP:经 POST /v1/files 上传后的引用;JS:直接传 hydrated File',
-      properties: {
-        fileId: {type: 'string', description: '桥接上传返回的文件 id'},
-        fileName: {type: 'string'},
-        mimeType: {type: 'string'},
-      },
-      required: ['fileId'],
-      additionalProperties: false,
-    },
-  },
+  properties: {file: fileRefSchema},
   required: ['file'],
+  additionalProperties: false,
+}
+
+const importModelsInput: JsonSchema = {
+  type: 'object',
+  properties: {files: {type: 'array', items: fileRefSchema}},
+  required: ['files'],
   additionalProperties: false,
 }
 
@@ -182,6 +190,13 @@ function requireFile(value: unknown): File {
   )
 }
 
+function requireFiles(value: unknown): File[] {
+  if (!Array.isArray(value) || value.length === 0) {
+    throw new AgentApiError('INVALID_ARGUMENT', 'files 必须是非空 File 数组')
+  }
+  return value.map(requireFile)
+}
+
 function requireWritable(library: Library): void {
   if (!library.canWrite) {
     throw new AgentApiError(
@@ -225,7 +240,7 @@ async function requireWritableEntry(
 async function describeImportFailure(
   library: Library,
   before: ReadonlySet<string>,
-  file: File,
+  files: File[],
   error: unknown,
 ): Promise<AgentApiError> {
   let createdAssetIds: string[] = []
@@ -236,7 +251,16 @@ async function describeImportFailure(
   } catch {
     // 连列举都失败时不掩盖原始错误
   }
-  const cause = error instanceof Error ? error.message : String(error)
+  const structured = error as {
+    failedItems?: Array<{file: string; message: string}>
+    cause?: unknown
+  }
+  const failedItems = Array.isArray(structured?.failedItems)
+    ? structured.failedItems
+    : undefined
+  const sourceError = structured?.cause ?? error
+  const cause =
+    sourceError instanceof Error ? sourceError.message : String(sourceError)
   if (createdAssetIds.length > 0) {
     return new AgentApiError(
       'PARTIAL_FAILURE',
@@ -244,12 +268,26 @@ async function describeImportFailure(
       {
         details: {
           createdAssetIds,
-          failedItems: [{file: file.name, message: cause}],
+          failedItems:
+            failedItems ??
+            files.map((file) => ({file: file.name, message: cause})),
         },
       },
     )
   }
-  return mapLibraryError(error)
+  const normalized = mapLibraryError(sourceError)
+  if (failedItems) {
+    return new AgentApiError(normalized.code, normalized.message, {
+      retryable: normalized.retryable,
+      details: {
+        ...(typeof normalized.details === 'object' && normalized.details
+          ? normalized.details
+          : {}),
+        failedItems,
+      },
+    })
+  }
+  return normalized
 }
 
 export function registerAssetCommands(
@@ -351,7 +389,61 @@ export function registerAssetCommands(
             controls.update({phase: 'loaded'})
             return entry
           } catch (error) {
-            throw await describeImportFailure(library, before, args.file, error)
+            throw await describeImportFailure(
+              library,
+              before,
+              [args.file],
+              error,
+            )
+          }
+        },
+      })
+      return {jobId}
+    },
+  })
+
+  registry.register<{files: File[]}, {jobId: string}>({
+    name: 'assets.importModels',
+    kind: 'job',
+    stateDomain: 'asset',
+    undoable: 'none',
+    completion: 'loaded',
+    cancelable: false,
+    inputSchema: importModelsInput,
+    outputSchema: jobIdOutput,
+    jobResultSchema: {type: 'array', items: modelEntrySchema},
+    errorCodes: [
+      'API_DISPOSED',
+      'INVALID_ARGUMENT',
+      'INVALID_STATE',
+      'STORAGE_ERROR',
+      'NETWORK_ERROR',
+      'PARTIAL_FAILURE',
+      'INTERNAL_ERROR',
+    ],
+    validate: (value) => ({files: requireFiles(requireObject(value).files)}),
+    execute: async (args) => {
+      runtime.assertActive()
+      requireWritable(runtime.library)
+      const library = runtime.library
+      const {jobId} = runtime.jobs.start<ModelEntry[]>({
+        kind: 'assets.importModels',
+        cancelable: false,
+        execute: async (controls) => {
+          const before = new Set(
+            (await library.listEntries()).map((entry) => entry.id),
+          )
+          try {
+            const entries = await importModelFiles(args.files, library)
+            controls.update({phase: 'loaded'})
+            return entries
+          } catch (error) {
+            throw await describeImportFailure(
+              library,
+              before,
+              args.files,
+              error,
+            )
           }
         },
       })

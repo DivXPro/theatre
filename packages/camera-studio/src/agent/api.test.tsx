@@ -5,7 +5,7 @@
  * 公开 JS API 门面与启动生命周期(2026-10-19,Task 15,spec §7):
  *
  * suite 1 命名空间转发:fake runtime + stub registry,遍历 spec §9 全部
- *   71 条命令对应的门面方法,断言转发到同名命令、参数原样透传(同引用)、
+ *   75 条命令对应的门面方法,断言转发到同名命令、参数原样透传(同引用)、
  *   返回原始领域结果(绝不包装 {ok,result}),错误以 AgentApiError 原样抛出;
  *   另用真实 registerAllAgentCommands 断言注册清单与 spec 命令面一致、
  *   门面映射与注册表零漂移。
@@ -174,6 +174,7 @@ jest.doMock('../PlacementManager', () => ({
     startPlacingFromLibrary: async () => {},
     // 与生产形状一致:Agent createModel handler 的 {key, persisted} 契约
     placeLibraryEntryAt: () => ({key: 'm1', persisted: Promise.resolve()}),
+    placePrimitiveAt: () => ({key: 'box', persisted: Promise.resolve()}),
     cancelPlacing: noop,
     confirmPlacing: noop,
     clearPending: noop,
@@ -301,12 +302,46 @@ const FACADE_COMMANDS: ReadonlyArray<{
     command: 'models.create',
     args: {assetId: 'asset-1', position: {x: 0, y: 0, z: 0}},
   },
+  {
+    path: 'models.retry',
+    command: 'models.retry',
+    args: {objectId: 'model:M'},
+  },
+  {
+    path: 'models.replace',
+    command: 'models.replace',
+    args: {objectId: 'model:M', assetId: 'asset-2'},
+  },
+  {
+    path: 'primitives.create',
+    command: 'primitives.create',
+    args: {kind: 'box', position: {x: 0, y: 0, z: 0}},
+  },
+  {
+    path: 'materials.list',
+    command: 'materials.list',
+    args: {objectId: 'model:M'},
+  },
+  {
+    path: 'materials.update',
+    command: 'materials.update',
+    args: {
+      objectId: 'model:M',
+      slotId: 'root:0',
+      values: {roughness: 0.5},
+    },
+  },
   {path: 'assets.list', command: 'assets.list'},
   {path: 'assets.get', command: 'assets.get', args: {assetId: 'asset-1'}},
   {
     path: 'assets.importModel',
     command: 'assets.importModel',
     args: {file: {name: 'm.glb'}},
+  },
+  {
+    path: 'assets.importModels',
+    command: 'assets.importModels',
+    args: {files: [{name: 'm.gltf'}, {name: 'm.bin'}]},
   },
   {
     path: 'assets.rename',
@@ -496,6 +531,7 @@ const FACADE_COMMANDS: ReadonlyArray<{
 /** CameraScene 生产绑定必须提供的完整 handler 集(命令侧 SCENE_UNAVAILABLE 的依据) */
 const HANDLER_KEYS = [
   'createModel',
+  'createPrimitive',
   'createCamera',
   'setActiveCamera',
   'createAnchor',
@@ -656,6 +692,48 @@ describe('命名空间转发', () => {
 function commandOf(row: {command: string}): string {
   return row.command
 }
+
+test('subscribe receives historic and selection changes and stops after unsubscribe', () => {
+  let notifyHistoric = () => {}
+  let notifySelection = () => {}
+  const unsubscribeSelection = jest.fn(() => {
+    notifySelection = () => {}
+  })
+  const runtime = createAgentRuntime({
+    project: {} as never,
+    sheet: {} as never,
+    library: {} as never,
+    getStudio: () =>
+      ({
+        onSelectionChange: (listener: () => void) => {
+          notifySelection = listener
+          return unsubscribeSelection
+        },
+      }) as never,
+    subscribeHistoric: (listener) => {
+      notifyHistoric = listener
+      return () => {
+        notifyHistoric = () => {}
+      }
+    },
+  })
+  const controller = createCameraStudioApi()
+  controller.activate(runtime)
+  const listener = jest.fn()
+  const unsubscribe = controller.api.subscribe(listener)
+
+  notifyHistoric()
+  notifySelection()
+  expect(listener).toHaveBeenCalledTimes(2)
+
+  listener.mockClear()
+  unsubscribe()
+  notifyHistoric()
+  notifySelection()
+  expect(listener).not.toHaveBeenCalled()
+  expect(unsubscribeSelection).toHaveBeenCalledTimes(1)
+  controller.dispose()
+})
 
 // ── suite 2:ready / dispose / remount ──────────────────────────
 describe('生命周期', () => {

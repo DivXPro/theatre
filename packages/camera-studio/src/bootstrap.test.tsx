@@ -36,11 +36,13 @@ const initSpy = jest.fn(async (_opts?: unknown) => {})
 const fakeSheet = {fakeSheet: true}
 const getProjectSpy = jest.fn((_name?: string, _opts?: unknown) => ({
   fake: true,
+  address: {projectId: _name},
   sheet: jest.fn(() => fakeSheet),
 }))
 // studio.ui 替身:hide/restore 翻转 isHidden(与真 UI 行为一致;
 // bootstrap 仅在 isHidden 时才 restore)
 const setLeftStripHiddenSpy = jest.fn()
+const setPanelVisibilitySpy = jest.fn()
 const uiBox = {
   isHidden: false,
   hide: jest.fn(() => {
@@ -50,6 +52,7 @@ const uiBox = {
     uiBox.isHidden = false
   }),
   setLeftStripHidden: setLeftStripHiddenSpy,
+  setPanelVisibility: setPanelVisibilitySpy,
 }
 const hideSpy = uiBox.hide
 const restoreSpy = uiBox.restore
@@ -113,6 +116,10 @@ initSpy.mockImplementation(async (opts?: unknown) => {
 jest.doMock('@dreamerbird/studio', () => ({
   __esModule: true,
 }))
+jest.doMock('@dreamerbird/studio/UI/UINonSSRBits', () => ({
+  __esModule: true,
+  default: class {},
+}))
 jest.doMock('@dreamerbird/core', () => ({
   __esModule: true,
   default: {init: initSpy},
@@ -169,6 +176,7 @@ beforeEach(async () => {
   uiBox.isHidden = false
   initializedBox.promise = Promise.resolve()
   setLeftStripHiddenSpy.mockClear()
+  setPanelVisibilitySpy.mockClear()
   getStudioSyncSpy.mockClear()
   activateApiSpy.mockClear()
   disposeApiSpy.mockClear()
@@ -706,4 +714,130 @@ test('14. ui.hideLeftStrip → boot 经 studio.ui.setLeftStripHidden(true) 应�
   await flush()
   expect(setLeftStripHiddenSpy).toHaveBeenCalledWith(true)
   await h.unmount()
+})
+
+test('flushState emits the pending throttled state exactly once', async () => {
+  let resolveState!: () => void
+  const onStateChange = jest.fn(
+    () =>
+      new Promise<void>((resolve) => {
+        resolveState = resolve
+      }),
+  )
+  const h = hookHost({state: {onStateChange, throttleMs: 60_000}})
+  await h.mount()
+  const historicCallback = onChangeSpy.mock.calls[1][1] as (
+    content: unknown,
+  ) => void
+  historicCallback({rev: 1})
+
+  let flushed = false
+  const firstFlush = h.result.current!.flushState().then(() => {
+    flushed = true
+  })
+  await Promise.resolve()
+  expect(onStateChange).toHaveBeenCalledTimes(1)
+  expect(onStateChange).toHaveBeenCalledWith({rev: 1})
+  expect(flushed).toBe(false)
+  resolveState()
+  await firstFlush
+  await h.result.current!.flushState()
+  expect(onStateChange).toHaveBeenCalledTimes(1)
+  await h.unmount()
+})
+
+test('ui.panels hides only the requested panel without changing timeline visibility', async () => {
+  const h = hookHost({ui: {panels: {outline: false, details: true}}})
+  await h.mount()
+  await flush()
+
+  expect(setPanelVisibilitySpy).toHaveBeenCalledWith({
+    outline: false,
+    details: true,
+  })
+  expect(hideSpy).not.toHaveBeenCalled()
+  expect(restoreSpy).not.toHaveBeenCalled()
+
+  const [{default: UI}, {Atom, val}] = await Promise.all([
+    import('@dreamerbird/studio/UI/UI'),
+    import('@dreamerbird/dataverse'),
+  ])
+  const studio = {
+    ephemeralAtom: new Atom<{
+      hiddenPanels?: {outline?: boolean; details?: boolean}
+    }>({}),
+    atomP: {ahistoric: {visibilityState: 'everythingIsVisible'}},
+  }
+  UI.prototype.setPanelVisibility.call(
+    {studio} as unknown as InstanceType<typeof UI>,
+    {
+      outline: false,
+      details: true,
+    },
+  )
+  expect(val(studio.ephemeralAtom.pointer.hiddenPanels)).toEqual({
+    outline: true,
+    details: false,
+  })
+  expect(studio.atomP.ahistoric.visibilityState).toBe('everythingIsVisible')
+  await h.unmount()
+})
+
+test('resetCameraStudio clears retained project/state config across A→B→A remounts', async () => {
+  const stateA = {objects: {a: {position: [1, 0, 0]}}}
+  const stateB = {objects: {b: {position: [2, 0, 0]}}}
+  const stateA2 = {objects: {a2: {position: [3, 0, 0]}}}
+  const onA = jest.fn()
+  const onB = jest.fn()
+  const onA2 = jest.fn()
+
+  const a = hookHost({
+    project: 'SceneA',
+    storage: false,
+    state: {initialState: stateA, onStateChange: onA},
+  })
+  await a.mount()
+  const projectA = a.result.current?.sceneProps.project
+  expect(projectA).toBeDefined()
+  await a.unmount()
+  await bootstrap.resetCameraStudio()
+
+  const b = hookHost({
+    project: 'SceneB',
+    storage: false,
+    state: {initialState: stateB, onStateChange: onB},
+  })
+  await b.mount()
+  expect(b.result.current?.sceneProps.project).not.toBe(projectA)
+  const projectB = b.result.current?.sceneProps.project
+  const stateCallbackB = onChangeSpy.mock.calls.at(-1)?.[1] as (
+    content: unknown,
+  ) => void
+  stateCallbackB({scene: 'B'})
+  await b.result.current!.flushState()
+  expect(onB).toHaveBeenCalledWith({scene: 'B'})
+  expect(onA).not.toHaveBeenCalled()
+  await b.unmount()
+  await bootstrap.resetCameraStudio()
+
+  const a2 = hookHost({
+    project: 'SceneA',
+    storage: false,
+    state: {initialState: stateA2, onStateChange: onA2},
+  })
+  await a2.mount()
+  expect(a2.result.current?.sceneProps.project).not.toBe(projectA)
+  expect(a2.result.current?.sceneProps.project).not.toBe(projectB)
+  const stateCallbackA2 = onChangeSpy.mock.calls.at(-1)?.[1] as (
+    content: unknown,
+  ) => void
+  stateCallbackA2({scene: 'A2'})
+  await a2.result.current!.flushState()
+  expect(onA2).toHaveBeenCalledWith({scene: 'A2'})
+  expect(onB).toHaveBeenCalledTimes(1)
+  await a2.unmount()
+
+  expect(getProjectSpy).toHaveBeenCalledWith('SceneA', {state: stateA})
+  expect(getProjectSpy).toHaveBeenCalledWith('SceneB', {state: stateB})
+  expect(getProjectSpy).toHaveBeenCalledWith('SceneA', {state: stateA2})
 })

@@ -29,6 +29,7 @@ const domainOwnedProps = new Set([
   'gestureL',
   'gestureR',
   'animation',
+  'materialOverrides',
   'aimTarget',
   'pathKey',
   'parent',
@@ -208,6 +209,40 @@ export function setStaticProps(
   props: Record<string, unknown>,
 ): void {
   assertStaticPropsWritable(sheetObject, props)
+  writePropsInTransaction(sheetObject, props)
+}
+
+export function assertStaticPropsWithLeafGuardWritable(
+  sheetObject: ISheetObject<$IntentionalAny>,
+  props: Record<string, unknown>,
+  guardedPropPaths: string[],
+): void {
+  const current = sheetObject.value as Record<string, unknown> | undefined
+  for (const [key, value] of Object.entries(props)) {
+    if (!current || !(key in current)) {
+      throw new AgentApiError('INVALID_ARGUMENT', `未知属性: ${key}`, {
+        details: {prop: key},
+      })
+    }
+    validateValueShape(key, current[key], value)
+  }
+  for (const propPath of guardedPropPaths) {
+    if (isPropSequenced(sheetObject, propPath)) {
+      throw new AgentApiError(
+        'INVALID_STATE',
+        `属性 ${propPath} 已建轨,请改用 keyframes.* 写入`,
+        {details: {prop: propPath}},
+      )
+    }
+  }
+}
+
+export function setStaticPropsWithLeafGuard(
+  sheetObject: ISheetObject<$IntentionalAny>,
+  props: Record<string, unknown>,
+  guardedPropPaths: string[],
+): void {
+  assertStaticPropsWithLeafGuardWritable(sheetObject, props, guardedPropPaths)
   writePropsInTransaction(sheetObject, props)
 }
 

@@ -18,6 +18,7 @@ import type {
   PaneInstance,
   ProjectId,
   SerializablePrimitive,
+  StudioPanelVisibility,
 } from '@dreamerbird/core/types/public'
 import {
   disablePlayPauseKeyboardShortcut,
@@ -67,6 +68,10 @@ export default class TheatreStudio implements IStudio {
 
     setLeftStripHidden(hidden: boolean) {
       getStudio().ui.setLeftStripHidden(hidden)
+    },
+
+    setPanelVisibility(visibility: StudioPanelVisibility) {
+      getStudio().ui.setPanelVisibility(visibility)
     },
 
     renderToolset(toolsetId: string, htmlNode: HTMLElement) {

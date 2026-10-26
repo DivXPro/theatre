@@ -24,12 +24,13 @@ import {
   AnimationMixer,
   Box3,
   BoxGeometry,
+  Group,
   Mesh,
   MeshBasicMaterial,
   Raycaster,
   Vector3,
 } from 'three'
-import type {Group, Object3D, AnimationClip, AnimationAction} from 'three'
+import type {Object3D, AnimationClip, AnimationAction} from 'three'
 import {SkeletonUtils} from 'three-stdlib'
 import {registerBoneAnchors, unregisterBoneAnchors} from './boneAnchors'
 import {notifyTargetRegistryChange, sheetObjectExists} from './aimTargets'
@@ -74,6 +75,14 @@ import {gesturePropConfigShape, resolveGestureBones} from './gestureProps'
 import {computeLegacyPoseMigration} from './poseMode/poseMigration'
 import {parsePoseValue} from './poseMode/poseValue'
 import type {ModelEntry, PoseEntry} from './assetLibrary/types'
+import {createPrimitive} from './primitives'
+import type {PrimitiveKind} from './primitives'
+import {
+  cloneModelMaterials,
+  collectMaterialSlots,
+  createMaterialOverridesConfig,
+} from './materials/modelMaterials'
+import {useModelMaterials} from './materials/useModelMaterials'
 import {formatSceneObjectId} from './agent/objectIds'
 import {
   registerSceneSheetObject,
@@ -120,6 +129,8 @@ export type PlacementEntry = {
   assetId?: string
   /** 库来源条目的 id;存在时优先从资产库加载 GLB */
   libraryEntryId?: string
+  primitive?: PrimitiveKind
+  loadAttempt?: number
   position: {x: number; y: number; z: number}
 }
 
@@ -651,6 +662,17 @@ export function usePlacementController(project: IProject, sheet: ISheet) {
     [sheet],
   )
 
+  const placePrimitiveAt = useCallback(
+    (kind: PrimitiveKind, point: {x: number; y: number; z: number}) => {
+      const key = uniquePlacedModelKey(sheet, kind)
+      const persisted = createPlacementWaiter(key)
+      persisted.catch(() => {})
+      setPendingEntry({key, primitive: kind, position: point, pending: true})
+      return {key, persisted}
+    },
+    [sheet],
+  )
+
   const clearPending = useCallback(() => setPendingEntry(null), [])
 
   return {
@@ -661,6 +683,7 @@ export function usePlacementController(project: IProject, sheet: ISheet) {
     cancelPlacing,
     confirmPlacing,
     placeLibraryEntryAt,
+    placePrimitiveAt,
     clearPending,
   }
 }
@@ -958,7 +981,10 @@ export function PlacedModels({
   return (
     <>
       {entries.map((entry) => (
-        <Suspense key={entry.key} fallback={null}>
+        <Suspense
+          key={`${entry.key}:${entry.loadAttempt ?? 0}`}
+          fallback={null}
+        >
           <PlacedModelErrorBoundary
             entry={entry}
             project={project}
@@ -988,6 +1014,17 @@ function PlacedModel({
   selectLocked?: boolean
   onObjectMenu?: (key: string, x: number, y: number) => void
 }) {
+  if (entry.primitive) {
+    return (
+      <PrimitivePlacedModel
+        entry={entry}
+        sheet={sheet}
+        onPersisted={onPersisted}
+        selectLocked={selectLocked}
+        onObjectMenu={onObjectMenu}
+      />
+    )
+  }
   if (entry.libraryEntryId) {
     return (
       <LibraryPlacedModel
@@ -1005,6 +1042,38 @@ function PlacedModel({
       entry={entry}
       project={project}
       sheet={sheet}
+      onPersisted={onPersisted}
+      selectLocked={selectLocked}
+      onObjectMenu={onObjectMenu}
+    />
+  )
+}
+
+function PrimitivePlacedModel({
+  entry,
+  sheet,
+  onPersisted,
+  selectLocked,
+  onObjectMenu,
+}: {
+  entry: PlacementEntry | PendingPlacementEntry
+  sheet: ISheet
+  onPersisted: () => void
+  selectLocked?: boolean
+  onObjectMenu?: (key: string, x: number, y: number) => void
+}) {
+  const group = useMemo(() => {
+    const primitiveGroup = new Group()
+    primitiveGroup.add(createPrimitive(entry.primitive!))
+    return primitiveGroup
+  }, [entry.primitive])
+  return (
+    <PlacedModelCore
+      entry={entry}
+      sheet={sheet}
+      group={group}
+      animations={[]}
+      sourceType="primitive"
       onPersisted={onPersisted}
       selectLocked={selectLocked}
       onObjectMenu={onObjectMenu}
@@ -1148,17 +1217,30 @@ function PlacedModelCore({
   sheet: ISheet
   group: Group
   animations: AnimationClip[]
-  sourceType: 'local' | 'library'
+  sourceType: 'local' | 'library' | 'primitive'
   onPersisted: () => void
   selectLocked?: boolean
   onObjectMenu?: (key: string, x: number, y: number) => void
 }) {
-  // 两条加载路径(库 GLB / 本地 FBX)都在这里汇合:挂载即「这个模型
+  // 三条来源路径(库 GLB / 本地 FBX / 基础几何体)都在这里汇合:挂载即「这个模型
   // 落定了」,上报首屏闸门(失败路径由 PlacedModelErrorBoundary 上报)
   useEffect(() => {
     getFirstScreenGate().settle(entry.key)
     // entry.key 挂载期内不变
   }, [])
+  const instance = useMemo(() => {
+    const cloned = SkeletonUtils.clone(group) as Group
+    cloneModelMaterials(cloned)
+    return cloned
+  }, [group])
+  const materialSlots = useMemo(
+    () => collectMaterialSlots(instance),
+    [instance],
+  )
+  const materialOverrides = useMemo(
+    () => createMaterialOverridesConfig(materialSlots),
+    [materialSlots],
+  )
   const additionalProps = useMemo(() => {
     const modelEntryId =
       sourceType === 'library' ? entry.libraryEntryId : undefined
@@ -1177,12 +1259,13 @@ function PlacedModelCore({
         label: () => translate('pg.props.poseOverride'),
         hidden: true,
       }),
+      materialOverrides,
     }
     if (sourceType === 'local' && entry.assetId) {
       props.source = fileConfigFor(entry.assetId)
     }
     return props
-  }, [sourceType, entry.assetId, entry.libraryEntryId])
+  }, [sourceType, entry.assetId, entry.libraryEntryId, materialOverrides])
   const {scale, lift} = useNormalizedModel(group)
   const objRef = useRef<ISheetObject<any> | undefined>(undefined)
   const [sheetObject, setSheetObject] = useState<ISheetObject<any> | undefined>(
@@ -1213,6 +1296,7 @@ function PlacedModelCore({
   // 登记为选中 gizmo 的附着目标:被选中时身上挂三轴移动箭头
   useSelectionGizmoTarget(objRef, groupRef)
   const invalidate = useThree((s) => s.invalidate)
+  useModelMaterials({instance, sheetObject, slots: materialSlots, invalidate})
 
   // 主画面点选:和 App 里 Model 的 selectThingy 同款。放置模式下点击是
   // 确认落点,不选中、不拦截;点 gizmo 箭头穿透过来的误点也要吞掉。
@@ -1262,10 +1346,6 @@ function PlacedModelCore({
     enterPoseSession(entry.key)
   }
 
-  // 骨架动画:加载结果按 URL 缓存,同一文件放多个会共享同一份骨架,
-  // 互相打架(多个 <primitive> 挂同一个 Object3D 也只有最后一个能显示)。
-  // 所以每个实例克隆一份(SkinnedMesh 安全),配独立的 AnimationMixer。
-  const instance = useMemo(() => SkeletonUtils.clone(group) as Group, [group])
   const mixer = useMemo(() => new AnimationMixer(instance), [instance])
   // 登记进 placedInstances 表:锚点父级绑定的 model: 解析用
   usePlacedInstance(entry.key, instance)
@@ -1468,7 +1548,7 @@ function PlacedModelCore({
       pendingUncachesRef.current = []
       mixer.stopAllAction()
       mixer.uncacheRoot(instance)
-      disposeObjectTree(instance)
+      disposeObjectTree(instance, {disposeTextures: false})
     }
   }, [mixer, instance])
 
@@ -1635,7 +1715,31 @@ function PlacedModelCore({
   )
 }
 
-/** 本地缺资产(另一个客户端同步来的清单)或 FBX 解析失败时,跳过该模型而不是崩掉画布 */
+export function createFailedModelPlaceholder(key: string): Group {
+  const group = new Group()
+  group.name = `Failed/${key}`
+  const marker = new Mesh(
+    new BoxGeometry(1, 1, 1),
+    new MeshBasicMaterial({color: 0xcc4444, wireframe: true}),
+  )
+  marker.name = `Failed/${key}/Placeholder`
+  group.add(marker)
+  return group
+}
+
+function FailedPlacedModel({entry}: {entry: PlacementEntry}) {
+  const group = useMemo(
+    () => createFailedModelPlaceholder(entry.key),
+    [entry.key],
+  )
+  useEffect(() => () => disposeObjectTree(group), [group])
+  return (
+    <group position={[entry.position.x, entry.position.y, entry.position.z]}>
+      <primitive object={group} />
+    </group>
+  )
+}
+
 class PlacedModelErrorBoundary extends React.Component<
   {
     entry: PlacementEntry | PendingPlacementEntry
@@ -1660,7 +1764,9 @@ class PlacedModelErrorBoundary extends React.Component<
     rejectPlacement(this.props.entry.key, err)
   }
   render() {
-    return this.state.failed ? null : <PlacedModel {...this.props} />
+    if (!this.state.failed) return <PlacedModel {...this.props} />
+    if ('pending' in this.props.entry && this.props.entry.pending) return null
+    return <FailedPlacedModel entry={this.props.entry} />
   }
 }
 
@@ -1715,6 +1821,40 @@ export function useGizmoMode(): [GizmoMode, (mode: GizmoMode) => void] {
  * 空壳在大纲里,刷新后消失——和撤销放置的已知行为一样。FBX 文件本体
  * 留在 IndexedDB。
  */
+export function retryPlacement(
+  sheet: ISheet,
+  key: string,
+  replacementEntryId?: string,
+): boolean {
+  const studio = getStudio()
+  if (!studio) return false
+  const registry = getRegistry(sheet)
+  const list = readRegistry(registry)
+  const current = list.find((entry) => entry.key === key)
+  if (!current) return false
+  const next: PlacementEntry = {
+    key: current.key,
+    position: current.position,
+    loadAttempt: (current.loadAttempt ?? 0) + 1,
+    ...(replacementEntryId === undefined
+      ? current.libraryEntryId
+        ? {libraryEntryId: current.libraryEntryId}
+        : current.assetId
+          ? {assetId: current.assetId}
+          : current.primitive
+            ? {primitive: current.primitive}
+            : {}
+      : {libraryEntryId: replacementEntryId}),
+  }
+  studio.transaction(({set}) => {
+    set(
+      registry.props.list,
+      JSON.stringify(list.map((entry) => (entry.key === key ? next : entry))),
+    )
+  })
+  return true
+}
+
 export function deletePlacement(sheet: ISheet, key: string) {
   const studio = getStudio()
   if (!studio) return

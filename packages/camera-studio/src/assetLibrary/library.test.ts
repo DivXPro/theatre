@@ -442,6 +442,97 @@ describe('骨架族别名并集读(终审 M-4)', () => {
 })
 
 describe('blob 生命周期', () => {
+  test('putBlobWithEntry rolls back the upload when entry creation fails', async () => {
+    const backend = memoryBackend()
+    const failure = new Error('entry write failed')
+    backend.putEntry = async () => {
+      throw failure
+    }
+    backend.deleteBlob = jest.fn(async () => {})
+    const lib = new Library({sources: [backend]})
+
+    await expect(lib.putBlobWithEntry(new Blob(['model']), model)).rejects.toBe(
+      failure,
+    )
+    expect(backend.deleteBlob).toHaveBeenCalledWith('blob-x')
+  })
+
+  test('putBlobWithEntry preserves a blob referenced by an existing entry after a later failure', async () => {
+    const backend = new IndexedDBBackend()
+    const lib = new Library({sources: [backend]})
+    const bytes = new Blob(['shared-model-bytes'])
+    let sharedBlobId = ''
+    await lib.putBlobWithEntry(bytes, (blobId) => {
+      sharedBlobId = blobId
+      return {...model('shared-original'), blobId, contentHash: blobId}
+    })
+    const failure = new Error('second entry write failed')
+    backend.putEntry = async () => {
+      throw failure
+    }
+
+    await expect(
+      lib.putBlobWithEntry(bytes, (blobId) => ({
+        ...model('shared-second'),
+        blobId,
+        contentHash: blobId,
+      })),
+    ).rejects.toBe(failure)
+    expect(await lib.listBlobIds()).toContain(sharedBlobId)
+    expect(await lib.getEntry('shared-original')).toMatchObject({
+      blobId: sharedBlobId,
+    })
+  })
+
+  test('putBlobWithEntry preserves shared bytes and the original error when any source cannot be enumerated', async () => {
+    const backend = new IndexedDBBackend()
+    const sourceFailure = new Error('catalog source unavailable')
+    let sourceEntries: LibraryEntry[] = []
+    let sourceUnavailable = false
+    const unavailableSource: LibrarySource = {
+      id: 'unavailable-source',
+      listEntries: async () => {
+        if (sourceUnavailable) throw sourceFailure
+        return sourceEntries
+      },
+      getEntry: async (id) => sourceEntries.find((entry) => entry.id === id),
+      getBlobUrl: async () => {
+        throw sourceFailure
+      },
+    }
+    const lib = new Library({sources: [backend, unavailableSource]})
+    const bytes = new Blob(['shared-partial-catalog-bytes'])
+    let sharedBlobId = ''
+    await lib.putBlobWithEntry(bytes, (blobId) => {
+      sharedBlobId = blobId
+      return {...model('shared-partial-original'), blobId, contentHash: blobId}
+    })
+    sourceEntries = [(await backend.getEntry('shared-partial-original'))!]
+    await backend.deleteEntry('shared-partial-original')
+    sourceUnavailable = true
+    const failure = new Error('partial catalog entry write failed')
+    backend.putEntry = async () => {
+      throw failure
+    }
+
+    await expect(
+      lib.putBlobWithEntry(bytes, (blobId) => ({
+        ...model('shared-partial-second'),
+        blobId,
+        contentHash: blobId,
+      })),
+    ).rejects.toBe(failure)
+    await expect(backend.getBlobUrl(sharedBlobId)).resolves.toBe(
+      'blob:mock-url',
+    )
+    expect(
+      await unavailableSource.getEntry('shared-partial-original'),
+    ).toMatchObject({
+      blobId: sharedBlobId,
+    })
+    await backend.deleteBlob(sharedBlobId)
+  })
+
   test('deleteEntryDeep: 缩略图被两个模型共享时,删一个不删 blob', async () => {
     const lib = new Library({sources: [new IndexedDBBackend()]})
     const thumbId = await lib.putBlob(new Blob(['thumb']))

@@ -95,6 +95,7 @@ import {
 } from './cameraRegistry'
 import type {CameraEntry, CameraSeed} from './cameraRegistry'
 import type {GizmoMode} from './PlacementManager'
+import type {PrimitiveKind} from './primitives'
 import {
   addPathPoint,
   CameraPath,
@@ -1104,6 +1105,7 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
     pendingEntry,
     startPlacingFromLibrary,
     placeLibraryEntryAt,
+    placePrimitiveAt,
     cancelPlacing,
     confirmPlacing,
     clearPending,
@@ -1804,6 +1806,10 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
       entry: ModelEntry,
       point: {x: number; y: number; z: number},
     ) => {key: string; persisted: Promise<void>}
+    placePrimitiveAt: (
+      kind: PrimitiveKind,
+      point: {x: number; y: number; z: number},
+    ) => {key: string; persisted: Promise<void>}
     enterPathEdit: (metaKey: string) => void
     exitPathEditOnBlur: () => void
     afterSceneObjectDeleted: (kind: SceneObjectKind, key: string) => void
@@ -1817,6 +1823,7 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
     gizmoMode,
     selectedPathPoint,
     placeLibraryEntryAt,
+    placePrimitiveAt,
     enterPathEdit,
     exitPathEditOnBlur,
     afterSceneObjectDeleted,
@@ -1828,6 +1835,8 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
       // 与 UI 点击放置同一条落地管线)
       createModel: ({entry, position}) =>
         deps().placeLibraryEntryAt(entry, position),
+      createPrimitive: ({kind, position}) =>
+        deps().placePrimitiveAt(kind, position),
       // 相机:Task 15 决策——生产绑定不自动 setActiveCameraKey。
       // create/setActive 是 spec §9 的两条显式命令,Agent 调用
       // cameras.create 不得隐性改变会话态;自动激活是 UI 顶栏

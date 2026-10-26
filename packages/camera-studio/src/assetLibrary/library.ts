@@ -287,7 +287,17 @@ export class Library {
     await this.enqueue(async () => {
       const writable = this.requireWritable()
       const blobId = await writable.putBlob(data)
-      await writable.putEntry(makeEntry(blobId))
+      try {
+        await writable.putEntry(makeEntry(blobId))
+      } catch (error) {
+        const referenced = await this.referencedBlobIdsForRollback().catch(
+          () => undefined,
+        )
+        if (referenced && !referenced.has(blobId)) {
+          await writable.deleteBlob(blobId).catch(() => {})
+        }
+        throw error
+      }
       this.emit()
     })
   }
@@ -312,6 +322,20 @@ export class Library {
       // 结构性判断:有字段且非空就算引用,否则启动清扫会把手势预览图
       // 当孤儿删掉(条目还在、图没了)
       if ('thumbnailId' in e && e.thumbnailId) ids.add(e.thumbnailId)
+    }
+    return ids
+  }
+
+  private async referencedBlobIdsForRollback(): Promise<Set<string>> {
+    const catalogs = await Promise.all(
+      this.sources.map((source) => source.listEntries()),
+    )
+    const ids = new Set<string>()
+    for (const entry of catalogs.flat()) {
+      if ('blobId' in entry) ids.add(entry.blobId)
+      if ('thumbnailId' in entry && entry.thumbnailId) {
+        ids.add(entry.thumbnailId)
+      }
     }
     return ids
   }

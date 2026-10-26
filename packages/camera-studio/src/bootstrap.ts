@@ -5,7 +5,8 @@
  *
  * 生命周期分层(R14):
  * - boot 级(一次性,initPromise 保留):Library 单例、IDB 连接、词典、
- *   theatre.init、project 解析、节流机械。重挂幂等复用,dispose 不拆。
+ *   theatre.init、project 解析、节流机械。重挂幂等复用,dispose 不拆;
+ *   显式场景切换可在全部消费者卸载后经 resetCameraStudio 清空重 boot。
  * - 会话级(每次挂载 acquire,dispose 拆解):3 个自定义属性编辑器注册、
  *   state 通道订阅、studio.ui 显隐。picker 注册表与宿主句柄由各自模块
  *   自管(CameraScene 组件挂载时接线),这里不碰。
@@ -24,6 +25,8 @@ import type {IProject, IStudioUI, InitOpts} from '@dreamerbird/core'
 import '@dreamerbird/studio'
 import {initState} from '@dreamerbird/core/initState'
 import {privateAPI} from '@dreamerbird/core/privateAPIs'
+import projectsSingleton from '@dreamerbird/core/projects/projectsSingleton'
+import getStudioInternal from '@dreamerbird/studio/getStudio'
 import {
   registerCustomPropEditor,
   unregisterCustomPropEditor,
@@ -46,6 +49,7 @@ import {
   GesturePropEditorRight,
 } from './gesturePropsEditor'
 import {createAgentRuntime} from './agent/runtime'
+import {clearSceneSheetObjects} from './agent/runtime/objectRuntime'
 import {
   activateCameraStudioApi,
   disposeCameraStudioApi,
@@ -64,7 +68,7 @@ export interface BootCtx {
   library: Library
   unregisterEditors: () => void
   /** 节流通道手动 flush:dispose 时调用,尾部变更不丢 */
-  flushState: () => void
+  flushState: () => Promise<void>
   /**
    * 状态通道入口:生产由 project 历史指针订阅喂入,测试可直接调。
    * 尾部节流(缺省 1000ms)后转给 config.state.onStateChange。
@@ -80,6 +84,7 @@ let initPromise: Promise<BootCtx> | undefined
 let bootConfig: CameraStudioConfig | undefined
 /** 漂移告警只发一次(同页多次重挂不同 config 不刷屏) */
 let warnedConfigDrift = false
+let resetPromise: Promise<void> | undefined
 /** 会话拆解函数;undefined = 当前无活跃会话(acquire 幂等守卫) */
 let sessionTeardown: (() => Promise<void>) | undefined
 /** 消费者计数由 hook 管(acquire/release 成对);dispose 据此做末位守卫 */
@@ -266,6 +271,10 @@ async function boot(config: CameraStudioConfig): Promise<BootCtx> {
   if (config.ui?.hideLeftStrip) {
     withStudioUi((ui) => ui.setLeftStripHidden(true))
   }
+  if (config.ui?.panels) {
+    const panels = config.ui.panels
+    withStudioUi((ui) => ui.setPanelVisibility(panels))
+  }
 
   // 1. 数据源:可写源(若有) + 内置目录,聚合进 Library 单例
   const {sources, idbName} = resolveSources(config)
@@ -328,7 +337,7 @@ async function boot(config: CameraStudioConfig): Promise<BootCtx> {
   let pendingContent: unknown
   let hasPending = false
   let timer: ReturnType<typeof setTimeout> | undefined
-  const flushState = (): void => {
+  const flushState = async (): Promise<void> => {
     if (timer !== undefined) {
       clearTimeout(timer)
       timer = undefined
@@ -337,7 +346,7 @@ async function boot(config: CameraStudioConfig): Promise<BootCtx> {
     hasPending = false
     const content = pendingContent
     pendingContent = undefined
-    config.state?.onStateChange?.(content)
+    await config.state?.onStateChange?.(content)
   }
   const notifyStateChange = (content: unknown): void => {
     if (!config.state?.onStateChange) return
@@ -445,12 +454,13 @@ function acquireSession(ctx: BootCtx): void {
     ctx.unregisterEditors()
     unsubState?.()
     // 先断订阅再 flush:尾部变更带给宿主,不丢
-    ctx.flushState()
+    await ctx.flushState()
     withStudioUi((ui) => ui.hide())
   }
 }
 
 export function initCameraStudio(config: CameraStudioConfig): Promise<BootCtx> {
+  if (resetPromise) return resetPromise.then(() => initCameraStudio(config))
   if (!initPromise) {
     bootConfig = config
     const p = boot(config)
@@ -486,4 +496,50 @@ export async function disposeCameraStudio(ctx?: BootCtx): Promise<void> {
   // 末位消费者守卫:还有消费者在挂(StrictMode 双跑/并发挂载)时不拆会话
   if (activeConsumers > 0) return
   await sessionTeardown?.()
+}
+
+export function resetCameraStudio(): Promise<void> {
+  if (resetPromise) return resetPromise
+  const previousInit = initPromise
+  resetPromise = (async () => {
+    if (activeConsumers > 0) {
+      throw new Error(
+        'resetCameraStudio requires all camera-studio consumers to be unmounted',
+      )
+    }
+    const previousCtx = previousInit
+      ? await previousInit.catch(() => undefined)
+      : undefined
+    if (activeConsumers > 0) {
+      throw new Error(
+        'resetCameraStudio requires all camera-studio consumers to be unmounted',
+      )
+    }
+    await sessionTeardown?.()
+    clearSceneSheetObjects()
+    if (previousCtx) {
+      const projectId = previousCtx.sceneProps.project.address.projectId
+      projectsSingleton.remove(projectId)
+      const studio = getStudioInternal()
+      if (studio) {
+        studio.transaction(({stateEditors}) => {
+          stateEditors.deleteProject({projectId})
+        }, false)
+        studio.ephemeralAtom.reduceByPointer(
+          (p) => p.coreByProject,
+          (projects) => {
+            const next = {...projects}
+            delete next[projectId]
+            return next
+          },
+        )
+      }
+    }
+    initPromise = undefined
+    bootConfig = undefined
+    warnedConfigDrift = false
+  })().finally(() => {
+    resetPromise = undefined
+  })
+  return resetPromise
 }

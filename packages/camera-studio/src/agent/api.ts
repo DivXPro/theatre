@@ -25,10 +25,13 @@ import {AgentCommandRegistry} from './registry'
 import type {RegistryDescription} from './registry'
 import type {AgentRuntime, AgentSceneRuntimeHandlers} from './runtime'
 import {isGenerationSupersededError} from './runtime'
+import {subscribeSceneSheetObjects} from './runtime/objectRuntime'
 import {registerAllAgentCommands} from './registerCommands'
 import type {SceneApi, ObjectsApi} from './commands/scene'
 import type {SelectionApi} from './commands/selection'
 import type {ModelsApi} from './commands/models'
+import type {PrimitivesApi} from './commands/primitives'
+import type {MaterialsApi} from './commands/materials'
 import type {AssetsApi} from './commands/assets'
 import type {PosesApi, PosesSessionApi} from './commands/poses'
 import type {AnimationsApi} from './commands/animations'
@@ -54,10 +57,13 @@ export type CameraStudioApi = {
   readonly ready: Promise<void>
   /** 当前会话的命令清单与元数据(spec 8.1);未激活 API_NOT_READY,已拆解 API_DISPOSED */
   describe(): RegistryDescription
+  subscribe(listener: () => void): () => void
   readonly scene: SceneApi
   readonly selection: SelectionApi
   readonly objects: ObjectsApi
   readonly models: ModelsApi
+  readonly primitives: PrimitivesApi
+  readonly materials: MaterialsApi
   readonly assets: AssetsApi
   readonly poses: PosesApi & {readonly session: PosesSessionApi}
   readonly animations: AnimationsApi
@@ -233,6 +239,20 @@ export function createCameraStudioApi(
         'Camera Studio API 尚未激活(场景未挂载)',
       )
     },
+    subscribe(listener: () => void): () => void {
+      const captured = session
+      if (!captured) return () => {}
+      const studio = captured.runtime.getStudio()
+      const offSelection =
+        studio?.onSelectionChange(() => listener()) ?? (() => {})
+      const offHistoric = captured.runtime.subscribeHistoric(listener)
+      const offSceneObjects = subscribeSceneSheetObjects(listener)
+      return () => {
+        offSelection()
+        offHistoric()
+        offSceneObjects()
+      }
+    },
     scene: {
       getSnapshot: () => invoke('scene.getSnapshot', undefined),
     },
@@ -249,11 +269,21 @@ export function createCameraStudioApi(
     },
     models: {
       create: (args) => invoke('models.create', args),
+      retry: (args) => invoke('models.retry', args),
+      replace: (args) => invoke('models.replace', args),
+    },
+    primitives: {
+      create: (args) => invoke('primitives.create', args),
+    },
+    materials: {
+      list: (args) => invoke('materials.list', args),
+      update: (args) => invoke('materials.update', args),
     },
     assets: {
       list: (args) => invoke('assets.list', args),
       get: (args) => invoke('assets.get', args),
       importModel: (args) => invoke('assets.importModel', args),
+      importModels: (args) => invoke('assets.importModels', args),
       rename: (args) => invoke('assets.rename', args),
       delete: (args) => invoke('assets.delete', args),
     },

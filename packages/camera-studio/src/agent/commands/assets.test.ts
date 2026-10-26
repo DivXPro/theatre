@@ -17,6 +17,7 @@ import type {CommandContext, JobSnapshot} from '../types'
 
 /** 晚绑定:doMock 工厂只登记一次,各用例在 setup 里换实现 */
 let activeImportModelFile: jest.Mock | undefined
+let activeImportModelFiles: jest.Mock | undefined
 
 jest.doMock('../../assetLibrary/importModelFile', () => ({
   __esModule: true,
@@ -24,10 +25,17 @@ jest.doMock('../../assetLibrary/importModelFile', () => ({
     activeImportModelFile!(...(args as [never, never])),
 }))
 
+jest.doMock('../../assetLibrary/importModelFiles', () => ({
+  __esModule: true,
+  importModelFiles: (...args: unknown[]) =>
+    activeImportModelFiles!(...(args as [never, never])),
+}))
+
 const cleanups: Array<() => void> = []
 afterEach(() => {
   while (cleanups.length) cleanups.pop()!()
   activeImportModelFile = undefined
+  activeImportModelFiles = undefined
 })
 
 const ctx = (): CommandContext => ({
@@ -151,6 +159,7 @@ function setup(options: SetupOptions = {}) {
   m.registerAssetCommands(registry, runtime)
   m.registerJobCommands(registry, runtime)
   activeImportModelFile = jest.fn()
+  activeImportModelFiles = jest.fn()
   return {...m, library, runtime, registry}
 }
 
@@ -514,6 +523,68 @@ describe('assets.importModel', () => {
     const done = await settleJob(runtime, jobId)
     expect(done.state).toBe('failed')
     expect(done.error?.code).toBe('INTERNAL_ERROR')
+  })
+})
+
+describe('assets.importModels', () => {
+  test('多个模型根成功时任务结果保持 ModelEntry[]', async () => {
+    const {registry, runtime, library} = setup()
+    const imported = [modelEntry('lib-a', 'a'), modelEntry('lib-b', 'b')]
+    activeImportModelFiles = jest.fn(async () => imported)
+    const files = [
+      new File(['a'], 'a.gltf'),
+      new File(['b'], 'b.gltf'),
+      new File(['bin'], 'shared.bin'),
+    ]
+
+    const {jobId} = (await registry.execute(
+      'assets.importModels',
+      {files},
+      ctx(),
+    )) as {jobId: string}
+    const done = await settleJob(runtime, jobId)
+
+    expect(activeImportModelFiles).toHaveBeenCalledWith(files, library)
+    expect(done).toMatchObject({
+      state: 'succeeded',
+      phase: 'loaded',
+      result: imported,
+    })
+  })
+
+  test('部分成功时只报告实际失败模型根,不误报成功项和伴随资源', async () => {
+    const {registry, runtime} = setup()
+    const partial = modelEntry('lib-a', 'a')
+    activeImportModelFiles = jest.fn(
+      async (_files: File[], library: Library) => {
+        await library.putEntry(partial)
+        throw Object.assign(new Error('b 写入失败'), {
+          entries: [partial],
+          failedItems: [{file: 'b.gltf', message: 'b 写入失败'}],
+        })
+      },
+    )
+    const files = [
+      new File(['a'], 'a.gltf'),
+      new File(['b'], 'b.gltf'),
+      new File(['bin'], 'shared.bin'),
+    ]
+
+    const {jobId} = (await registry.execute(
+      'assets.importModels',
+      {files},
+      ctx(),
+    )) as {jobId: string}
+    const done = await settleJob(runtime, jobId)
+
+    expect(done.state).toBe('failed')
+    expect(done.error).toMatchObject({
+      code: 'PARTIAL_FAILURE',
+      details: {
+        createdAssetIds: ['lib-a'],
+        failedItems: [{file: 'b.gltf', message: 'b 写入失败'}],
+      },
+    })
   })
 })
 

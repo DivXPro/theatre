@@ -21,7 +21,11 @@ export type {
   CameraStudioErrorSource,
 } from './errors'
 // 测试与高级宿主可用:绕过 hook 直接管 init/dispose 生命周期
-export {initCameraStudio, disposeCameraStudio} from './bootstrap'
+export {
+  initCameraStudio,
+  disposeCameraStudio,
+  resetCameraStudio,
+} from './bootstrap'
 export type {BootCtx} from './bootstrap'
 // Agent JS API(spec §7/§9):门面、命名空间类型、DTO 与错误族。
 // 内部接线口(activate/dispose/bindSceneHandlers/getActiveAgentRuntime)
@@ -50,6 +54,10 @@ export type {
 } from './agent/commands/scene'
 export type {SelectionApi} from './agent/commands/selection'
 export type {ModelsApi} from './agent/commands/models'
+export type {PrimitivesApi} from './agent/commands/primitives'
+export type {PrimitiveKind} from './primitives'
+export type {MaterialsApi} from './agent/commands/materials'
+export type {MaterialSlot, MaterialValues} from './materials/types'
 export type {AssetsApi} from './agent/commands/assets'
 export type {PosesApi, PosesSessionApi} from './agent/commands/poses'
 export type {
@@ -95,3 +103,4 @@ export type {
   LibraryEntry,
 } from './assetLibrary/types'
 export {IndexedDBBackend} from './assetLibrary/indexedDBBackend'
+export {importModelFiles} from './assetLibrary/importModelFiles'

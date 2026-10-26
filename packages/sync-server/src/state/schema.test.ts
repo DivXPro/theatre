@@ -1,3 +1,4 @@
+import {produce} from 'immer'
 import {stateEditors} from './schema'
 import type {OutlineCollectionState} from '@dreamerbird/core/types/private/studio'
 import type {
@@ -21,6 +22,16 @@ function makeDraft(): any {
   }
 }
 const outline = stateEditors.studio.historic.projects.stateByProjectId.outline
+
+describe('deleteProject', () => {
+  it('ignores project branches that are absent from partial state', () => {
+    expect(() =>
+      produce(makeDraft(), (draft: any) => {
+        stateEditors.deleteProject(draft, {}, {projectId: p1})
+      }),
+    ).not.toThrow()
+  })
+})
 
 describe('outline 显示名', () => {
   it('setObjectDisplayName 写入名称', () => {

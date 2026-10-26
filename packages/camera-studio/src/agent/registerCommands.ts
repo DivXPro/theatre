@@ -1,6 +1,6 @@
 /**
  * 全量 Agent 命令注册(2026-10-19,Task 15):按 Task 4–14 落地顺序
- * 注册全部 18 个命令组(spec §9 命令面,71 条命令),供生产会话与
+ * 注册全部 20 个命令组(spec §9 命令面,75 条命令),供生产会话与
  * 契约测试共用同一个注册入口。
  *
  * 重复命令兜底:registry.register 本身按名拒重(INVALID_STATE),注册
@@ -22,6 +22,8 @@ import {registerHistoryCommands} from './commands/history'
 import {registerKeyframeCommands} from './commands/keyframes'
 // Task 8:模型创建 + 资产管理 + 任务查询/取消
 import {registerModelCommands} from './commands/models'
+import {registerPrimitiveCommands} from './commands/primitives'
+import {registerMaterialCommands} from './commands/materials'
 import {registerAssetCommands} from './commands/assets'
 import {registerJobCommands} from './commands/jobs'
 // Task 9:姿势/手势 + 动画
@@ -60,6 +62,8 @@ export function registerAllAgentCommands(
   registerKeyframeCommands(registry, runtime)
   // Task 8
   registerModelCommands(registry, runtime)
+  registerPrimitiveCommands(registry, runtime)
+  registerMaterialCommands(registry, runtime)
   registerAssetCommands(registry, runtime)
   registerJobCommands(registry, runtime)
   // Task 9

@@ -16,8 +16,9 @@
 import {AgentApiError} from '../errors'
 import type {AgentCommandRegistry} from '../registry'
 import type {AgentRuntime} from '../runtime'
-import {formatSceneObjectId} from '../objectIds'
+import {formatSceneObjectId, parseSceneObjectId} from '../objectIds'
 import {getSceneObjectSummary} from '../objectResolver'
+import {retryPlacement} from '../../PlacementManager'
 import type {JsonSchema, SceneObjectId, Vec3} from '../types'
 import {
   requireFiniteNumber,
@@ -49,6 +50,15 @@ export type ModelsApi = {
     position: Vec3
     expectedRevision?: number
   }): Promise<{objectId: SceneObjectId; revision: number}>
+  retry(args: {
+    objectId: string
+    expectedRevision?: number
+  }): Promise<{revision: number}>
+  replace(args: {
+    objectId: string
+    assetId: string
+    expectedRevision?: number
+  }): Promise<{revision: number}>
 }
 
 type CreateArgs = {
@@ -205,4 +215,116 @@ export function registerModelCommands(
       return {objectId, revision: await runtime.nextRevision()}
     },
   })
+
+  const recoveryInput = {
+    type: 'object',
+    properties: {
+      objectId: {type: 'string'},
+      expectedRevision: {type: 'number'},
+    },
+    required: ['objectId'],
+    additionalProperties: false,
+  } as JsonSchema
+  const revisionOutput = {
+    type: 'object',
+    properties: {revision: {type: 'number'}},
+    required: ['revision'],
+  } as JsonSchema
+  const validateRecovery = (value: unknown) => {
+    const args = requireObject(value)
+    return {
+      objectId: requireString(args, 'objectId'),
+      expectedRevision: optionalRecoveryRevision(args.expectedRevision),
+    }
+  }
+  const recover = (
+    objectId: string,
+    expectedRevision: number | undefined,
+    replacementEntryId?: string,
+  ) => {
+    getSceneObjectSummary(runtime.sheet, objectId)
+    const {key} = parseSceneObjectId(objectId)
+    if (expectedRevision !== undefined) runtime.assertRevision(expectedRevision)
+    if (!retryPlacement(runtime.sheet, key, replacementEntryId)) {
+      throw new AgentApiError(
+        'SCENE_UNAVAILABLE',
+        'Studio 不可用,无法重试模型加载',
+      )
+    }
+  }
+
+  registry.register<
+    {objectId: string; expectedRevision?: number},
+    {revision: number}
+  >({
+    name: 'models.retry',
+    kind: 'mutation',
+    stateDomain: 'project',
+    undoable: 'single-step',
+    completion: 'committed',
+    inputSchema: recoveryInput,
+    outputSchema: revisionOutput,
+    errorCodes: [
+      'API_DISPOSED',
+      'INVALID_ARGUMENT',
+      'OBJECT_NOT_FOUND',
+      'REVISION_CONFLICT',
+      'SCENE_UNAVAILABLE',
+    ],
+    validate: validateRecovery,
+    execute: async ({objectId, expectedRevision}) => {
+      runtime.assertActive()
+      recover(objectId, expectedRevision)
+      return {revision: await runtime.nextRevision()}
+    },
+  })
+
+  registry.register<
+    {objectId: string; assetId: string; expectedRevision?: number},
+    {revision: number}
+  >({
+    name: 'models.replace',
+    kind: 'mutation',
+    stateDomain: 'project',
+    undoable: 'single-step',
+    completion: 'committed',
+    inputSchema: {
+      ...recoveryInput,
+      properties: {...recoveryInput.properties, assetId: {type: 'string'}},
+      required: ['objectId', 'assetId'],
+    },
+    outputSchema: revisionOutput,
+    errorCodes: [
+      'API_DISPOSED',
+      'INVALID_ARGUMENT',
+      'ASSET_NOT_FOUND',
+      'OBJECT_NOT_FOUND',
+      'REVISION_CONFLICT',
+      'SCENE_UNAVAILABLE',
+    ],
+    validate: (value) => ({
+      ...validateRecovery(value),
+      assetId: requireString(requireObject(value), 'assetId'),
+    }),
+    execute: async ({objectId, assetId, expectedRevision}) => {
+      runtime.assertActive()
+      const entry = await runtime.library.getEntry(assetId)
+      if (!entry) {
+        throw new AgentApiError('ASSET_NOT_FOUND', `资产不存在: ${assetId}`, {
+          details: {assetId},
+        })
+      }
+      if (entry.kind !== 'model') {
+        throw new AgentApiError('INVALID_ARGUMENT', `资产 ${assetId} 不是模型`)
+      }
+      recover(objectId, expectedRevision, assetId)
+      return {revision: await runtime.nextRevision()}
+    },
+  })
+}
+
+function optionalRecoveryRevision(value: unknown): number | undefined {
+  return value === undefined
+    ? undefined
+    : requireFiniteNumber(value, 'expectedRevision')
 }

@@ -94,6 +94,7 @@ export const contextMenuShownContext = createContext<
 
 const DetailPanel: React.FC<{}> = (props) => {
   const pin = useVal(getStudio().atomP.ahistoric.pinDetails) !== false
+  const hidden = useVal(getStudio().ephemeralAtom.pointer.hiddenPanels.details)
 
   const hotspotActive = useHotspot('right')
 
@@ -117,6 +118,8 @@ const DetailPanel: React.FC<{}> = (props) => {
   usePresenceListenersOnRootElement(containerElt)
 
   return usePrism(() => {
+    if (hidden) return null
+
     const selection = outlineSelection.getValue()
 
     const obj = selection.find(isSheetObject)
@@ -165,7 +168,7 @@ const DetailPanel: React.FC<{}> = (props) => {
     // 无选中物体时不显示面板(项目行选中也不再弹 ProjectDetails 空面板,
     // 2026-10-16 用户定夺:整块去掉,Export to JSON 入口随之移除)
     return null
-  }, [showDetailsPanel])
+  }, [showDetailsPanel, hidden])
 }
 
 export default () => {

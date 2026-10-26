@@ -24,6 +24,17 @@ class ProjectsSingleton {
   has(id: ProjectId) {
     return !!this.get(id)
   }
+
+  remove(id: ProjectId) {
+    this.atom.reduceByPointer(
+      (p) => p.projects,
+      (projects) => {
+        const next = {...projects}
+        delete next[id]
+        return next
+      },
+    )
+  }
 }
 
 const singleton = new ProjectsSingleton()

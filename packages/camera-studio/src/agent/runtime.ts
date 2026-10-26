@@ -75,6 +75,7 @@ export type AgentRuntime = {
   readonly library: Library
   readonly getStudio: () => IStudio | undefined
   readonly jobs: AgentJobManager
+  subscribeHistoric(listener: () => void): () => void
   /** 当前会话的 historic revision,从 1 开始 */
   readonly revision: number
   /**
@@ -117,6 +118,7 @@ type RuntimeCore = {
   revision: number
   currentGeneration: Generation
   readonly generations: Set<Generation>
+  readonly subscribeHistoric: AgentRuntimeDeps['subscribeHistoric']
   unsubscribeHistoric: () => void
 }
 
@@ -191,6 +193,7 @@ function makeRuntime(core: RuntimeCore, generation: Generation): AgentRuntime {
     library: core.library,
     getStudio: core.getStudio,
     jobs: core.jobs,
+    subscribeHistoric: core.subscribeHistoric,
     get revision() {
       return core.revision
     },
@@ -311,6 +314,7 @@ export function createAgentRuntime(deps: AgentRuntimeDeps): AgentRuntime {
     revision: 1,
     currentGeneration: first,
     generations: new Set([first]),
+    subscribeHistoric: deps.subscribeHistoric,
     unsubscribeHistoric: () => {},
   }
   // 订阅必须在 core 建好之后:真实 subscribeHistoric 走 core

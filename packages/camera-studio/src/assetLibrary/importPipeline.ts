@@ -2,6 +2,7 @@ import type {AnimationClip, Group, Object3D} from 'three'
 import {translate, type TFunction} from '@dreamerbird/studio/i18n'
 import {classifyModel, validatePoseJson} from './classify'
 import {createGLTFLoader} from './gltfLoader'
+import {createResourceUrlModifier} from './gltfResourceSet'
 import {exportAnimationGLB, exportModelGLB} from './exportGLB'
 import {hashBytes} from './hash'
 import type {Library} from './library'
@@ -17,15 +18,30 @@ export type ImportDeps = {
   exportAnimation: (root: Object3D, clip: AnimationClip) => Promise<ArrayBuffer>
 }
 
-export const realImportDeps: () => ImportDeps = () => ({
-  load: defaultLoad,
+export const realImportDeps: (files?: File[]) => ImportDeps = (files) => ({
+  load: (file) => defaultLoad(file, files),
   exportModel: exportModelGLB,
   exportAnimation: exportAnimationGLB,
 })
 
-async function defaultLoad(file: File): Promise<LoadedModel> {
+async function defaultLoad(
+  file: File,
+  resourceFiles?: File[],
+): Promise<LoadedModel> {
   const {FBXLoader} = await import('three-stdlib')
   const {LoadingManager} = await import('three')
+  if (resourceFiles && /\.gltf$/i.test(file.name)) {
+    const resources = createResourceUrlModifier(resourceFiles)
+    try {
+      const gltf = await createGLTFLoader(resources.manager).parseAsync(
+        await file.text(),
+        '',
+      )
+      return {root: gltf.scene as Group, animations: gltf.animations}
+    } finally {
+      resources.dispose()
+    }
+  }
   const url = URL.createObjectURL(file)
   try {
     if (/\.glb$|\.gltf$/i.test(file.name)) {
@@ -60,6 +76,7 @@ export type ImportItem =
   | {
       type: 'model'
       name: string
+      sourceFile?: string
       rig: string
       contentHash: string
       boneCount: number
@@ -69,13 +86,26 @@ export type ImportItem =
   | {
       type: 'animation'
       name: string
+      sourceFile?: string
       rig: string
       contentHash: string
       duration: number
       glb: ArrayBuffer
     }
-  | {type: 'pose'; name: string; rig: string; bones: PoseEntry['bones']}
-  | {type: 'skip'; name: string; reason: string}
+  | {
+      type: 'pose'
+      name: string
+      sourceFile?: string
+      rig: string
+      bones: PoseEntry['bones']
+    }
+  | {
+      type: 'skip'
+      name: string
+      sourceFile?: string
+      reason: string
+      duplicate?: boolean
+    }
 
 /** 哈希不同但同族同结构的模型,入库前要用户选 reuse/keep */
 export type SimilarMatch = {
@@ -142,12 +172,14 @@ export async function planImport(
         items.push({
           type: 'skip',
           name: file.name,
+          sourceFile: file.name,
           reason: tr('pg.import.reason.badPoseJson'),
         })
       } else {
         items.push({
           type: 'pose',
           name: baseName(file.name),
+          sourceFile: file.name,
           rig: parsed.rig,
           bones: parsed.bones,
         })
@@ -162,6 +194,7 @@ export async function planImport(
       items.push({
         type: 'skip',
         name: file.name,
+        sourceFile: file.name,
         reason: tr('pg.import.reason.parseFailed'),
       })
       continue
@@ -171,6 +204,7 @@ export async function planImport(
       items.push({
         type: 'skip',
         name: file.name,
+        sourceFile: file.name,
         reason: tr('pg.import.reason.noContent'),
       })
       continue
@@ -188,6 +222,7 @@ export async function planImport(
         items.push({
           type: 'skip',
           name: baseName(file.name),
+          sourceFile: file.name,
           reason: tr('pg.import.reason.modelExportFailed'),
         })
       }
@@ -204,6 +239,7 @@ export async function planImport(
             items.push({
               type: 'model',
               name: baseName(file.name),
+              sourceFile: file.name,
               rig,
               contentHash,
               boneCount,
@@ -229,7 +265,9 @@ export async function planImport(
           items.push({
             type: 'skip',
             name: baseName(file.name),
+            sourceFile: file.name,
             reason: tr('pg.import.reason.modelExists', {name: dup.name}),
+            duplicate: true,
           })
         }
         // dup 命中:模型跳过,下面的动作照常提取
@@ -246,6 +284,7 @@ export async function planImport(
         items.push({
           type: 'skip',
           name: `${baseName(file.name)}/${clip.name}`,
+          sourceFile: file.name,
           reason: tr('pg.import.reason.animationExportFailed'),
         })
         continue
@@ -259,13 +298,16 @@ export async function planImport(
         items.push({
           type: 'skip',
           name: `${baseName(file.name)}/${clip.name}`,
+          sourceFile: file.name,
           reason: tr('pg.import.reason.animationExists'),
+          duplicate: true,
         })
         continue
       }
       items.push({
         type: 'animation',
         name: clip.name || baseName(file.name),
+        sourceFile: file.name,
         rig,
         contentHash,
         duration: clip.duration,
@@ -275,6 +317,20 @@ export async function planImport(
   }
 
   return {items, similar, summary: summarize(items, tr)}
+}
+
+export class ImportItemWriteError extends Error {
+  constructor(
+    readonly item: Exclude<ImportItem, {type: 'skip'}>,
+    readonly cause: unknown,
+  ) {
+    super(
+      `导入项 ${item.name} 写入失败: ${
+        cause instanceof Error ? cause.message : String(cause)
+      }`,
+    )
+    this.name = 'ImportItemWriteError'
+  }
 }
 
 /** 落库:choices 与 plan.similar 一一对应,'reuse' 丢弃对应 model 项 */
@@ -289,45 +345,49 @@ export async function executeImport(
   for (let i = 0; i < plan.items.length; i++) {
     const item = plan.items[i]
     if (item.type === 'skip') continue
-    if (item.type === 'model') {
-      if (drop.has(i)) continue
-      await library.putBlobWithEntry(
-        new Blob([item.glb]),
-        (blobId): ModelEntry => ({
+    try {
+      if (item.type === 'model') {
+        if (drop.has(i)) continue
+        await library.putBlobWithEntry(
+          new Blob([item.glb]),
+          (blobId): ModelEntry => ({
+            id: newId(),
+            kind: 'model',
+            name: item.name,
+            rig: item.rig,
+            blobId,
+            contentHash: item.contentHash,
+            boneCount: item.boneCount,
+            vertexCount: item.vertexCount,
+            createdAt: Date.now(),
+          }),
+        )
+      } else if (item.type === 'animation') {
+        await library.putBlobWithEntry(
+          new Blob([item.glb]),
+          (blobId): AnimationEntry => ({
+            id: newId(),
+            kind: 'animation',
+            name: item.name,
+            rig: item.rig,
+            blobId,
+            contentHash: item.contentHash,
+            duration: item.duration,
+            createdAt: Date.now(),
+          }),
+        )
+      } else {
+        await library.putEntry({
           id: newId(),
-          kind: 'model',
+          kind: 'pose',
           name: item.name,
           rig: item.rig,
-          blobId,
-          contentHash: item.contentHash,
-          boneCount: item.boneCount,
-          vertexCount: item.vertexCount,
+          bones: item.bones,
           createdAt: Date.now(),
-        }),
-      )
-    } else if (item.type === 'animation') {
-      await library.putBlobWithEntry(
-        new Blob([item.glb]),
-        (blobId): AnimationEntry => ({
-          id: newId(),
-          kind: 'animation',
-          name: item.name,
-          rig: item.rig,
-          blobId,
-          contentHash: item.contentHash,
-          duration: item.duration,
-          createdAt: Date.now(),
-        }),
-      )
-    } else {
-      await library.putEntry({
-        id: newId(),
-        kind: 'pose',
-        name: item.name,
-        rig: item.rig,
-        bones: item.bones,
-        createdAt: Date.now(),
-      })
+        })
+      }
+    } catch (error) {
+      throw new ImportItemWriteError(item, error)
     }
   }
 }

@@ -13,6 +13,7 @@ import type {
   IWorkspaceButtonConfig,
   PaneClassDefinition,
   InitOpts,
+  StudioPanelVisibility,
 } from '@dreamerbird/core/types/public'
 import TheatreStudio from './TheatreStudio'
 import {nanoid} from 'nanoid/non-secure'
@@ -135,6 +136,7 @@ export class Studio {
     // LeftStrip(logo + 工作区按钮)显隐槽:ui.setLeftStripHidden 写入,
     // LeftStrip 组件订阅;undefined/false = 显示
     leftStripHidden?: boolean
+    hiddenPanels?: StudioPanelVisibility
     coreByProject: {[projectId in string]: ProjectEphemeralState}
     extensions: {
       byId: {[extensionId in string]?: IExtension}

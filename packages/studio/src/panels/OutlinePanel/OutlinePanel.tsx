@@ -49,6 +49,7 @@ const OutlinePanel: React.FC<{}> = () => {
   const pin = useVal(getStudio().atomP.ahistoric.pinOutline) ?? true
   const show = useVal(shouldShowOutlineD)
   const active = useHotspot('left')
+  const hidden = useVal(getStudio().ephemeralAtom.pointer.hiddenPanels.outline)
 
   useLayoutEffect(() => {
     isOutlinePanelHotspotActiveB.set(active)
@@ -61,6 +62,8 @@ const OutlinePanel: React.FC<{}> = () => {
       isOutlinePanelHotspotActiveB.set(false)
     }
   }, [])
+
+  if (hidden) return null
 
   return (
     <Container
