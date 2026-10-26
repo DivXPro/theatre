@@ -290,7 +290,10 @@ export class Library {
       try {
         await writable.putEntry(makeEntry(blobId))
       } catch (error) {
-        await writable.deleteBlob(blobId).catch(() => {})
+        const referenced = await this.referencedBlobIds().catch(() => undefined)
+        if (referenced && !referenced.has(blobId)) {
+          await writable.deleteBlob(blobId).catch(() => {})
+        }
         throw error
       }
       this.emit()

@@ -457,6 +457,33 @@ describe('blob 生命周期', () => {
     expect(backend.deleteBlob).toHaveBeenCalledWith('blob-x')
   })
 
+  test('putBlobWithEntry preserves a blob referenced by an existing entry after a later failure', async () => {
+    const backend = new IndexedDBBackend()
+    const lib = new Library({sources: [backend]})
+    const bytes = new Blob(['shared-model-bytes'])
+    let sharedBlobId = ''
+    await lib.putBlobWithEntry(bytes, (blobId) => {
+      sharedBlobId = blobId
+      return {...model('shared-original'), blobId, contentHash: blobId}
+    })
+    const failure = new Error('second entry write failed')
+    backend.putEntry = async () => {
+      throw failure
+    }
+
+    await expect(
+      lib.putBlobWithEntry(bytes, (blobId) => ({
+        ...model('shared-second'),
+        blobId,
+        contentHash: blobId,
+      })),
+    ).rejects.toBe(failure)
+    expect(await lib.listBlobIds()).toContain(sharedBlobId)
+    expect(await lib.getEntry('shared-original')).toMatchObject({
+      blobId: sharedBlobId,
+    })
+  })
+
   test('deleteEntryDeep: 缩略图被两个模型共享时,删一个不删 blob', async () => {
     const lib = new Library({sources: [new IndexedDBBackend()]})
     const thumbId = await lib.putBlob(new Blob(['thumb']))
