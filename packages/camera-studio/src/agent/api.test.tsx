@@ -303,6 +303,16 @@ const FACADE_COMMANDS: ReadonlyArray<{
     args: {assetId: 'asset-1', position: {x: 0, y: 0, z: 0}},
   },
   {
+    path: 'models.retry',
+    command: 'models.retry',
+    args: {objectId: 'model:M'},
+  },
+  {
+    path: 'models.replace',
+    command: 'models.replace',
+    args: {objectId: 'model:M', assetId: 'asset-2'},
+  },
+  {
     path: 'primitives.create',
     command: 'primitives.create',
     args: {kind: 'box', position: {x: 0, y: 0, z: 0}},

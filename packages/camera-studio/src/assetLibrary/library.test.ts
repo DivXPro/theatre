@@ -442,6 +442,21 @@ describe('骨架族别名并集读(终审 M-4)', () => {
 })
 
 describe('blob 生命周期', () => {
+  test('putBlobWithEntry rolls back the upload when entry creation fails', async () => {
+    const backend = memoryBackend()
+    const failure = new Error('entry write failed')
+    backend.putEntry = async () => {
+      throw failure
+    }
+    backend.deleteBlob = jest.fn(async () => {})
+    const lib = new Library({sources: [backend]})
+
+    await expect(lib.putBlobWithEntry(new Blob(['model']), model)).rejects.toBe(
+      failure,
+    )
+    expect(backend.deleteBlob).toHaveBeenCalledWith('blob-x')
+  })
+
   test('deleteEntryDeep: 缩略图被两个模型共享时,删一个不删 blob', async () => {
     const lib = new Library({sources: [new IndexedDBBackend()]})
     const thumbId = await lib.putBlob(new Blob(['thumb']))

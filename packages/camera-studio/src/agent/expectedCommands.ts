@@ -14,6 +14,8 @@ export const EXPECTED_AGENT_COMMANDS = [
   'objects.update',
   'objects.delete',
   'models.create',
+  'models.retry',
+  'models.replace',
   'primitives.create',
   'materials.list',
   'materials.update',

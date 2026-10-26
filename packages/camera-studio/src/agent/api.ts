@@ -269,6 +269,8 @@ export function createCameraStudioApi(
     },
     models: {
       create: (args) => invoke('models.create', args),
+      retry: (args) => invoke('models.retry', args),
+      replace: (args) => invoke('models.replace', args),
     },
     primitives: {
       create: (args) => invoke('primitives.create', args),

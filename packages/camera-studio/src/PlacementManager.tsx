@@ -130,6 +130,7 @@ export type PlacementEntry = {
   /** 库来源条目的 id;存在时优先从资产库加载 GLB */
   libraryEntryId?: string
   primitive?: PrimitiveKind
+  loadAttempt?: number
   position: {x: number; y: number; z: number}
 }
 
@@ -980,7 +981,10 @@ export function PlacedModels({
   return (
     <>
       {entries.map((entry) => (
-        <Suspense key={entry.key} fallback={null}>
+        <Suspense
+          key={`${entry.key}:${entry.loadAttempt ?? 0}`}
+          fallback={null}
+        >
           <PlacedModelErrorBoundary
             entry={entry}
             project={project}
@@ -1711,7 +1715,31 @@ function PlacedModelCore({
   )
 }
 
-/** 本地缺资产(另一个客户端同步来的清单)或 FBX 解析失败时,跳过该模型而不是崩掉画布 */
+export function createFailedModelPlaceholder(key: string): Group {
+  const group = new Group()
+  group.name = `Failed/${key}`
+  const marker = new Mesh(
+    new BoxGeometry(1, 1, 1),
+    new MeshBasicMaterial({color: 0xcc4444, wireframe: true}),
+  )
+  marker.name = `Failed/${key}/Placeholder`
+  group.add(marker)
+  return group
+}
+
+function FailedPlacedModel({entry}: {entry: PlacementEntry}) {
+  const group = useMemo(
+    () => createFailedModelPlaceholder(entry.key),
+    [entry.key],
+  )
+  useEffect(() => () => disposeObjectTree(group), [group])
+  return (
+    <group position={[entry.position.x, entry.position.y, entry.position.z]}>
+      <primitive object={group} />
+    </group>
+  )
+}
+
 class PlacedModelErrorBoundary extends React.Component<
   {
     entry: PlacementEntry | PendingPlacementEntry
@@ -1736,7 +1764,9 @@ class PlacedModelErrorBoundary extends React.Component<
     rejectPlacement(this.props.entry.key, err)
   }
   render() {
-    return this.state.failed ? null : <PlacedModel {...this.props} />
+    if (!this.state.failed) return <PlacedModel {...this.props} />
+    if ('pending' in this.props.entry && this.props.entry.pending) return null
+    return <FailedPlacedModel entry={this.props.entry} />
   }
 }
 
@@ -1791,6 +1821,40 @@ export function useGizmoMode(): [GizmoMode, (mode: GizmoMode) => void] {
  * 空壳在大纲里,刷新后消失——和撤销放置的已知行为一样。FBX 文件本体
  * 留在 IndexedDB。
  */
+export function retryPlacement(
+  sheet: ISheet,
+  key: string,
+  replacementEntryId?: string,
+): boolean {
+  const studio = getStudio()
+  if (!studio) return false
+  const registry = getRegistry(sheet)
+  const list = readRegistry(registry)
+  const current = list.find((entry) => entry.key === key)
+  if (!current) return false
+  const next: PlacementEntry = {
+    key: current.key,
+    position: current.position,
+    loadAttempt: (current.loadAttempt ?? 0) + 1,
+    ...(replacementEntryId === undefined
+      ? current.libraryEntryId
+        ? {libraryEntryId: current.libraryEntryId}
+        : current.assetId
+          ? {assetId: current.assetId}
+          : current.primitive
+            ? {primitive: current.primitive}
+            : {}
+      : {libraryEntryId: replacementEntryId}),
+  }
+  studio.transaction(({set}) => {
+    set(
+      registry.props.list,
+      JSON.stringify(list.map((entry) => (entry.key === key ? next : entry))),
+    )
+  })
+  return true
+}
+
 export function deletePlacement(sheet: ISheet, key: string) {
   const studio = getStudio()
   if (!studio) return

@@ -212,6 +212,40 @@ export function setStaticProps(
   writePropsInTransaction(sheetObject, props)
 }
 
+export function assertStaticPropsWithLeafGuardWritable(
+  sheetObject: ISheetObject<$IntentionalAny>,
+  props: Record<string, unknown>,
+  guardedPropPaths: string[],
+): void {
+  const current = sheetObject.value as Record<string, unknown> | undefined
+  for (const [key, value] of Object.entries(props)) {
+    if (!current || !(key in current)) {
+      throw new AgentApiError('INVALID_ARGUMENT', `未知属性: ${key}`, {
+        details: {prop: key},
+      })
+    }
+    validateValueShape(key, current[key], value)
+  }
+  for (const propPath of guardedPropPaths) {
+    if (isPropSequenced(sheetObject, propPath)) {
+      throw new AgentApiError(
+        'INVALID_STATE',
+        `属性 ${propPath} 已建轨,请改用 keyframes.* 写入`,
+        {details: {prop: propPath}},
+      )
+    }
+  }
+}
+
+export function setStaticPropsWithLeafGuard(
+  sheetObject: ISheetObject<$IntentionalAny>,
+  props: Record<string, unknown>,
+  guardedPropPaths: string[],
+): void {
+  assertStaticPropsWithLeafGuardWritable(sheetObject, props, guardedPropPaths)
+  writePropsInTransaction(sheetObject, props)
+}
+
 /**
  * 领域静态写入 + 坐标定格同事务(2026-10-19,Agent API F1 修复):
  * 绑定/父级切换类命令(setParent/clearParent/unbindPath/setAimTarget 解除)

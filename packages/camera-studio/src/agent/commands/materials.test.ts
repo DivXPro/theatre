@@ -27,7 +27,7 @@ const ctx = (): CommandContext => ({
   signal: new AbortController().signal,
 })
 
-type SetupOptions = {roughnessTrack?: boolean}
+type SetupOptions = {roughnessTrack?: boolean; secondSlot?: boolean}
 
 function setup(options: SetupOptions = {}) {
   const {getPointerParts} =
@@ -61,6 +61,14 @@ function setup(options: SetupOptions = {}) {
   )
   mesh.name = 'Body'
   instance.add(mesh)
+  if (options.secondSlot) {
+    const sibling = new three.Mesh(
+      new three.BoxGeometry(),
+      new three.MeshStandardMaterial({roughness: 0.7}),
+    )
+    sibling.name = 'Trim'
+    instance.add(sibling)
+  }
   const slots = collectMaterialSlots(instance)
   const slot = slots[0]!
   const slotKey = slot.slotKey
@@ -320,6 +328,52 @@ test('materials.update honors expectedRevision and rejects sequenced properties'
     ),
   ).rejects.toMatchObject({code: 'REVISION_CONFLICT'})
   expect(conflict.fakeStudio.transaction).not.toHaveBeenCalled()
+})
+
+test('materials.update guards only changed sequenced leaves and preserves siblings in one transaction', async () => {
+  const {registry, fakeStudio, calls, mountFoo, slot, slots} = setup({
+    roughnessTrack: true,
+    secondSlot: true,
+  })
+  mountFoo()
+  const sibling = slots[1]!
+
+  for (const [slotId, values] of [
+    [slot.slotId, {color: '#112233'}],
+    [slot.slotId, {metalness: 0.6}],
+    [slot.slotId, {mapBlobId: 'texture-new'}],
+    [sibling.slotId, {roughness: 0.45}],
+  ] as const) {
+    await expect(
+      registry.execute(
+        'materials.update',
+        {objectId: 'model:Foo', slotId, values},
+        ctx(),
+      ),
+    ).resolves.toEqual({revision: expect.any(Number)})
+  }
+
+  expect(fakeStudio.transaction).toHaveBeenCalledTimes(4)
+  const patches = calls
+    .filter((call) => call.op === 'set')
+    .map((call) => call.value as Record<string, MaterialValues>)
+  expect(patches).toHaveLength(4)
+  expect(patches[0]![slot.slotKey]).toMatchObject({
+    roughness: 0.25,
+    color: '#112233',
+  })
+  expect(patches[1]![slot.slotKey]).toMatchObject({
+    roughness: 0.25,
+    metalness: 0.6,
+  })
+  expect(patches[2]![slot.slotKey]).toMatchObject({
+    roughness: 0.25,
+    mapBlobId: 'texture-new',
+  })
+  expect(patches[3]).toMatchObject({
+    [slot.slotKey]: {roughness: 0.25},
+    [sibling.slotKey]: {roughness: 0.45},
+  })
 })
 
 test('roughness accepts keyframes at the materialOverrides compound leaf', async () => {

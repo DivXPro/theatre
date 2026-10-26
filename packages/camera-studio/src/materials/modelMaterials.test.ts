@@ -124,6 +124,29 @@ test('texture updates dispose replacements, and empty IDs restore immutable orig
   controller.dispose()
 })
 
+test('texture load failures report the slot and property through onError', async () => {
+  const {root} = modelWithTwoMeshes()
+  cloneModelMaterials(root)
+  const slots = collectMaterialSlots(root)
+  const cause = new Error('unsupported image')
+  const onError = jest.fn()
+  const controller = createMaterialTextureController({
+    getBlobUrl: async (blobId) => blobId,
+    loadTexture: async () => {
+      throw cause
+    },
+    onError,
+    invalidate: () => {},
+  })
+
+  await controller.update(root, slots, {
+    [slots[0]!.slotKey]: {mapBlobId: 'broken-texture'},
+  })
+
+  expect(onError).toHaveBeenCalledWith(cause, slots[0]!.slotId, 'mapBlobId')
+  controller.dispose()
+})
+
 test('stale texture loads cannot overwrite a newer selection and are disposed', async () => {
   const {root, a} = modelWithTwoMeshes()
   cloneModelMaterials(root)

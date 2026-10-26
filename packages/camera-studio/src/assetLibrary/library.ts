@@ -287,7 +287,12 @@ export class Library {
     await this.enqueue(async () => {
       const writable = this.requireWritable()
       const blobId = await writable.putBlob(data)
-      await writable.putEntry(makeEntry(blobId))
+      try {
+        await writable.putEntry(makeEntry(blobId))
+      } catch (error) {
+        await writable.deleteBlob(blobId).catch(() => {})
+        throw error
+      }
       this.emit()
     })
   }

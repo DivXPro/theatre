@@ -207,6 +207,7 @@ export function createMaterialOverridesConfig(slots: MaterialSlot[]) {
 type TextureControllerOptions = {
   getBlobUrl(blobId: string): Promise<string>
   loadTexture(url: string): Promise<Texture>
+  onError?(error: unknown, slotId: string, property: string): void
   invalidate(): void
 }
 
@@ -283,10 +284,14 @@ export function createMaterialTextureController(
           tasks.push(
             updateTexture(material, property, blobId, token).catch((error) => {
               if (!disposed && token === generation) {
-                console.warn(
-                  `[materials] 贴图加载失败: ${slot.slotId}/${blobProperty}`,
-                  error,
-                )
+                if (options.onError) {
+                  options.onError(error, slot.slotId, blobProperty)
+                } else {
+                  console.warn(
+                    `[materials] 贴图加载失败: ${slot.slotId}/${blobProperty}`,
+                    error,
+                  )
+                }
               }
             }),
           )

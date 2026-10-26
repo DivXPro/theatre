@@ -3,6 +3,7 @@ import {useVal} from '@dreamerbird/react'
 import {useEffect, useMemo} from 'react'
 import {TextureLoader, type Group} from 'three'
 import {getLibrary} from '../assetLibrary/library'
+import {LibraryError} from '../assetLibrary/source'
 import {
   applyMaterialScalars,
   createMaterialTextureController,
@@ -29,6 +30,15 @@ export function useModelMaterials({
     return createMaterialTextureController({
       getBlobUrl: (blobId) => getLibrary().getBlobUrl(blobId),
       loadTexture: (url) => loader.loadAsync(url),
+      onError: (error, slotId, property) => {
+        getLibrary().reportError(
+          new LibraryError(
+            'network',
+            `材质贴图加载失败: ${slotId}/${property}`,
+            error,
+          ),
+        )
+      },
       invalidate,
     })
   }, [instance, invalidate])

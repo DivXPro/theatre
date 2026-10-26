@@ -1,7 +1,10 @@
 import {AgentApiError} from '../errors'
 import {parseSceneObjectId} from '../objectIds'
 import {resolveSceneSheetObject} from '../objectResolver'
-import {assertStaticPropsWritable, setStaticProps} from '../propAccess'
+import {
+  assertStaticPropsWithLeafGuardWritable,
+  setStaticPropsWithLeafGuard,
+} from '../propAccess'
 import type {AgentCommandRegistry} from '../registry'
 import type {AgentRuntime} from '../runtime'
 import type {JsonSchema} from '../types'
@@ -236,11 +239,18 @@ export function registerMaterialCommands(
         },
       }
       const patch = {materialOverrides}
-      assertStaticPropsWritable(sheetObject, patch)
+      const guardedPropPaths = Object.keys(args.values).map(
+        (property) => `materialOverrides.${slot.slotKey}.${property}`,
+      )
+      assertStaticPropsWithLeafGuardWritable(
+        sheetObject,
+        patch,
+        guardedPropPaths,
+      )
       if (args.expectedRevision !== undefined) {
         runtime.assertRevision(args.expectedRevision)
       }
-      setStaticProps(sheetObject, patch)
+      setStaticPropsWithLeafGuard(sheetObject, patch, guardedPropPaths)
       return {revision: await runtime.nextRevision()}
     },
   })
