@@ -484,6 +484,55 @@ describe('blob 生命周期', () => {
     })
   })
 
+  test('putBlobWithEntry preserves shared bytes and the original error when any source cannot be enumerated', async () => {
+    const backend = new IndexedDBBackend()
+    const sourceFailure = new Error('catalog source unavailable')
+    let sourceEntries: LibraryEntry[] = []
+    let sourceUnavailable = false
+    const unavailableSource: LibrarySource = {
+      id: 'unavailable-source',
+      listEntries: async () => {
+        if (sourceUnavailable) throw sourceFailure
+        return sourceEntries
+      },
+      getEntry: async (id) => sourceEntries.find((entry) => entry.id === id),
+      getBlobUrl: async () => {
+        throw sourceFailure
+      },
+    }
+    const lib = new Library({sources: [backend, unavailableSource]})
+    const bytes = new Blob(['shared-partial-catalog-bytes'])
+    let sharedBlobId = ''
+    await lib.putBlobWithEntry(bytes, (blobId) => {
+      sharedBlobId = blobId
+      return {...model('shared-partial-original'), blobId, contentHash: blobId}
+    })
+    sourceEntries = [(await backend.getEntry('shared-partial-original'))!]
+    await backend.deleteEntry('shared-partial-original')
+    sourceUnavailable = true
+    const failure = new Error('partial catalog entry write failed')
+    backend.putEntry = async () => {
+      throw failure
+    }
+
+    await expect(
+      lib.putBlobWithEntry(bytes, (blobId) => ({
+        ...model('shared-partial-second'),
+        blobId,
+        contentHash: blobId,
+      })),
+    ).rejects.toBe(failure)
+    await expect(backend.getBlobUrl(sharedBlobId)).resolves.toBe(
+      'blob:mock-url',
+    )
+    expect(
+      await unavailableSource.getEntry('shared-partial-original'),
+    ).toMatchObject({
+      blobId: sharedBlobId,
+    })
+    await backend.deleteBlob(sharedBlobId)
+  })
+
   test('deleteEntryDeep: 缩略图被两个模型共享时,删一个不删 blob', async () => {
     const lib = new Library({sources: [new IndexedDBBackend()]})
     const thumbId = await lib.putBlob(new Blob(['thumb']))
