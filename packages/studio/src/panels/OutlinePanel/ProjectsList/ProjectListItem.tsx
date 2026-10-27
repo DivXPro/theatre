@@ -9,6 +9,7 @@ import {val} from '@dreamerbird/dataverse'
 import styled from 'styled-components'
 import {useCollapseStateInOutlinePanel} from '@dreamerbird/studio/panels/OutlinePanel/outlinePanelUtils'
 import useChordial from '@dreamerbird/studio/uiComponents/chordial/useChodrial'
+import {projectDisplayNameOf} from '@dreamerbird/studio/panels/OutlinePanel/outlineOps/displayName'
 
 const ConflictNotice = styled.div`
   color: #ff6363;
@@ -54,7 +55,7 @@ const ProjectListItem: React.FC<{
   return (
     <BaseItem
       depth={depth}
-      label={project.address.projectId}
+      label={projectDisplayNameOf(project)}
       setIsCollapsed={setCollapsed}
       collapsed={collapsed}
       headerRef={targetRef}

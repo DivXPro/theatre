@@ -7,6 +7,7 @@ import useLockSet from '@dreamerbird/studio/uiComponents/useLockSet'
 import React, {useContext} from 'react'
 import useWindowSize from 'react-use/esm/useWindowSize'
 import type {UIPanelId} from '@dreamerbird/core/types/private'
+import {StudioRootContext} from '@dreamerbird/studio/UIRoot/StudioRootContext'
 
 type PanelStuff = {
   panelId: UIPanelId
@@ -67,6 +68,27 @@ const PanelContext = React.createContext<PanelStuff>(null as $IntentionalAny)
 
 export const usePanel = () => useContext(PanelContext)
 
+function usePanelSize(): {width: number; height: number} {
+  const windowSize = useWindowSize(800, 200)
+  const root = useContext(StudioRootContext)
+  const [rootSize, setRootSize] = React.useState(windowSize)
+
+  React.useEffect(() => {
+    if (!root) return
+    const update = () => {
+      const bounds = root.getBoundingClientRect()
+      setRootSize({width: bounds.width, height: bounds.height})
+    }
+    update()
+    if (typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(update)
+    observer.observe(root)
+    return () => observer.disconnect()
+  }, [root, windowSize.width, windowSize.height])
+
+  return root ? rootSize : windowSize
+}
+
 const BasePanel: React.FC<{
   panelId: UIPanelId
   defaultPosition: PanelPosition
@@ -74,7 +96,7 @@ const BasePanel: React.FC<{
   docked?: 'bottom'
   children: React.ReactNode
 }> = ({panelId, children, defaultPosition, minDims, docked}) => {
-  const windowSize = useWindowSize(800, 200)
+  const windowSize = usePanelSize()
   const [boundsHighlighted, addBoundsHighlightLock] = useLockSet()
 
   const {stuff} = usePrism(() => {

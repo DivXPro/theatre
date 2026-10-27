@@ -1,4 +1,4 @@
-import {objectDisplayNameOf} from './displayName'
+import {objectDisplayNameOf, projectDisplayNameOf} from './displayName'
 import type {SheetObjectAddress} from '@dreamerbird/core/types/public'
 
 const address = {
@@ -38,5 +38,25 @@ describe('objectDisplayNameOf', () => {
     expect(objectDisplayNameOf({[keyA]: '主机位'}, otherInstance)).toBe(
       'Camera',
     )
+  })
+})
+
+describe('projectDisplayNameOf', () => {
+  it('uses the project display name without changing its ID', () => {
+    expect(
+      projectDisplayNameOf({
+        config: {name: '我的 3D 场景'},
+        address: {projectId: 'stage:scene_1' as never},
+      }),
+    ).toBe('我的 3D 场景')
+  })
+
+  it('falls back to the project ID when no display name is configured', () => {
+    expect(
+      projectDisplayNameOf({
+        config: {},
+        address: {projectId: 'stage:scene_1' as never},
+      }),
+    ).toBe('stage:scene_1')
   })
 })

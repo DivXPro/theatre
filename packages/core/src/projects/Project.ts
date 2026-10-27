@@ -58,6 +58,7 @@ export type Conf = Partial<{
   state: OnDiskState
   assets: IAssetConf
   experiments: ExperimentsConf
+  name: string
 }>
 
 export type ExperimentsConf = Partial<{}>

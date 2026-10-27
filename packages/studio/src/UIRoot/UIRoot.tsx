@@ -21,6 +21,7 @@ import {Notifier} from '@dreamerbird/studio/notify'
 import {useChordialCaptureEvents} from '@dreamerbird/studio/uiComponents/chordial/useChodrial'
 import {ChordialOverlay} from '@dreamerbird/studio/uiComponents/chordial/ChordialOverlay'
 import {I18nProvider} from '@dreamerbird/studio/i18n'
+import {StudioRootContext} from './StudioRootContext'
 
 const MakeRootHostContainStatic =
   typeof window !== 'undefined'
@@ -54,6 +55,7 @@ export default function UIRoot(props: {
   const [portalLayerRef, portalLayer] = useRefAndState<HTMLDivElement>(
     undefined as $IntentionalAny,
   )
+  const [rootRef, rootElement] = useRefAndState<HTMLDivElement | null>(null)
 
   const uiRootLogger = createTheatreInternalLogger()
   uiRootLogger.configureLogging({
@@ -76,6 +78,13 @@ export default function UIRoot(props: {
   }, [visiblityState])
 
   const chordialRootRef = useChordialCaptureEvents()
+  const setRootRefs = React.useCallback(
+    (node: HTMLDivElement | null) => {
+      chordialRootRef.current = node
+      rootRef.current = node
+    },
+    [chordialRootRef, rootRef],
+  )
 
   const inside = usePrism(() => {
     const visiblityState = val(studio.atomP.ahistoric.visibilityState)
@@ -101,13 +110,15 @@ export default function UIRoot(props: {
                     visiblityState === 'everythingIsHidden' ? 'invisible' : ''
                   }
                   // @ts-ignore
-                  ref={chordialRootRef}
+                  ref={setRootRefs}
                 >
-                  <PortalLayer ref={portalLayerRef} />
-                  <ChordialOverlay />
-                  <GlobalToolbar />
-                  <PanelsRoot />
-                  <Notifier />
+                  <StudioRootContext.Provider value={rootElement}>
+                    <PortalLayer ref={portalLayerRef} />
+                    <ChordialOverlay />
+                    <GlobalToolbar />
+                    <PanelsRoot />
+                    <Notifier />
+                  </StudioRootContext.Provider>
                 </Container>
               </>
             </ProvideStyles>
@@ -115,7 +126,7 @@ export default function UIRoot(props: {
         </PortalContext.Provider>
       </ProvideLogger>
     )
-  }, [studio, portalLayerRef, portalLayer])
+  }, [studio, portalLayerRef, portalLayer, rootElement])
 
   return inside
 }

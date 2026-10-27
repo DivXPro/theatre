@@ -43,6 +43,7 @@ import {isWritableSource} from './assetLibrary/source'
 import type {LibrarySource} from './assetLibrary/source'
 import {cleanupLegacySeeds} from './assetLibrary/legacySeedCleanup'
 import {setUiConfig} from './uiConfig'
+import {mountStudioRootWhenReady} from './studioRoot'
 import PosePropEditor from './poseMode/PosePropEditor'
 import {
   GesturePropEditorLeft,
@@ -114,10 +115,12 @@ function resolveProject(config: CameraStudioConfig): IProject {
   }
   const name = config.project ?? 'Space'
   const initialState = config.state?.initialState
-  return getProject(
-    name,
-    initialState === undefined ? {} : {state: initialState},
-  )
+  return getProject(name, {
+    ...(initialState === undefined ? {} : {state: initialState}),
+    ...(config.ui?.projectName === undefined
+      ? {}
+      : {name: config.ui.projectName}),
+  })
 }
 
 /** sceneProps 同步解析(hook 首帧就要返回;getProject 渲染期调用安全,App 既有先例) */
@@ -128,6 +131,9 @@ export function resolveSceneProps(
     project: resolveProject(config),
     onFlows: config.flows?.onFlows,
     onError: config.onError,
+    ...(config.scene?.includeDemoModel === undefined
+      ? {}
+      : {includeDemoModel: config.scene.includeDemoModel}),
   }
 }
 
@@ -275,6 +281,9 @@ async function boot(config: CameraStudioConfig): Promise<BootCtx> {
     const panels = config.ui.panels
     withStudioUi((ui) => ui.setPanelVisibility(panels))
   }
+  withStudioUi(() => {
+    void mountStudioRootWhenReady(config.ui?.portalContainer)
+  })
 
   // 1. 数据源:可写源(若有) + 内置目录,聚合进 Library 单例
   const {sources, idbName} = resolveSources(config)
@@ -375,8 +384,8 @@ async function boot(config: CameraStudioConfig): Promise<BootCtx> {
 }
 
 /** studio.ui 显隐操作:studio 未挂载(宿主以 studio:false init 等)时静默降级 */
-function withStudioUi(fn: (ui: IStudioUI) => void): void {
-  Promise.resolve()
+function withStudioUi(fn: (ui: IStudioUI) => void): Promise<void> {
+  return Promise.resolve()
     .then(() => getStudio())
     .then(async (studio) => {
       // 必须等 studio 初始化收尾(持久化/同步状态恢复落库)再读写显隐:
@@ -455,7 +464,7 @@ function acquireSession(ctx: BootCtx): void {
     unsubState?.()
     // 先断订阅再 flush:尾部变更带给宿主,不丢
     await ctx.flushState()
-    withStudioUi((ui) => ui.hide())
+    await withStudioUi((ui) => ui.hide())
   }
 }
 

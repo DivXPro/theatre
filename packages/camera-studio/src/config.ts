@@ -57,6 +57,10 @@ export interface CameraStudioConfig {
   assets?: {baseUrl?: string}
   /** 协作端点;缺省 false(关) */
   sync?: {serverUrl?: string} | false
+  scene?: {
+    /** 是否渲染内置 Thingy 演示模型;缺省 true */
+    includeDemoModel?: boolean
+  }
   ui?: {
     portalContainer?: HTMLElement
     zIndexBase?: number
@@ -64,6 +68,8 @@ export interface CameraStudioConfig {
     /** 隐藏 studio 左上角带 logo 的整条 LeftStrip(应用 logo + 工作区按钮) */
     hideLeftStrip?: boolean
     panels?: StudioPanelVisibility
+    /** Scene Tree 顶部项目节点的显示名;不改变持久化 projectId */
+    projectName?: string
   }
   flows?: {onFlows?: (flows: CameraFlows) => void}
   /** Agent JS API 行为配置;缺省不挂 window 全局 */
@@ -75,6 +81,7 @@ export type CameraSceneProps = {
   project: IProject
   onFlows?: (flows: CameraFlows) => void
   onError?: CameraStudioErrorHandler
+  includeDemoModel?: boolean
 }
 
 export interface CameraStudioHandle {

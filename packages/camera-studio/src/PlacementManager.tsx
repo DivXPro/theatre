@@ -897,8 +897,9 @@ function PlacementRigCore({
   useEffect(() => {
     if (!confirmOnPointerUp) return
     const el = gl.domElement
+    let nativeDragOverCanvas = false
     const onUp = (ev: PointerEvent) => {
-      if (ev.button !== 0) return
+      if (ev.button !== 0 || nativeDragOverCanvas) return
       // 画布铺满全窗口、垫在面板之下:松手在面板/工具栏等 DOM 上时 target 不是画布,
       // 必须取消(spec:松手在面板区域 = 静默取消)。提示条 pointerEvents:none 不挡
       if (ev.target !== el) {
@@ -912,9 +913,45 @@ function PlacementRigCore({
       }
       onConfirm({x: p.x, y: p.y, z: p.z})
     }
+    const onDragOver = (ev: DragEvent) => {
+      ev.preventDefault()
+      nativeDragOverCanvas = true
+      pendingMoveRef.current = {x: ev.clientX, y: ev.clientY}
+      invalidate()
+    }
+    const onDragLeave = () => {
+      nativeDragOverCanvas = false
+    }
+    const onDrop = (ev: DragEvent) => {
+      ev.preventDefault()
+      ev.stopPropagation()
+      nativeDragOverCanvas = false
+      const p = computePoint(ev.clientX, ev.clientY)
+      if (p.distanceTo(camera.position) > 300) {
+        onCancel()
+        return
+      }
+      onConfirm({x: p.x, y: p.y, z: p.z})
+    }
     window.addEventListener('pointerup', onUp)
-    return () => window.removeEventListener('pointerup', onUp)
-  }, [confirmOnPointerUp, gl, camera, computePoint, onConfirm, onCancel])
+    el.addEventListener('dragover', onDragOver)
+    el.addEventListener('dragleave', onDragLeave)
+    el.addEventListener('drop', onDrop)
+    return () => {
+      window.removeEventListener('pointerup', onUp)
+      el.removeEventListener('dragover', onDragOver)
+      el.removeEventListener('dragleave', onDragLeave)
+      el.removeEventListener('drop', onDrop)
+    }
+  }, [
+    confirmOnPointerUp,
+    gl,
+    camera,
+    computePoint,
+    invalidate,
+    onConfirm,
+    onCancel,
+  ])
 
   return (
     // 首次 pointermove 之前不显示,避免在原地闪一下

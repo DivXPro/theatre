@@ -1,4 +1,5 @@
 import type {SheetObjectAddress} from '@dreamerbird/core/types/public'
+import type Project from '@dreamerbird/core/projects/Project'
 import {objectAddressKey} from './addressKey'
 
 /**
@@ -10,4 +11,10 @@ export function objectDisplayNameOf(
   address: SheetObjectAddress,
 ): string {
   return namesByAddress?.[objectAddressKey(address)] ?? address.objectKey
+}
+
+export function projectDisplayNameOf(
+  project: Pick<Project, 'address' | 'config'>,
+): string {
+  return project.config.name ?? project.address.projectId
 }

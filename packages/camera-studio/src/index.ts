@@ -104,3 +104,5 @@ export type {
 } from './assetLibrary/types'
 export {IndexedDBBackend} from './assetLibrary/indexedDBBackend'
 export {importModelFiles} from './assetLibrary/importModelFiles'
+export {registerModelPicker, unregisterModelPicker} from './pickerRegistry'
+export type {ModelPickerProps} from './pickerRegistry'

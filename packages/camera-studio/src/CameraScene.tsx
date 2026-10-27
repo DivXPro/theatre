@@ -147,6 +147,8 @@ import {
 import {pruneObjectFromOutlineCollections} from '@dreamerbird/studio/panels/OutlinePanel/outlineOps/stateOps'
 import {
   createHostFlows,
+  dropPointFromClient,
+  isDropPointInsideCanvas,
   setDropPointContext,
   setHostFlowsHandle,
   setPlacingSnapshot,
@@ -817,7 +819,12 @@ export function captureAnchorSeed(
  * UI 装配可配见 ./uiConfig:停靠框 portal 容器 / z-index 基准 / 语言
  * (宿主已包 I18nProvider 时语言以宿主为准,ui.locale 仅自包时生效)。
  */
-export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
+export function CameraScene({
+  project,
+  onFlows,
+  onError,
+  includeDemoModel = true,
+}: CameraSceneProps) {
   const t = useT()
   const cameraTargetRef = useRef<Mesh>(null!)
   const cameraObjRef = useRef<ISheetObject<any> | undefined>(undefined)
@@ -1159,6 +1166,31 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
     },
     [startPlacingFromLibrary],
   )
+  useEffect(() => {
+    if (!modelDragging) return
+    const onDragOver = (ev: DragEvent) => {
+      if (isDropPointInsideCanvas(ev.clientX, ev.clientY)) ev.preventDefault()
+    }
+    const onDrop = (ev: DragEvent) => {
+      ev.preventDefault()
+      if (isDropPointInsideCanvas(ev.clientX, ev.clientY)) {
+        const point = dropPointFromClient(ev.clientX, ev.clientY)
+        if (point) {
+          confirmPlacing(point)
+          setModelDragging(false)
+          return
+        }
+      }
+      cancelPlacing()
+      setModelDragging(false)
+    }
+    window.addEventListener('dragover', onDragOver)
+    window.addEventListener('drop', onDrop)
+    return () => {
+      window.removeEventListener('dragover', onDragOver)
+      window.removeEventListener('drop', onDrop)
+    }
+  }, [modelDragging, confirmPlacing, cancelPlacing])
   // 右键已放置模型弹出的操作菜单:记录目标条目和光标位置
   const [objectMenu, setObjectMenu] = useState<{
     key: string
@@ -1924,7 +1956,7 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
   const [coverGone, setCoverGone] = useState(false)
   const [firstScreenGate] = useState(() => {
     const gate = createFirstScreenGate(() => setFirstScreenReady(true))
-    gate.expect(SCENE_MODEL_GATE_KEY)
+    if (includeDemoModel) gate.expect(SCENE_MODEL_GATE_KEY)
     installFirstScreenGate(gate)
     return gate
   })
@@ -2325,11 +2357,13 @@ export function CameraScene({project, onFlows, onError}: CameraSceneProps) {
               <boxGeometry attach="geometry" />
               <meshPhongMaterial attach="material" color="red" />
             </e.mesh>
-            <Suspense fallback={null}>
-              <InitialLoadProbe gateKey={SCENE_MODEL_GATE_KEY}>
-                <Model url={sceneGLB} selectLocked={!!placing} />
-              </InitialLoadProbe>
-            </Suspense>
+            {includeDemoModel && (
+              <Suspense fallback={null}>
+                <InitialLoadProbe gateKey={SCENE_MODEL_GATE_KEY}>
+                  <Model url={sceneGLB} selectLocked={!!placing} />
+                </InitialLoadProbe>
+              </Suspense>
+            )}
             {placing && (
               <Suspense fallback={null}>
                 <PlacementRigErrorBoundary
