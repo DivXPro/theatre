@@ -368,6 +368,34 @@ useCameraStudio({
 URL 拼装规则:`baseUrl + 'models/<file>'`、`baseUrl + 'poseThumbs/<file>'` (纯拼
 接,模块不探测;404 的表象见 §8)。
 
+### 直接用内置静态姿势数据(不启动 Studio)
+
+内置目录同时带 **180 个静态姿势**(12 个基础姿势 + 58 个 DPL 全身姿势 + 110 个
+QBX 手势),id 稳定为 `seed-pose-*`,骨架族是内置 Y Bot 的 Mixamo rig。引用本包的项
+目可以直接从 `@dreamerbird/camera-studio/poses` 取数据, 不依赖 IndexedDB、网络或
+React:
+
+```ts
+import {
+  BUILTIN_POSE_RIG,
+  applyPose,
+  getBuiltinPose,
+  listBuiltinPoses,
+} from '@dreamerbird/camera-studio/poses'
+
+const poses = listBuiltinPoses() // PoseEntry[]
+const relaxed = getBuiltinPose('seed-pose-stand-relaxed')!
+
+// 你的 THREE 骨架骨骼名与 Mixamo 一致时,直接写回:
+const {applied, missed} = applyPose(myModelRoot, relaxed.bones)
+```
+
+- 条目格式:`{id, kind: 'pose', name, rig, bones, createdAt}`;`bones` 是
+  `骨骼名 → {rotation?: [x,y,z,w], position?: [x,y,z]}`。
+- 手势条目(QBX)只有手指骨,是叠加片段;应用时要保留身体姿势。
+- 想在编辑器内使用,仍走 Agent API:`assets.list({kind: 'pose'})` 取 `assetId`,再
+  `poses.apply({objectId, assetId})`(见 §9)。
+
 ## 5. 场景状态接管
 
 传了 `state` 字段 = 宿主接管场景状态持久化,模块初始化 theatre 时自动带

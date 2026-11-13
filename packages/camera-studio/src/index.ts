@@ -84,6 +84,18 @@ export type {GizmoMode} from './PlacementManager'
 export type {PoseBones} from './poseMode/poseOverride'
 export type {GestureSide} from './gestureProps'
 export type {PoseFrameMode} from './poseMode/poseFrame'
+// 内置静态姿势库:引用本包的项目可直接取姿势数据并应用到自己的骨架,
+// 不必先启动编辑器。轻量消费可走 `@dreamerbird/camera-studio/poses` 子路径
+export {
+  BUILTIN_POSE_RIG,
+  BUILTIN_POSE_SOURCES,
+  listBuiltinPoses,
+  getBuiltinPose,
+  applyPose,
+  capturePose,
+  captureBindPose,
+} from './poses'
+export type {BuiltinPoseSourceId} from './poses'
 // 统一数据源公开契约(spec §5):宿主实现/组合存储用的类型族、错误族与
 // 内置 IndexedDB 实现;宿主自实现源可对 contract-tests 子路径跑契约套件
 export type {

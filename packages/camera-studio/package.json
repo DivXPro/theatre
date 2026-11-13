@@ -1,6 +1,6 @@
 {
   "name": "@dreamerbird/camera-studio",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "license": "Apache-2.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -16,6 +16,10 @@
     "./library-source": {
       "types": "./dist/assetLibrary/source.d.ts",
       "default": "./dist/assetLibrary/source.js"
+    },
+    "./poses": {
+      "types": "./dist/poses.d.ts",
+      "default": "./dist/poses.js"
     }
   },
   "files": [

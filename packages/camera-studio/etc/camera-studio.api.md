@@ -5,6 +5,7 @@
 ```ts
 
 import type { IProject } from '@dreamerbird/core';
+import type { Object3D } from 'three';
 import { default as React_2 } from 'react';
 
 // @public
@@ -99,6 +100,12 @@ export type AnimationStatusDto = {
 };
 
 // @public
+export function applyPose(root: Object3D, bones: PoseEntry['bones']): {
+    applied: number;
+    missed: string[];
+};
+
+// @public
 export type AssetsApi = {
     list(args?: {
         kind?: EntryKind;
@@ -138,6 +145,24 @@ export interface BootCtx {
     // (undocumented)
     unregisterEditors: () => void;
 }
+
+// @public
+export const BUILTIN_POSE_RIG: string;
+
+// @public
+export const BUILTIN_POSE_SOURCES: readonly [{
+    readonly id: "procedural";
+    readonly name: "内置程序化基础姿势";
+}, {
+    readonly id: "dpl";
+    readonly name: "Dynamic Pose Library Free (BlendAtlas)";
+}, {
+    readonly id: "qbx";
+    readonly name: "QBX Pose Asset Pack";
+}];
+
+// @public (undocumented)
+export type BuiltinPoseSourceId = (typeof BUILTIN_POSE_SOURCES)[number]['id'];
 
 // @public (undocumented)
 export const CAMERA_STUDIO_VERSION: string;
@@ -301,6 +326,12 @@ export interface CameraStudioHandle {
 }
 
 // @public
+export const captureBindPose: typeof capturePose;
+
+// @public
+export function capturePose(root: Object3D): PoseEntry['bones'];
+
+// @public
 export type CommandContext = {
     requestId: string;
     signal: AbortSignal;
@@ -357,6 +388,9 @@ export type ExportsApi = {
 
 // @public (undocumented)
 export type GestureSide = 'left' | 'right';
+
+// @public
+export function getBuiltinPose(id: string): PoseEntry | undefined;
 
 // @public
 export type GizmoMode = 'select' | 'translate' | 'rotate' | 'scale';
@@ -531,6 +565,9 @@ export type LibrarySourceCapabilities = {
     permanentUrls?: boolean;
     maxUploadBytes?: number;
 };
+
+// @public
+export function listBuiltinPoses(): PoseEntry[];
 
 // @public (undocumented)
 export type ModelEntry = {
