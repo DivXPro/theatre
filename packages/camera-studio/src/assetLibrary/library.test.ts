@@ -397,9 +397,9 @@ describe('聚合器(多数据源)', () => {
 })
 
 describe('骨架族别名并集读(终审 M-4)', () => {
-  // 内置默认别名的事实源 = seedAssetsManifest(与 ensureBuiltinRigAlias
-  // 共用 BUILTIN_RIG_ALIASES);测试取清单首个模型的 rig
-  const manifestRig = seedAssetsManifest.models[0].rig
+  // 内置默认别名的事实源 = seedAssetsManifest 的全部骨架族(与
+  // ensureBuiltinRigAlias 共用 BUILTIN_RIG_ALIASES);同族只保留一次
+  const manifestRigs = [...new Set(seedAssetsManifest.models.map((m) => m.rig))]
   const readOnlySource = (entries: LibraryEntry[] = []): LibrarySource => ({
     id: 'catalog',
     capabilities: {writable: false},
@@ -413,7 +413,7 @@ describe('骨架族别名并集读(终审 M-4)', () => {
       sources: [readOnlySource([{id: 'p1'} as any])],
     })
     const aliases = await lib.getRigAliases()
-    expect(aliases).toEqual([{rig: manifestRig, name: 'Mixamo'}])
+    expect(aliases).toEqual(manifestRigs.map((rig) => ({rig, name: 'Mixamo'})))
   })
 
   test('可写源覆盖同名族时优先;可写源新增别名并存', async () => {
@@ -428,16 +428,18 @@ describe('骨架族别名并集读(终审 M-4)', () => {
       putBlob: async () => 'h',
       deleteBlob: async () => {},
       getRigAliases: async () => [
-        {rig: manifestRig, name: '自定义族名'},
+        {rig: manifestRigs[0], name: '自定义族名'},
         {rig: 'rig-other', name: '其它'},
       ],
       putRigAlias: async () => {},
     }
     const lib = new Library({sources: [writable]})
     const aliases = await lib.getRigAliases()
-    expect(aliases.find((a) => a.rig === manifestRig)?.name).toBe('自定义族名')
+    expect(aliases.find((a) => a.rig === manifestRigs[0])?.name).toBe(
+      '自定义族名',
+    )
     expect(aliases.find((a) => a.rig === 'rig-other')?.name).toBe('其它')
-    expect(aliases.filter((a) => a.rig === manifestRig)).toHaveLength(1)
+    expect(aliases.filter((a) => a.rig === manifestRigs[0])).toHaveLength(1)
   })
 })
 
