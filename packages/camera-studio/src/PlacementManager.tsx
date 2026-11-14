@@ -43,6 +43,7 @@ import {LibraryError} from './assetLibrary/source'
 import {entryOptions} from './assetLibrary/options'
 import {computeDropPoint} from './dropPoint'
 import {registerEditorOnly} from './editorOnly'
+import {getExportAnimationTime} from './videoExport/exportAnimationClock'
 import {
   createSelectionOutlineRenderer,
   type SelectionOutlineRenderer,
@@ -1636,9 +1637,11 @@ function PlacedModelCore({
     poseModeActive,
   ])
   useFrame((_, delta) => {
-    if (!val(sheet.sequence.pointer.playing)) return
     if (!sheetObject) return
-    mixer.update(delta)
+    const exportTime = getExportAnimationTime()
+    if (exportTime === null && !val(sheet.sequence.pointer.playing)) return
+    if (exportTime === null) mixer.update(delta)
+    else mixer.setTime(exportTime)
     // 有姿势/手势轨道:求值姿势逐骨压过动作片段(spec §7.1);
     // 每帧重读求值值(拖针/播放求值产物),resolvePoseBones 有 LRU/缓存兜底。
     // 轨道有无也现场读——两步撤销首帧(撤关键帧→撤空轨)删轨不改求值值,
@@ -1676,7 +1679,8 @@ function PlacedModelCore({
         if (g) applyPose(instance, g)
       }
     }
-    invalidate()
+    // 导出时主循环已切到 never,由导出核心手动 advance;不额外请帧。
+    if (exportTime === null) invalidate()
   })
 
   // pending 条目:对象已由 e.group 建好后,一次性提交清单。

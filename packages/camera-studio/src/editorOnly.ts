@@ -21,14 +21,30 @@ export function registerEditorOnly(obj: Object3D): () => void {
 
 /** 隐藏全部编辑辅助对象后执行 fn(如同 gl.render),结束后恢复 */
 export function withEditorOnlyHidden<T>(fn: () => T): T {
+  const restore = hideEditorOnlyObjects()
+  try {
+    return fn()
+  } finally {
+    restore()
+  }
+}
+
+/**
+ * 隐藏全部编辑辅助对象并返回幂等恢复函数。
+ *
+ * 与 withEditorOnlyHidden 的区别是恢复时机由调用方决定:Previs 离线导出
+ * 要跨越多帧/多个 await 保持隐藏,不能再包一个同步回调。
+ */
+export function hideEditorOnlyObjects(): () => void {
   const saved: Array<{obj: Object3D; visible: boolean}> = []
   for (const obj of editorOnlyObjects) {
     saved.push({obj, visible: obj.visible})
     obj.visible = false
   }
-  try {
-    return fn()
-  } finally {
+  let restored = false
+  return () => {
+    if (restored) return
+    restored = true
     for (const {obj, visible} of saved) obj.visible = visible
   }
 }

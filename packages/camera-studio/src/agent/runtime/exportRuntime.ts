@@ -1,84 +1,71 @@
 /**
- * 场景视频导出运行时(2026-10-17,Task 13):CameraScene 导出流程的共享
- * 核心——活动相机校验、ShotView 切换与恢复、canvas 获取、录制
- * (startShotExport)和异常恢复,从 CameraScene 抽出,UI 导出菜单与
- * Agent exports.startVideo 共用(保留既有 UI 行为:开录时机仍是
- * ShotView 生效后的场景副作用,经 notifySceneReady 回调)。
+ * 场景 Previs 导出运行时(2026-11-14)。
  *
- * CameraScene 挂载时 createSceneExportController 建控制器并
- * registerSceneExportController 登记(模块级表单页单场景,同
- * directorView/animationStatus 模式);Agent 命令经
- * getSceneExportController 取用,未登记 = 场景未挂载(SCENE_UNAVAILABLE)。
+ * CameraScene 挂载时创建控制器并登记;顶部菜单与 Agent
+ * exports.captureStill / exports.startVideo 共用同一套控制器与
+ * videoExport/previsExporter 核心。
  *
  * 关键不变量:
- *  - handle.done 是导出终态的唯一权威;拿到 startShotExport 句柄 ≠ 成功;
- *  - 取消 = handle.abort + sink.abort(sink.abort 幂等,exporter 收尾也会调);
- *  - 场景 dispose:先 abort 在录任务,再恢复视图,最后拒绝未完成 Promise;
- *  - JS 结果是 VideoExportResult(含 Blob);Blob 绝不 JSON 序列化,HTTP
- *    侧由桥接适配为 fileId(jobResultSchema 描述 FileDescriptor)。
+ *  - 同一场景同一时刻只允许一个导出;
+ *  - handle.done 是成功/失败的唯一权威;
+ *  - 取消 = signal abort + writer.abort + sink.abort;
+ *  - dispose 先 abort,再同步 restoreNow(材质/灯光/背景/播放头),
+ *    最后恢复 ShotView;
+ *  - Blob 只在 JS 结果里;HTTP 桥接按既有逻辑适配 FileDescriptor。
  */
 import type {ISheet} from '@dreamerbird/core'
-import {onChange, val} from '@dreamerbird/core'
+import {val} from '@dreamerbird/core'
 import {AgentApiError} from '../errors'
-import {BlobCollectSink} from '../../videoExport/BlobCollectSink'
-import {startShotExport} from '../../videoExport/exporter'
-import type {ShotExportHandle} from '../../videoExport/exporter'
+import {getExportRenderContext} from '../../videoExport/exportRenderContext'
+import {
+  startStillExport,
+  startVideoExport,
+  type PrevisExportHandle,
+} from '../../videoExport/previsExporter'
+import {
+  resolveRenderOptions,
+  type ExportRenderArgs,
+  type StillExportArgs,
+  type StillExportResult,
+  type VideoExportArgs,
+  type VideoExportResult,
+} from '../../videoExport/previsTypes'
 import type {ExportSink} from '../../videoExport/sinks'
 
-/**
- * Agent 侧导出结果(JS API)。HTTP 桥接把 blob 写入临时文件后改发
- * FileDescriptor(fileId/fileName/mimeType/size);blob 本身不进 JSON。
- */
-export type VideoExportResult = {
-  blob: Blob
-  fileName: string
-  mimeType: string
-  size: number
+export type {StillExportResult, VideoExportResult}
+
+/** UI/Agent 共用的视频导出请求;旧字段保持兼容 */
+export type ShotExportRequest = VideoExportArgs & {
+  sink?: ExportSink
+  /** 指定相机 key;缺省当前活动相机 */
+  cameraKey?: string
+  signal?: AbortSignal
+  onProgress?: (progress: number) => void
+  onError?: (message: string) => void
+  onFallback?: (message: string) => void
 }
 
-/** UI/Agent 共用的导出请求;UI 只传用户所选 sink 与 onError 提示通道 */
-export type ShotExportRequest = {
-  /** 导出目标;缺省 = BlobCollectSink(Agent 路径:内存收集,不触发下载) */
-  sink?: ExportSink
-  /** 指定相机 key;缺省 = 当前活动相机(不存在则先激活再切视角) */
+export type StillExportRequest = StillExportArgs & {
   cameraKey?: string
-  /** 取消信号(jobs.cancel 触发);abort = handle.abort + sink.abort */
   signal?: AbortSignal
-  /** 进度回调 0..1(随 sequence 播放头) */
   onProgress?: (progress: number) => void
-  /**
-   * 出错提示通道:UI 传(对齐既有 onError 行为,录制失败由它提示);
-   * Agent 不传——失败走 Promise 拒绝,不双通道重复报告。
-   */
   onError?: (message: string) => void
 }
 
-/**
- * 场景导出控制器。startVideo 返回的 Promise 以录制终态为准:
- * 正常完成 resolve(UI sink / 用户取消系统对话框时为 undefined,内存
- * 收集时为 VideoExportResult);失败/取消/dispose reject。
- */
 export type SceneExportController = {
-  /** 正在导出(含挂起等待视角生效的请求与 UI 发起的导出) */
   isExporting(): boolean
   getActiveCameraKey(): string | null
   hasCamera(cameraKey: string): boolean
-  startVideo(request: ShotExportRequest): Promise<VideoExportResult | undefined>
-  /**
-   * 场景副作用在 ShotView/活动相机切换生效后调用(对齐既有
-   * "切到镜头视角再开录"的时序);无挂起请求时静默 no-op。
-   */
+  startVideo(
+    request?: ShotExportRequest,
+  ): Promise<VideoExportResult | undefined>
+  captureStill(request?: StillExportRequest): Promise<StillExportResult>
   notifySceneReady(): void
-  /** 场景卸载:先 abort 在录任务,再恢复视图,最后拒绝未完成任务 */
   dispose(): void
 }
 
 let controller: SceneExportController | undefined
 
-/**
- * CameraScene 挂载 effect 调用;返回解绑函数(仅当登记的还是同一
- * 控制器才删,防过期 cleanup 抹掉新代次的登记,同 registerDirectorView)。
- */
 export function registerSceneExportController(
   next: SceneExportController,
 ): () => void {
@@ -88,242 +75,230 @@ export function registerSceneExportController(
   }
 }
 
-/** 当前登记的场景导出控制器;未挂载为 undefined(命令映射 SCENE_UNAVAILABLE) */
 export function getSceneExportController(): SceneExportController | undefined {
   return controller
 }
 
-/** 内存收集 sink 的结构判定:有 blob() 即可交付 VideoExportResult */
-type CollectingSink = ExportSink & {
-  blob(): Blob
-  readonly fileName: string | undefined
-  readonly mimeType: string | undefined
-}
-
-function isCollectingSink(sink: ExportSink): sink is CollectingSink {
-  return typeof (sink as Partial<CollectingSink>).blob === 'function'
-}
-
-/**
- * 录制核心:canvas + sink + sheet → startShotExport,外挂进度订阅
- * (sequence 播放头 → 0..1)与 signal 取消;done 映射为导出结果。
- * 返回 undefined = 编码器不可用(MediaRecorder 无可用格式)。
- */
-function recordShot(args: {
-  sheet: ISheet
-  canvas: HTMLCanvasElement
-  sink: ExportSink
-  signal?: AbortSignal
-  onProgress?: (progress: number) => void
-  onError?: (message: string) => void
-}):
-  | {handle: ShotExportHandle; done: Promise<VideoExportResult | undefined>}
-  | undefined {
-  const {sheet, canvas, sink, signal, onProgress, onError} = args
-  const handle = startShotExport({canvas, sheet, sink, onError})
-  if (!handle) return undefined
-
-  // exporter 的 abort 收尾(用户 Esc、开录相机被删、signal 取消共用)会调
-  // sink.abort 丢弃已录内容;包一层记录"内容已弃",done 映射时据它把
-  // 用户侧中止(signal 未 abort)也识别为 JOB_CANCELLED,而不是掉进
-  // blob() 的 INVALID_STATE —— 轮询任务的 Agent 必须能区分"被中止"与真失败
-  let sinkAborted = false
-  const originalAbort = sink.abort.bind(sink)
-  sink.abort = async () => {
-    sinkAborted = true
-    await originalAbort()
-  }
-
-  // 进度随序列播放头更新:录制 = 序列从头播到尾,position/length 即进度
-  const sequence = sheet.sequence
-  const length = val(sequence.pointer.length)
-  const offProgress = onChange(sequence.pointer.position, (position) => {
-    onProgress?.(length > 0 ? Math.min(1, Math.max(0, position / length)) : 0)
-  })
-
-  const onAbort = () => {
-    handle.abort()
-    // exporter 的 abort 收尾也会调 sink.abort;这里显式再调(幂等),
-    // 保证取消语义不依赖 exporter 内部顺序
-    sink.abort().catch(() => {})
-  }
-  if (signal?.aborted) {
-    onAbort()
-  } else {
-    signal?.addEventListener('abort', onAbort, {once: true})
-  }
-
-  const done = (async (): Promise<VideoExportResult | undefined> => {
-    try {
-      // handle.done 是唯一权威:resolve = 录制收尾完成(含 abort 的安静收尾)
-      await handle.done
-    } finally {
-      offProgress()
-      signal?.removeEventListener('abort', onAbort)
-    }
-    if (signal?.aborted) {
-      throw new AgentApiError('JOB_CANCELLED', '视频导出已取消')
-    }
-    // done resolve 但内容已被丢弃(sink.abort 被调)= 用户侧中止
-    // (Esc/开录相机被删):同样按取消交付,不报 INVALID_STATE 假失败
-    if (sinkAborted) {
-      throw new AgentApiError(
-        'JOB_CANCELLED',
-        '视频导出被中止(Esc 取消或开录相机被删除)',
-      )
-    }
-    if (isCollectingSink(sink)) {
-      const blob = sink.blob()
-      return {
-        blob,
-        fileName: sink.fileName ?? 'video.webm',
-        mimeType: blob.type || sink.mimeType || '',
-        size: blob.size,
-      }
-    }
-    // UI sink(另存为/直接下载):结果落浏览器,无内存产出
-    return undefined
-  })()
-  return {handle, done}
-}
-
-/** CameraScene 提供给控制器的会话态读写(getter 须经 ref 读最新值) */
 export type SceneExportDeps = {
   sheet: ISheet
   getActiveCameraKey(): string | null
   hasCamera(cameraKey: string): boolean
-  /** 激活指定相机(转发 setActiveCameraKey 会话态) */
   setActiveCamera(cameraKey: string): void
   isExporting(): boolean
   getShotView(): boolean
-  /** 请求切换镜头视角;生效时机由场景副作用经 notifySceneReady 回调 */
   setShotView(on: boolean): void
-  /** 页面上只有一个 canvas(快照编辑器的在 shadow DOM 里,查不到) */
-  getCanvas(): HTMLCanvasElement | null
   setExporting(on: boolean): void
-  /** 同步在录句柄给场景(Esc 取消/相机删除中止/停止按钮共用) */
-  setActiveHandle(handle: ShotExportHandle | null): void
-  /** 锁定开录时的相机:中途被删(本地/对端)由场景中止录制 */
+  setActiveHandle(handle: PrevisExportHandle<unknown> | null): void
   lockExportCamera(cameraKey: string | null): void
+}
+
+type PendingKind = 'still' | 'video'
+
+type Pending = {
+  kind: PendingKind
+  request: ShotExportRequest | StillExportRequest
+  cameraKey: string
+  prevShotView: boolean
+  resolve: (result: StillExportResult | VideoExportResult | undefined) => void
+  reject: (error: unknown) => void
+}
+
+type Active = {
+  handle: PrevisExportHandle<StillExportResult | VideoExportResult>
+  prevShotView: boolean
+  request: ShotExportRequest | StillExportRequest
+  reject: (error: unknown) => void
+}
+
+function resolveVideoRange(
+  sheet: ISheet,
+  range: VideoExportArgs['range'],
+): {startMs: number; endMs: number} {
+  const lengthMs = Math.max(0, val(sheet.sequence.pointer.length) * 1000)
+  const resolved = range ?? {startMs: 0, endMs: lengthMs}
+  if (resolved.startMs < 0 || resolved.endMs <= resolved.startMs) {
+    throw new AgentApiError(
+      'INVALID_ARGUMENT',
+      'range 必须满足 0 <= startMs < endMs',
+      {details: {range: resolved}},
+    )
+  }
+  if (resolved.endMs > lengthMs + 1e-6) {
+    throw new AgentApiError(
+      'INVALID_ARGUMENT',
+      `range.endMs 超出 sequence 长度 ${lengthMs}ms`,
+      {details: {range: resolved, sequenceLengthMs: lengthMs}},
+    )
+  }
+  return {...resolved}
+}
+
+function normalizeExportError(error: unknown): AgentApiError {
+  if (error instanceof AgentApiError) return error
+  return new AgentApiError(
+    'INTERNAL_ERROR',
+    error instanceof Error ? error.message : String(error),
+    {details: {cause: error instanceof Error ? error.message : String(error)}},
+  )
 }
 
 export function createSceneExportController(
   deps: SceneExportDeps,
 ): SceneExportController {
-  type Pending = {
-    request: ShotExportRequest & {sink: ExportSink}
-    cameraKey: string
-    prevShotView: boolean
-    resolve: (result: VideoExportResult | undefined) => void
-    reject: (error: unknown) => void
-  }
-  type Active = {
-    handle: ShotExportHandle
-    sink: ExportSink
-    prevShotView: boolean
-    reject: (error: unknown) => void
-  }
   let disposed = false
   let pending: Pending | undefined
   let active: Active | undefined
 
-  /** 视角/相机已生效:取 canvas 开录;失败恢复视图并拒绝 */
-  function startPending(p: Pending): void {
-    const canvas = deps.getCanvas()
-    if (!canvas) {
-      deps.setShotView(p.prevShotView)
-      p.reject(
-        new AgentApiError('INVALID_STATE', '找不到场景画布(canvas),无法导出'),
+  function resolveCamera(cameraKey: string) {
+    const context = getExportRenderContext()
+    if (!context) {
+      throw new AgentApiError(
+        'INVALID_STATE',
+        '场景渲染上下文尚未挂载(renderer/scene 不可用)',
       )
-      return
     }
-    deps.lockExportCamera(p.cameraKey)
-    const record = recordShot({
-      sheet: deps.sheet,
-      canvas,
-      sink: p.request.sink,
-      signal: p.request.signal,
-      onProgress: p.request.onProgress,
-      onError: p.request.onError,
-    })
-    if (!record) {
-      // 编码器不可用:onError 已由 startShotExport 提示(UI 通道),
-      // 这里拒绝 Promise(Agent 通道),两者不重复
+    const camera = context.getCamera(cameraKey)
+    if (!camera) {
+      throw new AgentApiError(
+        'INVALID_STATE',
+        `相机尚未挂载到场景: ${cameraKey}`,
+        {details: {cameraKey}},
+      )
+    }
+    return {context, camera}
+  }
+
+  function resolveOptions(args: ExportRenderArgs, cameraKey: string) {
+    const {context, camera} = resolveCamera(cameraKey)
+    return {
+      context,
+      camera,
+      options: resolveRenderOptions(args, context.getCanvasSize()),
+    }
+  }
+
+  function startPending(p: Pending): void {
+    try {
+      deps.lockExportCamera(p.cameraKey)
+      const request = p.request
+      if (p.kind === 'video') {
+        const videoRequest = request as ShotExportRequest
+        const resolved = resolveOptions(videoRequest, p.cameraKey)
+        const range = resolveVideoRange(deps.sheet, videoRequest.range)
+        const handle = startVideoExport({
+          ...resolved,
+          sequence: deps.sheet.sequence,
+          range,
+          fps: videoRequest.fps ?? 30,
+          sink: videoRequest.sink,
+          signal: videoRequest.signal,
+          onProgress: videoRequest.onProgress,
+          onFallback: videoRequest.onFallback,
+        })
+        attachActive(handle, p, videoRequest)
+      } else {
+        const stillRequest = request as StillExportRequest
+        const resolved = resolveOptions(stillRequest, p.cameraKey)
+        const handle = startStillExport({
+          ...resolved,
+          sequence: deps.sheet.sequence,
+          timeMs: stillRequest.timeMs ?? deps.sheet.sequence.position * 1000,
+          signal: stillRequest.signal,
+          onProgress: stillRequest.onProgress,
+        })
+        attachActive(handle, p, stillRequest)
+      }
+    } catch (error) {
       deps.lockExportCamera(null)
       deps.setShotView(p.prevShotView)
-      p.reject(
-        new AgentApiError(
-          'CAPABILITY_UNAVAILABLE',
-          '当前浏览器不支持视频录制(MediaRecorder 无可用格式)',
-        ),
-      )
-      return
+      p.reject(normalizeExportError(error))
     }
+  }
+
+  function attachActive(
+    handle: PrevisExportHandle<StillExportResult | VideoExportResult>,
+    p: Pending,
+    request: ShotExportRequest | StillExportRequest,
+  ): void {
     active = {
-      handle: record.handle,
-      sink: p.request.sink,
+      handle,
       prevShotView: p.prevShotView,
+      request,
       reject: p.reject,
     }
-    deps.setActiveHandle(record.handle)
+    deps.setActiveHandle(handle)
     deps.setExporting(true)
-    // 收尾(成功/失败/取消共用):清句柄与导出态、恢复导出前视角
+
     const settle = () => {
-      if (active?.handle !== record.handle) return
+      if (active?.handle !== handle) return
       active = undefined
       deps.setActiveHandle(null)
       deps.setExporting(false)
       deps.setShotView(p.prevShotView)
       deps.lockExportCamera(null)
     }
-    record.done.then(
+    handle.done.then(
       (result) => {
         settle()
-        p.resolve(result)
+        p.resolve(
+          p.kind === 'video' && (request as ShotExportRequest).sink
+            ? undefined
+            : result,
+        )
       },
       (error) => {
         settle()
-        p.reject(error)
+        const normalized = normalizeExportError(error)
+        if (
+          normalized.code === 'JOB_CANCELLED' &&
+          p.kind === 'video' &&
+          (request as ShotExportRequest).sink &&
+          !(request as ShotExportRequest).signal?.aborted
+        ) {
+          p.resolve(undefined)
+          return
+        }
+        request.onError?.(normalized.message)
+        p.reject(normalized)
       },
     )
   }
 
-  return {
-    isExporting: () =>
-      deps.isExporting() || pending !== undefined || active !== undefined,
-    getActiveCameraKey: () => deps.getActiveCameraKey(),
-    hasCamera: (key) => deps.hasCamera(key),
-    startVideo(request) {
-      if (disposed) {
-        throw new AgentApiError('API_DISPOSED', '场景已卸载,无法导出')
-      }
-      if (pending || active || deps.isExporting()) {
-        throw new AgentApiError('INVALID_STATE', '已有视频导出进行中')
-      }
-      const cameraKey = request.cameraKey ?? deps.getActiveCameraKey()
-      if (!cameraKey) {
-        throw new AgentApiError('INVALID_STATE', '没有活动相机,无法导出视频')
-      }
-      if (!deps.hasCamera(cameraKey)) {
-        throw new AgentApiError(
-          'OBJECT_NOT_FOUND',
-          `相机不存在: ${cameraKey}`,
-          {details: {cameraKey}},
-        )
-      }
-      const sink = request.sink ?? new BlobCollectSink()
-      const prevShotView = deps.getShotView()
-      return new Promise<VideoExportResult | undefined>((resolve, reject) => {
+  function begin(
+    kind: PendingKind,
+    request: ShotExportRequest | StillExportRequest,
+  ): Promise<StillExportResult | VideoExportResult | undefined> {
+    if (disposed) {
+      throw new AgentApiError('API_DISPOSED', '场景已卸载,无法导出')
+    }
+    if (pending || active || deps.isExporting()) {
+      throw new AgentApiError('INVALID_STATE', '已有导出任务进行中')
+    }
+    const cameraKey = request.cameraKey ?? deps.getActiveCameraKey()
+    if (!cameraKey) {
+      throw new AgentApiError(
+        'INVALID_STATE',
+        kind === 'still'
+          ? '没有活动相机,无法捕获静帧(先创建相机或指定 cameraId)'
+          : '没有活动相机,无法导出视频(先创建相机或指定 cameraId)',
+      )
+    }
+    if (!deps.hasCamera(cameraKey)) {
+      throw new AgentApiError('OBJECT_NOT_FOUND', `相机不存在: ${cameraKey}`, {
+        details: {cameraKey},
+      })
+    }
+    const prevShotView = deps.getShotView()
+    return new Promise<StillExportResult | VideoExportResult | undefined>(
+      (resolve, reject) => {
         const p: Pending = {
-          request: {...request, sink},
+          kind,
+          request: {...request, cameraKey},
           cameraKey,
           prevShotView,
           resolve,
           reject,
         }
-        // 需要先切换(指定了非活动相机/不在镜头视角)就挂起,等场景副作用
-        // 在切换生效后 notifySceneReady 开录——对齐既有 UI 的开录时序;
-        // 无需切换则立即开录
         const switchCamera = cameraKey !== deps.getActiveCameraKey()
         const switchView = !deps.getShotView()
         if (!switchCamera && !switchView) {
@@ -333,10 +308,23 @@ export function createSceneExportController(
         pending = p
         if (switchCamera) deps.setActiveCamera(cameraKey)
         if (switchView) deps.setShotView(true)
-      })
+      },
+    )
+  }
+
+  return {
+    isExporting: () =>
+      deps.isExporting() || pending !== undefined || active !== undefined,
+    getActiveCameraKey: () => deps.getActiveCameraKey(),
+    hasCamera: (key) => deps.hasCamera(key),
+    startVideo(request = {}) {
+      return begin('video', request) as Promise<VideoExportResult | undefined>
+    },
+    captureStill(request = {}) {
+      return begin('still', request) as Promise<StillExportResult>
     },
     notifySceneReady() {
-      if (disposed || !pending) return
+      if (!pending) return
       const p = pending
       pending = undefined
       startPending(p)
@@ -348,21 +336,19 @@ export function createSceneExportController(
       pending = undefined
       const a = active
       active = undefined
-      // 先 abort 在录任务(handle.abort + sink.abort)
+
       if (a) {
         a.handle.abort()
-        a.sink.abort().catch(() => {})
+        // 同步恢复临时材质/灯光/背景/相机/播放头,再恢复视图
+        a.handle.restoreNow()
         deps.setActiveHandle(null)
         deps.setExporting(false)
         deps.lockExportCamera(null)
       }
-      // 再恢复视图
       const prevShotView = p?.prevShotView ?? a?.prevShotView
       if (prevShotView !== undefined && deps.getShotView() !== prevShotView) {
         deps.setShotView(prevShotView)
       }
-      // 最后拒绝未完成任务(录制的 done 随后 settle 时 Promise 已拒绝,
-      // 先到的 API_DISPOSED 胜出)
       const error = new AgentApiError('API_DISPOSED', '场景已卸载,导出终止')
       p?.reject(error)
       a?.reject(error)

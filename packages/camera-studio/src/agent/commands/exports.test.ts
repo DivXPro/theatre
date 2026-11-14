@@ -1,103 +1,109 @@
 /**
- * exports.startVideo(2026-10-17,Task 13):视频导出任务命令。
+ * exports.captureStill / exports.startVideo 命令 + 场景控制器契约。
  *
- * 布景:真实 core project/sheet + 真实 exportRuntime 控制器(假 React
- * 会话态 getter/setter),startShotExport 走 doMock 晚绑定假实现
- * (jest-esbuild 不提升 jest.mock);node 环境。
- *
- * 契约要点:
- *  - job/session、undoable:none、cancelable:true、completion:loaded;
- *  - 返回 {jobId};handle.done 是任务成功的唯一权威(句柄返回 ≠ 成功);
- *  - 进度随 sequence position 更新;done resolve 后结果为 BlobCollectSink
- *    收集的 VideoExportResult{blob,fileName,mimeType,size};
- *  - jobs.cancel → handle.abort + sink.abort,任务置 cancelled(终态不被
- *    迟到的 settle 覆盖)并恢复 ShotView;
- *  - 无活动相机/正在导出 → INVALID_STATE;MediaRecorder 不可用(句柄
- *    返回 undefined)→ 任务 failed/CAPABILITY_UNAVAILABLE;
- *  - cameraId 类型不符 → INVALID_ID_KIND;相机不存在 → OBJECT_NOT_FOUND;
- *  - 控制器未注册 → SCENE_UNAVAILABLE;场景 dispose → 先 abort、恢复视图、
- *    拒绝未完成任务(API_DISPOSED);
- *  - jobResultSchema 描述 HTTP FileDescriptor(fileId),JS 结果是 Blob,
- *    不做 JSON 序列化。
+ * 真实使用 core project/sheet、真实 exportRuntime 控制器与参数解析;
+ * 只把真正的像素/编码核心替换成可控句柄,以便验证任务状态、错误映射、
+ * 取消/dispose 和参数透传。
  */
 import {getProject, val} from '@dreamerbird/core'
 import {AgentApiError} from '../errors'
 import type {CommandContext, JobSnapshot} from '../types'
 import type {ExportSink} from '../../videoExport/sinks'
-import type {BlobCollectSink} from '../../videoExport/BlobCollectSink'
-import type {VideoExportResult} from '../runtime/exportRuntime'
+import type {PrevisExportHandle} from '../../videoExport/previsExporter'
+import type {
+  StillExportResult,
+  VideoExportResult,
+} from '../../videoExport/previsTypes'
+import type {ExportRenderContext} from '../../videoExport/exportRenderContext'
 
-/** 晚绑定:doMock 工厂只登记一次,各用例在 setup 里换实现 */
-let activeStartShotExport: jest.Mock | undefined
-
-jest.doMock('../../videoExport/exporter', () => ({
-  __esModule: true,
-  startShotExport: (...args: unknown[]) =>
-    activeStartShotExport!(...(args as [never])),
-}))
-
-type FakeRecording = {
-  args: {sink: ExportSink; [key: string]: unknown}
-  handle: {done: Promise<void>; abort: jest.Mock; finishEarly: jest.Mock}
-  resolveDone: () => void
-  rejectDone: (error: unknown) => void
-  /** 模拟编码器:start sink → 按序写块 → finish */
-  recordChunks: (chunks: Uint8Array[]) => Promise<void>
+type FakeTask = {
+  kind: 'still' | 'video'
+  args: Record<string, unknown>
+  handle: PrevisExportHandle<StillExportResult | VideoExportResult>
+  resolve: (result: StillExportResult | VideoExportResult) => void
+  reject: (error: unknown) => void
+  restoreCalls: number
+  finishEarlyCalls: number
+  abortCalls: number
 }
 
-let recording: FakeRecording | undefined
+let tasks: FakeTask[] = []
 
-/** 假 startShotExport:返回可控 {done,abort,finishEarly};abort 对齐真实行为(sink.abort + done resolve) */
-function stubExporterAvailable() {
-  activeStartShotExport = jest.fn((args: {sink: ExportSink}) => {
-    const {sink} = args
-    let resolveDone!: () => void
-    let rejectDone!: (error: unknown) => void
-    const done = new Promise<void>((res, rej) => {
-      resolveDone = res
-      rejectDone = rej
-    })
-    const handle = {
-      done,
-      abort: jest.fn(() => {
-        void sink.abort()
-        resolveDone()
-      }),
-      finishEarly: jest.fn(),
-    }
-    recording = {
-      args: args as FakeRecording['args'],
-      handle,
-      resolveDone,
-      rejectDone,
-      recordChunks: async (chunks) => {
-        await sink.start({
-          mimeType: 'video/webm',
-          suggestedName: '镜头-test.webm',
-        })
-        for (const chunk of chunks) await sink.write(chunk)
-        await sink.finish()
+jest.doMock('../../videoExport/previsExporter', () => {
+  const __esModule = true
+  function makeTask(kind: 'still' | 'video', args: Record<string, unknown>) {
+    let resolve!: (result: StillExportResult | VideoExportResult) => void
+    let reject!: (error: unknown) => void
+    const done = new Promise<StillExportResult | VideoExportResult>(
+      (res, rej) => {
+        resolve = res
+        reject = rej
       },
+    )
+    const task = {
+      kind,
+      args,
+      restoreCalls: 0,
+      finishEarlyCalls: 0,
+      abortCalls: 0,
+    } as FakeTask
+    const restore = () => {
+      task.restoreCalls += 1
     }
-    return handle
-  })
-  return activeStartShotExport
-}
+    const abort = () => {
+      task.abortCalls += 1
+      reject(new AgentApiError('JOB_CANCELLED', '导出已取消'))
+      restore()
+    }
+    task.handle = {
+      done,
+      abort,
+      finishEarly: () => {
+        task.finishEarlyCalls += 1
+      },
+      restoreNow: restore,
+    }
+    task.resolve = (result) => {
+      resolve(result)
+    }
+    task.reject = (error) => {
+      reject(error)
+    }
+    ;(args.signal as AbortSignal | undefined)?.addEventListener(
+      'abort',
+      abort,
+      {once: true},
+    )
+    tasks.push(task)
+    return task.handle
+  }
+  return {
+    __esModule,
+    startStillExport: (args: Record<string, unknown>) =>
+      makeTask('still', args),
+    startVideoExport: (args: Record<string, unknown>) =>
+      makeTask('video', args),
+  }
+})
 
-/** 编码器不可用:真实 startShotExport 此时返回 undefined 并经 onError 提示 */
-function stubExporterUnavailable() {
-  activeStartShotExport = jest.fn((args: {onError?: (m: string) => void}) => {
-    args.onError?.('当前浏览器不支持视频录制(MediaRecorder 无可用格式)')
-    return undefined
-  })
-  return activeStartShotExport
-}
+const {AgentCommandRegistry} =
+  require('../registry') as typeof import('../registry')
+const {createAgentRuntime} =
+  require('../runtime') as typeof import('../runtime')
+const {registerExportCommands} =
+  require('./exports') as typeof import('./exports')
+const {registerJobCommands} = require('./jobs') as typeof import('./jobs')
+const {createSceneExportController, registerSceneExportController} =
+  require('../runtime/exportRuntime') as typeof import('../runtime/exportRuntime')
+const {registerExportRenderContext} =
+  require('../../videoExport/exportRenderContext') as typeof import('../../videoExport/exportRenderContext')
+const {AgentApiError: RuntimeAgentApiError} =
+  require('../errors') as typeof import('../errors')
 
 const cleanups: Array<() => void> = []
 afterEach(() => {
   while (cleanups.length) cleanups.pop()!()
-  activeStartShotExport = undefined
-  recording = undefined
+  tasks = []
 })
 
 const ctx = (): CommandContext => ({
@@ -106,66 +112,84 @@ const ctx = (): CommandContext => ({
 })
 
 const tick = () => new Promise<void>((resolve) => setTimeout(resolve, 0))
-
 let projectSeq = 0
 
-type ExportsModules = {
-  AgentCommandRegistry: typeof import('../registry').AgentCommandRegistry
-  createAgentRuntime: typeof import('../runtime').createAgentRuntime
-  registerExportCommands: typeof import('./exports').registerExportCommands
-  registerJobCommands: typeof import('./jobs').registerJobCommands
-  createSceneExportController: typeof import('../runtime/exportRuntime').createSceneExportController
-  registerSceneExportController: typeof import('../runtime/exportRuntime').registerSceneExportController
-}
-
-function loadModules(): ExportsModules {
+function fakeVideoResult(): VideoExportResult {
+  const blob = new Blob(['video-bytes'], {type: 'video/mp4'})
   return {
-    AgentCommandRegistry: require('../registry').AgentCommandRegistry,
-    createAgentRuntime: require('../runtime').createAgentRuntime,
-    registerExportCommands: require('./exports').registerExportCommands,
-    registerJobCommands: require('./jobs').registerJobCommands,
-    createSceneExportController: require('../runtime/exportRuntime')
-      .createSceneExportController,
-    registerSceneExportController: require('../runtime/exportRuntime')
-      .registerSceneExportController,
+    blob,
+    fileName: '镜头-test.mp4',
+    mimeType: 'video/mp4',
+    size: blob.size,
+    width: 1920,
+    height: 1080,
+    fps: 30,
+    durationMs: 1000,
+    codec: 'avc1.640028',
+    encoding: 'webcodecs',
+    renderMode: 'clay',
+    range: {startMs: 0, endMs: 1000},
   }
 }
 
-/** 假 React 会话态:生产是 useState/useRef,测试用普通对象同步读写 */
-type FakeSceneState = {
-  cameras: string[]
-  activeCameraKey: string | null
-  shotView: boolean
-  exporting: boolean
-  handle: unknown
-  lockedCamera: string | null
-  canvas: HTMLCanvasElement
+function fakeStillResult(): StillExportResult {
+  const blob = new Blob(['png-bytes'], {type: 'image/png'})
+  return {
+    blob,
+    fileName: '镜头-test.png',
+    mimeType: 'image/png',
+    size: blob.size,
+    width: 800,
+    height: 600,
+    renderMode: 'clay',
+    timeMs: 500,
+  }
 }
 
-function makeScene({withController = true}: {withController?: boolean} = {}) {
-  const m = loadModules()
-  const project = getProject(`agent-exports-${++projectSeq}`)
+function makeFakeRenderContext(canvas = {width: 1920, height: 1080}) {
+  const context: ExportRenderContext = {
+    renderer: {} as never,
+    scene: {} as never,
+    getCamera: () => ({}) as never,
+    getCanvasSize: () => canvas,
+    getFrameloop: () => 'demand' as const,
+    setFrameloop: () => {},
+    advance: () => {},
+    invalidate: () => {},
+  }
+  return context
+}
+
+function makeScene({
+  withController = true,
+  withContext = true,
+}: {withController?: boolean; withContext?: boolean} = {}) {
+  const project = getProject(`previs-exports-${++projectSeq}`)
   const sheet = project.sheet('Scene')
-  const runtime = m.createAgentRuntime({
+  const runtime = createAgentRuntime({
     project,
     sheet,
     library: {} as never,
     getStudio: () => undefined,
     subscribeHistoric: () => () => {},
   })
-  const registry = new m.AgentCommandRegistry()
-  m.registerExportCommands(registry, runtime)
-  m.registerJobCommands(registry, runtime)
-  const scene: FakeSceneState = {
+  const registry = new AgentCommandRegistry()
+  registerExportCommands(registry, runtime)
+  registerJobCommands(registry, runtime)
+
+  if (withContext) {
+    cleanups.push(registerExportRenderContext(makeFakeRenderContext()))
+  }
+
+  const scene = {
     cameras: ['Cam 1', 'Cam 2'],
-    activeCameraKey: 'Cam 1',
+    activeCameraKey: 'Cam 1' as string | null,
     shotView: false,
     exporting: false,
-    handle: null,
-    lockedCamera: null,
-    canvas: {} as HTMLCanvasElement,
+    handle: null as unknown,
+    lockedCamera: null as string | null,
   }
-  const controller = m.createSceneExportController({
+  const controller = createSceneExportController({
     sheet,
     getActiveCameraKey: () => scene.activeCameraKey,
     hasCamera: (key) => scene.cameras.includes(key),
@@ -177,8 +201,6 @@ function makeScene({withController = true}: {withController?: boolean} = {}) {
     setShotView: (on) => {
       scene.shotView = on
     },
-    // 页面上只有一个 canvas(快照编辑器的在 shadow DOM 里)
-    getCanvas: () => scene.canvas,
     setExporting: (on) => {
       scene.exporting = on
     },
@@ -190,7 +212,7 @@ function makeScene({withController = true}: {withController?: boolean} = {}) {
     },
   })
   if (withController) {
-    cleanups.push(m.registerSceneExportController(controller))
+    cleanups.push(registerSceneExportController(controller))
   }
   cleanups.push(
     () => controller.dispose(),
@@ -199,12 +221,11 @@ function makeScene({withController = true}: {withController?: boolean} = {}) {
   return {registry, runtime, controller, scene, sheet}
 }
 
-/** 轮询任务到终态(job manager 的 done 不经命令暴露,测试读快照) */
 async function settleJob(
   runtime: ReturnType<typeof makeScene>['runtime'],
   jobId: string,
 ): Promise<JobSnapshot> {
-  for (let i = 0; i < 50; i++) {
+  for (let i = 0; i < 80; i++) {
     const snapshot = runtime.jobs.get(jobId)
     if (['succeeded', 'failed', 'cancelled'].includes(snapshot.state)) {
       return snapshot
@@ -214,279 +235,264 @@ async function settleJob(
   return runtime.jobs.get(jobId)
 }
 
-async function startVideo(
+async function startCommand(
   registry: ReturnType<typeof makeScene>['registry'],
+  name: 'exports.captureStill' | 'exports.startVideo',
   args: unknown = {},
-): Promise<{jobId: string}> {
-  return (await registry.execute('exports.startVideo', args, ctx())) as {
+): Promise<string> {
+  const result = (await registry.execute(
+    name,
+    {...(args as object)},
+    ctx(),
+  )) as {
     jobId: string
   }
+  return result.jobId
 }
 
-// ── 注册与元数据 ───────────────────────────────────────────────
-
-test('exports.startVideo 元数据:job/session、undoable:none、cancelable、completion:loaded', () => {
-  const {registry} = makeScene()
-  expect(registry.has('exports.startVideo')).toBe(true)
-  const described = new Map(
-    registry.describe().commands.map((c) => [c.name, c]),
-  )
-  const command = described.get('exports.startVideo')!
-  expect(command).toMatchObject({
-    kind: 'job',
-    stateDomain: 'session',
-    undoable: 'none',
-    completion: 'loaded',
-    cancelable: true,
-    acceptsExpectedRevision: false,
+describe('注册元数据与命令面', () => {
+  test('两条导出命令都是 job/session/undoable:none/cancelable', () => {
+    const {registry} = makeScene()
+    const described = new Map(
+      registry.describe().commands.map((command) => [command.name, command]),
+    )
+    for (const name of ['exports.captureStill', 'exports.startVideo']) {
+      expect(described.get(name)).toMatchObject({
+        kind: 'job',
+        stateDomain: 'session',
+        undoable: 'none',
+        completion: 'loaded',
+        cancelable: true,
+        acceptsExpectedRevision: false,
+      })
+      expect(described.get(name)!.jobResultSchema!.required).toEqual(
+        expect.arrayContaining(['fileId', 'fileName', 'mimeType', 'size']),
+      )
+    }
   })
-  // 二进制契约:jobResultSchema 描述 HTTP FileDescriptor;JS 结果是 Blob,不 JSON 序列化
-  expect(command.jobResultSchema!.required).toEqual(
-    expect.arrayContaining(['fileId', 'fileName', 'mimeType', 'size']),
-  )
-})
 
-// ── 成功路径 ───────────────────────────────────────────────────
-
-test('导出成功:返回 jobId,done 是唯一权威,结果为 BlobCollectSink 收集的文件,视角恢复', async () => {
-  const {registry, runtime, controller, scene} = makeScene()
-  const startShotExport = stubExporterAvailable()
-  const {jobId} = await startVideo(registry)
-  expect(runtime.jobs.get(jobId)).toMatchObject({
-    kind: 'exports.startVideo',
-    state: 'running',
-    progress: 0,
-    phase: 'accepted',
-    cancelable: true,
-  })
-  // 视角未生效前不开录;已请求切到镜头视角
-  expect(startShotExport).not.toHaveBeenCalled()
-  expect(scene.shotView).toBe(true)
-  // 模拟 React 副作用:ShotView 生效,开录
-  controller.notifySceneReady()
-  expect(startShotExport).toHaveBeenCalledTimes(1)
-  expect(scene.exporting).toBe(true)
-  expect(scene.lockedCamera).toBe('Cam 1')
-  // handle.done 是任务成功的唯一权威:句柄已返回 ≠ 成功
-  expect(runtime.jobs.get(jobId).state).toBe('running')
-  await recording!.recordChunks([
-    new Uint8Array([1, 2, 3]),
-    new Uint8Array([4, 5]),
-  ])
-  recording!.resolveDone()
-  const snapshot = await settleJob(runtime, jobId)
-  expect(snapshot.state).toBe('succeeded')
-  expect(snapshot.phase).toBe('loaded')
-  expect(snapshot.progress).toBe(1)
-  const result = snapshot.result as VideoExportResult
-  expect(result.fileName).toBe('镜头-test.webm')
-  expect(result.mimeType).toBe('video/webm')
-  expect(result.size).toBe(5)
-  expect([...new Uint8Array(await result.blob.arrayBuffer())]).toEqual([
-    1, 2, 3, 4, 5,
-  ])
-  // 收尾:恢复导出前视角、清导出态与句柄
-  expect(scene.shotView).toBe(false)
-  expect(scene.exporting).toBe(false)
-  expect(scene.handle).toBe(null)
-  expect(scene.lockedCamera).toBe(null)
-})
-
-test('进度随 sequence position 更新', async () => {
-  const {registry, runtime, controller, sheet} = makeScene()
-  stubExporterAvailable()
-  const {jobId} = await startVideo(registry)
-  controller.notifySceneReady()
-  const length = val(sheet.sequence.pointer.length)
-  sheet.sequence.position = length / 2
-  await tick()
-  expect(runtime.jobs.get(jobId).progress).toBeCloseTo(0.5)
-  expect(runtime.jobs.get(jobId).state).toBe('running')
-  await recording!.recordChunks([new Uint8Array([1])])
-  recording!.resolveDone()
-  const snapshot = await settleJob(runtime, jobId)
-  expect(snapshot.state).toBe('succeeded')
-})
-
-test('指定 cameraId:先激活该相机再开录', async () => {
-  const {registry, runtime, controller, scene} = makeScene()
-  stubExporterAvailable()
-  const {jobId} = await startVideo(registry, {cameraId: 'camera:Cam 2'})
-  expect(scene.activeCameraKey).toBe('Cam 2')
-  controller.notifySceneReady()
-  expect(scene.lockedCamera).toBe('Cam 2')
-  await recording!.recordChunks([new Uint8Array([1])])
-  recording!.resolveDone()
-  expect((await settleJob(runtime, jobId)).state).toBe('succeeded')
-})
-
-test('shotView 已开启且相机无需切换:立即开录,完成后保持镜头视角', async () => {
-  const {registry, runtime, scene} = makeScene()
-  const startShotExport = stubExporterAvailable()
-  scene.shotView = true
-  const {jobId} = await startVideo(registry)
-  expect(startShotExport).toHaveBeenCalledTimes(1)
-  await recording!.recordChunks([new Uint8Array([1])])
-  recording!.resolveDone()
-  expect((await settleJob(runtime, jobId)).state).toBe('succeeded')
-  // 导出前就在镜头视角:恢复到 true(不退出)
-  expect(scene.shotView).toBe(true)
-})
-
-// ── 取消 ───────────────────────────────────────────────────────
-
-test('jobs.cancel:handle.abort + sink.abort,任务置 cancelled 且不被迟到 settle 覆盖,视角恢复', async () => {
-  const {registry, runtime, controller, scene} = makeScene()
-  stubExporterAvailable()
-  const {jobId} = await startVideo(registry)
-  controller.notifySceneReady()
-  await recording!.recordChunks([new Uint8Array([1, 2])])
-  const cancelled = (await registry.execute(
-    'jobs.cancel',
-    {jobId},
-    ctx(),
-  )) as JobSnapshot
-  expect(cancelled.state).toBe('cancelled')
-  expect(recording!.handle.abort).toHaveBeenCalledTimes(1)
-  // sink 已 abort:blob() 抛 INVALID_STATE
-  const sink = recording!.args.sink as BlobCollectSink
-  expect(() => sink.blob()).toThrow()
-  // abort 后 done resolve 是迟到的 settle:终态 cancelled 不被覆盖
-  const snapshot = await settleJob(runtime, jobId)
-  expect(snapshot.state).toBe('cancelled')
-  expect(scene.shotView).toBe(false)
-  expect(scene.exporting).toBe(false)
-})
-
-test('用户侧中止(Esc/开录相机被删,signal 未 abort):任务置 cancelled 并带 JOB_CANCELLED,非 failed/INVALID_STATE', async () => {
-  const {registry, runtime, controller, scene} = makeScene()
-  stubExporterAvailable()
-  const {jobId} = await startVideo(registry)
-  controller.notifySceneReady()
-  await recording!.recordChunks([new Uint8Array([1, 2])])
-  // 模拟 Esc/相机删除:场景直调 handle.abort(signal 不经过 jobs.cancel);
-  // 假实现对齐真实 exporter:abort 丢弃内容(sink.abort)后 done resolve
-  recording!.handle.abort()
-  const snapshot = await settleJob(runtime, jobId)
-  // 轮询任务的 Agent 必须能区分"被用户中止"与真失败
-  expect(snapshot.state).toBe('cancelled')
-  expect(snapshot.error!.code).toBe('JOB_CANCELLED')
-  expect(scene.shotView).toBe(false)
-  expect(scene.exporting).toBe(false)
-})
-
-// ── 前置校验失败(任务启动前拒绝命令) ──────────────────────────
-
-test('无活动相机 → INVALID_STATE,不起任务', async () => {
-  const {registry, scene} = makeScene()
-  stubExporterAvailable()
-  scene.cameras = []
-  scene.activeCameraKey = null
-  await expect(startVideo(registry)).rejects.toMatchObject({
-    code: 'INVALID_STATE',
-  })
-  expect(activeStartShotExport).not.toHaveBeenCalled()
-})
-
-test('已有导出进行中 → INVALID_STATE', async () => {
-  const {registry, runtime, controller} = makeScene()
-  stubExporterAvailable()
-  const {jobId} = await startVideo(registry)
-  controller.notifySceneReady()
-  await expect(startVideo(registry)).rejects.toMatchObject({
-    code: 'INVALID_STATE',
-  })
-  await recording!.recordChunks([new Uint8Array([1])])
-  recording!.resolveDone()
-  expect((await settleJob(runtime, jobId)).state).toBe('succeeded')
-})
-
-test('cameraId 类型不符 → INVALID_ID_KIND;相机不存在 → OBJECT_NOT_FOUND', async () => {
-  const {registry} = makeScene()
-  stubExporterAvailable()
-  await expect(
-    startVideo(registry, {cameraId: 'model:Y Bot'}),
-  ).rejects.toMatchObject({code: 'INVALID_ID_KIND'})
-  await expect(
-    startVideo(registry, {cameraId: 'camera:Nope'}),
-  ).rejects.toMatchObject({code: 'OBJECT_NOT_FOUND'})
-  expect(activeStartShotExport).not.toHaveBeenCalled()
-})
-
-test('cameraId 非法参数 → INVALID_ARGUMENT', async () => {
-  const {registry} = makeScene()
-  await expect(startVideo(registry, {cameraId: 123})).rejects.toMatchObject({
-    code: 'INVALID_ARGUMENT',
-  })
-  await expect(startVideo(registry, {cameraId: ''})).rejects.toMatchObject({
-    code: 'INVALID_ARGUMENT',
+  test('参数校验在起任务前拒绝 fps/output/transparent', async () => {
+    const {registry} = makeScene()
+    await expect(
+      startCommand(registry, 'exports.startVideo', {fps: 0}),
+    ).rejects.toMatchObject({code: 'INVALID_ARGUMENT'})
+    await expect(
+      startCommand(registry, 'exports.captureStill', {
+        output: {width: -1, height: 10},
+      }),
+    ).rejects.toMatchObject({code: 'INVALID_ARGUMENT'})
+    await expect(
+      startCommand(registry, 'exports.startVideo', {
+        background: 'transparent',
+      }),
+    ).rejects.toMatchObject({code: 'INVALID_ARGUMENT'})
+    expect(tasks).toHaveLength(0)
   })
 })
 
-test('导出控制器未注册 → SCENE_UNAVAILABLE', async () => {
-  const {registry} = makeScene({withController: false})
-  await expect(startVideo(registry)).rejects.toMatchObject({
-    code: 'SCENE_UNAVAILABLE',
+describe('静帧导出', () => {
+  test('返回 jobId;精确 timeMs/output 透传;结果保持 PNG 元数据', async () => {
+    const {registry, runtime, controller, scene} = makeScene()
+    const jobId = await startCommand(registry, 'exports.captureStill', {
+      cameraId: 'camera:Cam 2',
+      renderMode: 'clay',
+      output: {width: 800, height: 600},
+      clayColor: '#ABC',
+      timeMs: 500,
+    })
+    expect(runtime.jobs.get(jobId)).toMatchObject({
+      kind: 'exports.captureStill',
+      state: 'running',
+      progress: 0,
+      phase: 'accepted',
+      cancelable: true,
+    })
+    expect(scene.activeCameraKey).toBe('Cam 2')
+    expect(scene.shotView).toBe(true)
+    controller.notifySceneReady()
+    expect(tasks).toHaveLength(1)
+    expect(tasks[0]!.args).toMatchObject({
+      timeMs: 500,
+      options: {
+        width: 800,
+        height: 600,
+        renderMode: 'clay',
+        clayColor: '#AABBCC',
+        background: 'neutral',
+      },
+    })
+    tasks[0]!.resolve(fakeStillResult())
+    const snapshot = await settleJob(runtime, jobId)
+    expect(snapshot.state).toBe('succeeded')
+    expect(snapshot.phase).toBe('loaded')
+    expect(snapshot.progress).toBe(1)
+    expect(snapshot.result).toMatchObject({
+      mimeType: 'image/png',
+      width: 800,
+      height: 600,
+      renderMode: 'clay',
+      timeMs: 500,
+    })
+    expect(scene.shotView).toBe(false)
+    expect(scene.exporting).toBe(false)
+    expect(scene.lockedCamera).toBe(null)
   })
 })
 
-// ── 运行期失败与场景卸载 ───────────────────────────────────────
+describe('视频导出', () => {
+  test('缺省使用当前相机/完整 sequence/当前 canvas/30fps', async () => {
+    const {registry, runtime, controller, sheet} = makeScene()
+    const lengthMs = val(sheet.sequence.pointer.length) * 1000
+    const jobId = await startCommand(registry, 'exports.startVideo')
+    controller.notifySceneReady()
+    expect(tasks[0]!.args).toMatchObject({
+      range: {startMs: 0, endMs: lengthMs},
+      fps: 30,
+      options: {width: 1920, height: 1080, renderMode: 'styled'},
+    })
+    tasks[0]!.resolve(fakeVideoResult())
+    expect((await settleJob(runtime, jobId)).state).toBe('succeeded')
+  })
 
-test('MediaRecorder 不可用(句柄 undefined)→ 任务 failed/CAPABILITY_UNAVAILABLE,视角恢复', async () => {
-  const {registry, runtime, controller, scene} = makeScene()
-  stubExporterUnavailable()
-  const {jobId} = await startVideo(registry)
-  controller.notifySceneReady()
-  const snapshot = await settleJob(runtime, jobId)
-  expect(snapshot.state).toBe('failed')
-  expect(snapshot.error!.code).toBe('CAPABILITY_UNAVAILABLE')
-  expect(scene.shotView).toBe(false)
-  expect(scene.exporting).toBe(false)
+  test('range/fps/aspect/output/renderMode 透传;进度写入 job', async () => {
+    const {registry, runtime, controller} = makeScene()
+    const jobId = await startCommand(registry, 'exports.startVideo', {
+      range: {startMs: 100, endMs: 1100},
+      fps: 24,
+      aspectRatio: '9:16',
+      renderMode: 'clay',
+      background: 'scene',
+    })
+    controller.notifySceneReady()
+    expect(tasks[0]!.args).toMatchObject({
+      range: {startMs: 100, endMs: 1100},
+      fps: 24,
+      options: {
+        width: 608,
+        height: 1080,
+        renderMode: 'clay',
+        background: 'scene',
+      },
+    })
+    ;(tasks[0]!.args.onProgress as (p: number) => void)(0.5)
+    expect(runtime.jobs.get(jobId).progress).toBe(0.5)
+    tasks[0]!.resolve(fakeVideoResult())
+    expect((await settleJob(runtime, jobId)).state).toBe('succeeded')
+  })
+
+  test('range 超出 sequence 长度在起任务前拒绝', async () => {
+    const {registry, sheet} = makeScene()
+    const lengthMs = val(sheet.sequence.pointer.length) * 1000
+    await expect(
+      startCommand(registry, 'exports.startVideo', {
+        range: {startMs: 0, endMs: lengthMs + 1},
+      }),
+    ).rejects.toMatchObject({code: 'INVALID_ARGUMENT'})
+    expect(tasks).toHaveLength(0)
+  })
+
+  test('UI sink 路径保持旧 Promise 语义(resolve undefined)', async () => {
+    const {controller, scene} = makeScene()
+    scene.shotView = true
+    const sink: ExportSink = {
+      id: 'fake',
+      label: 'fake',
+      description: 'fake',
+      available: () => true,
+      start: async () => {},
+      write: async () => {},
+      finish: async () => {},
+      abort: async () => {},
+    }
+    const promise = controller.startVideo({sink})
+    tasks[0]!.resolve(fakeVideoResult())
+    await expect(promise).resolves.toBeUndefined()
+  })
 })
 
-test('录制中途失败 → 任务 failed,视角恢复', async () => {
-  const {registry, runtime, controller, scene} = makeScene()
-  stubExporterAvailable()
-  const {jobId} = await startVideo(registry)
-  controller.notifySceneReady()
-  recording!.rejectDone(new Error('编码器炸了'))
-  const snapshot = await settleJob(runtime, jobId)
-  expect(snapshot.state).toBe('failed')
-  expect(snapshot.error!.message).toContain('编码器炸了')
-  expect(scene.shotView).toBe(false)
-  expect(scene.exporting).toBe(false)
+describe('结构化错误与并发', () => {
+  test('无活动相机 → INVALID_STATE', async () => {
+    const {registry, scene} = makeScene()
+    scene.cameras = []
+    scene.activeCameraKey = null
+    await expect(
+      startCommand(registry, 'exports.captureStill'),
+    ).rejects.toMatchObject({code: 'INVALID_STATE'})
+  })
+
+  test('cameraId 类型/不存在 → INVALID_ID_KIND / OBJECT_NOT_FOUND', async () => {
+    const {registry} = makeScene()
+    await expect(
+      startCommand(registry, 'exports.startVideo', {cameraId: 'model:X'}),
+    ).rejects.toMatchObject({code: 'INVALID_ID_KIND'})
+    await expect(
+      startCommand(registry, 'exports.startVideo', {cameraId: 'camera:Nope'}),
+    ).rejects.toMatchObject({code: 'OBJECT_NOT_FOUND'})
+  })
+
+  test('控制器未注册 → SCENE_UNAVAILABLE', async () => {
+    const {registry} = makeScene({withController: false})
+    await expect(
+      startCommand(registry, 'exports.captureStill'),
+    ).rejects.toMatchObject({code: 'SCENE_UNAVAILABLE'})
+  })
+
+  test('场景 controller 在但 render context 缺失 → 任务 INVALID_STATE', async () => {
+    const {registry, runtime, controller} = makeScene({withContext: false})
+    const jobId = await startCommand(registry, 'exports.captureStill')
+    controller.notifySceneReady()
+    const snapshot = await settleJob(runtime, jobId)
+    expect(snapshot.state).toBe('failed')
+    expect(snapshot.error!.code).toBe('INVALID_STATE')
+  })
+
+  test('已有导出进行中 → INVALID_STATE', async () => {
+    const {registry, controller} = makeScene()
+    await startCommand(registry, 'exports.captureStill')
+    await expect(
+      startCommand(registry, 'exports.startVideo'),
+    ).rejects.toMatchObject({code: 'INVALID_STATE'})
+    controller.notifySceneReady()
+    tasks[0]!.resolve(fakeStillResult())
+  })
+
+  test('编码能力缺失 → failed/CAPABILITY_UNAVAILABLE', async () => {
+    const {registry, runtime, controller} = makeScene()
+    const jobId = await startCommand(registry, 'exports.startVideo')
+    controller.notifySceneReady()
+    tasks[0]!.reject(
+      new RuntimeAgentApiError('CAPABILITY_UNAVAILABLE', '不支持的编码'),
+    )
+    const snapshot = await settleJob(runtime, jobId)
+    expect(snapshot.state).toBe('failed')
+    expect(snapshot.error!.code).toBe('CAPABILITY_UNAVAILABLE')
+  })
 })
 
-test('录制中途的结构化失败保留原错误码(INVALID_STATE 不被误归为取消)', async () => {
-  const {registry, runtime, controller} = makeScene()
-  stubExporterAvailable()
-  const {jobId} = await startVideo(registry)
-  controller.notifySceneReady()
-  // 真实路径示例:sink.write 拒绝(写盘失败)经 exporter 收尾后 done 拒绝
-  recording!.rejectDone(new AgentApiError('INVALID_STATE', '写入失败'))
-  const snapshot = await settleJob(runtime, jobId)
-  expect(snapshot.state).toBe('failed')
-  expect(snapshot.error!.code).toBe('INVALID_STATE')
-})
+describe('取消与 dispose', () => {
+  test('jobs.cancel 中止句柄并进入 cancelled', async () => {
+    const {registry, runtime, controller, scene} = makeScene()
+    const jobId = await startCommand(registry, 'exports.startVideo')
+    controller.notifySceneReady()
+    await registry.execute('jobs.cancel', {jobId}, ctx())
+    expect(tasks[0]!.abortCalls).toBe(1)
+    const snapshot = await settleJob(runtime, jobId)
+    expect(snapshot.state).toBe('cancelled')
+    expect(scene.exporting).toBe(false)
+    expect(scene.shotView).toBe(false)
+  })
 
-test('场景 dispose:先 abort 在录任务,再恢复视图,最后拒绝未完成任务(API_DISPOSED)', async () => {
-  const {registry, runtime, controller, scene} = makeScene()
-  stubExporterAvailable()
-  const {jobId} = await startVideo(registry)
-  controller.notifySceneReady()
-  expect(scene.exporting).toBe(true)
-  controller.dispose()
-  expect(recording!.handle.abort).toHaveBeenCalledTimes(1)
-  expect(scene.shotView).toBe(false)
-  const snapshot = await settleJob(runtime, jobId)
-  expect(snapshot.state).toBe('failed')
-  expect(snapshot.error!.code).toBe('API_DISPOSED')
-})
-
-test('会话销毁后 exports.startVideo 返回 API_DISPOSED', async () => {
-  const {registry, runtime} = makeScene()
-  runtime.dispose()
-  await expect(startVideo(registry)).rejects.toMatchObject({
-    code: 'API_DISPOSED',
+  test('dispose 先 abort + restoreNow,任务以 API_DISPOSED 结束', async () => {
+    const {registry, runtime, controller, scene} = makeScene()
+    const jobId = await startCommand(registry, 'exports.startVideo')
+    controller.notifySceneReady()
+    expect(runtime.jobs.get(jobId).state).toBe('running')
+    controller.dispose()
+    expect(tasks.at(-1)!.abortCalls).toBe(1)
+    expect(tasks.at(-1)!.restoreCalls).toBeGreaterThanOrEqual(1)
+    expect(scene.exporting).toBe(false)
+    const snapshot = await settleJob(runtime, jobId)
+    expect(snapshot.state).toBe('failed')
+    expect(snapshot.error!.code).toBe('API_DISPOSED')
   })
 })

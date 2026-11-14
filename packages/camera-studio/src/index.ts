@@ -78,6 +78,15 @@ export type {ViewApi, ViewState} from './agent/commands/view'
 export type {UiApi, UiPanelKind} from './agent/commands/ui'
 export type {ProjectApi} from './agent/commands/project'
 export type {ExportsApi} from './agent/commands/exports'
+export type {
+  ExportRenderArgs,
+  ExportRenderMode,
+  ExportBackground,
+  ExportAspectRatio,
+  StillExportArgs,
+  VideoExportArgs,
+  StillExportResult,
+} from './videoExport/previsTypes'
 export type {JobsApi} from './agent/commands/jobs'
 export type {VideoExportResult} from './agent/runtime/exportRuntime'
 export type {GizmoMode} from './PlacementManager'

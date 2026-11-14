@@ -79,6 +79,7 @@ export const EXPECTED_AGENT_COMMANDS = [
   'ui.closePanel',
   'ui.setGizmoMode',
   'project.exportState',
+  'exports.captureStill',
   'exports.startVideo',
   'jobs.get',
   'jobs.cancel',

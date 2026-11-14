@@ -368,6 +368,7 @@ export function createCameraStudioApi(
       exportState: () => invoke('project.exportState', undefined),
     },
     exports: {
+      captureStill: (args) => invoke('exports.captureStill', args),
       startVideo: (args) => invoke('exports.startVideo', args),
     },
     jobs: {

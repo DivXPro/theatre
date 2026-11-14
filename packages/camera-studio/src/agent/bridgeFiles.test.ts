@@ -262,6 +262,68 @@ describe('dehydrateJobResult', () => {
     expect(projected.result).toBeUndefined()
   })
 
+  test('导出元数据随 FileDescriptor 一起投影,Blob 不序列化', async () => {
+    const snapshot: JobSnapshot<unknown> = {
+      jobId: 'j-meta',
+      kind: 'exports.startVideo',
+      state: 'succeeded',
+      progress: 1,
+      phase: 'loaded',
+      cancelable: true,
+      result: {
+        blob: new Blob(['mp4-bytes'], {type: 'video/mp4'}),
+        fileName: '镜头.mp4',
+        mimeType: 'video/mp4',
+        size: 9,
+        width: 1920,
+        height: 1080,
+        fps: 30,
+        durationMs: 1000,
+        codec: 'avc1.640028',
+        encoding: 'webcodecs',
+        renderMode: 'clay',
+        range: {startMs: 0, endMs: 1000},
+      },
+    }
+    const fetchMock = jest.fn(async () =>
+      fakeResponse({
+        ok: true,
+        status: 201,
+        json: async () => ({
+          ok: true,
+          result: {
+            fileId: 'f-meta',
+            fileName: '镜头.mp4',
+            mimeType: 'video/mp4',
+            size: 9,
+          },
+        }),
+      }),
+    )
+
+    const projected = await dehydrateJobResult(
+      snapshot,
+      transport,
+      fetchMock as unknown as typeof fetch,
+    )
+
+    expect(projected.result).toEqual({
+      fileId: 'f-meta',
+      fileName: '镜头.mp4',
+      mimeType: 'video/mp4',
+      size: 9,
+      width: 1920,
+      height: 1080,
+      fps: 30,
+      durationMs: 1000,
+      codec: 'avc1.640028',
+      encoding: 'webcodecs',
+      renderMode: 'clay',
+      range: {startMs: 0, endMs: 1000},
+    })
+    expect((projected.result as Record<string, unknown>).blob).toBeUndefined()
+  })
+
   test('上传 fetch 拒绝(CORS/网络)→ failed NETWORK_ERROR;日志不含 token', async () => {
     const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
     const fetchMock = jest

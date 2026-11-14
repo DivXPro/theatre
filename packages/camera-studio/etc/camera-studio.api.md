@@ -4,9 +4,12 @@
 
 ```ts
 
+import type { AnimationClip } from 'three';
+import type { Group } from 'three';
 import type { IProject } from '@dreamerbird/core';
 import type { Object3D } from 'three';
 import { default as React_2 } from 'react';
+import type { StudioPanelVisibility } from '@dreamerbird/core';
 
 // @public
 export const AGENT_API_ERROR_CODES: readonly ["API_NOT_READY", "API_DISPOSED", "SCENE_UNAVAILABLE", "COMMAND_NOT_FOUND", "CAPABILITY_UNAVAILABLE", "INVALID_ARGUMENT", "INVALID_ID_KIND", "OBJECT_NOT_FOUND", "ASSET_NOT_FOUND", "PATH_POINT_NOT_FOUND", "KEYFRAME_NOT_FOUND", "INVALID_STATE", "REVISION_CONFLICT", "JOB_NOT_FOUND", "JOB_NOT_CANCELABLE", "JOB_CANCELLED", "FILE_NOT_FOUND", "PAYLOAD_TOO_LARGE", "UNAUTHORIZED", "FORBIDDEN", "STORAGE_ERROR", "NETWORK_ERROR", "RESOURCE_LOAD_FAILED", "PARTIAL_FAILURE", "INTERNAL_ERROR"];
@@ -118,6 +121,11 @@ export type AssetsApi = {
     }): Promise<{
         jobId: string;
     }>;
+    importModels(args: {
+        files: File[];
+    }): Promise<{
+        jobId: string;
+    }>;
     rename(args: {
         assetId: string;
         name: string;
@@ -134,7 +142,7 @@ export interface BootCtx {
     api: CameraStudioApi;
     // (undocumented)
     config: CameraStudioConfig;
-    flushState: () => void;
+    flushState: () => Promise<void>;
     // Warning: (ae-forgotten-export) The symbol "Library" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -218,13 +226,14 @@ export type CamerasApi = {
 };
 
 // @public
-export function CameraScene({ project, onFlows, onError }: CameraSceneProps): React_2.JSX.Element;
+export function CameraScene({ project, onFlows, onError, includeDemoModel, }: CameraSceneProps): React_2.JSX.Element;
 
 // @public
 export type CameraSceneProps = {
     project: IProject;
     onFlows?: (flows: CameraFlows) => void;
     onError?: CameraStudioErrorHandler;
+    includeDemoModel?: boolean;
 };
 
 // @public
@@ -244,10 +253,13 @@ export type CameraStudioAgentConfig = {
 export type CameraStudioApi = {
     readonly ready: Promise<void>;
     describe(): RegistryDescription;
+    subscribe(listener: () => void): () => void;
     readonly scene: SceneApi;
     readonly selection: SelectionApi;
     readonly objects: ObjectsApi;
     readonly models: ModelsApi;
+    readonly primitives: PrimitivesApi;
+    readonly materials: MaterialsApi;
     readonly assets: AssetsApi;
     readonly poses: PosesApi & {
         readonly session: PosesSessionApi;
@@ -280,6 +292,10 @@ export interface CameraStudioConfig {
     };
     onError?: CameraStudioErrorHandler;
     project?: string | IProject;
+    // (undocumented)
+    scene?: {
+        includeDemoModel?: boolean;
+    };
     state?: {
         initialState?: unknown;
         onStateChange?: (content: unknown) => void;
@@ -297,6 +313,8 @@ export interface CameraStudioConfig {
         zIndexBase?: number;
         locale?: string;
         hideLeftStrip?: boolean;
+        panels?: StudioPanelVisibility;
+        projectName?: string;
     };
 }
 
@@ -319,6 +337,8 @@ export interface CameraStudioHandle {
     api: CameraStudioApi;
     // (undocumented)
     error: Error | undefined;
+    // (undocumented)
+    flushState(): Promise<void>;
     // (undocumented)
     ready: boolean;
     // (undocumented)
@@ -378,10 +398,33 @@ export function disposeCameraStudio(ctx?: BootCtx): Promise<void>;
 export type EntryKind = 'model' | 'pose' | 'animation';
 
 // @public
+export type ExportAspectRatio = '16:9' | '9:16' | '1:1' | '4:3' | '3:4';
+
+// @public
+export type ExportBackground = 'scene' | 'neutral' | 'transparent';
+
+// @public
+export type ExportRenderArgs = {
+    cameraId?: string;
+    renderMode?: ExportRenderMode;
+    output?: {
+        width: number;
+        height: number;
+    };
+    aspectRatio?: ExportAspectRatio;
+    clayColor?: string;
+    background?: ExportBackground;
+};
+
+// @public
+export type ExportRenderMode = 'styled' | 'clay';
+
+// @public
 export type ExportsApi = {
-    startVideo(args?: {
-        cameraId?: string;
-    }): Promise<{
+    captureStill(args?: StillExportArgs): Promise<{
+        jobId: string;
+    }>;
+    startVideo(args?: VideoExportArgs): Promise<{
         jobId: string;
     }>;
 };
@@ -408,6 +451,11 @@ export type HistoryApi = {
         revision: number;
     }>;
 };
+
+// Warning: (ae-forgotten-export) The symbol "ImportDeps" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+export function importModelFiles(files: File[], library?: Library, deps?: ImportDeps): Promise<ModelEntry[]>;
 
 // @public
 export class IndexedDBBackend implements WritableLibrarySource {
@@ -570,6 +618,44 @@ export type LibrarySourceCapabilities = {
 export function listBuiltinPoses(): PoseEntry[];
 
 // @public (undocumented)
+export type MaterialsApi = {
+    list(args: {
+        objectId: string;
+    }): Promise<MaterialSlot[]>;
+    update(args: {
+        objectId: string;
+        slotId: string;
+        values: Partial<MaterialValues>;
+        expectedRevision?: number;
+    }): Promise<{
+        revision: number;
+    }>;
+};
+
+// @public (undocumented)
+export type MaterialSlot = {
+    slotId: string;
+    slotKey: string;
+    meshName: string;
+    materialName: string;
+    values: MaterialValues;
+};
+
+// @public (undocumented)
+export type MaterialValues = {
+    color: string;
+    metalness: number;
+    roughness: number;
+    emissive: string;
+    opacity: number;
+    mapBlobId: string;
+    normalMapBlobId: string;
+    roughnessMapBlobId: string;
+    metalnessMapBlobId: string;
+    emissiveMapBlobId: string;
+};
+
+// @public (undocumented)
 export type ModelEntry = {
     id: string;
     kind: 'model';
@@ -584,6 +670,16 @@ export type ModelEntry = {
 };
 
 // @public
+export type ModelPickerProps = {
+    entries: ModelEntry[];
+    getThumbUrl: (entry: ModelEntry) => string | undefined;
+    onPlace: (entry: ModelEntry) => void;
+    onDragStart: (entry: ModelEntry) => void;
+    onImport: (file: File) => Promise<ModelEntry>;
+    onClose: () => void;
+};
+
+// @public
 export type ModelsApi = {
     create(args: {
         assetId: string;
@@ -591,6 +687,19 @@ export type ModelsApi = {
         expectedRevision?: number;
     }): Promise<{
         objectId: SceneObjectId;
+        revision: number;
+    }>;
+    retry(args: {
+        objectId: string;
+        expectedRevision?: number;
+    }): Promise<{
+        revision: number;
+    }>;
+    replace(args: {
+        objectId: string;
+        assetId: string;
+        expectedRevision?: number;
+    }): Promise<{
         revision: number;
     }>;
 };
@@ -778,6 +887,21 @@ export type PosesSessionApi = {
     }>;
 };
 
+// @public (undocumented)
+export type PrimitiveKind = 'plane' | 'box' | 'sphere' | 'cylinder';
+
+// @public (undocumented)
+export type PrimitivesApi = {
+    create(args: {
+        kind: PrimitiveKind;
+        position: Vec3;
+        expectedRevision?: number;
+    }): Promise<{
+        objectId: SceneObjectId;
+        revision: number;
+    }>;
+};
+
 // @public
 export type ProjectApi = {
     exportState(): Promise<{
@@ -786,11 +910,17 @@ export type ProjectApi = {
     }>;
 };
 
+// @public (undocumented)
+export function registerModelPicker(component: React_2.FC<ModelPickerProps>): void;
+
 // @public
 export type RegistryDescription = {
     apiVersion: 1;
     commands: CommandDescription[];
 };
+
+// @public (undocumented)
+export function resetCameraStudio(): Promise<void>;
 
 // @public
 export type RigAlias = {
@@ -863,6 +993,23 @@ export type SequenceState = {
 };
 
 // @public
+export type StillExportArgs = ExportRenderArgs & {
+    timeMs?: number;
+};
+
+// @public
+export type StillExportResult = {
+    blob: Blob;
+    fileName: string;
+    mimeType: 'image/png';
+    size: number;
+    width: number;
+    height: number;
+    renderMode: ExportRenderMode;
+    timeMs: number;
+};
+
+// @public
 export type UiApi = {
     hide(): Promise<void>;
     restore(): Promise<void>;
@@ -884,6 +1031,9 @@ export type UiApi = {
 export type UiPanelKind = 'model' | 'pose' | 'animation' | 'path';
 
 // @public (undocumented)
+export function unregisterModelPicker(): void;
+
+// @public (undocumented)
 export function useCameraStudio(config?: CameraStudioConfig): CameraStudioHandle;
 
 // @public
@@ -894,11 +1044,31 @@ export type Vec3 = {
 };
 
 // @public
+export type VideoExportArgs = ExportRenderArgs & {
+    range?: {
+        startMs: number;
+        endMs: number;
+    };
+    fps?: number;
+};
+
+// @public
 export type VideoExportResult = {
     blob: Blob;
     fileName: string;
     mimeType: string;
     size: number;
+    width: number;
+    height: number;
+    fps: number;
+    durationMs: number;
+    codec: string;
+    encoding: 'webcodecs' | 'mediarecorder';
+    renderMode: ExportRenderMode;
+    range: {
+        startMs: number;
+        endMs: number;
+    };
 };
 
 // @public

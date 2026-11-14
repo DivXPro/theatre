@@ -24,7 +24,7 @@ import React, {
   useState,
 } from 'react'
 import type {MutableRefObject} from 'react'
-import {Canvas, useFrame, useThree} from '@react-three/fiber'
+import {Canvas, useFrame, useStore, useThree} from '@react-three/fiber'
 import {useT} from '@dreamerbird/studio/i18n'
 import {I18nContext, I18nProvider, setLanguage} from '@dreamerbird/studio/i18n'
 import type {ThreeEvent} from '@react-three/fiber'
@@ -87,6 +87,7 @@ import {ShotCamera} from './ShotCamera'
 import {
   addCameraToRegistry,
   getCamerasRegistry,
+  getShotCameraObjects,
   nextCameraEntry,
   readCameraEntries,
   removeCamera,
@@ -132,7 +133,12 @@ import type {PathPreset} from './pathPresets'
 import {PathPresetDropRig} from './PathPresetDropRig'
 import {listSinks} from './videoExport/sinks'
 import type {ExportSink} from './videoExport/sinks'
-import type {ShotExportHandle} from './videoExport/exporter'
+import type {PrevisExportHandle} from './videoExport/previsExporter'
+import {
+  registerExportRenderContext,
+  type FrameloopMode,
+} from './videoExport/exportRenderContext'
+import type {PerspectiveCamera as PerspectiveCameraImpl} from 'three'
 import {
   createSceneExportController,
   registerSceneExportController,
@@ -889,7 +895,7 @@ export function CameraScene({
   // 视频导出:进行中的导出句柄由场景导出控制器(agent/runtime/exportRuntime)
   // 同步进来(Esc 取消/相机被删中止/停止按钮共用);导出前的视角由控制器恢复
   const [exporting, setExporting] = useState(false)
-  const exportHandleRef = useRef<ShotExportHandle | null>(null)
+  const exportHandleRef = useRef<PrevisExportHandle<unknown> | null>(null)
 
   // project 来自 props(T9):宿主经 sceneProps 注入,bootstrap 已解析
   const sheet = project.sheet('Scene')
@@ -984,6 +990,13 @@ export function CameraScene({
     if (!activeCamera && shotView && !exporting) setShotView(false)
   }, [activeCamera, shotView, exporting])
 
+  // 导演视角的瞄准点只是编辑手势目标,不属于成片。
+  useEffect(() => {
+    const target = cameraTargetRef.current
+    if (!target) return
+    return registerEditorOnly(target)
+  }, [])
+
   // 导出锁定开录时的相机;它中途被删(本地/对端)就中止录制(丢弃)
   const exportCameraKeyRef = useRef<string | null>(null)
   useEffect(() => {
@@ -1019,8 +1032,6 @@ export function CameraScene({
         isExporting: () => exportingRef.current,
         getShotView: () => shotViewForExportRef.current,
         setShotView,
-        // 页面上只有一个 canvas(快照编辑器的在 shadow DOM 里,查不到)
-        getCanvas: () => document.querySelector('canvas'),
         setExporting,
         setActiveHandle: (handle) => {
           exportHandleRef.current = handle
@@ -2263,6 +2274,7 @@ export function CameraScene({
           }}
         >
           <SheetProvider sheet={sheet}>
+            <ExportRenderContextBridge />
             <HostFlowsDropPointCapture />
             <MainOrbitControls
               targetRef={cameraTargetRef}
@@ -2542,6 +2554,43 @@ function HostFlowsDropPointCapture() {
     setDropPointContext({gl, camera})
     return () => setDropPointContext(null)
   }, [gl, camera])
+  return null
+}
+
+/**
+ * 把 R3F 的 renderer/scene/camera 暴露给 Previs 导出核心。
+ * 导出核心只拿 Three 对象与手动推进函数,不查询 DOM canvas。
+ */
+function ExportRenderContextBridge() {
+  const gl = useThree((s) => s.gl)
+  const scene = useThree((s) => s.scene)
+  const setFrameloop = useThree((s) => s.setFrameloop)
+  const advance = useThree((s) => s.advance)
+  const invalidate = useThree((s) => s.invalidate)
+  // 同步读 store,不能捕获渲染时的 frameloop:导出内部会把 frameloop
+  // 切到 never 再恢复,渲染闭包里的旧值会让下一次导出漏切循环。
+  const store = useStore()
+
+  useEffect(
+    () =>
+      registerExportRenderContext({
+        renderer: gl,
+        scene,
+        getCamera: (cameraKey) =>
+          (getShotCameraObjects().get(cameraKey) as
+            | PerspectiveCameraImpl
+            | undefined) ?? null,
+        getCanvasSize: () => {
+          const size = gl.getDrawingBufferSize(new Vector2())
+          return {width: size.x, height: size.y}
+        },
+        getFrameloop: () => store.getState().frameloop as FrameloopMode,
+        setFrameloop,
+        advance: (timestampMs) => advance(timestampMs, false),
+        invalidate,
+      }),
+    [advance, gl, invalidate, scene, setFrameloop, store],
+  )
   return null
 }
 

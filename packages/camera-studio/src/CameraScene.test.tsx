@@ -172,10 +172,6 @@ jest.doMock('./videoExport/sinks', () => ({
   __esModule: true,
   listSinks: () => [],
 }))
-jest.doMock('./videoExport/exporter', () => ({
-  __esModule: true,
-  startShotExport: () => null,
-}))
 
 const {CameraScene, SceneI18nRoot} = require('./CameraScene') as {
   CameraScene: (props: CameraSceneProps) => ReactElement

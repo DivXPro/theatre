@@ -39,6 +39,15 @@ export type BridgeFileDescriptor = {
   fileName: string
   mimeType: string
   size: number
+  width?: number
+  height?: number
+  renderMode?: 'styled' | 'clay'
+  timeMs?: number
+  fps?: number
+  durationMs?: number
+  codec?: string
+  encoding?: 'webcodecs' | 'mediarecorder'
+  range?: {startMs: number; endMs: number}
 }
 
 /** fetch 拒绝(CORS 或网络不可达)时的宿主指引:精确 origin,不建议 * */
@@ -160,6 +169,32 @@ function isFileDescriptor(value: unknown): value is BridgeFileDescriptor {
   )
 }
 
+const EXPORT_METADATA_KEYS = [
+  'width',
+  'height',
+  'renderMode',
+  'timeMs',
+  'fps',
+  'durationMs',
+  'codec',
+  'encoding',
+  'range',
+] as const
+
+/**
+ * Previs 导出结果的尺寸/时间/编码元数据要穿过桥接,不能只剩四个文件
+ * 字段。只挑 JSON 安全的白名单元数据;Blob 永远不会被带出去。
+ */
+function exportMetadata(
+  result: Record<string, unknown>,
+): Record<string, unknown> {
+  const metadata: Record<string, unknown> = {}
+  for (const key of EXPORT_METADATA_KEYS) {
+    if (result[key] !== undefined) metadata[key] = result[key]
+  }
+  return metadata
+}
+
 async function uploadBlob(
   result: {blob: Blob; fileName: string; mimeType: string; size: number},
   transport: BridgeFileTransport,
@@ -213,6 +248,7 @@ export async function dehydrateJobResult(
   if (snapshot.state !== 'succeeded') return snapshot
   if (!isBlobResult(snapshot.result)) return snapshot
   const source = snapshot.result
+  const metadata = exportMetadata(source as unknown as Record<string, unknown>)
   try {
     const descriptor = await uploadBlob(
       source,
@@ -222,6 +258,7 @@ export async function dehydrateJobResult(
     return {
       ...snapshot,
       result: {
+        ...metadata,
         fileId: descriptor.fileId,
         fileName: descriptor.fileName,
         mimeType: descriptor.mimeType,

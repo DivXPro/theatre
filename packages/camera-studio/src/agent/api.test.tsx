@@ -248,10 +248,6 @@ jest.doMock('../videoExport/sinks', () => ({
   __esModule: true,
   listSinks: () => [],
 }))
-jest.doMock('../videoExport/exporter', () => ({
-  __esModule: true,
-  startShotExport: () => null,
-}))
 
 const {createCameraStudioApi} = require('./api') as typeof import('./api')
 const {createAgentRuntime} = require('./runtime') as typeof import('./runtime')
@@ -523,6 +519,7 @@ const FACADE_COMMANDS: ReadonlyArray<{
     args: {mode: 'rotate'},
   },
   {path: 'project.exportState', command: 'project.exportState'},
+  {path: 'exports.captureStill', command: 'exports.captureStill'},
   {path: 'exports.startVideo', command: 'exports.startVideo'},
   {path: 'jobs.get', command: 'jobs.get', args: {jobId: 'job-1'}},
   {path: 'jobs.cancel', command: 'jobs.cancel', args: {jobId: 'job-1'}},

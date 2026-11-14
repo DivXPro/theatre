@@ -47,6 +47,7 @@ import {
   setPoseSessionFrame,
 } from './poseSession'
 import {registerPoseSessionRig} from '../agent/runtime/poseSessionRuntime'
+import {getExportAnimationTime} from '../videoExport/exportAnimationClock'
 
 export function PoseModeRig({
   instance,
@@ -322,6 +323,8 @@ export function PoseModeRig({
     const rig = rigRef.current
     const ctl = ctlRef.current
     if (!rig || !ctl) return
+    // 离线导出由导出核心逐帧写姿势;绝不能用导出帧的毫秒 delta 推 IK。
+    if (getExportAnimationTime() !== null) return
     if (val(sheet.sequence.pointer.playing)) return // 播放时 mixer 写骨骼,不抢
     rig.update(delta)
     ctl.update()
