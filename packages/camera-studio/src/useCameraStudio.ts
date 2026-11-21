@@ -55,7 +55,8 @@ export function useCameraStudio(
       return () => {
         // 报错实例不占会话;但若是最后离场者,要替正常实例补拆(其 cleanup
         // 在还有消费者时按守卫跳过拆解)
-        if (releaseCameraStudioConsumer() === 0) void disposeCameraStudio()
+        if (releaseCameraStudioConsumer() === 0)
+          void disposeCameraStudio().catch(() => {})
       }
     }
     let cancelled = false
@@ -64,7 +65,7 @@ export function useCameraStudio(
       (ctx) => {
         if (cancelled) {
           // 卸载先于 init 解析:补一次 dispose(内部末位守卫决定拆不拆)
-          void disposeCameraStudio(ctx)
+          void disposeCameraStudio(ctx).catch(() => {})
           return
         }
         ctxRef = ctx
@@ -83,7 +84,8 @@ export function useCameraStudio(
       cancelled = true
       const remaining = releaseCameraStudioConsumer()
       // 最后一位消费者退场才拆解会话;init 未解析则由上面 cancelled 分支补
-      if (remaining === 0 && ctxRef) void disposeCameraStudio(ctxRef)
+      if (remaining === 0 && ctxRef)
+        void disposeCameraStudio(ctxRef).catch(() => {})
     }
   }, [])
 
@@ -106,5 +108,6 @@ export function useCameraStudio(
     sceneProps,
     api: getCameraStudioApi(),
     flushState: () => phase.ctx?.flushState() ?? Promise.resolve(),
+    hasTemporaryChanges: () => phase.ctx?.hasTemporaryChanges() ?? false,
   }
 }

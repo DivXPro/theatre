@@ -61,9 +61,8 @@ const initializedBox: {promise: Promise<void>} = {
   promise: Promise.resolve(),
 }
 const stateUnsubSpy = jest.fn()
-// onChange(pointer, cb) 的返回值 = 退订函数;state 通道那条订阅的断开断言压它
-const onChangeSpy = jest.fn(
-  (_pointer: unknown, _cb: (v: unknown) => void) => stateUnsubSpy,
+const subscribeToProjectStateSpy = jest.fn(
+  (_projectId: string, _cb: (v: unknown) => void) => stateUnsubSpy,
 )
 /** agent runtime 的 getStudio 惰性探针(构造期不调,替身即可) */
 const getStudioSyncSpy = jest.fn(() => undefined)
@@ -116,6 +115,14 @@ initSpy.mockImplementation(async (opts?: unknown) => {
 jest.doMock('@dreamerbird/studio', () => ({
   __esModule: true,
 }))
+jest.doMock('@dreamerbird/studio/getStudio', () => ({
+  __esModule: true,
+  default: () => ({
+    _store: {subscribeToProjectState: subscribeToProjectStateSpy},
+    transaction: jest.fn(),
+    ephemeralAtom: {reduceByPointer: jest.fn()},
+  }),
+}))
 jest.doMock('@dreamerbird/studio/UI/UINonSSRBits', () => ({
   __esModule: true,
   default: class {},
@@ -126,7 +133,7 @@ jest.doMock('@dreamerbird/core', () => ({
   getProject: getProjectSpy,
   getStudio: () => ({ui: uiBox, initialized: initializedBox.promise}),
   getStudioSync: getStudioSyncSpy,
-  onChange: onChangeSpy,
+  onChange: jest.fn(() => jest.fn()),
 }))
 jest.doMock('@dreamerbird/core/initState', () => ({
   __esModule: true,
@@ -168,7 +175,7 @@ beforeEach(async () => {
   hideSpy.mockClear()
   restoreSpy.mockClear()
   stateUnsubSpy.mockClear()
-  onChangeSpy.mockClear()
+  subscribeToProjectStateSpy.mockClear()
   registerSpy.mockClear()
   unregisterSpy.mockClear()
   initStateBox.called = false
@@ -409,6 +416,7 @@ test('6. state 通道:usePersistentStorage:false + 尾部节流 + dispose flush'
     ctx.notifyStateChange({rev: 2})
     expect(onStateChange).not.toHaveBeenCalled()
     jest.advanceTimersByTime(1000)
+    await Promise.resolve()
     expect(onStateChange).toHaveBeenCalledTimes(1)
     expect(onStateChange).toHaveBeenLastCalledWith({rev: 2})
     // dispose:订阅断开 + 未到的尾部变更立即 flush 带出
@@ -419,6 +427,74 @@ test('6. state 通道:usePersistentStorage:false + 尾部节流 + dispose flush'
     expect(stateUnsubSpy).toHaveBeenCalledTimes(1)
   } finally {
     jest.useRealTimers()
+  }
+})
+
+test('host writes are serialized and flush waits for the newest snapshot', async () => {
+  let finishFirst!: () => void
+  const first = new Promise<void>((resolve) => {
+    finishFirst = resolve
+  })
+  const onStateChange = jest.fn().mockReturnValueOnce(first)
+  const ctx = await bootstrap.initCameraStudio({
+    state: {onStateChange, throttleMs: 0},
+  })
+  ctx.notifyStateChange({rev: 1})
+  const firstFlush = ctx.flushState()
+  await Promise.resolve()
+  ctx.notifyStateChange({rev: 2})
+  ctx.notifyStateChange({rev: 3})
+  const secondFlush = ctx.flushState()
+  await Promise.resolve()
+  expect(onStateChange.mock.calls).toEqual([[{rev: 1}]])
+
+  finishFirst()
+  await Promise.all([firstFlush, secondFlush])
+  expect(onStateChange.mock.calls).toEqual([[{rev: 1}], [{rev: 3}]])
+})
+
+test('a failed host write is reported and can be flushed again', async () => {
+  const error = new Error('offline')
+  const onStateChange = jest.fn().mockRejectedValueOnce(error)
+  const onError = jest.fn()
+  const ctx = await bootstrap.initCameraStudio({
+    onError,
+    state: {onStateChange},
+  })
+  ctx.notifyStateChange({rev: 1})
+  await expect(ctx.flushState()).rejects.toBe(error)
+  expect(onError).toHaveBeenCalledWith(
+    expect.objectContaining({source: 'state', cause: error}),
+  )
+  await ctx.flushState()
+  expect(onStateChange.mock.calls).toEqual([[{rev: 1}], [{rev: 1}]])
+})
+
+test('host-owned state rejects an existing Studio that uses browser persistence', async () => {
+  simulateHostInit({studio: true})
+  await expect(
+    bootstrap.initCameraStudio({state: {onStateChange: jest.fn()}}),
+  ).rejects.toThrow('usePersistentStorage: false')
+})
+
+test('host-owned scenes use the supplied project asset functions and skip the default library database', async () => {
+  const projectStorage = {
+    getAssetUrl: (id: string) => `/uploads/${id}`,
+    createAsset: async () => 'model.fbx',
+  }
+  const open = jest.spyOn(indexedDB, 'open')
+  try {
+    const ctx = await bootstrap.initCameraStudio({
+      state: {},
+      assets: {projectStorage},
+    })
+    expect(getProjectSpy).toHaveBeenCalledWith('Space', {
+      assets: {storage: projectStorage},
+    })
+    expect(ctx.library.canWrite).toBe(false)
+    expect(open).not.toHaveBeenCalled()
+  } finally {
+    open.mockRestore()
   }
 })
 
@@ -726,7 +802,7 @@ test('flushState emits the pending throttled state exactly once', async () => {
   )
   const h = hookHost({state: {onStateChange, throttleMs: 60_000}})
   await h.mount()
-  const historicCallback = onChangeSpy.mock.calls[1][1] as (
+  const historicCallback = subscribeToProjectStateSpy.mock.calls[0][1] as (
     content: unknown,
   ) => void
   historicCallback({rev: 1})
@@ -810,7 +886,7 @@ test('resetCameraStudio clears retained project/state config across A→B→A re
   await b.mount()
   expect(b.result.current?.sceneProps.project).not.toBe(projectA)
   const projectB = b.result.current?.sceneProps.project
-  const stateCallbackB = onChangeSpy.mock.calls.at(-1)?.[1] as (
+  const stateCallbackB = subscribeToProjectStateSpy.mock.calls.at(-1)?.[1] as (
     content: unknown,
   ) => void
   stateCallbackB({scene: 'B'})
@@ -828,7 +904,7 @@ test('resetCameraStudio clears retained project/state config across A→B→A re
   await a2.mount()
   expect(a2.result.current?.sceneProps.project).not.toBe(projectA)
   expect(a2.result.current?.sceneProps.project).not.toBe(projectB)
-  const stateCallbackA2 = onChangeSpy.mock.calls.at(-1)?.[1] as (
+  const stateCallbackA2 = subscribeToProjectStateSpy.mock.calls.at(-1)?.[1] as (
     content: unknown,
   ) => void
   stateCallbackA2({scene: 'A2'})

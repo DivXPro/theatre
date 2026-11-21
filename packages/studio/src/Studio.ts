@@ -590,11 +590,26 @@ export class Studio {
 
   /** A function that returns a promise to an object containing asset storage methods for a project to be used by studio. */
   async createAssetStorage(project: Project, baseUrl?: string) {
+    if (project.config.assets?.storage) return project.config.assets.storage
+
     // in SSR we bail out and return a dummy asset manager
     if (typeof window === 'undefined') {
       return {
         getAssetUrl: () => '',
         createAsset: () => Promise.resolve(null),
+      }
+    }
+
+    if (!(await this._optsPromise).usePersistentStorage) {
+      return {
+        getAssetUrl: (assetId: string) => `${baseUrl ?? ''}/${assetId}`,
+        createAsset: async () => {
+          notify.error(
+            'Failed to save asset',
+            'Configure project.assets.storage to upload project assets.',
+          )
+          return null
+        },
       }
     }
 

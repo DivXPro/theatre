@@ -89,28 +89,31 @@ export function CameraPage() {
 }
 ```
 
-`useCameraStudio(config)` 返回 `{ready, error, sceneProps, api}`;`sceneProps` 对
-宿主 **不透明**(当前 = `{project, onFlows, onError}` 的转发),不要解构它。`api`
-是Agent JS 命令面门面的模块级单例(首帧即稳定),页内自动化/Agent 场景见§9
-与[专项指南](./camera-studio-agent-js-api.md)。
+`useCameraStudio(config)` 返回
+`{ready, error, sceneProps, api, flushState, hasTemporaryChanges}`;`sceneProps`
+对宿主 **不透明**(当前 = `{project, onFlows, onError}` 的转发),不要解构它。`api`
+是 Agent JS 命令面门面的模块级单例(首帧即稳定),页内自动化/Agent 场景见§9
+与[专项指南](./camera-studio-agent-js-api.md)。`hasTemporaryChanges()` 可用于判
+断拖拽等尚未提交的编辑预览,宿主替换场景前应先检查它。
 
 ### config 全字段参考
 
-| 字段                 | 类型                                                     | 缺省            | 说明                                                                                                 |
-| -------------------- | -------------------------------------------------------- | --------------- | ---------------------------------------------------------------------------------------------------- |
-| `project`            | `string \| IProject`                                     | `'Space'`       | 场景 id 字符串(getProject),或宿主自建的 IProject 实例(传实例时 `state.initialState` 被忽略)          |
-| `state`              | `{initialState?, onStateChange?, throttleMs?}`           | 不传            | 传了 = **宿主接管场景状态**,同时关掉 theatre 本地持久化(见 §5)                                       |
-| `onError`            | `(error: CameraStudioError) => void`                     | 不传            | 库存储/启动清理/视频导出错误上告给宿主提示组件(见下节)                                               |
-| `storage`            | `WritableLibrarySource \| {namespace?: string} \| false` | 内置 IndexedDB  | 可写源实例 / 「namespace」简写(库名 `toybox-asset-library[-namespace]`)/ `false` 纯查看器(见 §3、§8) |
-| `assets.baseUrl`     | `string`                                                 | 包内 `assets/`  | 内置目录文件根(见 §4)                                                                                |
-| `sync`               | `{serverUrl?: string} \| false`                          | `false`         | 协作端点(见 §6)                                                                                      |
-| `ui.portalContainer` | `HTMLElement`                                            | `document.body` | 模块停靠框的 portal 挂载点                                                                           |
-| `ui.zIndexBase`      | `number`                                                 | `1000`          | 模块停靠框 z-index 基准(见 §7 层级地图)                                                              |
-| `ui.locale`          | `string`                                                 | 不生效          | 仅当宿主**未**包 I18nProvider 时应用,一次性 setLanguage(见 §7)                                       |
-| `ui.hideLeftStrip`   | `boolean`                                                | `false`         | 隐藏 studio 左上角带 logo 的整条 LeftStrip(应用 logo + 工作区按钮);boot 级一次性应用,换值需整页刷新  |
-| `flows.onFlows`      | `(flows: CameraFlows) => void`                           | 不传            | 接管「添加模型/添加路径/添加相机」入口,拿到模块的 flows 句柄                                         |
-| `agent.exposeGlobal` | `boolean`                                                | `false`         | 场景 ready 后把 Agent JS API 门面挂到 `window.__cameraStudioApi`,dispose 时删除(见 §9)               |
-| `agent.bridge`       | `{url, token, httpUrl}`                                  | 不传            | 连接本机 Agent HTTP 桥接(`url` 是 WS 命令通道,`httpUrl` 走文件传输);缺省不连桥接(见 §9)              |
+| 字段                    | 类型                                                     | 缺省            | 说明                                                                                                |
+| ----------------------- | -------------------------------------------------------- | --------------- | --------------------------------------------------------------------------------------------------- |
+| `project`               | `string \| IProject`                                     | `'Space'`       | 场景 id 字符串(getProject),或宿主自建的 IProject 实例(传实例时 `state.initialState` 被忽略)         |
+| `state`                 | `{initialState?, onStateChange?, throttleMs?}`           | 不传            | 传了 = **宿主接管场景状态**,同时关掉 theatre 本地持久化(见 §5)                                      |
+| `onError`               | `(error: CameraStudioError) => void`                     | 不传            | 资产库、场景保存和视频导出的错误由宿主展示                                                          |
+| `storage`               | `WritableLibrarySource \| {namespace?: string} \| false` | 见 §5           | 宿主资产库接口、浏览器 IndexedDB 命名空间，或 `false` 只用内置目录                                  |
+| `assets.baseUrl`        | `string`                                                 | 包内 `assets/`  | 内置目录文件根(见 §4)                                                                               |
+| `assets.projectStorage` | `{getAssetUrl, createAsset}`                             | 不传            | 项目文件的 URL 和上传接口。传 `IProject` 时由创建方通过 `assets.storage` 配置                       |
+| `sync`                  | `{serverUrl?: string} \| false`                          | `false`         | 协作端点(见 §6)                                                                                     |
+| `ui.portalContainer`    | `HTMLElement`                                            | `document.body` | 模块停靠框的 portal 挂载点                                                                          |
+| `ui.zIndexBase`         | `number`                                                 | `1000`          | 模块停靠框 z-index 基准(见 §7 层级地图)                                                             |
+| `ui.locale`             | `string`                                                 | 不生效          | 仅当宿主**未**包 I18nProvider 时应用,一次性 setLanguage(见 §7)                                      |
+| `ui.hideLeftStrip`      | `boolean`                                                | `false`         | 隐藏 studio 左上角带 logo 的整条 LeftStrip(应用 logo + 工作区按钮);boot 级一次性应用,换值需整页刷新 |
+| `flows.onFlows`         | `(flows: CameraFlows) => void`                           | 不传            | 接管「添加模型/添加路径/添加相机」入口,拿到模块的 flows 句柄                                        |
+| `agent.exposeGlobal`    | `boolean`                                                | `false`         | 场景 ready 后把 Agent JS API 门面挂到 `window.__cameraStudioApi`,dispose 时删除(见 §9)              |
+| `agent.bridge`          | `{url, token, httpUrl}`                                  | 不传            | 连接本机 Agent HTTP 桥接(`url` 是 WS 命令通道,`httpUrl` 走文件传输);缺省不连桥接(见 §9)             |
 
 ### 错误提示:onError 交给宿主组件
 
@@ -149,10 +152,10 @@ function CameraPage() {
 
 `CameraStudioError` 形状:`{source, code, message, cause?}`。`source: 'library'`
 = 库存储与启动清理错误,`code` 沿用 `LibraryError` 六码(`auth` / `quota` /
-`network` / `conflict` / `not-found` / `unknown`);`source: 'export'` = 视频导出
-错误,当前 `code` 为 `unknown`。不传 `onError` 时保持旧行为:库错误按原路径静默或
-console 留痕,视频导出错误用浏览器 `alert`。初始化失败不走 `onError`,仍从 hook 的
-`error` 返回。
+`network` / `conflict` / `not-found` / `unknown`)。`source: 'export'` 表示视频导
+出失败， `source: 'state'` 表示场景保存失败，两者的 `code` 均为 `unknown`。省略
+`onError` 时，场景保存失败会写入控制台，视频导出失败通过浏览器 `alert` 展示。初
+始化错误从 hook 的 `error` 返回。
 
 ## 3. 存储:实现 WritableLibrarySource
 
@@ -373,8 +376,8 @@ URL 拼装规则:`baseUrl + 'models/<file>'`、`baseUrl + 'poseThumbs/<file>'` (
 内置目录同时带 **180 个静态姿势**(12 个基础姿势 + 58 个 DPL 全身姿势 + 110 个
 QBX 手势),id 稳定为 `seed-pose-*`,骨架族是内置 Y Bot 的 Mixamo rig。引用本包的项
 目可以直接从 `@dreamerbird/camera-studio/poses` 取数据, 不依赖 IndexedDB、网络或
-React。直接使用 `applyPose` 时，目标骨架的骨名和局部坐标系需与 Y Bot 对应。
-编辑器通过内置姿势 ID 应用全身姿势时，会将髋骨旋转换到目标骨架的父坐标系。
+React。直接使用 `applyPose` 时，目标骨架的骨名和局部坐标系需与 Y Bot 对应。编辑
+器通过内置姿势 ID 应用全身姿势时，会将髋骨旋转换到目标骨架的父坐标系。
 
 ```ts
 import {
@@ -398,35 +401,113 @@ const {applied, missed} = applyPose(myModelRoot, relaxed.bones)
 
 ## 5. 场景状态接管
 
-传了 `state` 字段 = 宿主接管场景状态持久化,模块初始化 theatre 时自动带
-`usePersistentStorage: false`(两者联动,不用你手动管):
+传入 `state` 后，编辑器从宿主提供的 `initialState` 打开项目，场景编辑通过
+`onStateChange` 保存。Studio 在内存中运行撤销和重做。网络应用可以在挂载前通过
+`loadSceneSyncState` 加载远端项目。
 
 ```tsx
+import {
+  HttpPatchAdapter,
+  loadSceneSyncState,
+  useCameraStudio,
+} from '@dreamerbird/camera-studio'
+
+// 在宿主路由的数据加载阶段为当前项目执行。
+const state = await loadSceneSyncState(new HttpPatchAdapter(sceneUrl), {
+  throttleMs: 0,
+})
+
+// 在数据加载完成后挂载的编辑器组件内调用。
 const {ready, error, sceneProps} = useCameraStudio({
-  project: 'Space',
-  state: {
-    initialState: savedState ?? undefined, // 打开时回放(JSON 或 undefined)
-    onStateChange: (content) => {
-      // 已按 throttleMs(缺省 1000ms,尾部触发)节流;
-      // 组件卸载时会自动 flush 尾部变更,不丢
-      void fetch('/api/scene-state', {
-        method: 'PUT',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(content),
-      })
-    },
-  },
+  project: projectId,
+  state,
 })
 ```
 
-语义要点:
+- 自有存储也可直接提供 `initialState` 和 `onStateChange`，或实现
+  `SceneSyncAdapter` 的 `load()`、`commit()` 和可选的 `commitPatch()`。
+- `initialState` 经 `getProject(projectId, {state})` 传入。传 `IProject` 实例
+  时，由创建方提供初始状态。
+- 只保存已提交的编辑。`throttleMs` 默认是 1000 毫秒，设为 `0` 会在每次提交后立即
+  排队。保存请求串行执行，等待期间合并为最新快照。
+- 保存失败会上报 `onError`，其 `source` 为 `state`。最新待保存状态保留在当前会话
+  内，可用 `await flushState()` 重试。需要在离开路由前确认保存时，先等待
+  `flushState()` 成功。
+- `loadSceneSyncState()` 返回的 `hasUnsavedChanges()` 跟踪进入保存通道后的编辑
+  （排队、在途或失败待重试）。远端重载前应先调用 `flushState()` 处理编辑器节流队列，
+  并通过 `hasTemporaryChanges()` 检查拖拽中的临时事务。
+- 由模块初始化 Studio 时会自动关闭浏览器持久化。宿主自行初始化时需使用
+  `theatre.init({studio: true, usePersistentStorage: false})`。宿主管理状态时关
+  闭 `sync`，以便场景由同一个来源管理。
+- 宿主可通过 `storage: WritableLibrarySource` 接管可写资产库，通过
+  `assets.projectStorage` 接管场景直接引用的文件。上传接口应在远端文件可读取后返
+  回资产 ID。接管场景状态且省略 `storage` 时，资产库只提供内置目录。独立使用时默
+  认资产库使用 IndexedDB。
 
-- `initialState` 经 `getProject(name, {state})` 透传;`project` 传 IProject实例时
-  它会被忽略(实例的状态由创建方负责),控制台有警告。
-- 节流是**尾部触发**:持续编辑期间每秒最多回调一次,停顿 1s 后必触发一次。
-- **冲突矩阵**:如果宿主在挂载模块**之前**已经自己调过 `theatre.init`, 模块检测到
-  init 配置不一致时**以先到的为准**(告警到 console,绝不悄悄重连)。所以要么把
-  `init` 交给模块,要么自己 init 且保持一致,不要两头都管。
+### HTTP 快照与增量协议
+
+配套示例 `camera-host-demo` 内置同源的 `/api/scene`。在仓库根目录运行以下命令即
+可启用。
+
+```sh
+VITE_CAMERA_STUDIO_STATE_URL=/api/scene pnpm --filter camera-host-demo dev
+```
+
+示例把快照、版本和幂等记录一并保存在 `~/.camera-host-demo/scene.json`，重启后继
+续读取。可以用 `CAMERA_HOST_DEMO_STATE_FILE` 指定其他文件，每个文件由一个示例服
+务进程管理。内置接口使用 `HttpPatchAdapter`。也可以把
+`VITE_CAMERA_STUDIO_STATE_URL` 指向宿主的全量接口，示例会使用 `HttpSnapshotAdapter`。
+
+| 操作     | 请求                                         | 响应                                                                          |
+| -------- | -------------------------------------------- | ----------------------------------------------------------------------------- |
+| 打开场景 | `GET`                                        | `200`、场景 JSON 和强 `ETag`，例如 `"17"`。场景尚未创建时返回 `404`。         |
+| 创建场景 | `PUT`、`If-None-Match: *`、`Idempotency-Key` | 成功返回 `2xx` 和此次提交的强 `ETag`。场景已存在时返回 `412`。                |
+| 全量更新 | `PUT`、`If-Match`、`Idempotency-Key`         | 成功返回 `2xx` 和此次提交的强 `ETag`。版本不匹配返回 `412`，可附当前 `ETag`。 |
+| 增量更新 | `PATCH`、`If-Match`、`Idempotency-Key`、`Content-Type: application/json-patch+json` | 版本条件和响应同全量更新。向当前快照应用 JSON Patch。 |
+
+`HttpPatchAdapter` 用 `GET` 加载完整快照，首次创建用 `PUT`，后续保存仅发送相对
+最近已确认快照的 JSON Patch（`add`、`remove`、`replace`）。空补丁不发请求。
+数组长度改变时替换该数组，等长数组可按索引更新。远端版本通知触发重载时仍用
+`GET`。现有只实现 `PUT` 的宿主可以继续使用 `HttpSnapshotAdapter`。
+
+服务端应原子地校验版本、保存场景并记录提交结果。对于同一项目中已成功的
+`Idempotency-Key`，在检查版本条件前先核对重试的请求内容和基准版本，再返回原提交
+的版本。每次成功的新提交都应获得新的版本。`loadSceneSyncState` 会用原提交 ID 重
+试结果未确认的请求。
+
+示例接口在缺少版本条件时返回 `428`。重复使用提交 ID 且请求内容或基准版本不同则返
+回 `409`。
+
+跨域部署时，在 CORS 配置中暴露响应头 `ETag`，并允许 `PUT`、`PATCH` 及请求头
+`Content-Type`、`If-Match`、`If-None-Match`、`Idempotency-Key`。
+
+版本冲突通过 `onError` 上报 `SceneRevisionConflictError`（`cause`）。待保存编辑
+留在当前会话，宿主可据此提示用户处理冲突。
+
+自定义 `SceneSyncAdapter` 时，`load()` 在场景尚未创建时返回 `null`，`commit()`
+和 `commitPatch()` 在远端保存成功后返回新版本。适配器可用 `SceneCommitRejectedError` 表示服务端已明
+确拒绝提交，版本冲突使用其子类 `SceneRevisionConflictError`。
+
+示例启用内置接口时，也通过 `SceneSyncAdapter.subscribe` 连接同源 WebSocket
+`/api/scene/revisions`。保存继续走 HTTP。新快照写入成功后，服务端发送包含 ETag
+的通知，格式为 `{revision, clientId?}`。`clientId` 来自保存请求的
+`X-Scene-Client-Id`，用于识别本标签页的提交。幂等重试和拒绝的提交均不会广播。
+
+连接建立时，服务端会发送当前已保存版本，便于检查断线期间是否有更新。其他标签页保
+存后，示例会先 flush 本页尾部保存，再判断是否有未保存编辑：空闲页自动通过 HTTP
+重新加载最新快照并重建场景，顶栏短暂显示「场景已更新」；有未保存编辑（提交在途/
+失败，或拖拽中的临时事务）时只显示「场景有新版本，当前编辑未保存，未自动覆盖」，
+不替换当前场景。宿主也可以用自己的 WebSocket 或 SSE 实现 `subscribe`。
+
+#### 接入已有场景服务
+
+对于 DreamLoom 这类按场景保存快照和整数 `revision` 的宿主，可在现有接口上增加
+`PATCH`，并将版本作为强 ETag 返回（例如 `"17"`）。写入时在同一数据库事务内，
+按场景检查幂等记录和基准版本、应用补丁、校验完整场景，再用版本条件更新快照和
+`revision`，一并写入幂等记录。通知在事务成功后发送。读取权限和写入权限由宿主
+校验。前端在挂载前调用 `loadSceneSyncState(new HttpPatchAdapter(sceneUrl))`，
+用返回值作为 `useCameraStudio` 的 `state`，并设置 `sync: false`。已有保存状态和
+冲突提示可通过 `flushState()` 和 `onError` 接线。
 
 ## 6. 协作
 

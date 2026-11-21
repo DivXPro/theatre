@@ -1021,6 +1021,21 @@ export class SaazFront<
     return finalState(s) as $IntentionalAny
   }
 
+  get committedState(): {op: OpSnapshot; cell: CellShape} {
+    return finalState(
+      this._prisms.optimisticState.getValue(),
+    ) as $IntentionalAny
+  }
+
+  /**
+   * 本端尚未 commit/discard 的临时事务（例如拖拽中的连续预览）。
+   * 这些改动已经反映在 `state` 里，但还没进入乐观更新队列，
+   * 因此也不会出现在 `committedState` 中。
+   */
+  get tempTransactions(): readonly TempTransaction[] {
+    return this._atom.get().tempTransactions
+  }
+
   get isReady(): boolean {
     return this._atom.get().initialized === true
   }
@@ -1403,11 +1418,14 @@ export class SaazFront<
 
   subscribe(
     fn: (newState: {op: OpSnapshot; cell: CellShape}) => void,
+    {includeTemporaryChanges = true}: {includeTemporaryChanges?: boolean} = {},
   ): () => void {
-    const withPeers = this._prisms.withPeers
-    let oldState = withPeers.getValue()
-    return withPeers.onStale(() => {
-      const newState = withPeers.getValue()
+    const state = includeTemporaryChanges
+      ? this._prisms.withPeers
+      : this._prisms.optimisticState
+    let oldState = state.getValue()
+    return state.onStale(() => {
+      const newState = state.getValue()
       // A failed recalculation leaves the prism undefined (the error is
       // logged by dataverse). Skip the notification rather than crash the
       // subscriber with a confusing "reading 'op'" deep inside finalState.

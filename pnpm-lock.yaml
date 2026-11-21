@@ -199,6 +199,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.2.5
         version: 19.2.5(@types/react@19.2.18)
+      '@types/ws':
+        specifier: ^8.5.10
+        version: 8.18.2
       '@vitejs/plugin-react-swc':
         specifier: ^3.3.2
         version: 3.3.2(@swc/helpers@0.5.23)(vite@4.3.9(@types/node@20.10.5)(terser@5.12.1))
@@ -217,6 +220,9 @@ importers:
       vite:
         specifier: ^4.3.9
         version: 4.3.9(@types/node@20.10.5)(terser@5.12.1)
+      ws:
+        specifier: ^8.18.0
+        version: 8.22.0
 
   examples/dom-cra:
     dependencies:

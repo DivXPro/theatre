@@ -79,30 +79,42 @@ export default class StudioStore {
             schema,
           })
         : Saaz.createDeferredBackend(
-            optsPromise.then((opts) =>
-              opts.serverUrl === undefined
-                ? new SaazBack({
-                    dbName: opts.persistenceKey,
-                    storageAdapter: new Saaz.BackIDBAdapter(
+            optsPromise.then((opts) => {
+              if (opts.serverUrl !== undefined) {
+                return createTrpcBackend(Promise.resolve(opts.persistenceKey))
+              }
+              return new SaazBack({
+                dbName: opts.persistenceKey,
+                storageAdapter: opts.usePersistentStorage
+                  ? new Saaz.BackIDBAdapter(
                       deriveSaazNames(opts.persistenceKey).backDbName,
-                    ),
-                    schema,
-                  })
-                : createTrpcBackend(Promise.resolve(opts.persistenceKey)),
-            ),
+                    )
+                  : new Saaz.BackMemoryAdapter(),
+                schema,
+              })
+            }),
           )
+
+    const frontAdapter = optsPromise.then((opts) =>
+      typeof window === 'undefined' ||
+      process.env.NODE_ENV === 'test' ||
+      !opts.usePersistentStorage
+        ? new Saaz.FrontMemoryAdapter()
+        : new Saaz.FrontIDBAdapter(
+            deriveSaazNames(opts.persistenceKey).frontDbName,
+          ),
+    )
 
     const saaz = new Saaz.SaazFront({
       schema,
       dbName: 'studio',
-      storageAdapter:
-        typeof window === 'undefined' || process.env.NODE_ENV === 'test'
-          ? new Saaz.FrontMemoryAdapter()
-          : new Saaz.FrontIDBAdapter(
-              optsPromise.then(
-                (o) => deriveSaazNames(o.persistenceKey).frontDbName,
-              ),
-            ),
+      storageAdapter: {
+        transaction: async (fn) => (await frontAdapter).transaction(fn),
+        get: async (key, session) => (await frontAdapter).get(key, session),
+        getList: async (key, session) =>
+          (await frontAdapter).getList(key, session),
+        close: async () => (await frontAdapter).close(),
+      },
       backend,
       onStorageFailure: () => opts?.onPersistenceStatusChange?.('degraded'),
     })
@@ -131,6 +143,28 @@ export default class StudioStore {
   getState(): StudioState {
     return this._atom.get()
     // return this._reduxStore.getState()
+  }
+
+  /** 是否存在尚未 commit/discard 的临时事务（拖拽等编辑预览）。 */
+  hasTemporaryChanges(): boolean {
+    return this._saaz.tempTransactions.length > 0
+  }
+
+  subscribeToProjectState(
+    projectId: ProjectId,
+    listener: (state: OnDiskState) => void,
+  ): () => void {
+    let previous =
+      this._saaz.committedState.cell.historic?.coreByProject[projectId]
+    return this._saaz.subscribe(
+      ({cell}) => {
+        const state = cell.historic?.coreByProject[projectId]
+        if (state === previous) return
+        previous = state
+        if (state) listener(state)
+      },
+      {includeTemporaryChanges: false},
+    )
   }
 
   clearPersistentStorage(persistenceKey: string): StudioState {

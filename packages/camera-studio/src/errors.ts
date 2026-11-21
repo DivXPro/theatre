@@ -4,8 +4,7 @@
  */
 import type {LibraryError, LibraryErrorCode} from './assetLibrary/source'
 
-/** library = 资产库存储/启动清理;export = 视频导出 */
-export type CameraStudioErrorSource = 'library' | 'export'
+export type CameraStudioErrorSource = 'library' | 'export' | 'state'
 
 /** 宿主提示组件可直接渲染的结构化错误 */
 export type CameraStudioError = {

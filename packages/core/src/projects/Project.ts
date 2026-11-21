@@ -18,6 +18,7 @@ import {defer} from '@dreamerbird/utils/defer'
 import {globals} from '@dreamerbird/core/globals'
 import {initState} from '@dreamerbird/core/initState'
 import type {
+  IProjectConfig,
   ProjectId,
   SheetId,
   SheetInstanceId,
@@ -49,14 +50,9 @@ export type IAssetStorageConfig = {
   coreAssetStorage: ICoreAssetStorage
 }
 
-type IAssetConf = {
-  /** The base URL for assets. */
-  baseUrl?: string
-}
-
 export type Conf = Partial<{
   state: OnDiskState
-  assets: IAssetConf
+  assets: IProjectConfig['assets']
   experiments: ExperimentsConf
   name: string
 }>
@@ -112,7 +108,7 @@ export default class Project {
     })
 
     this._assetStorageReadyDeferred = defer()
-    this.assetStorage = {
+    this.assetStorage = config.assets?.storage ?? {
       getAssetUrl: (assetId: string) => `${config.assets?.baseUrl}/${assetId}`,
 
       // Until the asset storage is ready, we'll throw an error when the user tries to use it

@@ -242,6 +242,10 @@ export type IProjectConfig = {
   state?: any // intentional
   assets?: {
     baseUrl?: string
+    storage?: {
+      getAssetUrl: (assetId: string) => string
+      createAsset: (asset: globalThis.File) => Promise<string | null>
+    }
   }
 }
 /**

@@ -75,6 +75,8 @@ export interface BootCtx {
    * 尾部节流(缺省 1000ms)后转给 config.state.onStateChange。
    */
   notifyStateChange: (content: unknown) => void
+  /** 是否存在尚未提交的临时编辑（拖拽等编辑预览）。 */
+  hasTemporaryChanges: () => boolean
   sceneProps: CameraSceneProps
   /** Agent JS API 门面(模块级单例,与 useCameraStudio 返回的同一对象) */
   api: CameraStudioApi
@@ -88,6 +90,8 @@ let warnedConfigDrift = false
 let resetPromise: Promise<void> | undefined
 /** 会话拆解函数;undefined = 当前无活跃会话(acquire 幂等守卫) */
 let sessionTeardown: (() => Promise<void>) | undefined
+/** 正在执行的拆解;reset 必须等它结束,不能与 dispose 的异步收尾赛跑 */
+let sessionTeardownInFlight: Promise<void> | undefined
 /** 消费者计数由 hook 管(acquire/release 成对);dispose 据此做末位守卫 */
 let activeConsumers = 0
 
@@ -115,8 +119,12 @@ function resolveProject(config: CameraStudioConfig): IProject {
   }
   const name = config.project ?? 'Space'
   const initialState = config.state?.initialState
+  const projectStorage = config.assets?.projectStorage
   return getProject(name, {
     ...(initialState === undefined ? {} : {state: initialState}),
+    ...(projectStorage === undefined
+      ? {}
+      : {assets: {storage: projectStorage}}),
     ...(config.ui?.projectName === undefined
       ? {}
       : {name: config.ui.projectName}),
@@ -232,8 +240,21 @@ function initOptsConsistent(
  */
 async function ensureTheatreInit(config: CameraStudioConfig): Promise<void> {
   const desired = desiredInitOpts(config)
+  if (config.state && config.sync) {
+    throw new Error('[camera-studio] 宿主管理场景状态时，请关闭 sync')
+  }
   if (initState.called) {
     const hostOpts = await initState.optsDeferred.promise
+    if (
+      config.state &&
+      (hostOpts?.studio !== true ||
+        hostOpts.usePersistentStorage !== false ||
+        hostOpts.serverUrl !== undefined)
+    ) {
+      throw new Error(
+        '[camera-studio] 宿主管理场景状态需要 theatre.init({studio: true, usePersistentStorage: false})，且不能配置 serverUrl',
+      )
+    }
     if (!initOptsConsistent(hostOpts, desired)) {
       console.warn(
         '[camera-studio] 检测到宿主已调用 theatre.init 且配置与 ' +
@@ -254,7 +275,9 @@ function resolveSources(config: CameraStudioConfig): {
   idbName: string | undefined
 } {
   const storage = config.storage
-  if (storage === false) return {sources: [], idbName: undefined}
+  if (storage === false || (storage === undefined && config.state)) {
+    return {sources: [], idbName: undefined}
+  }
   if (storage) {
     // 可写源实例(putEntry 等方法签名判别) vs 「namespace」简写
     const asSource = storage as LibrarySource
@@ -284,6 +307,8 @@ async function boot(config: CameraStudioConfig): Promise<BootCtx> {
   withStudioUi(() => {
     void mountStudioRootWhenReady(config.ui?.portalContainer)
   })
+
+  await ensureTheatreInit(config)
 
   // 1. 数据源:可写源(若有) + 内置目录,聚合进 Library 单例
   const {sources, idbName} = resolveSources(config)
@@ -338,35 +363,60 @@ async function boot(config: CameraStudioConfig): Promise<BootCtx> {
   // 2. 词典显式注册(模块加载副作用已注册一次;registerMessages 合并语义,重复安全)
   registerCameraMessages()
 
-  // 3. theatre.init 冲突矩阵
-  await ensureTheatreInit(config)
-
-  // 4. state 通道:尾部节流(缺省 1000ms),dispose 时 flush
+  const onStateChange = config.state?.onStateChange
   const throttleMs = config.state?.throttleMs ?? 1000
-  let pendingContent: unknown
-  let hasPending = false
+  let pending: {content: unknown} | undefined
   let timer: ReturnType<typeof setTimeout> | undefined
-  const flushState = async (): Promise<void> => {
+  let inFlight: Promise<void> | undefined
+  const flushState = (): Promise<void> => {
     if (timer !== undefined) {
       clearTimeout(timer)
       timer = undefined
     }
-    if (!hasPending) return
-    hasPending = false
-    const content = pendingContent
-    pendingContent = undefined
-    await config.state?.onStateChange?.(content)
+    if (inFlight) return inFlight
+    if (!pending || !onStateChange) return Promise.resolve()
+
+    inFlight = Promise.resolve().then(async () => {
+      try {
+        while (pending) {
+          const next = pending
+          pending = undefined
+          try {
+            await onStateChange(next.content)
+          } catch (cause) {
+            pending ??= next
+            const message =
+              cause instanceof Error
+                ? `场景保存失败：${cause.message}`
+                : '场景保存失败'
+            if (config.onError)
+              config.onError(cameraErrorFromUnknown('state', message, cause))
+            else console.error(`[camera-studio] ${message}`, cause)
+            throw cause
+          }
+        }
+      } finally {
+        inFlight = undefined
+      }
+    })
+    return inFlight
   }
   const notifyStateChange = (content: unknown): void => {
-    if (!config.state?.onStateChange) return
-    pendingContent = content
-    hasPending = true
-    // 已在等待尾部触发:只更新待发内容,不重置计时
-    if (timer === undefined) timer = setTimeout(flushState, throttleMs)
+    if (!onStateChange) return
+    pending = {content}
+    if (timer !== undefined || inFlight) return
+    if (throttleMs === 0) {
+      void flushState().catch(() => {})
+    } else {
+      timer = setTimeout(() => {
+        void flushState().catch(() => {})
+      }, throttleMs)
+    }
   }
 
   // 5. project 解析(initialState 透传)与对外 sceneProps
   const sceneProps = resolveSceneProps(config)
+  if (config.state) await sceneProps.project.ready
 
   return {
     config,
@@ -378,6 +428,13 @@ async function boot(config: CameraStudioConfig): Promise<BootCtx> {
     },
     flushState,
     notifyStateChange,
+    hasTemporaryChanges: () => {
+      try {
+        return getStudioInternal()._store.hasTemporaryChanges()
+      } catch {
+        return false
+      }
+    },
     sceneProps,
     api: getCameraStudioApi(),
   }
@@ -437,12 +494,11 @@ function acquireSession(ctx: BootCtx): void {
       config: bridgeConfig,
     })
   }
-  // state 通道订阅:project 历史状态变更 → 节流转给宿主
   let unsubState: (() => void) | undefined
   if (ctx.config.state?.onStateChange) {
-    const historic = privateAPI(ctx.sceneProps.project).pointers.historic
-    unsubState = onChange(historic, (content: unknown) =>
-      ctx.notifyStateChange(content),
+    unsubState = getStudioInternal()._store.subscribeToProjectState(
+      project.address.projectId,
+      ctx.notifyStateChange,
     )
   }
   // 上次 dispose 隐去的 studio UI 随重挂恢复;仅在确实隐去时调 restore——
@@ -463,8 +519,13 @@ function acquireSession(ctx: BootCtx): void {
     ctx.unregisterEditors()
     unsubState?.()
     // 先断订阅再 flush:尾部变更带给宿主,不丢
-    await ctx.flushState()
-    await withStudioUi((ui) => ui.hide())
+    try {
+      await ctx.flushState()
+    } finally {
+      await withStudioUi((ui) => {
+        if (!sessionTeardown) ui.hide()
+      })
+    }
   }
 }
 
@@ -504,7 +565,20 @@ export async function disposeCameraStudio(ctx?: BootCtx): Promise<void> {
   void ctx
   // 末位消费者守卫:还有消费者在挂(StrictMode 双跑/并发挂载)时不拆会话
   if (activeConsumers > 0) return
-  await sessionTeardown?.()
+  await runSessionTeardown()
+}
+
+function runSessionTeardown(): Promise<void> {
+  if (sessionTeardownInFlight) return sessionTeardownInFlight
+  const teardown = sessionTeardown
+  if (!teardown) return Promise.resolve()
+  sessionTeardown = undefined
+  let promise: Promise<void>
+  promise = teardown().finally(() => {
+    if (sessionTeardownInFlight === promise) sessionTeardownInFlight = undefined
+  })
+  sessionTeardownInFlight = promise
+  return promise
 }
 
 export function resetCameraStudio(): Promise<void> {
@@ -524,7 +598,8 @@ export function resetCameraStudio(): Promise<void> {
         'resetCameraStudio requires all camera-studio consumers to be unmounted',
       )
     }
-    await sessionTeardown?.()
+    await runSessionTeardown()
+    await previousCtx?.flushState()
     clearSceneSheetObjects()
     if (previousCtx) {
       const projectId = previousCtx.sceneProps.project.address.projectId

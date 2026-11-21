@@ -5,7 +5,7 @@
     "noEmit": true,
     "resolveJsonModule": true
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "vite.config.ts", "devEnv/sceneStateServer*.ts"],
   "exclude": [
     "**/node_modules",
     "**/.*",

@@ -4,6 +4,21 @@ import './i18n'
 export {CameraScene} from './CameraScene'
 export {CAMERA_STUDIO_VERSION} from './version'
 export {useCameraStudio} from './useCameraStudio'
+export {
+  HttpPatchAdapter,
+  HttpSnapshotAdapter,
+  loadSceneSyncState,
+  SceneCommitRejectedError,
+  SceneRevisionConflictError,
+} from './sceneSync'
+export type {
+  SceneCommit,
+  ScenePatchCommit,
+  ScenePatchOperation,
+  SceneSyncSnapshot,
+  SceneSyncAdapter,
+  SceneSyncState,
+} from './sceneSync'
 export type {
   CameraStudioConfig,
   CameraStudioHandle,

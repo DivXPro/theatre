@@ -7,6 +7,7 @@
 import type { AnimationClip } from 'three';
 import type { Group } from 'three';
 import type { IProject } from '@dreamerbird/core';
+import type { IProjectConfig } from '@dreamerbird/core';
 import type { Object3D } from 'three';
 import { default as React_2 } from 'react';
 import type { StudioPanelVisibility } from '@dreamerbird/core';
@@ -143,6 +144,7 @@ export interface BootCtx {
     // (undocumented)
     config: CameraStudioConfig;
     flushState: () => Promise<void>;
+    hasTemporaryChanges: () => boolean;
     // Warning: (ae-forgotten-export) The symbol "Library" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -283,8 +285,10 @@ export type CameraStudioApi = {
 // @public (undocumented)
 export interface CameraStudioConfig {
     agent?: CameraStudioAgentConfig;
+    // (undocumented)
     assets?: {
         baseUrl?: string;
+        projectStorage?: NonNullable<IProjectConfig['assets']>['storage'];
     };
     // (undocumented)
     flows?: {
@@ -298,7 +302,7 @@ export interface CameraStudioConfig {
     };
     state?: {
         initialState?: unknown;
-        onStateChange?: (content: unknown) => void;
+        onStateChange?: (content: unknown) => void | Promise<void>;
         throttleMs?: number;
     };
     storage?: WritableLibrarySource | {
@@ -329,8 +333,8 @@ export type CameraStudioError = {
 // @public
 export type CameraStudioErrorHandler = (error: CameraStudioError) => void;
 
-// @public
-export type CameraStudioErrorSource = 'library' | 'export';
+// @public (undocumented)
+export type CameraStudioErrorSource = 'library' | 'export' | 'state';
 
 // @public (undocumented)
 export interface CameraStudioHandle {
@@ -339,6 +343,7 @@ export interface CameraStudioHandle {
     error: Error | undefined;
     // (undocumented)
     flushState(): Promise<void>;
+    hasTemporaryChanges(): boolean;
     // (undocumented)
     ready: boolean;
     // (undocumented)
@@ -451,6 +456,29 @@ export type HistoryApi = {
         revision: number;
     }>;
 };
+
+// @public (undocumented)
+export class HttpPatchAdapter extends HttpSnapshotAdapter {
+    // (undocumented)
+    commitPatch(change: ScenePatchCommit): Promise<{
+        revision: string;
+    }>;
+}
+
+// @public (undocumented)
+export class HttpSnapshotAdapter implements SceneSyncAdapter {
+    constructor(url: string | URL, request?: typeof fetch);
+    // (undocumented)
+    commit(change: SceneCommit): Promise<{
+        revision: string;
+    }>;
+    // (undocumented)
+    load(): Promise<SceneSyncSnapshot | null>;
+    // (undocumented)
+    protected write(method: 'PUT' | 'PATCH', change: Pick<SceneCommit, 'baseRevision' | 'commitId'>, body: unknown): Promise<{
+        revision: string;
+    }>;
+}
 
 // Warning: (ae-forgotten-export) The symbol "ImportDeps" needs to be exported by the entry point index.d.ts
 //
@@ -616,6 +644,11 @@ export type LibrarySourceCapabilities = {
 
 // @public
 export function listBuiltinPoses(): PoseEntry[];
+
+// @public (undocumented)
+export function loadSceneSyncState(adapter: SceneSyncAdapter, options?: {
+    throttleMs?: number;
+}): Promise<SceneSyncState>;
 
 // @public (undocumented)
 export type MaterialsApi = {
@@ -936,6 +969,21 @@ export type SceneApi = {
     getSnapshot(): Promise<SceneSnapshot>;
 };
 
+// @public (undocumented)
+export interface SceneCommit {
+    // (undocumented)
+    baseRevision: string | null;
+    // (undocumented)
+    commitId: string;
+    // (undocumented)
+    content: unknown;
+}
+
+// @public (undocumented)
+export class SceneCommitRejectedError extends Error {
+    constructor(message: string);
+}
+
 // @public
 export type SceneObjectId = `${SceneObjectKind}:${string}`;
 
@@ -951,11 +999,73 @@ export type SceneObjectSummary = {
     mounted: boolean;
 };
 
+// @public (undocumented)
+export interface ScenePatchCommit {
+    // (undocumented)
+    baseRevision: string;
+    // (undocumented)
+    commitId: string;
+    // (undocumented)
+    operations: ScenePatchOperation[];
+}
+
+// @public (undocumented)
+export type ScenePatchOperation = {
+    op: 'add' | 'replace';
+    path: string;
+    value: unknown;
+} | {
+    op: 'remove';
+    path: string;
+};
+
+// @public (undocumented)
+export class SceneRevisionConflictError extends SceneCommitRejectedError {
+    constructor(currentRevision?: string | undefined);
+    // (undocumented)
+    readonly currentRevision?: string | undefined;
+}
+
 // @public
 export type SceneSnapshot = {
     revision: number;
     objects: SceneObjectSummary[];
 };
+
+// @public (undocumented)
+export interface SceneSyncAdapter {
+    // (undocumented)
+    commit(change: SceneCommit): Promise<{
+        revision: string;
+    }>;
+    // (undocumented)
+    commitPatch?(change: ScenePatchCommit): Promise<{
+        revision: string;
+    }>;
+    // (undocumented)
+    load(): Promise<SceneSyncSnapshot | null>;
+    // (undocumented)
+    subscribe?(onRevision: (revision: string) => void): () => void;
+}
+
+// @public (undocumented)
+export interface SceneSyncSnapshot {
+    // (undocumented)
+    content: unknown;
+    // (undocumented)
+    revision: string;
+}
+
+// @public (undocumented)
+export interface SceneSyncState {
+    hasUnsavedChanges(): boolean;
+    // (undocumented)
+    initialState: unknown;
+    // (undocumented)
+    onStateChange(content: unknown): Promise<void>;
+    // (undocumented)
+    throttleMs?: number;
+}
 
 // @public
 export type SelectionApi = {
