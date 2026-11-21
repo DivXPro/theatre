@@ -11,7 +11,11 @@ import {
 } from 'three'
 import type {WebGLRenderer} from 'three'
 import {registerEditorOnly} from '../editorOnly'
-import {beginExportSceneState, ExportFrameRenderer} from './sceneCapture'
+import {
+  beginExportSceneState,
+  createVideoFrameCanvas,
+  ExportFrameRenderer,
+} from './sceneCapture'
 import type {ResolvedRenderOptions} from './previsTypes'
 
 class FakeRenderer {
@@ -211,5 +215,30 @@ describe('ExportFrameRenderer', () => {
     expect(pixels[7 * 4 * 2]).toBe(0)
     expect(fake.target).toBe(null)
     frameRenderer.dispose()
+  })
+})
+
+describe('createVideoFrameCanvas', () => {
+  test('返回可直接构造 VideoFrame 的已初始化画布', () => {
+    const getContext = jest.fn(() => ({}))
+    class FakeOffscreenCanvas {
+      constructor(
+        readonly width: number,
+        readonly height: number,
+      ) {}
+      getContext = getContext
+    }
+    const previous = (globalThis as {OffscreenCanvas?: unknown}).OffscreenCanvas
+    ;(globalThis as {OffscreenCanvas?: unknown}).OffscreenCanvas =
+      FakeOffscreenCanvas
+    try {
+      expect(createVideoFrameCanvas(320, 180)).toMatchObject({
+        width: 320,
+        height: 180,
+      })
+      expect(getContext).toHaveBeenCalledWith('2d')
+    } finally {
+      ;(globalThis as {OffscreenCanvas?: unknown}).OffscreenCanvas = previous
+    }
   })
 })

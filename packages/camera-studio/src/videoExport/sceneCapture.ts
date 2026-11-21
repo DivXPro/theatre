@@ -245,19 +245,29 @@ function flipRows(
 }
 
 function create2DCanvas(width: number, height: number): AnyCanvas {
-  if (typeof OffscreenCanvas !== 'undefined') {
-    return new OffscreenCanvas(width, height)
+  const canvas =
+    typeof OffscreenCanvas !== 'undefined'
+      ? new OffscreenCanvas(width, height)
+      : typeof document !== 'undefined'
+        ? document.createElement('canvas')
+        : null
+  if (!canvas) {
+    throw new AgentApiError(
+      'CAPABILITY_UNAVAILABLE',
+      '运行环境没有 OffscreenCanvas 或 DOM canvas,无法编码图像',
+    )
   }
-  if (typeof document !== 'undefined') {
-    const canvas = document.createElement('canvas')
-    canvas.width = width
-    canvas.height = height
-    return canvas
+  canvas.width = width
+  canvas.height = height
+  // Chrome 在 OffscreenCanvas 还没有 2D 上下文时拒绝把它作为
+  // VideoFrame 源(Invalid source state);提前初始化再交给 WebCodecs。
+  if (!canvas.getContext('2d')) {
+    throw new AgentApiError(
+      'CAPABILITY_UNAVAILABLE',
+      '画布无法创建 2D 上下文,无法编码图像',
+    )
   }
-  throw new AgentApiError(
-    'CAPABILITY_UNAVAILABLE',
-    '运行环境没有 OffscreenCanvas 或 DOM canvas,无法编码图像',
-  )
+  return canvas
 }
 
 function createHtmlCanvas(width: number, height: number): HTMLCanvasElement {

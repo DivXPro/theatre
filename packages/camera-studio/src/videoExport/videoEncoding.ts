@@ -249,6 +249,26 @@ function codecFromMime(mimeType: string): string {
   return mimeType
 }
 
+async function waitForRecorder(
+  event: Promise<void>,
+  timeoutMessage: string,
+): Promise<void> {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  try {
+    await Promise.race([
+      event,
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(
+          () => reject(new AgentApiError('INTERNAL_ERROR', timeoutMessage)),
+          10_000,
+        )
+      }),
+    ])
+  } finally {
+    if (timer !== undefined) clearTimeout(timer)
+  }
+}
+
 /**
  * MediaRecorder 显式降级 writer。仅用于 WebCodecs/H.264 缺失的平台。
  * 该路径受实时录制能力影响,结果会如实标记 encoding='mediarecorder'。
@@ -259,7 +279,9 @@ export class MediaRecorderVideoWriter {
   private readonly track: MediaStreamTrack & {requestFrame?: () => void}
   private readonly chunks: Blob[] = []
   private readonly stopPromise: Promise<void>
-  private stopped = false
+  private rejectStop!: (error: Error) => void
+  private started = false
+  private aborted = false
 
   private constructor(
     canvas: HTMLCanvasElement,
@@ -272,15 +294,17 @@ export class MediaRecorderVideoWriter {
     this.recorder = recorder
     this.track = track
     recorder.ondataavailable = (event) => {
-      if (event.data.size > 0) this.chunks.push(event.data)
+      if (!this.aborted && event.data.size > 0) this.chunks.push(event.data)
     }
     this.stopPromise = new Promise<void>((resolve, reject) => {
+      this.rejectStop = reject
       recorder.onstop = () => resolve()
       recorder.onerror = (event) =>
         reject(
           (event as ErrorEvent).error ?? new Error('MediaRecorder 录制失败'),
         )
     })
+    void this.stopPromise.catch(() => {})
   }
 
   static async create(args: {
@@ -291,37 +315,34 @@ export class MediaRecorderVideoWriter {
     if (typeof MediaRecorder === 'undefined') return null
     const mimeType = pickMimeType((type) => MediaRecorder.isTypeSupported(type))
     if (!mimeType) return null
+    let stream: MediaStream | undefined
     try {
       const canvas = createMediaRecorderCanvas(args.width, args.height)
       const captureStream = canvas.captureStream
       if (typeof captureStream !== 'function') return null
-      const stream = captureStream.call(canvas, 0)
+      stream = captureStream.call(canvas, 0)
+      const track = stream.getVideoTracks()[0] as
+        | (MediaStreamTrack & {requestFrame?: () => void})
+        | undefined
+      if (!track?.requestFrame) {
+        track?.stop()
+        stream = captureStream.call(canvas)
+      }
+      const videoTrack = stream.getVideoTracks()[0]
+      if (!videoTrack) return null
       const recorder = new MediaRecorder(stream, {
         mimeType,
         videoBitsPerSecond: bitrateForSize(args.width, args.height),
       })
-      const writer = new MediaRecorderVideoWriter(
+      return new MediaRecorderVideoWriter(
         canvas,
         recorder,
-        stream.getVideoTracks()[0]!,
+        videoTrack,
         mimeType,
         args.fps,
       )
-      await new Promise<void>((resolve, reject) => {
-        recorder.addEventListener('start', () => resolve(), {once: true})
-        recorder.addEventListener(
-          'error',
-          (event) =>
-            reject(
-              (event as ErrorEvent).error ??
-                new Error('MediaRecorder 启动失败'),
-            ),
-          {once: true},
-        )
-        recorder.start(1000)
-      })
-      return writer
     } catch {
+      stream?.getVideoTracks().forEach((track) => track.stop())
       return null
     }
   }
@@ -331,8 +352,33 @@ export class MediaRecorderVideoWriter {
     width: number,
     height: number,
   ): Promise<void> {
-    drawPixels(this.canvas, pixels, width, height)
+    if (this.aborted) {
+      throw new AgentApiError('JOB_CANCELLED', '预演导出已取消')
+    }
+    let start: Promise<void> | undefined
+    if (!this.started) {
+      start = new Promise<void>((resolve) => {
+        this.recorder.addEventListener('start', () => resolve(), {once: true})
+      })
+      this.recorder.start(1000)
+      this.started = true
+    }
     this.track.requestFrame?.()
+    drawPixels(this.canvas, pixels, width, height)
+    if (start) {
+      await waitForRecorder(
+        Promise.race([
+          start,
+          this.stopPromise.then(() => {
+            throw new AgentApiError(
+              'INTERNAL_ERROR',
+              'MediaRecorder 未能录制首帧',
+            )
+          }),
+        ]),
+        'MediaRecorder 等待首帧超时',
+      )
+    }
     // 降级路径按真实帧间隔给录制器采样窗口;机器慢时会如实表现为
     // MediaRecorder 的限制,不会伪称离线确定帧。
     await new Promise<void>((resolve) =>
@@ -341,13 +387,16 @@ export class MediaRecorderVideoWriter {
   }
 
   async finish(): Promise<VideoEncodingResult> {
-    if (!this.stopped) {
-      this.stopped = true
-      this.recorder.stop()
+    try {
+      if (this.recorder.state !== 'inactive') this.recorder.stop()
+      await waitForRecorder(this.stopPromise, 'MediaRecorder 等待视频完成超时')
+    } finally {
+      this.track.stop()
     }
-    await this.stopPromise
-    this.track.stop()
     const blob = new Blob(this.chunks as BlobPart[], {type: this.mimeType})
+    if (!blob.size) {
+      throw new AgentApiError('INTERNAL_ERROR', 'MediaRecorder 未产出视频数据')
+    }
     return {
       data: new Uint8Array(await blob.arrayBuffer()),
       mimeType: blob.type || this.mimeType,
@@ -357,11 +406,12 @@ export class MediaRecorderVideoWriter {
   }
 
   abort(): void {
-    if (this.stopped) return
-    this.stopped = true
+    if (this.aborted) return
+    this.aborted = true
     this.chunks.length = 0
+    this.rejectStop(new AgentApiError('JOB_CANCELLED', '预演导出已取消'))
     try {
-      this.recorder.stop()
+      if (this.recorder.state !== 'inactive') this.recorder.stop()
     } catch {
       // 已停止
     }
