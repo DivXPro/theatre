@@ -3,6 +3,7 @@ import type {ISheetObject} from '@dreamerbird/core'
 import {
   addStrip,
   editStrip,
+  findFreeStripStart,
   parseAnimationTracks,
   updateStripTiming,
 } from './model'
@@ -59,6 +60,29 @@ export function appendAnimationStrip(
       val(object.sheet.sequence.pointer.length) * 1000,
     ),
   )
+}
+
+/**
+ * 从当前播放头添加动作；已有片段占位时自动顺延到空闲处，避免
+ * "点了添加却只出现一个错误提示"。
+ */
+export function appendAnimationStripAtPlayhead(
+  object: AnimationTracksObject,
+  assetId: string,
+  durationMs: number,
+): number {
+  const state = parseAnimationTracks(val(object.props.animationTracks))
+  const strips = state.kind === 'tracks' ? state.document.tracks[0]!.strips : []
+  const sequence = object.sheet.sequence
+  const sequenceLengthMs = val(sequence.pointer.length) * 1000
+  const startMs = findFreeStripStart(
+    strips,
+    sequence.closestGridPosition(sequence.position) * 1000,
+    durationMs,
+    sequenceLengthMs,
+  )
+  appendAnimationStrip(object, assetId, durationMs, startMs)
+  return startMs
 }
 
 export function previewAnimationStripEdit(

@@ -1,7 +1,9 @@
 import {
   addStrip,
+  clampStripEditPosition,
   editStrip,
   evaluateStrips,
+  findFreeStripStart,
   parseAnimationTracks,
   stripEndMs,
 } from './model'
@@ -85,4 +87,22 @@ test('reads old and empty projects, round trips stable IDs, and protects unknown
   ).toBe('tracks')
   expect(parseAnimationTracks('{"version":2,"tracks":[]}').kind).toBe('invalid')
   expect(parseAnimationTracks('{').kind).toBe('invalid')
+})
+
+test('places new strips at the playhead and skips occupied ranges', () => {
+  expect(findFreeStripStart([], 2000, 1000, 8000)).toBe(2000)
+  expect(findFreeStripStart([walking], 2000, 1000, 8000)).toBe(4000)
+  expect(findFreeStripStart([walking], 4000, 1000, 8000)).toBe(4000)
+  expect(findFreeStripStart([walking], 0, 900, 8000)).toBe(0)
+  expect(() => findFreeStripStart([walking], 7000, 2000, 8000)).toThrow()
+})
+
+test('clamps strip edits to source and sequence boundaries', () => {
+  expect(clampStripEditPosition(walking, 'move', -500, 5000, 8000)).toBe(0)
+  expect(clampStripEditPosition(walking, 'move', 7000, 5000, 8000)).toBe(5000)
+  expect(clampStripEditPosition(walking, 'start', -500, 5000, 8000)).toBe(800)
+  expect(clampStripEditPosition(walking, 'start', 9999, 5000, 8000)).toBe(3999)
+  expect(clampStripEditPosition(walking, 'end', 1000, 5000, 8000)).toBe(1001)
+  expect(clampStripEditPosition(walking, 'end', 9999, 5000, 8000)).toBe(5800)
+  expect(clampStripEditPosition(walking, 'end', 9999, 5000, 3500)).toBe(3500)
 })

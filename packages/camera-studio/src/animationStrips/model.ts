@@ -38,6 +38,68 @@ export function stripEndMs(strip: AnimationStrip): number {
   return strip.startMs + (strip.sourceOutMs - strip.sourceInMs)
 }
 
+/**
+ * 找一段能放下 `durationMs` 的起点。优先用播放头位置；若与已有片段
+ * 重叠，就顺延到该片段末尾。连续片段允许首尾相接，不留额外间隙。
+ */
+export function findFreeStripStart(
+  strips: readonly AnimationStrip[],
+  desiredStartMs: number,
+  durationMs: number,
+  sequenceLengthMs: number,
+): number {
+  let startMs = Math.max(0, desiredStartMs)
+  for (const strip of [...strips].sort(
+    (left, right) => left.startMs - right.startMs,
+  )) {
+    const endMs = stripEndMs(strip)
+    if (before(startMs, endMs) && before(strip.startMs, startMs + durationMs)) {
+      startMs = endMs
+    }
+  }
+  if (before(sequenceLengthMs, startMs + durationMs)) {
+    throw new Error('Animation strip does not fit in the sequence')
+  }
+  return startMs
+}
+
+/**
+ * 把拖动位置限制在素材和序列的可行范围内。端点拖出素材边界时不再
+ * 静默失败，而是停在边界上，用户能明确看到"到头了"。
+ */
+export function clampStripEditPosition(
+  strip: AnimationStrip,
+  edit: AnimationStripEdit,
+  positionMs: number,
+  assetDurationMs: number,
+  sequenceLengthMs: number,
+): number {
+  const minDurationMs = 1
+  const durationMs = stripEndMs(strip) - strip.startMs
+  switch (edit) {
+    case 'move': {
+      const maxStartMs = Math.max(0, sequenceLengthMs - durationMs)
+      return Math.min(Math.max(0, positionMs), maxStartMs)
+    }
+    case 'start': {
+      const minStartMs = Math.max(0, strip.startMs - strip.sourceInMs)
+      const maxStartMs = Math.max(minStartMs, stripEndMs(strip) - minDurationMs)
+      return Math.min(Math.max(minStartMs, positionMs), maxStartMs)
+    }
+    case 'end': {
+      const minEndMs = strip.startMs + minDurationMs
+      const maxEndMs = Math.max(
+        minEndMs,
+        Math.min(
+          sequenceLengthMs,
+          strip.startMs + (assetDurationMs - strip.sourceInMs),
+        ),
+      )
+      return Math.min(Math.max(minEndMs, positionMs), maxEndMs)
+    }
+  }
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value && typeof value === 'object')
 }

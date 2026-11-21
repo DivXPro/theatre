@@ -91,6 +91,7 @@ test('selects a strip, edits its duration, and shows a guide only while snapped'
                 object={actor}
                 layout={layout}
                 statuses={new Map([['walk', 'ready']])}
+                rig={null}
               />
             </PointerEventsHandler>
           </I18nProvider>

@@ -167,14 +167,16 @@ export function useAnimationStrips(
     return registerAdditionalSequenceRow(object, {
       id: 'animationTracks',
       hasContent: () =>
+        sampler.hasBones ||
         parseAnimationTracks(val(object.props.animationTracks)).kind !==
-        'legacy',
+          'legacy',
       renderHeader: () => <AnimationStripHeader object={object} rig={rig} />,
       renderTrack: (layout) => (
         <AnimationStripTrack
           object={object}
           layout={layout}
           statuses={statuses}
+          rig={rig}
         />
       ),
     })

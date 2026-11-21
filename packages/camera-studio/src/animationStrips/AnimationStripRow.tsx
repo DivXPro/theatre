@@ -3,7 +3,6 @@ import {val} from '@dreamerbird/dataverse'
 import type {Pointer} from '@dreamerbird/dataverse'
 import {useT} from '@dreamerbird/studio/i18n'
 import type {SequenceEditorPanelLayout} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/layout'
-import {ConnectorLine} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/Right/keyframeRowUI/ConnectorLine'
 import useDrag from '@dreamerbird/studio/uiComponents/useDrag'
 import usePopover from '@dreamerbird/studio/uiComponents/Popover/usePopover'
 import useContextMenu from '@dreamerbird/studio/uiComponents/simpleContextMenu/useContextMenu'
@@ -16,11 +15,11 @@ import {
   AnimationStripProperties,
   AnimationStripPropertiesPanel,
 } from './AnimationStripProperties'
-import {parseAnimationTracks, stripEndMs} from './model'
+import {clampStripEditPosition, parseAnimationTracks, stripEndMs} from './model'
 import type {AnimationStrip, AnimationStripEdit} from './model'
 import {resolveStripDrag} from './snap'
 import {
-  appendAnimationStrip,
+  appendAnimationStripAtPlayhead,
   commitAnimationStripEdit,
   previewAnimationStripEdit,
   removeAnimationStrip,
@@ -41,6 +40,7 @@ const Header = styled.div`
     min-width: 0;
     max-width: 100%;
     flex: 1;
+    height: 22px;
   }
 
   select,
@@ -51,11 +51,60 @@ const Header = styled.div`
     border-radius: 3px;
     font: inherit;
   }
+
+  select:not(:disabled) {
+    border-style: dashed;
+    cursor: pointer;
+  }
+
+  select:not(:disabled):hover {
+    border-color: var(--theatre-text-secondary, #ccc);
+    background: var(--theatre-panel-bg-hover, #33373c);
+  }
+
+  select:disabled {
+    border-style: dashed;
+    opacity: 0.65;
+    cursor: default;
+  }
 `
 
 const Track = styled.div`
   position: relative;
   height: 100%;
+`
+
+const EmptyAdd = styled.select`
+  position: absolute;
+  top: 50%;
+  left: 10px;
+  transform: translateY(-50%);
+  height: 22px;
+  max-width: 220px;
+  padding: 0 6px;
+  color: var(--theatre-text-secondary, #ccc);
+  background: rgba(111, 183, 255, 0.06);
+  border: 1px dashed rgba(111, 183, 255, 0.45);
+  border-radius: 3px;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    color: var(--theatre-text-primary, #fff);
+    background: rgba(111, 183, 255, 0.12);
+    border-color: rgba(111, 183, 255, 0.8);
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.65;
+  }
+
+  &[data-add-error='true'] {
+    color: #ff9c92;
+    border-color: #ff9c92;
+  }
 `
 
 const snapRadiusPx = 8
@@ -97,7 +146,7 @@ const SnapGuide = styled.div`
 const Span = styled.div<{$error: boolean; $selected: boolean}>`
   position: absolute;
   top: 50%;
-  height: 18px;
+  height: 24px;
   transform: translateY(-50%);
   cursor: grab;
   color: ${({$error, $selected}) =>
@@ -106,16 +155,37 @@ const Span = styled.div<{$error: boolean; $selected: boolean}>`
       : $selected
         ? '#f3cc66'
         : 'var(--theatre-text-primary, #fff)'};
+  background: ${({$error, $selected}) =>
+    $error
+      ? 'rgba(255, 122, 122, 0.16)'
+      : $selected
+        ? 'rgba(243, 204, 102, 0.14)'
+        : 'rgba(111, 183, 255, 0.14)'};
+  border: 1px solid
+    ${({$error, $selected}) =>
+      $error ? '#ff7a7a' : $selected ? '#f3cc66' : 'rgba(111, 183, 255, 0.5)'};
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  box-sizing: border-box;
   outline-offset: 3px;
 
+  &:hover {
+    background: ${({$error, $selected}) =>
+      $error
+        ? 'rgba(255, 122, 122, 0.22)'
+        : $selected
+          ? 'rgba(243, 204, 102, 0.2)'
+          : 'rgba(111, 183, 255, 0.22)'};
+  }
+
   &:focus-visible {
-    outline: 1px solid currentColor;
+    outline: 2px solid currentColor;
   }
 `
 
 const Label = styled.div`
   position: absolute;
-  inset: 0 5px;
+  inset: 0 14px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -123,18 +193,67 @@ const Label = styled.div`
   pointer-events: none;
   white-space: nowrap;
   font-size: 10px;
-  text-shadow: 0 1px 2px #000;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65);
 `
 
 const Edge = styled.span<{$side: 'start' | 'end'}>`
   position: absolute;
-  top: 50%;
-  ${({$side}) => ($side === 'start' ? 'left: 0;' : 'left: 100%;')}
-  transform: translate(-50%, -50%) rotate(45deg);
-  width: 8px;
-  height: 8px;
-  background: currentColor;
+  top: 0;
+  bottom: 0;
+  width: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  ${({$side}) => ($side === 'start' ? 'left: 0;' : 'right: 0;')}
+  background: rgba(0, 0, 0, 0.16);
   cursor: ew-resize;
+
+  ${({$side}) =>
+    $side === 'start'
+      ? 'border-radius: 3px 0 0 3px;'
+      : 'border-radius: 0 3px 3px 0;'}
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.16);
+  }
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 1px;
+    height: 10px;
+    transform: translateY(-50%);
+    background: currentColor;
+    opacity: 0.55;
+  }
+
+  &::before {
+    left: 4px;
+  }
+
+  &::after {
+    right: 4px;
+  }
+`
+
+const ErrorBadge = styled.span`
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  color: #1b1b1b;
+  background: #ff7a7a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 700;
+  pointer-events: none;
 `
 
 type RowProps = {object: AnimationTracksObject; rig: string | null}
@@ -157,7 +276,11 @@ export function AnimationStripHeader({object, rig}: RowProps) {
         <>
           <select
             aria-label={t('pg.strips.add')}
-            title={t('pg.strips.add')}
+            title={t(
+              compatible.length
+                ? 'pg.strips.addHint'
+                : 'pg.strips.noActionsHint',
+            )}
             value=""
             disabled={!compatible.length}
             onChange={(event) => {
@@ -166,12 +289,10 @@ export function AnimationStripHeader({object, rig}: RowProps) {
               )
               if (!asset) return
               try {
-                const sequence = object.sheet.sequence
-                appendAnimationStrip(
+                appendAnimationStripAtPlayhead(
                   object,
                   asset.id,
                   asset.duration * 1000,
-                  sequence.closestGridPosition(sequence.position) * 1000,
                 )
                 setError('')
               } catch {
@@ -180,7 +301,9 @@ export function AnimationStripHeader({object, rig}: RowProps) {
             }}
           >
             <option value="">
-              {t(compatible.length ? 'pg.strips.add' : 'pg.strips.noActions')}
+              {compatible.length
+                ? `＋ ${t('pg.strips.add')}`
+                : t('pg.strips.noActions')}
             </option>
             {compatible.map((entry) => (
               <option key={entry.id} value={entry.id}>
@@ -216,21 +339,29 @@ export function AnimationStripTrack({
   object,
   layout,
   statuses,
+  rig,
 }: {
   object: AnimationTracksObject
   layout: Pointer<SequenceEditorPanelLayout>
   statuses: ReadonlyMap<string, 'loading' | 'error' | 'ready'>
+  rig: string | null
 }) {
+  const t = useT()
   const entries = useLibraryEntries('animation')
   const state = parseAnimationTracks(useVal(object.props.animationTracks))
   const [selectedStripId, selectStrip] = useState<string | null>(null)
+  const [addError, setAddError] = useState(false)
   const strips =
     state.kind === 'tracks' ? state.document.tracks[0]!.strips : null
+  const compatible = entries.filter(
+    (entry): entry is AnimationEntry =>
+      entry.kind === 'animation' && entry.rig === rig,
+  )
   const selected = strips?.some((strip) => strip.id === selectedStripId)
   useEffect(() => {
     if (!selected) selectStrip(null)
   }, [selected])
-  if (!strips) return null
+  if (state.kind === 'invalid') return null
   const assets = new Map(entries.map((entry) => [entry.id, entry]))
   return (
     <Track
@@ -238,7 +369,51 @@ export function AnimationStripTrack({
         if (event.target === event.currentTarget) selectStrip(null)
       }}
     >
-      {strips.map((strip) => {
+      {(!strips || strips.length === 0) && (
+        <EmptyAdd
+          aria-label={t('pg.strips.add')}
+          title={
+            addError
+              ? t('pg.strips.rangeError')
+              : t(
+                  compatible.length
+                    ? 'pg.strips.addHint'
+                    : 'pg.strips.noActionsHint',
+                )
+          }
+          value=""
+          disabled={!compatible.length}
+          data-add-error={addError}
+          onChange={(event) => {
+            const asset = compatible.find(
+              (entry) => entry.id === event.target.value,
+            )
+            if (!asset) return
+            try {
+              appendAnimationStripAtPlayhead(
+                object,
+                asset.id,
+                asset.duration * 1000,
+              )
+              setAddError(false)
+            } catch {
+              setAddError(true)
+            }
+          }}
+        >
+          <option value="">
+            {compatible.length
+              ? `＋ ${t('pg.strips.add')}`
+              : t('pg.strips.noActions')}
+          </option>
+          {compatible.map((entry) => (
+            <option key={entry.id} value={entry.id}>
+              {entry.name}
+            </option>
+          ))}
+        </EmptyAdd>
+      )}
+      {strips?.map((strip) => {
         const asset = assets.get(strip.assetId)
         return (
           <Strip
@@ -395,6 +570,14 @@ function Strip({
               ],
               grid: (timeMs) =>
                 sequence.closestGridPosition(timeMs / 1000) * 1000,
+              clamp: (timeMs) =>
+                clampStripEditPosition(
+                  strip,
+                  edit,
+                  timeMs,
+                  assetDurationMs,
+                  val(sequence.pointer.length) * 1000,
+                ),
               preview: (timeMs) =>
                 previewAnimationStripEdit(
                   object,
@@ -419,7 +602,11 @@ function Strip({
           active.current = null
           if (!node?.isConnected) return
           setDraft(null)
-          if (cancelled || !didDrag || candidate === undefined) return
+          if (cancelled || !didDrag) return
+          if (candidate === undefined) {
+            setEditError(true)
+            return
+          }
           try {
             commitAnimationStripEdit(
               object,
@@ -483,16 +670,18 @@ function Strip({
           }
         }}
       >
-        <div style={{position: 'absolute', top: '50%', left: 0}}>
-          <ConnectorLine
-            isPopoverOpen={selected && properties.isOpen}
-            isSelected={selected}
-            connectorLengthInUnitSpace={duration}
-          />
-        </div>
         <Label>{name}</Label>
-        <Edge $side="start" data-strip-edit="start" />
-        <Edge $side="end" data-strip-edit="end" />
+        <Edge
+          $side="start"
+          data-strip-edit="start"
+          title={t('pg.strips.trimStart')}
+        />
+        <Edge
+          $side="end"
+          data-strip-edit="end"
+          title={t('pg.strips.trimEnd')}
+        />
+        {error && <ErrorBadge>!</ErrorBadge>}
       </Span>
       {draft?.snapMs != null && (
         <SnapGuide
