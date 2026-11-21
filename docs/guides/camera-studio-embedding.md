@@ -373,7 +373,8 @@ URL 拼装规则:`baseUrl + 'models/<file>'`、`baseUrl + 'poseThumbs/<file>'` (
 内置目录同时带 **180 个静态姿势**(12 个基础姿势 + 58 个 DPL 全身姿势 + 110 个
 QBX 手势),id 稳定为 `seed-pose-*`,骨架族是内置 Y Bot 的 Mixamo rig。引用本包的项
 目可以直接从 `@dreamerbird/camera-studio/poses` 取数据, 不依赖 IndexedDB、网络或
-React:
+React。直接使用 `applyPose` 时，目标骨架的骨名和局部坐标系需与 Y Bot 对应。
+编辑器通过内置姿势 ID 应用全身姿势时，会将髋骨旋转换到目标骨架的父坐标系。
 
 ```ts
 import {
@@ -386,7 +387,6 @@ import {
 const poses = listBuiltinPoses() // PoseEntry[]
 const relaxed = getBuiltinPose('seed-pose-stand-relaxed')!
 
-// 你的 THREE 骨架骨骼名与 Mixamo 一致时,直接写回:
 const {applied, missed} = applyPose(myModelRoot, relaxed.bones)
 ```
 

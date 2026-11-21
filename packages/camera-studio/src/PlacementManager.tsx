@@ -66,7 +66,7 @@ import {
   usePoseSessionKey,
 } from './poseMode/poseSession'
 import {resolveControlSpec} from './poseMode/controlSpec'
-import {prefetchLibPoses, resolvePoseBones} from './poseMode/poseLibResolve'
+import {prefetchLibPoses} from './poseMode/poseLibResolve'
 import {
   collectLibPoseIdsForProps,
   getPoseTrackId,
@@ -1279,6 +1279,7 @@ function PlacedModelCore({
     () => createMaterialOverridesConfig(materialSlots),
     [materialSlots],
   )
+  const poseProp = useMemo(() => posePropConfigShape(instance), [instance])
   const additionalProps = useMemo(() => {
     const modelEntryId =
       sourceType === 'library' ? entry.libraryEntryId : undefined
@@ -1287,7 +1288,7 @@ function PlacedModelCore({
       // 姿势 = 时间轴单属性(spec §6.1 + 2026-10-01 属性行化):值
       // JSON(lib 引用|custom 快照),面板显示为属性行,值区域走注册表
       // 的 pose 编辑器(弹框选预设);自定义插值器让它可打帧且平滑混合
-      pose: t.string('', posePropConfigShape().opts),
+      pose: t.string(poseProp.defaultValue, poseProp.opts),
       // 手势(2026-10-05):姿势的纯选择叠加层,左右手各一行;值是库手势
       // 引用(或 ''=无手势),应用只写本侧手指骨,可打帧(同姿势插值器)
       gestureL: t.string('', gesturePropConfigShape('left').opts),
@@ -1303,7 +1304,13 @@ function PlacedModelCore({
       props.source = fileConfigFor(entry.assetId)
     }
     return props
-  }, [sourceType, entry.assetId, entry.libraryEntryId, materialOverrides])
+  }, [
+    sourceType,
+    entry.assetId,
+    entry.libraryEntryId,
+    materialOverrides,
+    poseProp,
+  ])
   const {scale, lift} = useNormalizedModel(group)
   const objRef = useRef<ISheetObject<any> | undefined>(undefined)
   const [sheetObject, setSheetObject] = useState<ISheetObject<any> | undefined>(
@@ -1506,10 +1513,10 @@ function PlacedModelCore({
     })
   }, [sheetObject])
   const poseBones = useMemo(
-    () => resolvePoseBones(parsePoseValue(poseJson)),
+    () => poseProp.resolveBones(parsePoseValue(poseJson)),
     // libResolveTick:库引用异步解析到手后 onReady 自增,静止态下逼 memo 重算
     // (r3f invalidate 只排帧不重渲染 React,spec §5 的「重求值」需要这一跳)
-    [poseJson, libResolveTick],
+    [poseProp, poseJson, libResolveTick],
   )
   // 手势层(叠加):本侧手指骨;解析不出 = null(跳过应用,保持姿势层)
   const gestureLBones = useMemo(
@@ -1660,7 +1667,8 @@ function PlacedModelCore({
         const evaluated = (val(sheetObject.props.pose) as string) ?? ''
         applyPose(
           instance,
-          resolvePoseBones(parsePoseValue(evaluated)) ?? bindPoseRef.current,
+          poseProp.resolveBones(parsePoseValue(evaluated)) ??
+            bindPoseRef.current,
         )
       }
       // 手势轨道:求值值裁到本侧手指骨压上;无姿势轨道时身体仍归 mixer

@@ -73,9 +73,10 @@ export function poseInterpolate(
   leftJson: string,
   rightJson: string,
   progression: number,
+  resolveBones = resolvePoseBones,
 ): string {
-  const lb = resolvePoseBones(parseCached(leftJson))
-  const rb = resolvePoseBones(parseCached(rightJson))
+  const lb = resolveBones(parseCached(leftJson))
+  const rb = resolveBones(parseCached(rightJson))
   if (!lb || !rb) return leftJson
   return serializeCustomPose(mixPoseBones(lb, rb, progression))
 }

@@ -2,9 +2,15 @@
 /**
  * PlacementManager 姿势属性注册的可测纯件(组件逻辑留 PlacementManager.tsx)。
  */
+import {Quaternion} from 'three'
+import type {Bone, Object3D} from 'three'
 import {defaultT as translate} from './i18n'
 import {poseInterpolate} from './poseMode/poseInterpolate'
+import {resolvePoseBones} from './poseMode/poseLibResolve'
+import type {PoseBones} from './poseMode/poseOverride'
 import {parsePoseValue} from './poseMode/poseValue'
+
+const MIXAMO_HIPS = 'mixamorigHips'
 
 /** 库条目使用计数:姿势值(新旧格式通吃)是否引用了该条目 */
 export function isPoseEntryUsed(poseJson: string, entryId: string): boolean {
@@ -12,23 +18,76 @@ export function isPoseEntryUsed(poseJson: string, entryId: string): boolean {
   return v?.kind === 'lib' && v.id === entryId
 }
 
+function createPlacementPoseResolver(model: Object3D): typeof resolvePoseBones {
+  const hips = model.getObjectByName(MIXAMO_HIPS) as Bone | undefined
+  if (!hips?.isBone) return resolvePoseBones
+
+  const targetParentInPlacementSpace = new Quaternion()
+  for (
+    let ancestor = hips.parent;
+    ancestor && ancestor !== model.parent;
+    ancestor = ancestor.parent
+  ) {
+    targetParentInPlacementSpace.premultiply(ancestor.quaternion)
+  }
+  if (targetParentInPlacementSpace.equals(new Quaternion())) {
+    return resolvePoseBones
+  }
+
+  const yBotToTargetParent = targetParentInPlacementSpace.normalize().invert()
+  const convertedPoses = new WeakMap<PoseBones, PoseBones>()
+  return (value) => {
+    const bones = resolvePoseBones(value)
+    if (!bones || value?.kind !== 'lib' || !value.id.startsWith('seed-pose-')) {
+      return bones
+    }
+    const presetHips = bones[MIXAMO_HIPS]
+    if (!presetHips?.rotation) return bones
+
+    const cached = convertedPoses.get(bones)
+    if (cached) return cached
+    const rotation = new Quaternion()
+      .fromArray(presetHips.rotation)
+      .premultiply(yBotToTargetParent)
+      .normalize()
+    const converted: PoseBones = {
+      ...bones,
+      [MIXAMO_HIPS]: {
+        ...presetHips,
+        rotation: [rotation.x, rotation.y, rotation.z, rotation.w],
+      },
+    }
+    convertedPoses.set(bones, converted)
+    return converted
+  }
+}
+
 /** pose 属性的注册形态(spec §6.1 + 2026-10-01 属性行化):值是 JSON 字符串,
  *  面板显示为普通属性行,值区域由注册表里的 pose 编辑器渲染(弹框选预设,
  *  显示 T 姿势/预设名/自定义姿势);自定义插值器让轨道帧间平滑混合 */
-export function posePropConfigShape(): {
+export function posePropConfigShape(model?: Object3D): {
   defaultValue: string
+  resolveBones: typeof resolvePoseBones
   opts: {
     label: () => string
     editor: string
     interpolate: typeof poseInterpolate
   }
 } {
+  const resolveBones = model
+    ? createPlacementPoseResolver(model)
+    : resolvePoseBones
   return {
     defaultValue: '',
+    resolveBones,
     opts: {
       label: () => translate('pg.props.pose'),
       editor: 'pose',
-      interpolate: poseInterpolate,
+      interpolate:
+        resolveBones === resolvePoseBones
+          ? poseInterpolate
+          : (left, right, progression) =>
+              poseInterpolate(left, right, progression, resolveBones),
     },
   }
 }
