@@ -1,8 +1,8 @@
 import {lighten, saturate} from 'polished'
 import React from 'react'
 import styled from 'styled-components'
-import {DOT_SIZE_PX} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/Right/BasicKeyframedTrack/KeyframeEditor/SingleKeyframeDot'
 
+export const DOT_SIZE_PX = 6
 const CONNECTOR_HEIGHT = DOT_SIZE_PX / 2 + 1
 const CONNECTOR_WIDTH_UNSCALED = 1000
 

@@ -14,6 +14,7 @@ const RightSheetObjectRow: React.FC<{
 }> = ({leaf, layoutP}) => {
   return usePrism(() => {
     const aggregatedKeyframes = collectAggregateKeyframesInPrism(leaf)
+    const additional = leaf.additionalRow
 
     const node = (
       <AggregatedKeyframeTrack
@@ -25,7 +26,17 @@ const RightSheetObjectRow: React.FC<{
 
     return (
       <RightRow leaf={leaf} node={node} isCollapsed={leaf.isCollapsed}>
-        {leaf.children.map((leaf) => decideRowByPropType(leaf, layoutP))}
+        {[
+          ...leaf.children.map((leaf) => decideRowByPropType(leaf, layoutP)),
+          additional?.shouldRender && (
+            <RightRow
+              key={additional.content.id}
+              leaf={additional}
+              node={<>{additional.content.renderTrack(layoutP)}</>}
+              isCollapsed={false}
+            />
+          ),
+        ]}
       </RightRow>
     )
   }, [leaf, layoutP])

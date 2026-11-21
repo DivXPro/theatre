@@ -11,6 +11,7 @@ import {val} from '@dreamerbird/dataverse'
 import {useLockFrameStampPosition} from '@dreamerbird/studio/panels/SequenceEditorPanel/FrameStampPositionProvider'
 import {useCssCursorLock} from '@dreamerbird/studio/uiComponents/PointerEventsHandler'
 import DopeSnap from '@dreamerbird/studio/panels/SequenceEditorPanel/RightOverlay/DopeSnap'
+import {DOT_SIZE_PX} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/Right/keyframeRowUI/ConnectorLine'
 
 import type {ISingleKeyframeEditorProps} from './SingleKeyframeEditor'
 import {absoluteDims} from '@dreamerbird/studio/utils/absoluteDims'
@@ -31,7 +32,6 @@ import {__private} from '@dreamerbird/core'
 
 const {keyframeUtils} = __private
 
-export const DOT_SIZE_PX = 6
 const DOT_HOVER_SIZE_PX = DOT_SIZE_PX + 2
 
 const dotTheme = {

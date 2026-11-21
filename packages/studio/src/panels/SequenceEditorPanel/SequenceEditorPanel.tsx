@@ -27,6 +27,7 @@ import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
 import getStudio from '@dreamerbird/studio/getStudio'
 import type {UIPanelId} from '@dreamerbird/core/types/private'
 import {__private} from '@dreamerbird/core'
+import {getAdditionalSequenceRow} from './additionalRows'
 const {isSheet, isSheetObject} = __private.instanceTypes
 
 const Container = styled(PanelWrapper)`
@@ -134,6 +135,7 @@ function useHasAnyTracks(sheet: Sheet | undefined): boolean {
         obj.template.getMapOfValidSequenceTracks_forStudio(),
       )
       if (Object.keys(trackSetups).length > 0) return true
+      if (getAdditionalSequenceRow(obj.publicApi)?.hasContent()) return true
     }
     return false
   }, [sheet])

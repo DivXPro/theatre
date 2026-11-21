@@ -199,6 +199,12 @@ function resolveSimpleLeaf(
   objectId: string,
   propPath: string[],
 ): {sheetObject: ISheetObject<$IntentionalAny>; current: unknown} {
+  if (propPath[0] === 'animationTracks') {
+    throw new AgentApiError(
+      'INVALID_ARGUMENT',
+      'Action strips use the animation track editor',
+    )
+  }
   const sheetObject = resolveSceneSheetObject(runtime.sheet, objectId)
   if (!sheetObject) {
     throw new AgentApiError(

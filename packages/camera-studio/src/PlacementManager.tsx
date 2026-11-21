@@ -41,6 +41,10 @@ import {getLibrary} from './assetLibrary/library'
 import type {Library} from './assetLibrary/library'
 import {LibraryError} from './assetLibrary/source'
 import {entryOptions} from './assetLibrary/options'
+import {animationTracksProp} from './animationStrips/storage'
+import type {AnimationTracksObject} from './animationStrips/storage'
+import {parseAnimationTracks} from './animationStrips/model'
+import {useAnimationStrips} from './animationStrips/useAnimationStrips'
 import {computeDropPoint} from './dropPoint'
 import {registerEditorOnly} from './editorOnly'
 import {getExportAnimationTime} from './videoExport/exportAnimationClock'
@@ -229,7 +233,18 @@ export function countLibraryEntryUsage(entryId: string): number {
   let n = 0
   for (const [obj, {entry}] of placementObjects.entries()) {
     if (entry.libraryEntryId === entryId) n++
-    if (val(obj.props.animation) === entryId) n++
+    const tracks = parseAnimationTracks(
+      (val(obj.props.animationTracks) as string) ?? '',
+    )
+    if (
+      val(obj.props.animation) === entryId ||
+      (tracks.kind === 'tracks' &&
+        tracks.document.tracks.some((track) =>
+          track.strips.some((strip) => strip.assetId === entryId),
+        ))
+    ) {
+      n++
+    }
     if (isPoseEntryUsed((val(obj.props.pose) as string) ?? '', entryId)) n++
   }
   return n
@@ -1285,6 +1300,7 @@ function PlacedModelCore({
       sourceType === 'library' ? entry.libraryEntryId : undefined
     const props: Record<string, any> = {
       animation: literalConfigFor('animation', modelEntryId),
+      animationTracks: animationTracksProp,
       // 姿势 = 时间轴单属性(spec §6.1 + 2026-10-01 属性行化):值
       // JSON(lib 引用|custom 快照),面板显示为属性行,值区域走注册表
       // 的 pose 编辑器(弹框选预设);自定义插值器让它可打帧且平滑混合
@@ -1342,6 +1358,13 @@ function PlacedModelCore({
   useSelectionGizmoTarget(objRef, groupRef)
   const invalidate = useThree((s) => s.invalidate)
   useModelMaterials({instance, sheetObject, slots: materialSlots, invalidate})
+  const strips = useAnimationStrips(
+    sheetObject as AnimationTracksObject | undefined,
+    instance,
+    entry.libraryEntryId,
+    invalidate,
+  )
+  const hasStripLayer = strips.state.kind !== 'legacy'
 
   // 主画面点选:和 App 里 Model 的 selectThingy 同款。放置模式下点击是
   // 确认落点,不选中、不拦截;点 gizmo 箭头穿透过来的误点也要吞掉。
@@ -1605,7 +1628,7 @@ function PlacedModelCore({
   // 旧的 action fadeOut 残余权重在停止后直接由 applyPose 覆盖,不必 stopAllAction。
   useEffect(() => {
     return onChange(sheet.sequence.pointer.playing, (playing) => {
-      if (playing) {
+      if (playing || hasStripLayer) {
         invalidate()
       } else {
         applyPose(instance, poseBones ?? bindPoseRef.current)
@@ -1615,13 +1638,25 @@ function PlacedModelCore({
         invalidate()
       }
     })
-  }, [sheet, invalidate, instance, poseBones, gestureLBones, gestureRBones])
+  }, [
+    sheet,
+    invalidate,
+    instance,
+    poseBones,
+    gestureLBones,
+    gestureRBones,
+    hasStripLayer,
+  ])
   // pose 数据变化且当前未播放时立即应用,覆盖 pose 值切换与撤销/重做路径。
   // poseModeActive 进 deps:姿势模式期间不抢骨骼(IK 骨架每帧重解算,应用了
   // 也会被压回);会话退出(true→false)时本 effect 重跑,把当前值补刷回骨骼——
   // 修「会话期间值被弹框/撤销/同步改掉,Esc 后模型停在旧姿势、再点同值因
   // 值没变不重刷而永久卡死」的脱节。
   useEffect(() => {
+    if (hasStripLayer) {
+      invalidate()
+      return
+    }
     if (
       !shouldApplyPoseWhenIdle(
         val(sheet.sequence.pointer.playing),
@@ -1642,13 +1677,27 @@ function PlacedModelCore({
     invalidate,
     sheet,
     poseModeActive,
+    hasStripLayer,
   ])
   useFrame((_, delta) => {
     if (!sheetObject) return
     const exportTime = getExportAnimationTime()
-    if (exportTime === null && !val(sheet.sequence.pointer.playing)) return
-    if (exportTime === null) mixer.update(delta)
-    else mixer.setTime(exportTime)
+    const playing = val(sheet.sequence.pointer.playing)
+    if (exportTime === null && poseModeActive && strips.hasLayer()) return
+    const sampledStripLayer = strips.applyAt(
+      (exportTime ?? sheet.sequence.position) * 1000,
+      exportTime !== null,
+      () => {
+        const currentPose = (val(sheetObject.props.pose) as string) ?? ''
+        const base = poseProp.resolveBones(parsePoseValue(currentPose))
+        if (base) applyPose(instance, base)
+      },
+    )
+    if (!sampledStripLayer) {
+      if (exportTime === null && !playing) return
+      if (exportTime === null) mixer.update(delta)
+      else mixer.setTime(exportTime)
+    }
     // 有姿势/手势轨道:求值姿势逐骨压过动作片段(spec §7.1);
     // 每帧重读求值值(拖针/播放求值产物),resolvePoseBones 有 LRU/缓存兜底。
     // 轨道有无也现场读——两步撤销首帧(撤关键帧→撤空轨)删轨不改求值值,
@@ -1688,7 +1737,7 @@ function PlacedModelCore({
       }
     }
     // 导出时主循环已切到 never,由导出核心手动 advance;不额外请帧。
-    if (exportTime === null) invalidate()
+    if (exportTime === null && playing) invalidate()
   })
 
   // pending 条目:对象已由 e.group 建好后,一次性提交清单。

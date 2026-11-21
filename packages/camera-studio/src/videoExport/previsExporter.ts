@@ -14,6 +14,7 @@ import {val} from '@dreamerbird/core'
 import type {ISequence} from '@dreamerbird/core'
 import type {PerspectiveCamera} from 'three'
 import {AgentApiError} from '../agent/errors'
+import {prepareAnimationStripExport} from '../animationStrips/exportSession'
 import type {ExportSink} from './sinks'
 import {setExportAnimationTime} from './exportAnimationClock'
 import type {ExportRenderContext} from './exportRenderContext'
@@ -171,6 +172,7 @@ export function startStillExport(
   let restoreSequence: (() => void) | null = null
   let restoreFrameloop: (() => void) | null = null
   let restoreScene: (() => void) | null = null
+  let restoreStrips: (() => void) | null = null
   let frameRenderer: ExportFrameRenderer | null = null
   let restored = false
   restoreNow = () => {
@@ -179,6 +181,7 @@ export function startStillExport(
     frameRenderer?.dispose()
     frameRenderer = null
     setExportAnimationTime(null)
+    restoreStrips?.()
     restoreScene?.()
     restoreFrameloop?.()
     restoreSequence?.()
@@ -194,6 +197,14 @@ export function startStillExport(
     const lengthMs = Math.max(0, val(args.sequence.pointer.length) * 1000)
     const timeMs = clampStillTime(args.timeMs, lengthMs)
     try {
+      const activateStrips = await prepareAnimationStripExport(
+        args.sequence,
+        timeMs,
+        timeMs,
+        combined.signal,
+      )
+      assertNotAborted(combined.signal)
+      restoreStrips = activateStrips()
       restoreSequence = beginSequenceSession(args.sequence)
       restoreFrameloop = beginFrameloopSession(args.context)
       restoreScene = beginExportSceneState(
@@ -265,6 +276,7 @@ export function startVideoExport(
   let restoreSequence: (() => void) | null = null
   let restoreFrameloop: (() => void) | null = null
   let restoreScene: (() => void) | null = null
+  let restoreStrips: (() => void) | null = null
   let frameRenderer: ExportFrameRenderer | null = null
   let activeWriter: AnyVideoWriter | null = null
   let activeSink: ExportSink | undefined
@@ -281,6 +293,7 @@ export function startVideoExport(
     // 仅在取消/异常路径丢弃半成品;正常 finish 后 activeSink 已清空。
     void sink?.abort().catch(() => {})
     setExportAnimationTime(null)
+    restoreStrips?.()
     restoreScene?.()
     restoreFrameloop?.()
     restoreSequence?.()
@@ -349,6 +362,14 @@ export function startVideoExport(
       }
       assertNotAborted(combined.signal)
 
+      const activateStrips = await prepareAnimationStripExport(
+        args.sequence,
+        plan.timesMs[0]!,
+        plan.timesMs[plan.frameCount - 1]!,
+        combined.signal,
+      )
+      assertNotAborted(combined.signal)
+      restoreStrips = activateStrips()
       restoreSequence = beginSequenceSession(args.sequence)
       restoreFrameloop = beginFrameloopSession(args.context)
       restoreScene = beginExportSceneState(

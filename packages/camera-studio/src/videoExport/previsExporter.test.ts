@@ -83,6 +83,18 @@ const {startStillExport, startVideoExport} =
   require('./previsExporter') as typeof import('./previsExporter')
 
 import type {ExportRenderContext} from './exportRenderContext'
+import {AnimationClip, Bone, Group, VectorKeyframeTrack} from 'three'
+import {Ticker, val as readPointer} from '@dreamerbird/dataverse'
+import DefaultPlaybackController from '@dreamerbird/core/sequences/playbackControllers/DefaultPlaybackController'
+import {
+  applyAnimationStripFrame,
+  createStripSampler,
+} from '../animationStrips/sampler'
+import {
+  getAnimationStripSnapshot,
+  registerAnimationStripExport,
+} from '../animationStrips/exportSession'
+import type {AnimationTrackState} from '../animationStrips/model'
 
 function makeSequence(lengthSeconds = 2) {
   return {
@@ -136,6 +148,122 @@ beforeEach(() => {
 })
 
 describe('startVideoExport', () => {
+  test('paused seek, normal playback and video export sample the same bone pose', async () => {
+    const controller = new DefaultPlaybackController()
+    const ticker = new Ticker()
+    ticker.tick(0)
+    const sequence = {
+      get position() {
+        return controller.getCurrentPosition()
+      },
+      set position(value: number) {
+        controller.gotoPosition(value)
+      },
+      get pointer() {
+        return {
+          length: 5,
+          playing: readPointer(controller.statePointer.playing),
+        }
+      },
+      pause: () => controller.pause(),
+      play: () => controller.play(1, [0, 5], 1, 'normal', ticker),
+    }
+    const object = {sheet: {sequence}} as never
+    const model = new Group()
+    const hip = new Bone()
+    hip.name = 'Hip'
+    model.add(hip)
+    const clip = new AnimationClip('Walk', 4, [
+      new VectorKeyframeTrack('Hip.position', [0, 4], [0, 0, 0, 4, 8, 12]),
+    ])
+    const state: AnimationTrackState = {
+      kind: 'tracks',
+      document: {
+        version: 1,
+        tracks: [
+          {
+            id: 'track',
+            strips: [
+              {
+                id: 'walk',
+                assetId: 'walk-asset',
+                startMs: 1000,
+                sourceInMs: 500,
+                sourceOutMs: 3500,
+              },
+            ],
+          },
+        ],
+      },
+    }
+    const clips = new Map([['walk-asset', clip]])
+    const sampler = createStripSampler(model)
+    const frame = (
+      input: {
+        state: AnimationTrackState
+        clips: ReadonlyMap<string, AnimationClip>
+      } = {state, clips},
+    ) => {
+      applyAnimationStripFrame(
+        sampler,
+        input.state,
+        (id) => input.clips.get(id),
+        sequence.position * 1000,
+        () => {},
+      )
+      return hip.position.toArray()
+    }
+    const prepare = jest.fn(async () => ({state, clips}))
+    const unregister = registerAnimationStripExport(object, prepare)
+    try {
+      sequence.position = 2.5
+      const sought = frame()
+      expect(sought).toEqual([2, 4, 6])
+      sequence.position = 0
+      let playing: Promise<boolean> | undefined
+      ticker.onThisOrNextTick(() => {
+        playing = sequence.play()
+      })
+      ticker.tick(0)
+      ticker.tick(1500)
+      expect(frame()).toEqual([1, 2, 3])
+      ticker.tick(2500)
+      expect(readPointer(controller.statePointer.playing)).toBe(true)
+      expect(frame()).toEqual(sought)
+      sequence.pause()
+      await playing
+
+      const {context, advance} = makeContext()
+      const exported: number[][] = []
+      advance.mockImplementation(() => {
+        const snapshot = getAnimationStripSnapshot(object)
+        expect(snapshot).toBeDefined()
+        exported.push(frame(snapshot))
+      })
+      await startVideoExport({
+        context,
+        sequence: sequence as never,
+        camera: {} as never,
+        options: {
+          width: 640,
+          height: 360,
+          renderMode: 'styled',
+          clayColor: '#D8D8D8',
+          background: 'neutral',
+        },
+        range: {startMs: 2500, endMs: 2533},
+        fps: 30,
+      }).done
+      expect(prepare).toHaveBeenCalledWith(2500, 2500, expect.anything())
+      expect(exported).toEqual([sought])
+      expect(getAnimationStripSnapshot(object)).toBeUndefined()
+    } finally {
+      controller.pause()
+      unregister()
+      sampler.dispose()
+    }
+  })
+
   test('导出期切到 frameloop=never,完成后恢复并还原播放头', async () => {
     const sequence = makeSequence()
     const {context, setFrameloop, invalidate, advance} = makeContext()
