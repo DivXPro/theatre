@@ -1,8 +1,8 @@
 name: Release
 
 # Publishes @dreamerbird packages to npm when a version tag (v1.2.3) is pushed.
-# The tag must match the package.json version of at least one publishable
-# package; packages whose version already exists on npm are skipped, so
+# All publishable packages must share the version named by the tag.
+# Packages whose version already exists on npm are skipped, so
 # re-running a failed release is safe.
 #
 # Requires the NPM_TOKEN repository secret (npm automation token with

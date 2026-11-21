@@ -10,12 +10,12 @@
 
 ## 发版步骤
 
-1. 决定版本号，手动 bump 对应包的 `package.json`（核心包固定模式共用同一版本；camera-studio / camera-studio-bridge 版本独立演进）。
+1. 决定统一版本号。即使只有一个包有改动，也将清单中 10 个公开包的 `package.json` 同步更新到该版本。
 2. 提交 bump，确认工作区干净。
 3. 本地演练（只读，不发布）：
 
    ```bash
-   node scripts/stable-release.mjs --dry-run --tag v1.0.0
+   node scripts/stable-release.mjs --dry-run --tag v1.0.1
    ```
 
    检查输出的 `publishing` 清单是否符合预期；已存在于 npm 的版本会列入 `skipping`。
@@ -23,15 +23,15 @@
 4. 打 tag 并推送：
 
    ```bash
-   git tag v1.0.0
-   git push origin main --tags
+   git tag v1.0.1
+   git push origin main refs/tags/v1.0.1
    ```
 
 5. 在 GitHub Actions 的 `Release` 工作流盯结果。流水线：安装 → 全量构建 → typecheck → agent 相关包测试 → 发布。
 
 ## 语义保证
 
-- **tag 校验**：tag 必须是 `v主.次.补丁` 且至少匹配一个待发包的版本号，否则工作流直接失败——打错 tag 不会发出任何东西。
+- **版本校验**：所有公开包必须使用同一版本号。发布 tag 必须采用 `v主.次.补丁` 格式，并匹配这个统一版本号。
 - **幂等**：发布前逐一查询 npm，已存在的版本跳过。发布中途失败时修复后重跑同一 tag 即可，已成功的包不会重发。
 - **失败止步**：任一包发布失败，工作流失败并列出本次已发布的包。
 

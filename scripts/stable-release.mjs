@@ -61,23 +61,25 @@ function fail(message) {
 }
 
 // --- tag validation -------------------------------------------------------
-// A `v*` tag must correspond to at least one publishable package's version,
-// otherwise the tag is almost certainly a typo.
 const versions = publishablePackages.map((name) => ({
   name,
   version: readPackageVersion(name),
 }))
+const releaseVersion = versions[0].version
+
+if (!versions.every(({version}) => version === releaseVersion)) {
+  fail(
+    'Publishable packages must share one release version: ' +
+      versions.map(({name, version}) => `${name}@${version}`).join(', '),
+  )
+}
 
 if (tag) {
   if (!/^v\d+\.\d+\.\d+$/.test(tag)) {
     fail(`Release tag "${tag}" must look like v1.2.3`)
   }
-  const taggedVersion = tag.slice(1)
-  if (!versions.some((p) => p.version === taggedVersion)) {
-    fail(
-      `Tag ${tag} does not match any publishable package version: ` +
-        versions.map((p) => `${p.name}@${p.version}`).join(', '),
-    )
+  if (tag !== `v${releaseVersion}`) {
+    fail(`Tag ${tag} does not match the shared package version ${releaseVersion}`)
   }
 }
 
