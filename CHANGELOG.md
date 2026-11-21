@@ -1,5 +1,11 @@
 # Theatre.js changelog
 
+## 1.1.0
+
+- Camera Studio 宿主可用 `HttpPatchAdapter` 从服务器加载场景，并通过 HTTP JSON Patch 保存增量。示例接口支持 ETag 版本校验、幂等提交和 WebSocket 版本通知。
+- 宿主管理场景时，Studio 在内存中保留未保存编辑。空闲标签页收到远端更新后重新加载，编辑中的标签页会提示版本变化并保留本地编辑。
+- 宿主可配置场景资产的上传与读取接口。接入步骤见 [Camera Studio 嵌入指南](docs/guides/camera-studio-embedding.md#5-场景状态接管)。
+
 ## 1.0.0
 
 Theatre.js 1.0 将 npm scope 从 `@theatre/*` 迁至 `@dreamerbird/*`,定稿 `init()` 流程,并引入实验性的自托管协作。完整迁移步骤见 [MIGRATION.md](MIGRATION.md)。
