@@ -95,6 +95,11 @@ const FRUSTUM_HIGHLIGHT = 0xffb020
  * × 该比例」处才开始画,4 根线不再在机位精确交汇成亮点,尾部更干净
  */
 const FRUSTUM_TAIL_INSET = 0.125
+/** 视锥线拾取:Three 的 Line raycast 默认阈值是 1 个世界单位,近距离会
+ *  把旁边的模型也罩进去。这里按点击距离缩放成约 6px 的窄带。 */
+const FRUSTUM_LINE_PICK_RATIO = 0.006
+const FRUSTUM_LINE_PICK_MIN = 0.004
+const frustumPickOrigin = new Vector3()
 
 /**
  * 运镜驱动属性,挂在 Shot Camera 对象上(模块级常量:
@@ -170,16 +175,33 @@ const shotCameraAdditionalProps = {
   }),
 }
 
-/** 视锥线:末端平面矩形 4 段 + 顶点→平面 4 角 = 8 段 */
+/** 视锥线:近端矩形 4 段 + 远端矩形 4 段 + 侧棱 4 段 = 12 段 */
 function makeFrustumLines(): LineSegments {
   const geo = new BufferGeometry()
-  geo.setAttribute('position', new BufferAttribute(new Float32Array(16 * 3), 3))
+  geo.setAttribute('position', new BufferAttribute(new Float32Array(24 * 3), 3))
   const lines = new LineSegments(
     geo,
     new LineBasicMaterial({color: FRUSTUM_COLOR, toneMapped: false}),
   )
   // 顶点逐帧重写,包围球不更新,关掉视锥剔除防止被误剔
   lines.frustumCulled = false
+  // 只收紧本对象的线拾取阈值;共享 raycaster 的参数同步恢复。
+  const baseRaycast = lines.raycast
+  lines.raycast = (raycaster, intersects) => {
+    const threshold = raycaster.params.Line.threshold
+    const distance = raycaster.ray.origin.distanceTo(
+      lines.getWorldPosition(frustumPickOrigin),
+    )
+    raycaster.params.Line.threshold = Math.max(
+      FRUSTUM_LINE_PICK_MIN,
+      distance * FRUSTUM_LINE_PICK_RATIO,
+    )
+    try {
+      baseRaycast.call(lines, raycaster, intersects)
+    } finally {
+      raycaster.params.Line.threshold = threshold
+    }
+  }
   return lines
 }
 
@@ -241,6 +263,11 @@ function updateFrustum(
     [w, h, z],
     [-w, h, z],
   ]
+  const near = corners.map(([x, y, nearZ]) => [
+    x * FRUSTUM_TAIL_INSET,
+    y * FRUSTUM_TAIL_INSET,
+    nearZ * FRUSTUM_TAIL_INSET,
+  ])
   const attr = lines.geometry.getAttribute('position') as BufferAttribute
   const arr = attr.array as Float32Array
   let o = 0
@@ -253,17 +280,13 @@ function updateFrustum(
     arr[o++] = b[2]
   }
   for (let i = 0; i < 4; i++) {
-    seg(corners[i], corners[(i + 1) % 4])
-    // 尾部内缩:起点从机位沿角点方向前移视锥长度的 FRUSTUM_TAIL_INSET,
-    // 4 根线起点错开,不再交汇成亮点
-    seg(
-      [
-        corners[i][0] * FRUSTUM_TAIL_INSET,
-        corners[i][1] * FRUSTUM_TAIL_INSET,
-        corners[i][2] * FRUSTUM_TAIL_INSET,
-      ],
-      corners[i],
-    )
+    const next = (i + 1) % 4
+    // 远端矩形
+    seg(corners[i], corners[next])
+    // 近端矩形:闭合小口,不再留开放线头
+    seg(near[i], near[next])
+    // 侧棱:近端角点连到对应远端角点
+    seg(near[i], corners[i])
   }
   attr.needsUpdate = true
   fill.scale.set(2 * w, 2 * h, 1)
