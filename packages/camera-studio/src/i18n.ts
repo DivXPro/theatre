@@ -238,6 +238,13 @@ export const en: Messages = {
   'pg.lib.rigMismatch': ' · rig mismatch',
   'pg.lib.modelCardTitle':
     'Click to preview placement, or drag to a spot in the viewport',
+  'pg.lib.modelGroup.characters': 'Characters',
+  'pg.lib.modelGroup.buildings': 'Buildings',
+  'pg.lib.modelGroup.buildingBlocks': 'Building blocks',
+  'pg.lib.modelGroup.props': 'Furniture and props',
+  'pg.lib.modelGroup.vehicles': 'Vehicles',
+  'pg.lib.modelGroup.nature': 'Nature',
+  'pg.lib.modelGroup.imported': 'Imported models',
   'pg.lib.pathCardTitle':
     'Click to place at scene center; drag to a spot on the canvas',
   'pg.placement.click':
@@ -487,6 +494,13 @@ export const zhCN: Messages = {
   'pg.lib.rigTitle': '{rig}\n点击给这套骨架起名',
   'pg.lib.rigMismatch': ' · 骨架不匹配',
   'pg.lib.modelCardTitle': '点击预览放置，或直接拖到视口指定落点',
+  'pg.lib.modelGroup.characters': '人物',
+  'pg.lib.modelGroup.buildings': '建筑',
+  'pg.lib.modelGroup.buildingBlocks': '建筑构件',
+  'pg.lib.modelGroup.props': '家具与道具',
+  'pg.lib.modelGroup.vehicles': '交通工具',
+  'pg.lib.modelGroup.nature': '自然',
+  'pg.lib.modelGroup.imported': '导入模型',
   'pg.lib.pathCardTitle': '点击放到场景中心;按住拖到画布指定落点',
   'pg.placement.click': '{name} · 点击视口放置 · Esc 取消',
   'pg.placement.drag': '在视口松手放置 · Esc 取消',

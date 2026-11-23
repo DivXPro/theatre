@@ -22,6 +22,11 @@ import type {ImportPlan} from './importPipeline'
 import {backfillModelThumbnails} from './thumbnail'
 import {useModelThumbUrl} from './useModelThumbUrl'
 import type {AnimationEntry, ModelEntry, PoseEntry} from './types'
+import {
+  modelGroupOf,
+  modelGroupOrder,
+  modelPickerEntries,
+} from './modelPickerEntries'
 import {getUiConfig} from '../uiConfig'
 
 export type AssetKind = 'model' | 'pose' | 'animation' | 'path'
@@ -493,6 +498,9 @@ export function AssetLibraryPanel({
   const [busy, setBusy] = useState(false)
   const [animationQuery, setAnimationQuery] = useState('')
   const [animationPack, setAnimationPack] = useState('')
+  const [collapsedModelGroups, setCollapsedModelGroups] = useState<
+    Partial<Record<(typeof modelGroupOrder)[number], boolean>>
+  >({})
   const [collapsedPacks, setCollapsedPacks] = useState<Set<string>>(
     () => new Set(),
   )
@@ -707,6 +715,15 @@ export function AssetLibraryPanel({
     </Card>
   )
 
+  const modelGroups = new Map<ReturnType<typeof modelGroupOf>, ModelEntry[]>()
+  if (kind === 'model') {
+    for (const entry of modelPickerEntries(models)) {
+      const group = modelGroupOf(entry)
+      const entries = modelGroups.get(group)
+      if (entries) entries.push(entry)
+      else modelGroups.set(group, [entry])
+    }
+  }
   const animationPacks =
     kind === 'animation'
       ? [...new Set(animations.flatMap((entry) => entry.packs ?? []))].sort(
@@ -839,7 +856,30 @@ export function AssetLibraryPanel({
       {/* 卡片网格 */}
       <Grid>
         {kind === 'model'
-          ? models.map(renderModelCard)
+          ? modelGroupOrder.map((group) => {
+              const entries = modelGroups.get(group)
+              if (!entries) return null
+              const expanded = !collapsedModelGroups[group]
+              return (
+                <React.Fragment key={group}>
+                  <PackHeading>
+                    <PackToggle
+                      type="button"
+                      aria-expanded={expanded}
+                      onClick={() =>
+                        setCollapsedModelGroups((previous) => ({
+                          ...previous,
+                          [group]: !previous[group],
+                        }))
+                      }
+                    >
+                      {t(`pg.lib.modelGroup.${group}`)}
+                    </PackToggle>
+                  </PackHeading>
+                  {expanded && entries.map(renderModelCard)}
+                </React.Fragment>
+              )
+            })
           : kind === 'pose'
             ? visiblePoses.map(renderPoseCard)
             : kind === 'path'

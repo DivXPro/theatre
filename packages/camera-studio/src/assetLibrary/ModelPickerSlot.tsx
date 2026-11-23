@@ -19,6 +19,7 @@ import type {ModelEntry} from './types'
 import {useModelThumbUrl} from './useModelThumbUrl'
 import {importModelFile} from './importModelFile'
 import {AssetLibraryPanel} from './AssetLibraryPanel'
+import {modelPickerEntries} from './modelPickerEntries'
 
 export type ModelPickerSlotProps = {
   onPlaceModel: (entry: ModelEntry) => void
@@ -44,7 +45,7 @@ export function ModelPickerSlot({
   if (HostPicker) {
     return (
       <HostPicker
-        entries={entries}
+        entries={modelPickerEntries(entries)}
         getThumbUrl={getThumbUrl}
         onPlace={onPlaceModel}
         onDragStart={onDragStartModel}

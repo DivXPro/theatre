@@ -15,8 +15,10 @@
  */
 import React, {act} from 'react'
 import ReactDOM from 'react-dom/client'
+import '../i18n'
 import type {WritableLibrarySource} from './source'
-import type {AnimationEntry, LibraryEntry} from './types'
+import {StaticCatalogSource} from './staticCatalogSource'
+import type {AnimationEntry, LibraryEntry, ModelEntry} from './types'
 ;(globalThis as any).IS_REACT_ACT_ENVIRONMENT = true
 
 const noop = () => {}
@@ -56,7 +58,7 @@ const {AssetLibraryPanel} = require('./AssetLibraryPanel') as {
   AssetLibraryPanel: (props: Record<string, unknown>) => React.ReactElement
 }
 const {configureLibrary} = require('./library') as {
-  configureLibrary: (opts: {sources: unknown[]}) => unknown
+  configureLibrary: typeof import('./library').configureLibrary
 }
 
 /** 造一个持有一条姿势条目(骨架 rig-test)的源;writable 决定查看器模式 */
@@ -144,6 +146,73 @@ test('可写源:族标签点击弹改名 prompt(入口仍在)', async () => {
     expect(promptSpy).toHaveBeenCalledTimes(1)
   } finally {
     promptSpy.mockRestore()
+  }
+})
+
+test('模型库按用途折叠分组，旧人体和 Bot 副本仍可按 ID 读取', async () => {
+  const catalog = new StaticCatalogSource()
+  const builtinModels = (await catalog.listEntries('model')) as ModelEntry[]
+  const xBot = builtinModels.find((entry) => entry.name === 'X Bot')!
+  const localModel = (id: string, name: string): ModelEntry => ({
+    ...xBot,
+    id,
+    name,
+    blobId: id,
+    contentHash: id,
+  })
+  const legacy = [
+    localModel('legacy-bot', 'X Bot (1).fbx'),
+    {
+      ...localModel('legacy-y-bot', 'Renamed Y Bot'),
+      contentHash: '95cbcdd2192dbe68',
+    },
+    localModel('legacy-mixamo', 'Remy'),
+    {
+      ...localModel('legacy-mixamo-renamed', 'Renamed retired character'),
+      contentHash: 'd5d9862207306764',
+    },
+    localModel('legacy-poser', 'MangaKa Posers - Poser_Male_01A_1.8m'),
+    localModel('legacy-hand', 'Dummy_R_Hand_M01A_1.8m'),
+  ]
+  const custom = localModel('custom-model', 'Custom model')
+  const library = configureLibrary({
+    sources: [makeSource(true, [...legacy, custom]), catalog],
+  })
+  const container = document.body.appendChild(document.createElement('div'))
+  const root = ReactDOM.createRoot(container)
+  try {
+    await act(async () => {
+      root.render(<AssetLibraryPanel kind="model" onClose={noop} />)
+    })
+    const headings = Array.from(container.querySelectorAll('h3 button'))
+    expect(headings.map((heading) => heading.textContent)).toEqual([
+      'Characters',
+      'Buildings',
+      'Building blocks',
+      'Furniture and props',
+      'Vehicles',
+      'Nature',
+      'Imported models',
+    ])
+    const hasCard = (name: string) =>
+      Boolean(container.querySelector(`[title="${name}"]`))
+    expect(hasCard('X Bot')).toBe(true)
+    expect(hasCard('Y Bot')).toBe(true)
+    expect(hasCard(custom.name)).toBe(true)
+    for (const entry of legacy) {
+      expect(hasCard(entry.name)).toBe(false)
+      expect(await library.getEntry(entry.id)).toEqual(entry)
+    }
+
+    const buildings = headings[1] as HTMLButtonElement
+    expect(hasCard('MangaKa Props - M_R_City_Building_18')).toBe(true)
+    await act(async () => buildings.click())
+    expect(buildings.getAttribute('aria-expanded')).toBe('false')
+    expect(hasCard('MangaKa Props - M_R_City_Building_18')).toBe(false)
+    expect(hasCard('X Bot')).toBe(true)
+  } finally {
+    await act(async () => root.unmount())
+    container.remove()
   }
 })
 
