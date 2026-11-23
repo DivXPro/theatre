@@ -6,6 +6,7 @@ import theatre, {
   getProject,
   getStudioSync,
   onChange,
+  types as t,
   val,
 } from '@dreamerbird/core'
 import {getCoreTicker} from '@dreamerbird/core/coreTicker'
@@ -120,7 +121,7 @@ test('lays out ordered management and track rows reactively and cleans up the cu
   expect(tree.getValue().children).toEqual([])
 })
 
-test('keeps object-row actions registered without reserving an extra timeline row', async () => {
+test('hides an empty object until it is selected, then exposes its row actions', async () => {
   const project = getProject('object-row-action')
   await project.ready
   const sheet = project.sheet('Scene')
@@ -135,10 +136,20 @@ test('keeps object-row actions registered without reserving an extra timeline ro
     },
   ])
   try {
-    const tree = prism(() =>
-      calculateSequenceEditorTree(privateAPI(sheet), getStudio()),
-    ).getValue()
-    const [objectRow] = tree.children
+    const readTree = () =>
+      prism(() =>
+        calculateSequenceEditorTree(privateAPI(sheet), getStudio()),
+      ).getValue()
+
+    expect(readTree().children).toEqual([])
+
+    getStudio().transaction(({stateEditors}) => {
+      stateEditors.studio.historic.panels.outline.selection.set([
+        {...object.address, type: 'SheetObject'},
+      ])
+    })
+
+    const [objectRow] = readTree().children
     expect(objectRow.additionalRows).toEqual([
       expect.objectContaining({
         shouldRender: false,
@@ -146,6 +157,117 @@ test('keeps object-row actions registered without reserving an extra timeline ro
       }),
     ])
     expect(objectRow.heightIncludingChildren).toBe(objectRow.nodeHeight)
+  } finally {
+    unregister()
+  }
+})
+
+test('shows objects with a property track and hides them when the track is removed', async () => {
+  const project = getProject('object-row-property-track')
+  await project.ready
+  const sheet = project.sheet('Scene')
+  const object = sheet.object('Actor', {value: t.number(0)})
+  const stop = onChange(object.props.value, () => {})
+  const readTree = () =>
+    prism(() =>
+      calculateSequenceEditorTree(privateAPI(sheet), getStudio()),
+    ).getValue()
+  try {
+    expect(readTree().children).toEqual([])
+
+    getStudioSync()!.transaction(({sequenceProp}) =>
+      sequenceProp(object.props.value),
+    )
+    const rows = readTree().children
+    expect(rows).toHaveLength(1)
+    expect(rows[0].sheetObject.address.objectKey).toBe('Actor')
+
+    getStudioSync()!.transaction(({unsequenceProp}) =>
+      unsequenceProp(object.props.value),
+    )
+    expect(readTree().children).toEqual([])
+  } finally {
+    stop()
+  }
+})
+
+test('keeps a selected object hidden when it has neither tracks nor row actions', async () => {
+  const project = getProject('object-row-selected-empty')
+  await project.ready
+  const sheet = project.sheet('Scene')
+  const object = sheet.object('Camera', {value: t.number(0)})
+  getStudio().transaction(({stateEditors}) => {
+    stateEditors.studio.historic.panels.outline.selection.set([
+      {...object.address, type: 'SheetObject'},
+    ])
+  })
+  const tree = prism(() =>
+    calculateSequenceEditorTree(privateAPI(sheet), getStudio()),
+  ).getValue()
+  expect(tree.children).toEqual([])
+})
+
+test('does not leak selection across projects with the same sheet and object names', async () => {
+  const first = getProject('object-row-selection-source')
+  const second = getProject('object-row-selection-target')
+  await Promise.all([first.ready, second.ready])
+  const source = first.sheet('Scene').object('Actor', {
+    animationTracks: animationTracksProp,
+  })
+  const target = second.sheet('Scene').object('Actor', {
+    animationTracks: animationTracksProp,
+  })
+  const register = (object: typeof source) =>
+    registerAdditionalSequenceRows(object, () => [
+      {
+        id: 'object-actions',
+        isHeaderVisible: () => false,
+        renderObjectHeader: () => <span>Object actions</span>,
+        renderHeader: () => null,
+        renderTrack: () => null,
+      },
+    ])
+  const unregisterSource = register(source)
+  const unregisterTarget = register(target)
+  try {
+    getStudio().transaction(({stateEditors}) => {
+      stateEditors.studio.historic.panels.outline.selection.set([
+        {...source.address, type: 'SheetObject'},
+      ])
+    })
+    const targetTree = prism(() =>
+      calculateSequenceEditorTree(
+        privateAPI(second.sheet('Scene')),
+        getStudio(),
+      ),
+    ).getValue()
+    expect(targetTree.children).toEqual([])
+  } finally {
+    unregisterSource()
+    unregisterTarget()
+  }
+})
+
+test('shows an object when a registered additional row has timeline content', async () => {
+  const project = getProject('object-row-additional-track')
+  await project.ready
+  const sheet = project.sheet('Scene')
+  const object = sheet.object('Actor', {animationTracks: animationTracksProp})
+  const row = (id: string): AdditionalSequenceRow => ({
+    id,
+    renderHeader: () => null,
+    renderTrack: () => null,
+  })
+  const unregister = registerAdditionalSequenceRows(object, () => [
+    {...row('toolbar'), countsAsTrack: false, isHeaderVisible: () => false},
+    row('track'),
+  ])
+  try {
+    const tree = prism(() =>
+      calculateSequenceEditorTree(privateAPI(sheet), getStudio()),
+    ).getValue()
+    expect(tree.children).toHaveLength(1)
+    expect(tree.children[0].sheetObject.address.objectKey).toBe('Actor')
   } finally {
     unregister()
   }

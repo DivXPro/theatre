@@ -28,6 +28,7 @@ import getStudio from '@dreamerbird/studio/getStudio'
 import type {UIPanelId} from '@dreamerbird/core/types/private'
 import {__private} from '@dreamerbird/core'
 import {
+  additionalRowCountsAsTrack,
   getAdditionalSequenceRows,
   getSequenceEditorView,
   onRevealAdditionalSequenceRows,
@@ -164,7 +165,7 @@ function useHasAnyTracks(sheet: Sheet | undefined): boolean {
       if (Object.keys(trackSetups).length > 0) return true
       if (
         getAdditionalSequenceRows(obj.publicApi).some(
-          (row) => row.countsAsTrack !== false && (row.hasContent?.() ?? true),
+          additionalRowCountsAsTrack,
         )
       )
         return true

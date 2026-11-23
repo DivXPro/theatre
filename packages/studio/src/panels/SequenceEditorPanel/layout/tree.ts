@@ -16,7 +16,10 @@ import logger from '@dreamerbird/utils/logger'
 import {titleBarHeight} from '@dreamerbird/studio/panels/BasePanel/common'
 import type {Studio} from '@dreamerbird/studio/Studio'
 import type {SequenceTrackId} from '@dreamerbird/core/types/public'
-import {getAdditionalSequenceRows} from '@dreamerbird/studio/panels/SequenceEditorPanel/additionalRows'
+import {
+  additionalRowProvidesTimelineContent,
+  getAdditionalSequenceRows,
+} from '@dreamerbird/studio/panels/SequenceEditorPanel/additionalRows'
 import type {AdditionalSequenceRow} from '@dreamerbird/studio/panels/SequenceEditorPanel/additionalRows'
 
 /**
@@ -121,6 +124,14 @@ export const calculateSequenceEditorTree = (
     collapsableItemSetP.byId[createStudioSheetItemKey.forSheet()].isCollapsed
   const isCollapsed = pointerToPrism(isCollapsedP).getValue() ?? false
 
+  // 没有时间轴数据的对象默认不出现在左栏。当前选中的对象例外：它的
+  // 行头操作（例如「＋ 动作轨」）是新建轨道、让对象进入时间轴的入口。
+  const selectedObjectKeys = new Set(
+    (val(studio.atomP.historic.panels.outlinePanel.selection) ?? [])
+      .filter((item) => item.type === 'SheetObject')
+      .map((item) => `${item.projectId}/${item.sheetId}/${item.objectKey}`),
+  )
+
   const tree: SequenceEditorTree = {
     type: 'sheet',
     isCollapsed,
@@ -164,7 +175,21 @@ export const calculateSequenceEditorTree = (
     const objectConfig = val(sheetObject.template.configPointer)
 
     const additionalRows = getAdditionalSequenceRows(sheetObject.publicApi)
-    if (Object.keys(trackSetups).length === 0 && additionalRows.length === 0)
+    const hasPropTracks = Object.keys(trackSetups).length > 0
+    const hasAdditionalTracks = additionalRows.some(
+      additionalRowProvidesTimelineContent,
+    )
+    const isSelected = selectedObjectKeys.has(
+      `${sheetObject.address.projectId}/${sheetObject.address.sheetId}/${sheetObject.address.objectKey}`,
+    )
+    const canAddFromRow = additionalRows.some((row) =>
+      Boolean(row.renderObjectHeader),
+    )
+    if (
+      !hasPropTracks &&
+      !hasAdditionalTracks &&
+      !(isSelected && canAddFromRow)
+    )
       return
 
     const isCollapsedP =

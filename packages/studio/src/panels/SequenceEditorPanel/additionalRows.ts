@@ -94,6 +94,26 @@ export function getAdditionalSequenceRows(
   return val(registrations.pointer).get(object)?.resolve() ?? emptyRows
 }
 
+/**
+ * 这条附加行是否真的需要在时间轴上占据一行。对象工具行（只提供行头按钮，
+ * 头部本身隐藏）不算时间轴数据，不应仅因为它被注册就让空对象出现在左栏。
+ */
+export function additionalRowProvidesTimelineContent(
+  row: AdditionalSequenceRow,
+): boolean {
+  if (!(row.isHeaderVisible?.() ?? true)) return false
+  return row.hasContent?.() ?? true
+}
+
+/** 时间轴是否应因为这条附加行自动展开（工具行不算轨道）。 */
+export function additionalRowCountsAsTrack(
+  row: AdditionalSequenceRow,
+): boolean {
+  return (
+    row.countsAsTrack !== false && additionalRowProvidesTimelineContent(row)
+  )
+}
+
 export function onRevealAdditionalSequenceRows(
   listener: () => void,
 ): () => void {
