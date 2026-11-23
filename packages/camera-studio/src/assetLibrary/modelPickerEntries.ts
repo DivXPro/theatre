@@ -5,6 +5,7 @@ export const modelGroupOrder = [
   'characters',
   'buildings',
   'buildingBlocks',
+  'sceneBlocks',
   'props',
   'vehicles',
   'nature',
@@ -107,6 +108,7 @@ export function modelGroupOf(entry: ModelEntry): ModelGroup {
   ) {
     return 'buildingBlocks'
   }
+  if (name.startsWith('LowPoly Modular - ')) return 'sceneBlocks'
   if (
     /^MangaKa Props - (F_S_ScifiBuilding|M_R_City_Building|PF_MedieHouses)_/.test(
       name,

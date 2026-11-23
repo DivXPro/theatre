@@ -189,6 +189,7 @@ test('模型库按用途折叠分组，旧人体和 Bot 副本仍可按 ID 读�
       'Characters',
       'Buildings',
       'Building blocks',
+      'Scene blocks',
       'Furniture and props',
       'Vehicles',
       'Nature',
@@ -196,9 +197,25 @@ test('模型库按用途折叠分组，旧人体和 Bot 副本仍可按 ID 读�
     ])
     const hasCard = (name: string) =>
       Boolean(container.querySelector(`[title="${name}"]`))
+    const groupCards = (label: string) => {
+      const heading = headings.find((item) => item.textContent === label)!
+        .parentElement!
+      const names: string[] = []
+      for (
+        let element = heading.nextElementSibling;
+        element && element.tagName !== 'H3';
+        element = element.nextElementSibling
+      ) {
+        const label = element.querySelector('[title]')
+        if (label) names.push(label.getAttribute('title')!)
+      }
+      return names
+    }
     expect(hasCard('X Bot')).toBe(true)
     expect(hasCard('Y Bot')).toBe(true)
     expect(hasCard(custom.name)).toBe(true)
+    expect(groupCards('Scene blocks')).toHaveLength(126)
+    expect(groupCards('Scene blocks')).toContain('LowPoly Modular - Wall_200')
     for (const entry of legacy) {
       expect(hasCard(entry.name)).toBe(false)
       expect(await library.getEntry(entry.id)).toEqual(entry)
