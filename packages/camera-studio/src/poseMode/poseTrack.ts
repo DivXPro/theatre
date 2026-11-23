@@ -8,26 +8,35 @@
  * __setPointerRootResolverForTest 注入(仅测试用)。
  *
  * 写入(spec §7.2/§7.3 两条通道):
- *   writePoseKeyframe:摆姿势退出提交。有轨道 = scrub set(theatre 按当前
- *   position 写贝塞尔帧,同 position 覆盖);无轨道 = transaction
- *   sequenceProp 建轨 + scrub set 写首帧——两步事务为已知限制
- *   (setPrimitivePropAsSequenced 的 trackId 随机生成,set 看不到同事务
- *   草稿里的新轨道,spec §2.4)。面板打帧走属性行原生打帧钮,不经这里。
+ *   writePoseKeyframe:在一个事务内迁移旧静态值、建轨、写帧。
  *   setPoseValue:右键菜单/弹框应用姿势。永不建轨:有轨道写帧、无轨道
  *   写静态,theatre track-aware set 原生行为。
  */
-import {getStudioSync} from '@dreamerbird/core'
+import {__private, getStudioSync} from '@dreamerbird/core'
 import {getPointerParts, val} from '@dreamerbird/dataverse'
 import type {ISheetObject} from '@dreamerbird/core'
-import type {$IntentionalAny} from '@dreamerbird/core/types/public'
+import type {
+  $IntentionalAny,
+  KeyframeId,
+  SequenceTrackId,
+} from '@dreamerbird/core/types/public'
+import type {HistoricPositionalSequence} from '@dreamerbird/core/types/private'
 // clearPoseValue 需要 stateEditors 直改 historic(公共 transaction api
 // 不暴露),走内部 Studio 通道——与 agent/keyframeTracks、CameraScene
 // 诊断钩子同路径
 import getStudio from '@dreamerbird/studio/getStudio'
-import {parsePoseValue} from './poseValue'
+import {encodePathToProp} from '@dreamerbird/utils/pathToProp'
+import type {Group} from 'three'
+import {capturePose} from '../assetLibrary/pose'
+import {determinePoseFrameMode} from './poseFrame'
+import type {PoseFrameMode} from './poseFrame'
+import type {PoseSession, PoseSessionTarget} from './poseSession'
+import {parsePoseValue, serializeCustomPose} from './poseValue'
 
 type InternalSheetObject = {
   template: {
+    getDefaultValues: () => {getValue: () => Record<string, unknown>}
+    getStaticValues: () => {getValue: () => Record<string, unknown> | undefined}
     getMapOfValidSequenceTracks_forStudio: () => {
       getValue: () => Record<string, unknown>
     }
@@ -109,6 +118,89 @@ export function getPoseKeyframeCount(
   return getPoseKeyframePositions(sheetObject).length
 }
 
+function getLegacyDefaultPose(
+  sheetObject: ISheetObject<$IntentionalAny>,
+): string {
+  if (getPoseKeyframeCount(sheetObject) > 0) return ''
+  const value = internalRoot(sheetObject).template.getStaticValues().getValue()
+    ?.pose
+  return typeof value === 'string' ? value : ''
+}
+
+export function resolveDefaultPose(
+  sheetObject: ISheetObject<$IntentionalAny>,
+): string {
+  const stored = internalRoot(sheetObject).template.getStaticValues().getValue()
+    ?.defaultPose
+  return typeof stored === 'string' ? stored : getLegacyDefaultPose(sheetObject)
+}
+
+export function writeDefaultPose(
+  sheetObject: ISheetObject<$IntentionalAny>,
+  json: string,
+): void {
+  const studio = getStudio()
+  if (
+    !studio ||
+    typeof internalRoot(sheetObject).template.getDefaultValues().getValue()
+      .defaultPose !== 'string'
+  )
+    return
+  const address = {...sheetObject.address, pathToProp: ['defaultPose']}
+  studio.transaction(({stateEditors}) => {
+    const editors = stateEditors.coreByProject.historic.sheetsById
+    editors.sequence.setPrimitivePropAsStatic({...address, value: json})
+    editors.staticOverrides.byObject.setValueOfPrimitiveProp({
+      ...address,
+      value: json,
+    })
+  })
+}
+
+export type PreparePose = (target: PoseSessionTarget, position: number) => void
+
+export function preparePoseSession(
+  session: PoseSession,
+  instance: Group,
+  object: ISheetObject<$IntentionalAny>,
+  preparePose?: PreparePose,
+): PoseFrameMode | null {
+  if (session.target === 'draft') {
+    session.draft.applyPreview?.(instance)
+    return null
+  }
+  const sequence = object.sheet.sequence
+  if (session.target === 'static') {
+    preparePose?.('static', sequence.position)
+    return null
+  }
+  const frame = determinePoseFrameMode(
+    getPoseKeyframePositions(object),
+    session.position ?? sequence.position,
+    (position) => sequence.closestGridPosition(position),
+  )
+  sequence.position = frame.position
+  preparePose?.('scene', frame.position)
+  return frame
+}
+
+export function commitPoseSession(
+  session: PoseSession,
+  instance: Group,
+  object: ISheetObject<$IntentionalAny>,
+  frame: PoseFrameMode | null,
+): void {
+  const bones = capturePose(instance)
+  if (session.target === 'draft') {
+    session.draft.onCapture(bones)
+  } else if (session.target === 'static') {
+    writeDefaultPose(object, serializeCustomPose(bones))
+  } else if (frame) {
+    object.sheet.sequence.position = frame.position
+    writePoseKeyframe(object, serializeCustomPose(bones))
+  }
+}
+
 /** 当前值 + 轨道全部帧值里的 lib 引用 id(prefetchLibPoses 的输入) */
 export function collectLibPoseIds(
   sheetObject: ISheetObject<$IntentionalAny>,
@@ -142,18 +234,61 @@ export function writePoseKeyframe(
   sheetObject: ISheetObject<$IntentionalAny>,
   json: string,
 ): void {
-  const studio = getStudioSync()
+  const studio = getStudio()
   if (!studio) return
-  if (!getPoseTrackId(sheetObject)) {
-    studio.transaction(({sequenceProp}) => {
-      sequenceProp(sheetObject.props.pose as $IntentionalAny)
-    })
-  }
-  const scrub = studio.scrub()
-  scrub.capture(({set}) => {
-    set(sheetObject.props.pose as $IntentionalAny, json)
+  const address = sheetObject.address
+  const pathToProp = ['pose']
+  const sequence = sheetObject.sheet.sequence
+  const position = sequence.closestGridPosition(sequence.position)
+  const template = internalRoot(sheetObject).template
+  const existingTrackId = getPoseTrackId(sheetObject)
+  const storedDefaultPose = template.getStaticValues().getValue()?.defaultPose
+  const defaultPose =
+    storedDefaultPose === undefined &&
+    typeof template.getDefaultValues().getValue().defaultPose === 'string' &&
+    getPoseKeyframeCount(sheetObject) === 0
+      ? getLegacyDefaultPose(sheetObject)
+      : ''
+
+  studio.transaction(({stateEditors}) => {
+    const editors = stateEditors.coreByProject.historic.sheetsById
+    if (defaultPose) {
+      editors.staticOverrides.byObject.setValueOfPrimitiveProp({
+        ...address,
+        pathToProp: ['defaultPose'],
+        value: defaultPose,
+      })
+    }
+    const path = encodePathToProp(pathToProp)
+    if (!existingTrackId) {
+      editors.sequence.setPrimitivePropAsSequenced({...address, pathToProp})
+      const draft = editors.sequence._ensure(
+        address,
+      ) as unknown as HistoricPositionalSequence
+      const tracks = draft.tracksByObject[address.objectKey]!
+      const trackId = tracks.trackIdByPropPath[path]!
+      const track = tracks.trackData[trackId]!
+      track.keyframes = __private.keyframeUtils.fromArray([
+        {
+          id: trackId as string as KeyframeId,
+          position,
+          value: json,
+          connectedRight: true,
+          handles: [0.5, 1, 0.5, 0],
+          type: 'bezier',
+        },
+      ])
+    } else {
+      editors.sequence.setKeyframeAtPosition({
+        ...address,
+        trackId: existingTrackId as SequenceTrackId,
+        position,
+        value: json,
+        snappingFunction: (time) => sequence.closestGridPosition(time),
+        type: 'bezier',
+      })
+    }
   })
-  scrub.commit()
 }
 
 export function setPoseValue(

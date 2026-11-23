@@ -24,14 +24,15 @@ import {usePresenceListenersOnRootElement} from '@dreamerbird/studio/uiComponent
 import {__private} from '@dreamerbird/core'
 const {isSheetObject} = __private.instanceTypes
 
-const headerHeight = `32px`
+const headerHeight = 32
+const panelTop = 50
 
 const Container = styled.div<{$pin: boolean}>`
   ${pointerEventsAutoInNormalMode};
   background-color: var(--theatre-panel-bg-80);
   position: fixed;
   right: 8px;
-  top: 50px;
+  top: ${panelTop}px;
   // Temporary, see comment about CSS grid in SingleRowPropEditor.
   width: 280px;
   height: fit-content;
@@ -67,7 +68,7 @@ const Title = styled.div`
 `
 
 const Header = styled.div`
-  height: ${headerHeight};
+  height: ${headerHeight}px;
   display: flex;
   align-items: center;
 `
@@ -92,7 +93,9 @@ export const contextMenuShownContext = createContext<
   ReturnType<typeof useLockSet>
 >([false, () => () => {}])
 
-const DetailPanel: React.FC<{}> = (props) => {
+const DetailPanel: React.FC<{sequenceDockTop?: number}> = ({
+  sequenceDockTop,
+}) => {
   const pin = useVal(getStudio().atomP.ahistoric.pinDetails) !== false
   const hidden = useVal(getStudio().ephemeralAtom.pointer.hiddenPanels.details)
 
@@ -116,9 +119,17 @@ const DetailPanel: React.FC<{}> = (props) => {
 
   const [containerElt, setContainerElt] = useState<null | HTMLDivElement>(null)
   usePresenceListenersOnRootElement(containerElt)
+  const availableHeight =
+    sequenceDockTop === undefined
+      ? undefined
+      : Math.max(0, sequenceDockTop - panelTop - 8)
 
   return usePrism(() => {
-    if (hidden) return null
+    if (
+      hidden ||
+      (availableHeight !== undefined && availableHeight < headerHeight)
+    )
+      return null
 
     const selection = outlineSelection.getValue()
 
@@ -159,7 +170,17 @@ const DetailPanel: React.FC<{}> = (props) => {
               <TitleBar_Piece>{shownName}</TitleBar_Piece>
             </Title>
           </Header>
-          <Body>
+          <Body
+            style={
+              availableHeight === undefined
+                ? undefined
+                : {
+                    maxHeight: `min(calc(100vh - 100px), ${
+                      availableHeight - headerHeight
+                    }px)`,
+                  }
+            }
+          >
             <ObjectDetails objects={[obj]} />
           </Body>
         </Container>
@@ -168,15 +189,17 @@ const DetailPanel: React.FC<{}> = (props) => {
     // 无选中物体时不显示面板(项目行选中也不再弹 ProjectDetails 空面板,
     // 2026-10-16 用户定夺:整块去掉,Export to JSON 入口随之移除)
     return null
-  }, [showDetailsPanel, hidden])
+  }, [showDetailsPanel, hidden, availableHeight])
 }
 
-export default () => {
+export default function DetailPanelWithContext(props: {
+  sequenceDockTop?: number
+}) {
   const lockSet = useLockSet()
 
   return (
     <contextMenuShownContext.Provider value={lockSet}>
-      <DetailPanel />
+      <DetailPanel {...props} />
     </contextMenuShownContext.Provider>
   )
 }

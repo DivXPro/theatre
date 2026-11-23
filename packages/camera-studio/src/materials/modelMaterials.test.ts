@@ -71,12 +71,13 @@ test('SkeletonUtils.clone instances receive isolated materials and scalar update
   expect(secondMaterial.color.getHexString()).toBe('ffffff')
 })
 
-test('Theatre compound configs are cached and preserve slot defaults', () => {
+test('Theatre material configs are cached and hidden from the property panel', () => {
   const {root} = modelWithTwoMeshes()
   const slots = collectMaterialSlots(root)
   const first = createMaterialOverridesConfig(slots)
   const second = createMaterialOverridesConfig(slots)
   expect(second).toBe(first)
+  expect(first.hidden).toBe(true)
 })
 
 test('texture updates dispose replacements, and empty IDs restore immutable originals', async () => {

@@ -19,14 +19,17 @@ import React, {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
 } from 'react'
 import {
   AnimationMixer,
   Box3,
   BoxGeometry,
+  Euler,
   Group,
   Mesh,
   MeshBasicMaterial,
+  Quaternion,
   Raycaster,
   Vector3,
 } from 'three'
@@ -34,8 +37,10 @@ import type {Object3D, AnimationClip, AnimationAction} from 'three'
 import {SkeletonUtils} from 'three-stdlib'
 import {registerBoneAnchors, unregisterBoneAnchors} from './boneAnchors'
 import {notifyTargetRegistryChange, sheetObjectExists} from './aimTargets'
+import {animationClipForModel} from './assetLibrary/animationClipForModel'
 import {createGLTFLoader} from './assetLibrary/gltfLoader'
 import {metricScaleFactor} from './assetLibrary/exportGLB'
+import {measureMixamoCalibration} from './assetLibrary/mixamoScale'
 import {getFirstScreenGate} from './firstScreenGate'
 import {getLibrary} from './assetLibrary/library'
 import type {Library} from './assetLibrary/library'
@@ -45,6 +50,11 @@ import {animationTracksProp} from './animationStrips/storage'
 import type {AnimationTracksObject} from './animationStrips/storage'
 import {parseAnimationTracks} from './animationStrips/model'
 import {useAnimationStrips} from './animationStrips/useAnimationStrips'
+import {
+  characterPathPropConfig,
+  evaluateCharacterPath,
+  registerCharacterPathBindingValidator,
+} from './characterPaths'
 import {computeDropPoint} from './dropPoint'
 import {registerEditorOnly} from './editorOnly'
 import {getExportAnimationTime} from './videoExport/exportAnimationClock'
@@ -75,6 +85,7 @@ import {
   collectLibPoseIdsForProps,
   getPoseTrackId,
   getTrackIdForProp,
+  resolveDefaultPose,
 } from './poseMode/poseTrack'
 import {gesturePropConfigShape, resolveGestureBones} from './gestureProps'
 import {computeLegacyPoseMigration} from './poseMode/poseMigration'
@@ -89,6 +100,7 @@ import {
 } from './materials/modelMaterials'
 import {useModelMaterials} from './materials/useModelMaterials'
 import {formatSceneObjectId} from './agent/objectIds'
+import type {Vec3} from './agent/types'
 import {
   registerSceneSheetObject,
   unregisterSceneSheetObject,
@@ -139,18 +151,29 @@ export type PlacementEntry = {
   position: {x: number; y: number; z: number}
 }
 
+type LoadedLibraryModel = {group: Group; animations: AnimationClip[]}
 /** 已确认但尚未提交进清单的放置:先渲染,挂载后在 effect 里一次性提交 */
-type PendingPlacementEntry = PlacementEntry & {pending: true}
+type PendingPlacementEntry = PlacementEntry & {
+  pending: true
+  loaded?: LoadedLibraryModel
+  selectOnPersist?: boolean
+}
 
-type PlacementSource =
-  | {type: 'local'; file: File; assetId: string}
-  | {type: 'library'; entryId: string}
-
-export type PlacingState = {
+type LocalPlacingState = {
   url: string
   label: string
-  source: PlacementSource
+  source: {type: 'local'; file: File; assetId: string}
 }
+
+type LibraryPlacingState = {
+  label: string
+  source: {type: 'library'; entryId: string}
+  mode: 'click' | 'drag'
+  loaded: LoadedLibraryModel | null
+  point: Vec3 | null
+}
+
+export type PlacingState = LocalPlacingState | LibraryPlacingState
 
 /** 注册表对象的 theatre key(大纲顶层 "Placements" 行;Agent resolver 只读探测用) */
 export const PLACEMENTS_REGISTRY_KEY = 'Placements'
@@ -200,6 +223,7 @@ function literalConfigFor(kind: 'animation', modelEntryId: string | undefined) {
       {
         label: () => translate('pg.props.animation'),
         as: 'menu',
+        hidden: true,
       },
     )
     literalConfigCache.set(cacheKey, config)
@@ -454,8 +478,12 @@ export function suppressSelectBriefly() {
 export function readRegistry(
   registry: ISheetObject<{list: string}>,
 ): PlacementEntry[] {
+  return parsePlacementEntries(registry.value.list)
+}
+
+function parsePlacementEntries(value: string): PlacementEntry[] {
   try {
-    const list = JSON.parse(registry.value.list)
+    const list = JSON.parse(value)
     return Array.isArray(list) ? list : []
   } catch {
     return []
@@ -482,15 +510,16 @@ export function readPlacementEntries(sheet: ISheet): PlacementEntry[] {
  * 清单(注册表已写、对象尚未挂载的空窗) + 全场景路径探测(顶层名字可能与
  * 相机/灯光/演示模型撞,如 "Camera.fbx"、"Thingy.fbx",只查不建)
  */
-export function uniquePlacedModelKey(sheet: ISheet, label: string): string {
+export function uniquePlacedModelKey(
+  sheet: ISheet,
+  label: string,
+  pendingKeys: Iterable<string> = [],
+): string {
   const base = label.replace(/\.[^.]+$/, '').replace(/[^\w-]/g, '_') || 'model'
-  let taken: Set<string>
+  const taken = new Set(pendingKeys)
   try {
-    taken = new Set(readPlacementEntries(sheet).map((e) => e.key))
-  } catch {
-    // 注册表对象尚未创建(理论外场景):按空清单处理,探测兜底防重
-    taken = new Set()
-  }
+    for (const entry of readPlacementEntries(sheet)) taken.add(entry.key)
+  } catch {}
   let key = base
   for (let i = 2; taken.has(key) || sheetObjectExists(sheet, key); i++) {
     key = `${base}-${i}`
@@ -521,32 +550,31 @@ function useProjectReady(project: IProject): boolean {
 /** 响应式读放置清单:scrub 提交/撤销/同步都会触发 onValuesChange */
 function usePlacementsList(sheet: ISheet): PlacementEntry[] {
   const registry = useMemo(() => getRegistry(sheet), [sheet])
-  const [list, setList] = useState<PlacementEntry[]>(() =>
-    readRegistry(registry),
+  const subscribe = useCallback(
+    (listener: () => void) => registry.onValuesChange(listener),
+    [registry],
   )
-  useEffect(() => {
-    setList(readRegistry(registry))
-    return registry.onValuesChange(() => setList(readRegistry(registry)))
-  }, [registry])
-  return list
+  const getSnapshot = useCallback(() => registry.value.list, [registry])
+  const value = useSyncExternalStore(subscribe, getSnapshot)
+  return useMemo(() => parsePlacementEntries(value), [value])
 }
 
-/** 米制兜底:入库时源单位已换算成米烘进资产(exportGLB.bakeMetricScale),
- * 这里只对未烘焙来源(local 直接拖文件、旧库存)纠偏——已烘焙资产算出
- * 的系数恰好是 1,theatre 缩放属性得以 1 为干净基线。底部对齐落点。
- * ⚠️ 旧库存是「归一化成 5 单位」时代的资产(2026-10-21 前),量出来
- * maxDim=5 不会触发厘米换算,放出来是 5 米高的巨人——重新导入即得米制。 */
-function useNormalizedModel(fbx: Group) {
+/** 内置 GLB 和校准后的 Mixamo 模型都以 1 为放置缩放基线。 */
+export function useNormalizedModel(model: Group, libraryEntryId?: string) {
+  const isBuiltin = libraryEntryId?.startsWith('seed-model-') === true
   return useMemo(() => {
-    const box = new Box3().setFromObject(fbx)
+    const mixamo = measureMixamoCalibration(model)
+    if (mixamo) return {scale: 1, lift: mixamo.lift, modelScale: mixamo.scale}
+
+    const box = new Box3().setFromObject(model)
     const size = box.getSize(new Vector3())
     const maxDim = Math.max(size.x, size.y, size.z)
     return {
-      scale: maxDim > 0 ? metricScaleFactor(maxDim) : 1,
+      scale: !isBuiltin && maxDim > 0 ? metricScaleFactor(maxDim) : 1,
       // lift 是模型局部单位,放进 scale 过的组里后底部正好落在 y=0
       lift: -box.min.y,
     }
-  }, [fbx])
+  }, [model, isBuiltin])
 }
 
 /** ghost:克隆一份(SkinnedMesh 安全),材质全部换成半透明 */
@@ -577,8 +605,45 @@ function makeGhost(fbx: Group): Group {
  */
 export function usePlacementController(project: IProject, sheet: ISheet) {
   const [placing, setPlacing] = useState<PlacingState | null>(null)
-  const [pendingEntry, setPendingEntry] =
-    useState<PendingPlacementEntry | null>(null)
+  const placingRef = useRef<PlacingState | null>(null)
+  const getPlacing = useCallback(() => placingRef.current, [])
+  const updatePlacing = useCallback((next: PlacingState | null) => {
+    placingRef.current = next
+    setPlacing(next)
+  }, [])
+  const pendingRef = useRef(new Map<string, PendingPlacementEntry>())
+  const [pendingEntries, setPendingEntries] = useState<PendingPlacementEntry[]>(
+    [],
+  )
+  const enqueuePlacement = useCallback(
+    (label: string, entry: Omit<PendingPlacementEntry, 'key' | 'pending'>) => {
+      const pending = pendingRef.current
+      const key = uniquePlacedModelKey(sheet, label, pending.keys())
+      const persisted = createPlacementWaiter(key)
+      persisted.catch(() => {})
+      pending.set(key, {...entry, key, pending: true})
+      setPendingEntries(Array.from(pending.values()))
+      return {key, persisted}
+    },
+    [sheet],
+  )
+
+  const releasePreview = useCallback(() => {
+    const current = placingRef.current
+    placingRef.current = null
+    if (!current) return
+    if ('mode' in current) {
+      if (current.loaded) disposeObjectTree(current.loaded.group)
+    } else {
+      URL.revokeObjectURL(current.url)
+    }
+  }, [])
+  useEffect(() => releasePreview, [releasePreview])
+
+  const cancelPlacing = useCallback(() => {
+    releasePreview()
+    updatePlacing(null)
+  }, [releasePreview, updatePlacing])
 
   const startPlacing = useCallback(
     async (file: File) => {
@@ -598,102 +663,115 @@ export function usePlacementController(project: IProject, sheet: ISheet) {
         return
       }
       if (!assetId) return
-      setPlacing({
+      releasePreview()
+      updatePlacing({
         url: URL.createObjectURL(file),
         label: file.name,
         source: {type: 'local', file, assetId},
       })
     },
-    [project],
+    [project, releasePreview, updatePlacing],
   )
 
-  /** 从资产库选模型进入放置模式:不创建 theatre 项目资产 */
-  const libraryGenRef = useRef(0)
-  const startPlacingFromLibrary = useCallback(async (entry: ModelEntry) => {
-    const gen = ++libraryGenRef.current
-    const url = await getLibrary().getBlobUrl(entry.blobId)
-    // 用户快速切换选择时,旧加载结果直接丢弃
-    if (gen !== libraryGenRef.current) return
-    setPlacing({
-      url,
-      label: entry.name,
-      source: {type: 'library', entryId: entry.id},
-    })
-  }, [])
+  const commitLibraryPlacement = useCallback(
+    (
+      current: LibraryPlacingState,
+      position: Vec3,
+      loaded: LoadedLibraryModel,
+    ) => {
+      enqueuePlacement(current.label, {
+        libraryEntryId: current.source.entryId,
+        position,
+        loaded,
+        selectOnPersist: true,
+      })
+      updatePlacing(null)
+    },
+    [enqueuePlacement, updatePlacing],
+  )
 
-  const cancelPlacing = useCallback(() => {
-    setPlacing((p) => {
-      // 本地文件是自己创建的 blob URL,库 URL 由 backend 管理生命周期
-      if (p && p.source.type === 'local') URL.revokeObjectURL(p.url)
-      return null
-    })
-  }, [])
+  const startPlacingFromLibrary = useCallback(
+    async (entry: ModelEntry, mode: LibraryPlacingState['mode'] = 'click') => {
+      const previous = placingRef.current
+      if (previous && 'mode' in previous && previous.point) return
+      releasePreview()
+      const source = {type: 'library' as const, entryId: entry.id}
+      updatePlacing({
+        source,
+        mode,
+        label: entry.name,
+        loaded: null,
+        point: null,
+      })
+      try {
+        const loaded = await loadLibraryModel(entry.id)
+        const current = placingRef.current
+        if (!current || !('mode' in current) || current.source !== source) {
+          disposeObjectTree(loaded.group)
+          return
+        }
+        if (current.point) {
+          commitLibraryPlacement(current, current.point, loaded)
+        } else {
+          updatePlacing({...current, loaded})
+        }
+      } catch (err) {
+        if (placingRef.current?.source === source) {
+          cancelPlacing()
+          throw err
+        }
+      }
+    },
+    [cancelPlacing, commitLibraryPlacement, releasePreview, updatePlacing],
+  )
 
   const confirmPlacing = useCallback(
-    (point: {x: number; y: number; z: number}) => {
-      if (!placing) return
-      const key = uniquePlacedModelKey(sheet, placing.label)
-      if (placing.source.type === 'local') {
-        setPendingEntry({
-          key,
-          assetId: placing.source.assetId,
-          position: point,
-          pending: true,
-        })
-      } else {
-        setPendingEntry({
-          key,
-          libraryEntryId: placing.source.entryId,
-          position: point,
-          pending: true,
-        })
+    (point: Vec3) => {
+      const current = placingRef.current
+      if (!current) return
+      if ('mode' in current) {
+        if (current.point) return
+        if (current.loaded) {
+          commitLibraryPlacement(current, point, current.loaded)
+        } else {
+          updatePlacing({...current, point})
+        }
+        return
       }
-      if (placing.source.type === 'local') URL.revokeObjectURL(placing.url)
-      setPlacing(null)
+      enqueuePlacement(current.label, {
+        assetId: current.source.assetId,
+        position: point,
+      })
+      cancelPlacing()
     },
-    [placing, sheet],
+    [cancelPlacing, commitLibraryPlacement, enqueuePlacement, updatePlacing],
   )
 
-  /**
-   * 点击库卡片直接落点:跳过幽灵预览,走与 confirmPlacing 相同的落地管线。
-   * 返回 {key, persisted}(2026-10-17,Task 8):Agent models.create 靠
-   * persisted 等挂载完成(completion:mounted);waiter 必须先于
-   * setPendingEntry 创建,挂载链路的 resolve/reject 都按 key 找它。
-   * UI 调用方不 await persisted —— 这里挂 noop catch 兜底,失败告警由
-   * PlacedModelErrorBoundary 负责,不产生 unhandled rejection。
-   */
+  /** 宿主和 Agent 提供明确落点,直接排队创建。 */
   const placeLibraryEntryAt = useCallback(
-    (entry: ModelEntry, point: {x: number; y: number; z: number}) => {
-      const key = uniquePlacedModelKey(sheet, entry.name)
-      const persisted = createPlacementWaiter(key)
-      persisted.catch(() => {})
-      setPendingEntry({
-        key,
+    (entry: ModelEntry, point: Vec3) =>
+      enqueuePlacement(entry.name, {
         libraryEntryId: entry.id,
         position: point,
-        pending: true,
-      })
-      return {key, persisted}
-    },
-    [sheet],
+      }),
+    [enqueuePlacement],
   )
 
   const placePrimitiveAt = useCallback(
-    (kind: PrimitiveKind, point: {x: number; y: number; z: number}) => {
-      const key = uniquePlacedModelKey(sheet, kind)
-      const persisted = createPlacementWaiter(key)
-      persisted.catch(() => {})
-      setPendingEntry({key, primitive: kind, position: point, pending: true})
-      return {key, persisted}
-    },
-    [sheet],
+    (kind: PrimitiveKind, point: Vec3) =>
+      enqueuePlacement(kind, {primitive: kind, position: point}),
+    [enqueuePlacement],
   )
 
-  const clearPending = useCallback(() => setPendingEntry(null), [])
+  const clearPending = useCallback((key: string) => {
+    const pending = pendingRef.current
+    if (pending.delete(key)) setPendingEntries(Array.from(pending.values()))
+  }, [])
 
   return {
     placing,
-    pendingEntry,
+    getPlacing,
+    pendingEntries,
     startPlacing,
     startPlacingFromLibrary,
     cancelPlacing,
@@ -711,267 +789,250 @@ export function usePlacementController(project: IProject, sheet: ISheet) {
  * 落点规则:物体表面优先;y=0 地面(数学平面,无限大)兜底;视线与地面
  * 平行或朝天时再退到"前方 30 个单位、压到地面",保证任何视角都有落点预览。
  */
-export function PlacementRig(props: {
-  placing: PlacingState
-  onConfirm: (point: {x: number; y: number; z: number}) => void
-  onCancel: () => void
-  /** 拖拽放置:按下发生在面板卡片上,画布内松手才是确认 */
-  confirmOnPointerUp?: boolean
-}) {
-  return props.placing.source.type === 'local' ? (
-    <PlacementRigFBX {...props} />
-  ) : (
-    <PlacementRigGLTF {...props} />
-  )
-}
-
-/** 本地 FBX 预览:用 drei 的 useFBX,加载完交给公共的 Rig 逻辑 */
-function PlacementRigFBX({
+export function PlacementRig({
   placing,
+  getPlacing,
   onConfirm,
   onCancel,
-  confirmOnPointerUp,
 }: {
-  placing: PlacingState
-  onConfirm: (point: {x: number; y: number; z: number}) => void
+  placing: PlacingState | null
+  getPlacing: () => PlacingState | null
+  onConfirm: (point: Vec3) => void
   onCancel: () => void
-  confirmOnPointerUp?: boolean
-}) {
-  const fbx = useFBX(placing.url)
-  return (
-    <PlacementRigCore
-      model={fbx}
-      onConfirm={onConfirm}
-      onCancel={onCancel}
-      confirmOnPointerUp={confirmOnPointerUp}
-    />
-  )
-}
-
-/** 资产库 GLB 预览:用 GLTFLoader 异步加载,失败时交给错误边界 */
-function PlacementRigGLTF({
-  placing,
-  onConfirm,
-  onCancel,
-  confirmOnPointerUp,
-}: {
-  placing: PlacingState
-  onConfirm: (point: {x: number; y: number; z: number}) => void
-  onCancel: () => void
-  confirmOnPointerUp?: boolean
-}) {
-  const [model, setModel] = useState<Group | null>(null)
-  const [failed, setFailed] = useState(false)
-  useEffect(() => {
-    let cancelled = false
-    const loader = createGLTFLoader()
-    loader
-      .loadAsync(placing.url)
-      .then((gltf) => {
-        if (!cancelled) setModel(gltf.scene as Group)
-      })
-      .catch((err) => {
-        console.warn('[placement] 库模型预览加载失败', err)
-        // 资产 URL 不可达/解析失败:上告库 onError 通道(toast 条),
-        // 本地状态照走错误边界取消放置,不崩画布
-        getLibrary().reportError(
-          new LibraryError('network', '库模型预览加载失败', err),
-        )
-        if (!cancelled) setFailed(true)
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [placing.url])
-  // 卸载或 URL 变化时释放模型 GPU 资源
-  useEffect(() => {
-    return () => {
-      if (model) disposeObjectTree(model)
-    }
-  }, [model])
-  if (failed) throw new Error('[placement] 库模型预览加载失败')
-  if (!model) return null
-  return (
-    <PlacementRigCore
-      model={model}
-      onConfirm={onConfirm}
-      onCancel={onCancel}
-      confirmOnPointerUp={confirmOnPointerUp}
-    />
-  )
-}
-
-/** 放置模式下的 Canvas 内容:半透明 ghost 跟随光标。
- * 事件走 canvas 的 DOM 监听 + 手动射线检测,不用不可见网格接事件——
- * 视线与地面平行时网格永远打不中,事件根本不触发,看起来就是"没反应"。
- * 落点规则:物体表面优先;y=0 地面(数学平面,无限大)兜底;视线与地面
- * 平行或朝天时再退到"前方 30 个单位、压到地面",保证任何视角都有落点预览。 */
-function PlacementRigCore({
-  model,
-  onConfirm,
-  onCancel,
-  confirmOnPointerUp,
-}: {
-  model: Group
-  onConfirm: (point: {x: number; y: number; z: number}) => void
-  onCancel: () => void
-  confirmOnPointerUp?: boolean
 }) {
   const invalidate = useThree((s) => s.invalidate)
   const gl = useThree((s) => s.gl)
   const camera = useThree((s) => s.camera)
-  const ghost = useMemo(() => makeGhost(model), [model])
-  const {scale, lift} = useNormalizedModel(model)
-  const ghostRef = useRef<Group>(null!)
+  const previewRef = useRef<Group>(null!)
+  const markerRef = useRef<Mesh>(null)
   const raycaster = useMemo(() => new Raycaster(), [])
+  const cursorRef = useRef<{x: number; y: number} | null>(null)
+  const pointRef = useRef<Vector3 | null>(null)
+  const needsRaycast = useRef(false)
 
   const computePoint = useCallback(
-    (clientX: number, clientY: number): Vector3 =>
-      computeDropPoint(
+    (clientX: number, clientY: number) => {
+      const point = computeDropPoint(
         raycaster,
         camera,
         placementSurfaces,
         gl.domElement.getBoundingClientRect(),
         clientX,
         clientY,
-      ),
+      )
+      return point.distanceTo(camera.position) <= 300 ? point : null
+    },
     [gl, camera, raycaster],
   )
 
   // 鼠标事件只记坐标并申请一帧,真正的落点计算在帧回调里做一次——
   // pointermove 一秒能来上百次(每次都全量射线检测会很卡),渲染帧一秒最多 60 次
-  const pendingMoveRef = useRef<{x: number; y: number} | null>(null)
+  useLayoutEffect(() => {
+    needsRaycast.current = true
+    invalidate()
+  }, [placing, computePoint, invalidate])
+  useEffect(() => registerEditorOnly(previewRef.current), [])
+
   useFrame(() => {
-    const pending = pendingMoveRef.current
-    if (!pending) return
-    pendingMoveRef.current = null
-    const p = computePoint(pending.x, pending.y)
-    if (ghostRef.current) {
-      ghostRef.current.visible = true
-      ghostRef.current.position.copy(p)
+    const preview = previewRef.current
+    if (!placing || !preview) return
+    const fixed = 'point' in placing ? placing.point : null
+    if (!fixed && needsRaycast.current) {
+      needsRaycast.current = false
+      const cursor = cursorRef.current
+      pointRef.current = cursor ? computePoint(cursor.x, cursor.y) : null
+    }
+    const point = fixed ?? pointRef.current
+    preview.visible = !!point
+    if (!point) return
+    preview.position.set(point.x, point.y, point.z)
+    const marker = markerRef.current
+    if (marker) {
+      marker.quaternion.copy(camera.quaternion)
+      marker.scale.setScalar(
+        preview.position.distanceTo(camera.position) * 0.014,
+      )
     }
   })
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = gl.domElement
-    let downPos: {x: number; y: number} | null = null
+    let down: {x: number; y: number; source: PlacingState['source']} | null =
+      null
+    let nativeDrag = false
 
-    const onMove = (ev: PointerEvent) => {
-      pendingMoveRef.current = {x: ev.clientX, y: ev.clientY}
-      invalidate()
+    const updateCursor = (ev: MouseEvent | null) => {
+      cursorRef.current = ev ? {x: ev.clientX, y: ev.clientY} : null
+      needsRaycast.current = true
+      if (getPlacing()) invalidate()
     }
+    const onMove = (ev: PointerEvent) => updateCursor(ev)
+    const onLeave = () => updateCursor(null)
     const onDown = (ev: PointerEvent) => {
-      downPos = {x: ev.clientX, y: ev.clientY}
+      const current = getPlacing()
+      if (ev.button === 0 && current)
+        down = {x: ev.clientX, y: ev.clientY, source: current.source}
+    }
+    const pointAt = (ev: MouseEvent): Vec3 | null => {
+      const point = computePoint(ev.clientX, ev.clientY)
+      return point && {x: point.x, y: point.y, z: point.z}
     }
     const onClick = (ev: MouseEvent) => {
-      if (ev.button !== 0) return
-      // 拖拽模式下画布点击不确认,确认只走松手
-      if (confirmOnPointerUp) return
-      // 拖动后的松手不算点击
-      if (
-        downPos &&
-        Math.hypot(ev.clientX - downPos.x, ev.clientY - downPos.y) > 2
-      )
+      const current = getPlacing()
+      if (ev.button !== 0 || !current) return
+      ev.stopPropagation()
+      if ('mode' in current && (current.mode === 'drag' || current.point))
         return
-      const p = computePoint(ev.clientX, ev.clientY)
-      // 太远的落点直接忽略,留在放置模式里(防止误放到天边)
-      if (p.distanceTo(camera.position) > 300) return
-      onConfirm({x: p.x, y: p.y, z: p.z})
+      const start = down
+      down = null
+      if (start?.source !== current.source) return
+      if (Math.hypot(ev.clientX - start.x, ev.clientY - start.y) > 2) return
+      const point = pointAt(ev)
+      if (point) onConfirm(point)
     }
     const onKey = (ev: KeyboardEvent) => {
-      if (ev.key === 'Escape') onCancel()
+      if (ev.key === 'Escape' && getPlacing()) onCancel()
     }
     const onContextMenu = (ev: MouseEvent) => {
+      if (!getPlacing()) return
       ev.preventDefault()
+      ev.stopPropagation()
       onCancel()
+    }
+    const isDragging = () => {
+      const current = getPlacing()
+      return (
+        current &&
+        'mode' in current &&
+        current.mode === 'drag' &&
+        !current.point
+      )
+    }
+    const confirmDrop = (ev: MouseEvent) => {
+      const target = el.ownerDocument.elementFromPoint(ev.clientX, ev.clientY)
+      const point = target === el ? pointAt(ev) : null
+      if (point) onConfirm(point)
+      else onCancel()
+    }
+    const onUp = (ev: PointerEvent) => {
+      if (ev.isPrimary && ev.button === 0 && !nativeDrag && isDragging())
+        confirmDrop(ev)
+    }
+    const onDragStart = (ev: DragEvent) => {
+      if (!ev.defaultPrevented && isDragging()) nativeDrag = true
+    }
+    const onDragOver = (ev: DragEvent) => {
+      if (!isDragging()) return
+      ev.preventDefault()
+      nativeDrag = true
+      updateCursor(ev)
+    }
+    const onDrop = (ev: DragEvent) => {
+      if (!isDragging()) return
+      ev.preventDefault()
+      nativeDrag = false
+      confirmDrop(ev)
+    }
+    const cancelDrag = () => {
+      nativeDrag = false
+      if (isDragging()) onCancel()
+    }
+    const onPointerCancel = () => {
+      if (!nativeDrag) cancelDrag()
     }
 
     el.addEventListener('pointermove', onMove)
+    el.addEventListener('pointerleave', onLeave)
     el.addEventListener('pointerdown', onDown)
-    el.addEventListener('click', onClick)
+    el.addEventListener('click', onClick, true)
+    el.addEventListener('contextmenu', onContextMenu, true)
+    el.addEventListener('dragover', onDragOver)
+    el.addEventListener('dragleave', onLeave)
     window.addEventListener('keydown', onKey)
-    window.addEventListener('contextmenu', onContextMenu)
+    window.addEventListener('pointerup', onUp, true)
+    window.addEventListener('pointercancel', onPointerCancel)
+    window.addEventListener('blur', cancelDrag)
+    window.addEventListener('dragstart', onDragStart)
+    window.addEventListener('dragend', cancelDrag)
+    window.addEventListener('drop', onDrop)
     return () => {
       el.removeEventListener('pointermove', onMove)
+      el.removeEventListener('pointerleave', onLeave)
       el.removeEventListener('pointerdown', onDown)
-      el.removeEventListener('click', onClick)
-      window.removeEventListener('keydown', onKey)
-      window.removeEventListener('contextmenu', onContextMenu)
-    }
-  }, [
-    gl,
-    computePoint,
-    camera,
-    invalidate,
-    onConfirm,
-    onCancel,
-    confirmOnPointerUp,
-  ])
-
-  // 拖拽模式:按下发生在面板卡片上,松手才是确认。松手在画布外(面板区域)
-  // = 取消;太远(>300)也取消,防止误放到天边
-  useEffect(() => {
-    if (!confirmOnPointerUp) return
-    const el = gl.domElement
-    let nativeDragOverCanvas = false
-    const onUp = (ev: PointerEvent) => {
-      if (ev.button !== 0 || nativeDragOverCanvas) return
-      // 画布铺满全窗口、垫在面板之下:松手在面板/工具栏等 DOM 上时 target 不是画布,
-      // 必须取消(spec:松手在面板区域 = 静默取消)。提示条 pointerEvents:none 不挡
-      if (ev.target !== el) {
-        onCancel()
-        return
-      }
-      const p = computePoint(ev.clientX, ev.clientY)
-      if (p.distanceTo(camera.position) > 300) {
-        onCancel()
-        return
-      }
-      onConfirm({x: p.x, y: p.y, z: p.z})
-    }
-    const onDragOver = (ev: DragEvent) => {
-      ev.preventDefault()
-      nativeDragOverCanvas = true
-      pendingMoveRef.current = {x: ev.clientX, y: ev.clientY}
-      invalidate()
-    }
-    const onDragLeave = () => {
-      nativeDragOverCanvas = false
-    }
-    const onDrop = (ev: DragEvent) => {
-      ev.preventDefault()
-      ev.stopPropagation()
-      nativeDragOverCanvas = false
-      const p = computePoint(ev.clientX, ev.clientY)
-      if (p.distanceTo(camera.position) > 300) {
-        onCancel()
-        return
-      }
-      onConfirm({x: p.x, y: p.y, z: p.z})
-    }
-    window.addEventListener('pointerup', onUp)
-    el.addEventListener('dragover', onDragOver)
-    el.addEventListener('dragleave', onDragLeave)
-    el.addEventListener('drop', onDrop)
-    return () => {
-      window.removeEventListener('pointerup', onUp)
+      el.removeEventListener('click', onClick, true)
+      el.removeEventListener('contextmenu', onContextMenu, true)
       el.removeEventListener('dragover', onDragOver)
-      el.removeEventListener('dragleave', onDragLeave)
-      el.removeEventListener('drop', onDrop)
+      el.removeEventListener('dragleave', onLeave)
+      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('pointerup', onUp, true)
+      window.removeEventListener('pointercancel', onPointerCancel)
+      window.removeEventListener('blur', cancelDrag)
+      window.removeEventListener('dragstart', onDragStart)
+      window.removeEventListener('dragend', cancelDrag)
+      window.removeEventListener('drop', onDrop)
     }
-  }, [
-    confirmOnPointerUp,
-    gl,
-    camera,
-    computePoint,
-    invalidate,
-    onConfirm,
-    onCancel,
-  ])
+  }, [gl, computePoint, getPlacing, invalidate, onConfirm, onCancel])
 
+  const library = placing && 'mode' in placing ? placing : null
   return (
-    // 首次 pointermove 之前不显示,避免在原地闪一下
-    <group ref={ghostRef} scale={scale} visible={false}>
+    <group ref={previewRef} visible={false}>
+      {library?.loaded && (
+        <PlacementRigErrorBoundary onCancel={onCancel}>
+          <PlacementGhost
+            model={library.loaded.group}
+            libraryEntryId={library.source.entryId}
+          />
+        </PlacementRigErrorBoundary>
+      )}
+      {library && !library.loaded && (
+        <mesh ref={markerRef} renderOrder={20}>
+          <ringGeometry args={[0.65, 1, 32]} />
+          <meshBasicMaterial color="#80c8ff" depthTest={false} />
+        </mesh>
+      )}
+      {placing && 'url' in placing && (
+        <PlacementRigErrorBoundary key={placing.url} onCancel={onCancel}>
+          <Suspense fallback={null}>
+            <PlacementRigFBX url={placing.url} />
+          </Suspense>
+        </PlacementRigErrorBoundary>
+      )}
+    </group>
+  )
+}
+
+function PlacementRigFBX({url}: {url: string}) {
+  return <PlacementGhost model={useFBX(url)} />
+}
+
+function PlacementGhost({
+  model,
+  libraryEntryId,
+}: {
+  model: Group
+  libraryEntryId?: string
+}) {
+  const ghost = useMemo(() => makeGhost(model), [model])
+  const {
+    scale,
+    lift,
+    modelScale = 1,
+  } = useNormalizedModel(model, libraryEntryId)
+  useEffect(
+    () => () => {
+      ghost.traverse((object) => {
+        const mesh = object as Mesh
+        if (!mesh.isMesh) return
+        const materials = Array.isArray(mesh.material)
+          ? mesh.material
+          : [mesh.material]
+        for (const material of materials) material.dispose()
+      })
+    },
+    [ghost],
+  )
+  return (
+    <group scale={scale * modelScale}>
       <primitive object={ghost} position={[0, lift, 0]} />
     </group>
   )
@@ -999,26 +1060,26 @@ export class PlacementRigErrorBoundary extends React.Component<
 export function PlacedModels({
   sheet,
   project,
-  pendingEntry,
+  pendingEntries,
   onPersisted,
   selectLocked,
   onObjectMenu,
 }: {
   sheet: ISheet
   project: IProject
-  pendingEntry: PendingPlacementEntry | null
-  onPersisted: () => void
+  pendingEntries: PendingPlacementEntry[]
+  onPersisted: (key: string) => void
   selectLocked?: boolean
   onObjectMenu?: (key: string, x: number, y: number) => void
 }) {
   const list = usePlacementsList(sheet)
   const ready = useProjectReady(project)
-  // pending 提交进清单(list)到 clearPending 之间有一瞬两边都渲染,
-  // React 报 duplicate key;已在清单里的 pending 副本直接跳过
-  const entries: Array<PlacementEntry | PendingPlacementEntry> =
-    pendingEntry && !list.some((e) => e.key === pendingEntry.key)
-      ? [...list, pendingEntry]
-      : list
+  // pending 提交后,同一个 React key 从清单读取,保留已挂载的实例。
+  const persistedKeys = new Set(list.map((entry) => entry.key))
+  const entries = [
+    ...list,
+    ...pendingEntries.filter((entry) => !persistedKeys.has(entry.key)),
+  ]
   // 首屏闸门(firstScreenGate 机制):先登记本批要等的模型、再报工程就绪,
   // 顺序不可换——先报就绪而 pending 为空会提前揭幕。已落定的 key gate
   // 内部防回加,清单变化重跑只补登新条目;落定后全部调用是 no-op
@@ -1063,7 +1124,7 @@ function PlacedModel({
   entry: PlacementEntry | PendingPlacementEntry
   project: IProject
   sheet: ISheet
-  onPersisted: () => void
+  onPersisted: (key: string) => void
   selectLocked?: boolean
   onObjectMenu?: (key: string, x: number, y: number) => void
 }) {
@@ -1111,7 +1172,7 @@ function PrimitivePlacedModel({
 }: {
   entry: PlacementEntry | PendingPlacementEntry
   sheet: ISheet
-  onPersisted: () => void
+  onPersisted: (key: string) => void
   selectLocked?: boolean
   onObjectMenu?: (key: string, x: number, y: number) => void
 }) {
@@ -1146,7 +1207,7 @@ function FBXPlacedModel({
   entry: PlacementEntry | PendingPlacementEntry
   project: IProject
   sheet: ISheet
-  onPersisted: () => void
+  onPersisted: (key: string) => void
   selectLocked?: boolean
   onObjectMenu?: (key: string, x: number, y: number) => void
 }) {
@@ -1179,7 +1240,7 @@ function FBXPlacedModel({
 export async function loadLibraryModel(
   entryId: string,
   lib: Library = getLibrary(),
-): Promise<{group: Group; animations: AnimationClip[]}> {
+): Promise<LoadedLibraryModel> {
   try {
     const libEntry = await lib.getEntry(entryId)
     if (!libEntry || libEntry.kind !== 'model') {
@@ -1210,20 +1271,22 @@ function LibraryPlacedModel({
   entry: PlacementEntry | PendingPlacementEntry
   project: IProject
   sheet: ISheet
-  onPersisted: () => void
+  onPersisted: (key: string) => void
   selectLocked?: boolean
   onObjectMenu?: (key: string, x: number, y: number) => void
 }) {
-  const [loaded, setLoaded] = useState<{
-    group: Group
-    animations: AnimationClip[]
-  } | null>(null)
+  const [preloaded] = useState(() => ('loaded' in entry ? entry.loaded : null))
+  const [loaded, setLoaded] = useState<LoadedLibraryModel | null>(
+    preloaded ?? null,
+  )
   const [failed, setFailed] = useState(false)
   useEffect(() => {
+    if (preloaded) return
     let cancelled = false
     loadLibraryModel(entry.libraryEntryId!)
       .then((result) => {
-        if (!cancelled) setLoaded(result)
+        if (cancelled) disposeObjectTree(result.group)
+        else setLoaded(result)
       })
       .catch((err) => {
         console.warn('[placement] 库模型加载失败', err)
@@ -1232,7 +1295,7 @@ function LibraryPlacedModel({
     return () => {
       cancelled = true
     }
-  }, [entry.libraryEntryId])
+  }, [entry.libraryEntryId, preloaded])
   // 卸载或条目变化时释放已加载模型
   useEffect(() => {
     return () => {
@@ -1271,7 +1334,7 @@ function PlacedModelCore({
   group: Group
   animations: AnimationClip[]
   sourceType: 'local' | 'library' | 'primitive'
-  onPersisted: () => void
+  onPersisted: (key: string) => void
   selectLocked?: boolean
   onObjectMenu?: (key: string, x: number, y: number) => void
 }) {
@@ -1301,10 +1364,21 @@ function PlacedModelCore({
     const props: Record<string, any> = {
       animation: literalConfigFor('animation', modelEntryId),
       animationTracks: animationTracksProp,
+      // 默认姿势 = 角色的基础静态姿势；场景姿势仍是可打帧的 pose 属性。
+      // 两者共用同一套姿态解析器，但保存目标和覆盖层不同。
+      defaultPose: t.string('', {
+        label: () => translate('pg.props.defaultPose'),
+        editor: 'defaultPose',
+      }),
       // 姿势 = 时间轴单属性(spec §6.1 + 2026-10-01 属性行化):值
       // JSON(lib 引用|custom 快照),面板显示为属性行,值区域走注册表
       // 的 pose 编辑器(弹框选预设);自定义插值器让它可打帧且平滑混合
-      pose: t.string(poseProp.defaultValue, poseProp.opts),
+      pose: t.string(poseProp.defaultValue, {
+        ...poseProp.opts,
+        label: () => translate('pg.props.scenePose'),
+        editor: 'pose',
+      }),
+      ...characterPathPropConfig,
       // 手势(2026-10-05):姿势的纯选择叠加层,左右手各一行;值是库手势
       // 引用(或 ''=无手势),应用只写本侧手指骨,可打帧(同姿势插值器)
       gestureL: t.string('', gesturePropConfigShape('left').opts),
@@ -1327,7 +1401,10 @@ function PlacedModelCore({
     materialOverrides,
     poseProp,
   ])
-  const {scale, lift} = useNormalizedModel(group)
+  const {scale, lift, modelScale} = useNormalizedModel(
+    group,
+    entry.libraryEntryId,
+  )
   const objRef = useRef<ISheetObject<any> | undefined>(undefined)
   const [sheetObject, setSheetObject] = useState<ISheetObject<any> | undefined>(
     undefined,
@@ -1363,6 +1440,7 @@ function PlacedModelCore({
     instance,
     entry.libraryEntryId,
     invalidate,
+    entry.key,
   )
   const hasStripLayer = strips.state.kind !== 'legacy'
 
@@ -1411,6 +1489,9 @@ function PlacedModelCore({
     if (!studio.selection.includes(objRef.current)) return
     if (!resolveControlSpec(instance)) return // 骨架不支持:静默不进
     event.stopPropagation()
+    // 动作编辑器打开时，双击模型沿用局部帧的骨骼姿势进入 draft 会话；
+    // 否则场景姿势会话会按时间轴当前帧重新求值，画面会跳到另一套姿势。
+    if (strips.enterActionPose()) return
     enterPoseSession(entry.key)
   }
 
@@ -1424,6 +1505,8 @@ function PlacedModelCore({
   }, [instance])
   const animationId = useVal(sheetObject?.props.animation) ?? ''
   const poseJson = (useVal(sheetObject?.props.pose) as string | undefined) ?? ''
+  const defaultPoseJson =
+    (useVal(sheetObject?.props.defaultPose) as string | undefined) ?? ''
   const gestureLJson =
     (useVal(sheetObject?.props.gestureL) as string | undefined) ?? ''
   const gestureRJson =
@@ -1486,7 +1569,7 @@ function PlacedModelCore({
       const url = await getLibrary().getBlobUrl(animEntry.blobId)
       const gltf = await createGLTFLoader().loadAsync(url)
       if (!cancelled) {
-        setClip(gltf.animations[0] ?? null)
+        setClip(animationClipForModel(gltf, instance) ?? null)
         setAnimationLoadStatus(entry.key, {assetId: animationId, loaded: true})
       }
     }
@@ -1509,7 +1592,7 @@ function PlacedModelCore({
       cancelled = true
       clearAnimationLoadStatus(entry.key)
     }
-  }, [animationId, entry.key])
+  }, [animationId, entry.key, instance])
 
   const [libResolveTick, setLibResolveTick] = useState(0)
   // 旧两字段 → 新 pose 值迁移(spec §9):一个事务(可撤销、经 saaz 同步),
@@ -1541,6 +1624,14 @@ function PlacedModelCore({
     // (r3f invalidate 只排帧不重渲染 React,spec §5 的「重求值」需要这一跳)
     [poseProp, poseJson, libResolveTick],
   )
+  const defaultPoseBones = useMemo(() => {
+    if (!sheetObject) return null
+    return poseProp.resolveBones(
+      parsePoseValue(resolveDefaultPose(sheetObject)),
+    )
+    // defaultPose 属性与旧静态 pose 都可能改变基础姿势；libResolveTick
+    // 负责库引用解析完成后重算。
+  }, [sheetObject, poseProp, defaultPoseJson, poseJson, libResolveTick])
   // 手势层(叠加):本侧手指骨;解析不出 = null(跳过应用,保持姿势层)
   const gestureLBones = useMemo(
     () => resolveGestureBones(gestureLJson, 'left'),
@@ -1550,11 +1641,72 @@ function PlacedModelCore({
     () => resolveGestureBones(gestureRJson, 'right'),
     [gestureRJson, libResolveTick],
   )
+  // 骨骼层顺序：绑定姿势 → 默认姿势 → 骨骼动作片段 → 场景姿势 → 手势。
+  // 低层只铺没有被高层写到的通道，composePose 的 replace 语义保证这一点。
+  const applyBasePose = useCallback(() => {
+    applyPose(instance, bindPoseRef.current)
+    if (defaultPoseBones) applyPose(instance, defaultPoseBones)
+  }, [instance, defaultPoseBones])
+  const applyPoseOverlays = useCallback(() => {
+    if (!sheetObject) return
+    // 每帧重读求值值：摆姿势入口会先改播放头再预览，React useVal 可能
+    // 还没重渲染，用闭包值会把上一帧姿势烤进新关键帧。
+    const pose = poseProp.resolveBones(
+      parsePoseValue((val(sheetObject.props.pose) as string) ?? ''),
+    )
+    if (pose) applyPose(instance, pose)
+    const left = resolveGestureBones(
+      (val(sheetObject.props.gestureL) as string) ?? '',
+      'left',
+    )
+    if (left) applyPose(instance, left)
+    const right = resolveGestureBones(
+      (val(sheetObject.props.gestureR) as string) ?? '',
+      'right',
+    )
+    if (right) applyPose(instance, right)
+  }, [instance, sheetObject, poseProp])
+  const applyScenePose = useCallback(
+    (timeMs: number, exporting: boolean) => {
+      const sampled = strips.applyAt(
+        timeMs,
+        exporting,
+        applyBasePose,
+        applyPoseOverlays,
+      )
+      if (!sampled) {
+        applyBasePose()
+        applyPoseOverlays()
+      }
+      return sampled
+    },
+    [strips, applyBasePose, applyPoseOverlays],
+  )
+  // 摆姿势会话的入口预览：静态姿势只看默认姿势；场景姿势看完整合成。
+  const preparePose = useCallback(
+    (target: 'static' | 'scene', position: number) => {
+      if (target === 'static') {
+        applyPose(instance, bindPoseRef.current)
+        if (defaultPoseBones) applyPose(instance, defaultPoseBones)
+        return
+      }
+      const scenePose =
+        sheetObject && ((val(sheetObject.props.pose) as string) ?? '').trim()
+      // 新场景帧从“当前画面”起手：有骨骼动作或已有场景姿势时按场景时间
+      // 重新求值；都没有时保留当前骨骼（例如旧版动画暂停住的那一帧），
+      // 不能先把画面重置成默认姿势再让用户摆。
+      if (strips.hasLayer() || scenePose) {
+        applyScenePose(position * 1000, getExportAnimationTime() !== null)
+      }
+    },
+    [instance, sheetObject, defaultPoseBones, strips, applyScenePose],
+  )
   // 库姿势引用预取(spec §5):当前值与轨道全部帧值里的 lib id 异步进缓存,
   // 到手 invalidate 触发重求值,阶跃变平滑
   useEffect(() => {
     if (!sheetObject) return
     const ids = collectLibPoseIdsForProps(sheetObject, [
+      'defaultPose',
       'pose',
       'gestureL',
       'gestureR',
@@ -1570,6 +1722,15 @@ function PlacedModelCore({
       cancelled = true
     }
   }, [sheetObject, poseJson, gestureLJson, gestureRJson, invalidate])
+
+  // 绑定路径前先检查动作是否自带前移/对象位置通道，避免路径和动作同时写位置。
+  // 已绑定时也保留校验器，换片段后时间轴工具行会显示同一份冲突原因。
+  useEffect(() => {
+    if (!sheetObject) return
+    return registerCharacterPathBindingValidator(sheetObject, ({orient}) =>
+      strips.pathConflict(orient, clip),
+    )
+  }, [sheetObject, strips, clip])
 
   // 动画片段切换:0.2s 淡入淡出
   useEffect(() => {
@@ -1631,7 +1792,10 @@ function PlacedModelCore({
       if (playing || hasStripLayer) {
         invalidate()
       } else {
-        applyPose(instance, poseBones ?? bindPoseRef.current)
+        applyPose(
+          instance,
+          poseBones ?? defaultPoseBones ?? bindPoseRef.current,
+        )
         // 手势叠加层:姿势层整写之后,只补本侧手指骨(顺序不能反)
         if (gestureLBones) applyPose(instance, gestureLBones)
         if (gestureRBones) applyPose(instance, gestureRBones)
@@ -1643,6 +1807,7 @@ function PlacedModelCore({
     invalidate,
     instance,
     poseBones,
+    defaultPoseBones,
     gestureLBones,
     gestureRBones,
     hasStripLayer,
@@ -1664,7 +1829,7 @@ function PlacedModelCore({
       )
     )
       return
-    applyPose(instance, poseBones ?? bindPoseRef.current)
+    applyPose(instance, poseBones ?? defaultPoseBones ?? bindPoseRef.current)
     // 手势叠加层:姿势层整写之后,只补本侧手指骨(顺序不能反)
     if (gestureLBones) applyPose(instance, gestureLBones)
     if (gestureRBones) applyPose(instance, gestureRBones)
@@ -1672,6 +1837,7 @@ function PlacedModelCore({
   }, [
     instance,
     poseBones,
+    defaultPoseBones,
     gestureLBones,
     gestureRBones,
     invalidate,
@@ -1683,62 +1849,121 @@ function PlacedModelCore({
     if (!sheetObject) return
     const exportTime = getExportAnimationTime()
     const playing = val(sheet.sequence.pointer.playing)
-    if (exportTime === null && poseModeActive && strips.hasLayer()) return
-    const sampledStripLayer = strips.applyAt(
-      (exportTime ?? sheet.sequence.position) * 1000,
-      exportTime !== null,
-      () => {
-        const currentPose = (val(sheetObject.props.pose) as string) ?? ''
-        const base = poseProp.resolveBones(parsePoseValue(currentPose))
-        if (base) applyPose(instance, base)
-      },
-    )
-    if (!sampledStripLayer) {
-      if (exportTime === null && !playing) return
-      if (exportTime === null) mixer.update(delta)
-      else mixer.setTime(exportTime)
-    }
-    // 有姿势/手势轨道:求值姿势逐骨压过动作片段(spec §7.1);
-    // 每帧重读求值值(拖针/播放求值产物),resolvePoseBones 有 LRU/缓存兜底。
-    // 轨道有无也现场读——两步撤销首帧(撤关键帧→撤空轨)删轨不改求值值,
-    // 缓存的布尔会滞留 true 让播放被绑定姿势盖住(终审 F2)
-    const hasPoseTrack = getPoseTrackId(sheetObject) !== undefined
-    const hasGestureLTrack =
-      getTrackIdForProp(sheetObject, 'gestureL') !== undefined
-    const hasGestureRTrack =
-      getTrackIdForProp(sheetObject, 'gestureR') !== undefined
-    if (
-      shouldApplyPoseDuringPlayback(
-        hasPoseTrack || hasGestureLTrack || hasGestureRTrack,
+    const timeMs = (exportTime ?? sheet.sequence.position) * 1000
+    const group = groupRef.current
+    const values = sheetObject.value as Record<string, any>
+    const basePosition = values.position ?? {x: 0, y: 0, z: 0}
+    const baseRotation = values.rotation ?? {x: 0, y: 0, z: 0}
+    const baseScale = values.scale ?? {x: 1, y: 1, z: 1}
+
+    // 场景变换的底层始终取 Theatre 当前求值值；对象动作只覆盖自己声明的
+    // 通道，路径生效后再接管世界位置和（可选）朝向。
+    if (group) {
+      group.position.set(basePosition.x, basePosition.y, basePosition.z)
+      group.rotation.set(baseRotation.x, baseRotation.y, baseRotation.z)
+      group.scale.set(baseScale.x, baseScale.y, baseScale.z)
+      const objectValues = strips.sampleObjectAt(timeMs, exportTime !== null)
+      const pathBound = Boolean(values.characterPathId)
+      const pathOwnsRotation = pathBound && (values.characterPathOrient ?? true)
+      if (objectValues?.position && !pathBound) {
+        group.position.set(
+          objectValues.position.x,
+          objectValues.position.y,
+          objectValues.position.z,
+        )
+      }
+      if (objectValues?.quaternion && !pathOwnsRotation) {
+        group.quaternion.set(
+          objectValues.quaternion.x,
+          objectValues.quaternion.y,
+          objectValues.quaternion.z,
+          objectValues.quaternion.w,
+        )
+      }
+      if (objectValues?.scale) {
+        group.scale.set(
+          objectValues.scale.x,
+          objectValues.scale.y,
+          objectValues.scale.z,
+        )
+      }
+      const baseForward = new Vector3(0, 0, 1).applyQuaternion(
+        new Quaternion().setFromEuler(
+          new Euler(baseRotation.x, baseRotation.y, baseRotation.z),
+        ),
       )
-    ) {
-      if (hasPoseTrack) {
-        const evaluated = (val(sheetObject.props.pose) as string) ?? ''
-        applyPose(
-          instance,
-          poseProp.resolveBones(parsePoseValue(evaluated)) ??
-            bindPoseRef.current,
-        )
+      const path = evaluateCharacterPath(
+        sheetObject.sheet,
+        values,
+        Math.hypot(baseForward.x, baseForward.z) > 1e-6
+          ? {x: baseForward.x, z: baseForward.z}
+          : undefined,
+      )
+      if (path.status === 'active') {
+        group.position.copy(path.position)
+        if (path.yaw !== undefined) {
+          group.quaternion.setFromAxisAngle(new Vector3(0, 1, 0), path.yaw)
+        }
       }
-      // 手势轨道:求值值裁到本侧手指骨压上;无姿势轨道时身体仍归 mixer
-      if (hasGestureLTrack) {
-        const g = resolveGestureBones(
-          (val(sheetObject.props.gestureL) as string) ?? '',
-          'left',
+      // 同帧的跟随机位和取景读取的是世界矩阵，必须在这里刷新。
+      group.updateMatrixWorld(true)
+    }
+
+    const bonesLocked =
+      exportTime === null && poseModeActive && strips.hasLayer()
+    if (!bonesLocked) {
+      const sampledStripLayer =
+        (exportTime === null && strips.previewBones()) ||
+        strips.applyAt(
+          timeMs,
+          exportTime !== null,
+          applyBasePose,
+          applyPoseOverlays,
         )
-        if (g) applyPose(instance, g)
-      }
-      if (hasGestureRTrack) {
-        const g = resolveGestureBones(
-          (val(sheetObject.props.gestureR) as string) ?? '',
-          'right',
-        )
-        if (g) applyPose(instance, g)
+      if (!sampledStripLayer && (exportTime !== null || playing)) {
+        if (exportTime === null) mixer.update(delta)
+        else mixer.setTime(exportTime)
+        // 有姿势/手势轨道:求值姿势逐骨压过旧动作；每帧重读值，
+        // 兼容拖播放头和轨道求值不触发 React 重渲染的情况。
+        const hasPoseTrack = getPoseTrackId(sheetObject) !== undefined
+        const hasGestureLTrack =
+          getTrackIdForProp(sheetObject, 'gestureL') !== undefined
+        const hasGestureRTrack =
+          getTrackIdForProp(sheetObject, 'gestureR') !== undefined
+        if (
+          shouldApplyPoseDuringPlayback(
+            hasPoseTrack || hasGestureLTrack || hasGestureRTrack,
+          )
+        ) {
+          if (hasPoseTrack) {
+            const evaluated = (val(sheetObject.props.pose) as string) ?? ''
+            applyPose(
+              instance,
+              poseProp.resolveBones(parsePoseValue(evaluated)) ??
+                defaultPoseBones ??
+                bindPoseRef.current,
+            )
+          }
+          if (hasGestureLTrack) {
+            const g = resolveGestureBones(
+              (val(sheetObject.props.gestureL) as string) ?? '',
+              'left',
+            )
+            if (g) applyPose(instance, g)
+          }
+          if (hasGestureRTrack) {
+            const g = resolveGestureBones(
+              (val(sheetObject.props.gestureR) as string) ?? '',
+              'right',
+            )
+            if (g) applyPose(instance, g)
+          }
+        }
       }
     }
     // 导出时主循环已切到 never,由导出核心手动 advance;不额外请帧。
     if (exportTime === null && playing) invalidate()
-  })
+  }, -2)
 
   // pending 条目:对象已由 e.group 建好后,一次性提交清单。
   // 本地来源额外写 source 静态覆盖,让 theatre 项目状态引用到资产(避免被清理);
@@ -1755,7 +1980,12 @@ function PlacedModelCore({
       if (!list.some((e) => e.key === entry.key)) {
         const scrub = studio.scrub()
         scrub.capture(({set}) => {
-          const {pending: _pending, ...rest} = entry as PendingPlacementEntry
+          const {
+            pending: _pending,
+            loaded: _loaded,
+            selectOnPersist: _selectOnPersist,
+            ...rest
+          } = entry as PendingPlacementEntry
           set(registry.props.list, JSON.stringify([...list, rest]))
           if (sourceType === 'local' && entry.assetId) {
             set(
@@ -1768,7 +1998,9 @@ function PlacedModelCore({
           }
         })
         scrub.commit()
-        onPersisted()
+        if ('selectOnPersist' in entry && entry.selectOnPersist)
+          studio.setSelection([obj])
+        onPersisted(entry.key)
         // Agent models.create 的 mounted 信号(Task 8):注册表提交 +
         // pending 清理之后才兑现;waiter 不存在(UI 路径)时是 no-op
         resolvePlacementPersisted(entry.key)
@@ -1784,19 +2016,25 @@ function PlacedModelCore({
     }
   }, [])
 
+  const modelContent = <primitive object={instance} position={[0, lift, 0]} />
   return (
     <e.group
       ref={groupRef}
       theatreKey={entry.key}
       objRef={setObjRef}
       additionalProps={additionalProps}
+      applyValuesToObject={false}
       position={[entry.position.x, entry.position.y, entry.position.z]}
       scale={scale}
       onClick={selectSelf}
       onContextMenu={openMenu}
       onDoubleClick={enterPoseViaDoubleClick}
     >
-      <primitive object={instance} position={[0, lift, 0]} />
+      {modelScale === undefined ? (
+        modelContent
+      ) : (
+        <group scale={modelScale}>{modelContent}</group>
+      )}
       {sheetObject && poseModeActive && (
         <>
           <PoseModeRig
@@ -1804,6 +2042,7 @@ function PlacedModelCore({
             sheetObject={sheetObject}
             placementKey={entry.key}
             sheet={sheet}
+            preparePose={preparePose}
           />
           {/* 浮动小条跟模型走(挂头骨锚点):移动/旋转互斥切换,与 W/E 键同一状态源 */}
           <PoseModeBar instance={instance} />
@@ -1843,7 +2082,7 @@ class PlacedModelErrorBoundary extends React.Component<
     entry: PlacementEntry | PendingPlacementEntry
     project: IProject
     sheet: ISheet
-    onPersisted: () => void
+    onPersisted: (key: string) => void
     selectLocked?: boolean
     onObjectMenu?: (key: string, x: number, y: number) => void
   },
@@ -1860,6 +2099,8 @@ class PlacedModelErrorBoundary extends React.Component<
     // Agent models.create 正等着挂载完成(Task 8):失败必须 reject waiter,
     // 不能悬挂;UI 路径没有 waiter,rejectPlacement 是 no-op
     rejectPlacement(this.props.entry.key, err)
+    if ('pending' in this.props.entry)
+      this.props.onPersisted(this.props.entry.key)
   }
   render() {
     if (!this.state.failed) return <PlacedModel {...this.props} />

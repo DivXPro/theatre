@@ -144,6 +144,7 @@ export function getPathMeta(sheet: ISheet, metaKey: string) {
       progress: t.number(0, {
         range: [0, 1],
         label: () => translate('pg.props.pathProgress'),
+        hidden: true,
       }),
       position: t.compound(
         {x: t.number(0), y: t.number(0), z: t.number(0)},
@@ -163,7 +164,9 @@ export function getPathMeta(sheet: ISheet, metaKey: string) {
   const meta = sheet.object(metaKey, config)
   // 调试/自动化验证挂钩:page 上下文拿不到 sheet.object(配置校验),
   // 名单对象从这里直接读(同 __cameraShot 的用法)
-  ;((window as any).__cameraPathMeta ??= {})[metaKey] = meta
+  if (typeof window !== 'undefined') {
+    ;((window as any).__cameraPathMeta ??= {})[metaKey] = meta
+  }
   return meta
 }
 

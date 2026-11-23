@@ -6,20 +6,41 @@
  * PoseModeRig 注册的命中测试(控制球/被摆模型不算空白)。
  */
 import {useEffect, useState} from 'react'
+import type {Group} from 'three'
+import type {PoseBones} from './poseOverride'
 
 export type {PoseFrameMode} from './poseFrame'
 import type {PoseFrameMode} from './poseFrame'
 
-export type PoseSession = {key: string}
+export type PoseSessionTarget = 'static' | 'scene'
+export type DraftPoseSessionOptions = {
+  onCapture: (bones: PoseBones) => void
+  applyPreview?: (instance: Group) => void
+  onCancel?: () => void
+}
+export type PoseSession =
+  | {key: string; target?: PoseSessionTarget; position?: number}
+  | {key: string; target: 'draft'; draft: DraftPoseSessionOptions}
+type PoseExitAction = 'save' | 'cancel'
+type PoseExitListener = (key: string, action?: PoseExitAction) => void
 
 let session: PoseSession | null = null
 // 会话的帧信息(帧模式判定结果):进会话时由 PoseModeRig 写入,随会话生灭
 let sessionFrame: PoseFrameMode | null = null
 const changeListeners = new Set<(s: PoseSession | null) => void>()
-const exitListeners = new Set<(key: string) => void>()
+const exitListeners = new Set<PoseExitListener>()
 
 export function getPoseSession(): PoseSession | null {
   return session
+}
+
+export function usePoseSession(): PoseSession | null {
+  const [current, setCurrent] = useState(getPoseSession)
+  useEffect(() => {
+    setCurrent(getPoseSession())
+    return onPoseSessionChange(setCurrent)
+  }, [])
+  return current
 }
 
 export function onPoseSessionChange(
@@ -32,7 +53,7 @@ export function onPoseSessionChange(
 }
 
 /** PoseModeRig 订阅:外部请求退出时回调(提交 + clearPoseSession) */
-export function onPoseExitRequested(cb: (key: string) => void): () => void {
+export function onPoseExitRequested(cb: PoseExitListener): () => void {
   exitListeners.add(cb)
   return () => {
     exitListeners.delete(cb)
@@ -45,22 +66,64 @@ function emitChange() {
 
 /** 请求退出当前会话;监听者没清会话时兜底清掉,防状态卡死。
  *  try/finally:监听抛异常(如 capturePose 失败)也兜底清理,异常照常上抛 */
-export function requestPoseExit(): void {
-  if (!session) return
+export function requestPoseExit(action?: PoseExitAction): void {
+  const ending = session
+  if (!ending) return
   // 先快照 key:监听者可能在回调里清会话,循环里再读 session.key 会崩
-  const key = session.key
+  const key = ending.key
   try {
-    for (const cb of exitListeners) cb(key)
+    const listeners = [...exitListeners]
+    for (const cb of listeners) {
+      if (session !== ending) break
+      if (action) cb(key, action)
+      else cb(key)
+    }
   } finally {
-    if (session) clearPoseSession()
+    if (session === ending) clearPoseSession()
   }
 }
 
+export function requestPoseSave(): void {
+  requestPoseExit('save')
+}
+
+export function requestPoseCancel(): void {
+  requestPoseExit('cancel')
+}
+
 /** 会话唯一:已在摆别的模型时,先按退出流程提交旧会话再开新的 */
-export function enterPoseSession(key: string): void {
-  if (session?.key === key) return
+export function enterPoseSession(
+  key: string,
+  target?: PoseSessionTarget,
+  position?: number,
+): void {
+  const currentTarget = session?.target ?? 'scene'
+  const nextTarget = target ?? 'scene'
+  if (
+    session?.key === key &&
+    currentTarget === nextTarget &&
+    (position === undefined || position === sessionFrame?.position)
+  )
+    return
+  startPoseSession(
+    target === 'scene' && position !== undefined
+      ? {key, target, position}
+      : target
+        ? {key, target}
+        : {key},
+  )
+}
+
+export function enterDraftPoseSession(
+  key: string,
+  draft: DraftPoseSessionOptions,
+): void {
+  startPoseSession({key, target: 'draft', draft})
+}
+
+function startPoseSession(next: PoseSession): void {
   if (session) requestPoseExit()
-  session = {key}
+  session = next
   sessionFrame = null // 帧信息由新会话的 Rig 挂载后写入
   selectionModes = BOTH_MODES // 选中支持集同理(新会话从无限制造起)
   emitChange()
@@ -107,7 +170,13 @@ export function clearPoseSession(): void {
 
 /** 记录当前会话的帧信息;非当前会话 key 忽略(A→B 切换防护,同 clearPoseSessionIfCurrent) */
 export function setPoseSessionFrame(key: string, frame: PoseFrameMode): void {
-  if (!session || session.key !== key) return
+  if (
+    !session ||
+    session.key !== key ||
+    session.target === 'static' ||
+    session.target === 'draft'
+  )
+    return
   sessionFrame = frame
   emitChange()
 }

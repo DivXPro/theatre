@@ -26,10 +26,14 @@ import React, {
 import type {MutableRefObject} from 'react'
 import {Canvas, useFrame, useStore, useThree} from '@react-three/fiber'
 import {useT} from '@dreamerbird/studio/i18n'
+import {revealAdditionalSequenceRows} from '@dreamerbird/studio/panels/SequenceEditorPanel/additionalRows'
 import {I18nContext, I18nProvider, setLanguage} from '@dreamerbird/studio/i18n'
 import type {ThreeEvent} from '@react-three/fiber'
 import {useGLTF} from '@react-three/drei'
 import sceneGLB from './scene.glb'
+import {addAnimationTrack} from './animationStrips/storage'
+import {parseAnimationTracks} from './animationStrips/model'
+import {registerCharacterPathEditor} from './characterPaths/CharacterPathEditor'
 import {
   Color,
   Euler,
@@ -45,7 +49,6 @@ import {RoomEnvironment} from 'three/examples/jsm/environments/RoomEnvironment.j
 import type {Mesh, Object3D} from 'three'
 import {
   PlacementRig,
-  PlacementRigErrorBoundary,
   PlacedModels,
   SelectionGizmo,
   deletePlacement,
@@ -53,7 +56,6 @@ import {
   getPlacementInstanceForObject,
   isSelectSuppressed,
   readPlacementEntries,
-  readPlacementPositions,
   useGizmoMode,
   usePlacementController,
   usePlacementSurface,
@@ -128,7 +130,7 @@ import {bindCameraStudioSceneHandlers} from './agent/api'
 import type {AgentSceneRuntimeHandlers} from './agent/runtime'
 import {registerDirectorView} from './agent/runtime/directorView'
 import type {DirectorViewController} from './agent/runtime/directorView'
-import {findFreeSpot, presetPlacement} from './pathPresets'
+import {presetPlacement} from './pathPresets'
 import type {PathPreset} from './pathPresets'
 import {PathPresetDropRig} from './PathPresetDropRig'
 import {listSinks} from './videoExport/sinks'
@@ -153,8 +155,6 @@ import {
 import {pruneObjectFromOutlineCollections} from '@dreamerbird/studio/panels/OutlinePanel/outlineOps/stateOps'
 import {
   createHostFlows,
-  dropPointFromClient,
-  isDropPointInsideCanvas,
   setDropPointContext,
   setHostFlowsHandle,
   setPlacingSnapshot,
@@ -899,6 +899,7 @@ export function CameraScene({
 
   // project 来自 props(T9):宿主经 sceneProps 注入,bootstrap 已解析
   const sheet = project.sheet('Scene')
+  useLayoutEffect(registerCharacterPathEditor, [])
   // 「瞄准目标」下拉的动态选项(aimTargetOptions)在 studio 面板渲染时
   // 调用,不在 React 上下文里——把当前 sheet 喂给模块级 optionsSheet,
   // 选项函数经它读 Anchors 注册表
@@ -1120,7 +1121,8 @@ export function CameraScene({
   }
   const {
     placing,
-    pendingEntry,
+    getPlacing,
+    pendingEntries,
     startPlacingFromLibrary,
     placeLibraryEntryAt,
     placePrimitiveAt,
@@ -1151,57 +1153,16 @@ export function CameraScene({
     [],
   )
 
-  // 点击模型卡片 = 立即放到默认位(原点被占沿 +X 自动错开);要指定位置用拖拽
-  const placeModelAtDefault = useCallback(
-    (entry: ModelEntry) => {
-      // placeLibraryEntryAt 返回 {key, persisted}(Task 8,Agent
-      // models.create 的挂载等待句柄);UI 路径不等挂载完成——失败由
-      // PlacedModelErrorBoundary 上告,persisted 的 rejection 已在
-      // placeLibraryEntryAt 内兜底,这里只触发放置、忽略返回句柄
-      placeLibraryEntryAt(entry, findFreeSpot(readPlacementPositions(sheet)))
-    },
-    [sheet, placeLibraryEntryAt],
-  )
-
-  // 拖拽态:模型拖拽复用 placing 幽灵(按下即进 placing,松手即 confirm);
-  // 路径预设拖拽挂落点标记
-  const [modelDragging, setModelDragging] = useState(false)
   const [presetDrag, setPresetDrag] = useState<PathPreset | null>(null)
-  const startModelDrag = useCallback(
-    (entry: ModelEntry) => {
-      setModelDragging(true)
-      startPlacingFromLibrary(entry).catch((err) => {
+  const modelPlacement = placing && 'mode' in placing ? placing : null
+  const startModelPlacement = useCallback(
+    (entry: ModelEntry, mode: 'click' | 'drag') => {
+      startPlacingFromLibrary(entry, mode).catch((err) => {
         console.warn('[placement] 库模型加载失败', err)
-        setModelDragging(false)
       })
     },
     [startPlacingFromLibrary],
   )
-  useEffect(() => {
-    if (!modelDragging) return
-    const onDragOver = (ev: DragEvent) => {
-      if (isDropPointInsideCanvas(ev.clientX, ev.clientY)) ev.preventDefault()
-    }
-    const onDrop = (ev: DragEvent) => {
-      ev.preventDefault()
-      if (isDropPointInsideCanvas(ev.clientX, ev.clientY)) {
-        const point = dropPointFromClient(ev.clientX, ev.clientY)
-        if (point) {
-          confirmPlacing(point)
-          setModelDragging(false)
-          return
-        }
-      }
-      cancelPlacing()
-      setModelDragging(false)
-    }
-    window.addEventListener('dragover', onDragOver)
-    window.addEventListener('drop', onDrop)
-    return () => {
-      window.removeEventListener('dragover', onDragOver)
-      window.removeEventListener('drop', onDrop)
-    }
-  }, [modelDragging, confirmPlacing, cancelPlacing])
   // 右键已放置模型弹出的操作菜单:记录目标条目和光标位置
   const [objectMenu, setObjectMenu] = useState<{
     key: string
@@ -2007,7 +1968,7 @@ export function CameraScene({
           pipVisible={pipVisible}
           onTogglePip={handleTogglePip}
           pipDisabled={!activeCamera}
-          libraryDisabled={!!placing || modelDragging || presetDrag !== null}
+          libraryDisabled={!!placing || presetDrag !== null}
         />
         {!shotView && activeCamera && pipVisible && (
           <div
@@ -2034,8 +1995,9 @@ export function CameraScene({
             />
           </div>
         )}
-        {(modelDragging || presetDrag) && (
+        {(modelPlacement || presetDrag) && (
           <div
+            role="status"
             style={{
               position: 'absolute',
               bottom: 24,
@@ -2051,7 +2013,11 @@ export function CameraScene({
               pointerEvents: 'none',
             }}
           >
-            松开鼠标落点,Esc/右键取消
+            {modelPlacement?.point
+              ? t('pg.placement.loading', {name: modelPlacement.label})
+              : modelPlacement?.mode === 'click'
+                ? t('pg.placement.click', {name: modelPlacement.label})
+                : t('pg.placement.drag')}
           </div>
         )}
         {shotView && (
@@ -2076,9 +2042,10 @@ export function CameraScene({
         )}
         {frameOpen.model && (
           <ModelPickerSlot
-            onPlaceModel={placeModelAtDefault}
-            onDragStartModel={startModelDrag}
-            disabled={rigLoading}
+            onPlaceModel={(entry) => startModelPlacement(entry, 'click')}
+            onDragStartModel={(entry) => startModelPlacement(entry, 'drag')}
+            activeModelId={modelPlacement?.source.entryId}
+            disabled={rigLoading || !!modelPlacement?.point}
             onClose={() => closeFrame('model')}
           />
         )}
@@ -2146,10 +2113,25 @@ export function CameraScene({
                   const entry = selectedPlacement
                     ? getPlacementEntryForObject(selectedPlacement)
                     : undefined
-                  if (!inst || !entry || entry.key !== objectMenu.key) return {}
+                  if (
+                    !selectedPlacement ||
+                    !inst ||
+                    !entry ||
+                    entry.key !== objectMenu.key
+                  )
+                    return {}
                   if (collectBoneNames(inst.instance).length === 0) return {}
                   const supported = resolveControlSpec(inst.instance) !== null
                   return {
+                    onAddAnimationTrack:
+                      parseAnimationTracks(
+                        val(selectedPlacement.props.animationTracks) as string,
+                      ).kind === 'legacy'
+                        ? () => {
+                            addAnimationTrack(selectedPlacement)
+                            revealAdditionalSequenceRows(selectedPlacement)
+                          }
+                        : undefined,
                     onPoseMode: () => enterPoseSession(objectMenu.key),
                     poseModeEnabled: supported,
                     poseModeHint: t('pg.menu.poseModeUnsupported'),
@@ -2376,33 +2358,16 @@ export function CameraScene({
                 </InitialLoadProbe>
               </Suspense>
             )}
-            {placing && (
-              <Suspense fallback={null}>
-                <PlacementRigErrorBoundary
-                  onCancel={() => {
-                    cancelPlacing()
-                    setModelDragging(false)
-                  }}
-                >
-                  <PlacementRig
-                    placing={placing}
-                    confirmOnPointerUp={modelDragging}
-                    onConfirm={(p) => {
-                      confirmPlacing(p)
-                      setModelDragging(false)
-                    }}
-                    onCancel={() => {
-                      cancelPlacing()
-                      setModelDragging(false)
-                    }}
-                  />
-                </PlacementRigErrorBoundary>
-              </Suspense>
-            )}
+            <PlacementRig
+              placing={placing}
+              getPlacing={getPlacing}
+              onConfirm={confirmPlacing}
+              onCancel={cancelPlacing}
+            />
             <PlacedModels
               sheet={sheet}
               project={project}
-              pendingEntry={pendingEntry}
+              pendingEntries={pendingEntries}
               onPersisted={clearPending}
               selectLocked={!!placing}
               onObjectMenu={(key, x, y) => setObjectMenu({key, x, y})}

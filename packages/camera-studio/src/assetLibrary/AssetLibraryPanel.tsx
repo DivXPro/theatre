@@ -176,6 +176,67 @@ const Grid = styled.div`
   align-content: start;
 `
 
+const AnimationFilters = styled.div`
+  display: grid;
+  gap: 6px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--theatre-panel-border, #1f1f1f);
+
+  input,
+  select {
+    box-sizing: border-box;
+    min-width: 0;
+    width: 100%;
+    height: 26px;
+    padding: 0 6px;
+    border: 1px solid var(--theatre-panel-border, #1f1f1f);
+    border-radius: 3px;
+    background: var(--theatre-panel-bg, #282b2f);
+    color: inherit;
+    font: inherit;
+    color-scheme: dark;
+  }
+
+  input::placeholder {
+    color: var(--theatre-text-secondary, #cccccc);
+  }
+`
+
+const PackHeading = styled.h3`
+  grid-column: 1 / -1;
+  margin: 6px 0 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--theatre-text-secondary, #cccccc);
+`
+
+const PackToggle = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &::before {
+    content: '';
+    width: 0;
+    height: 0;
+    border: 4px solid transparent;
+    border-right-width: 0;
+    border-left-color: currentColor;
+  }
+
+  &[aria-expanded='true']::before {
+    transform: rotate(90deg);
+  }
+`
+
 /** 卡片:面板色系,hover 用原生工具条按钮的 hover 色 */
 const Card = styled.div`
   position: relative;
@@ -188,6 +249,9 @@ const Card = styled.div`
   user-select: none;
   &:hover {
     background: rgba(59, 63, 69, 0.8);
+  }
+  &[data-placement-active='true'] {
+    border-color: #80c8ff;
   }
   &[data-disabled='true'] {
     cursor: default;
@@ -382,6 +446,7 @@ export function AssetLibraryPanel({
   kind,
   onPlaceModel,
   onDragStartModel,
+  activeModelId,
   onPlacePreset,
   onDragStartPreset,
   filterRig,
@@ -400,6 +465,7 @@ export function AssetLibraryPanel({
   kind: AssetKind
   onPlaceModel?: (entry: ModelEntry) => void
   onDragStartModel?: (entry: ModelEntry) => void
+  activeModelId?: string
   onPlacePreset?: (preset: PathPreset) => void
   onDragStartPreset?: (preset: PathPreset) => void
   filterRig?: string
@@ -425,6 +491,11 @@ export function AssetLibraryPanel({
   const [plan, setPlan] = useState<ImportPlan | null>(null)
   const [choices, setChoices] = useState<Array<'reuse' | 'keep'>>([])
   const [busy, setBusy] = useState(false)
+  const [animationQuery, setAnimationQuery] = useState('')
+  const [animationPack, setAnimationPack] = useState('')
+  const [collapsedPacks, setCollapsedPacks] = useState<Set<string>>(
+    () => new Set(),
+  )
   const [menu, setMenu] = useState<{x: number; y: number; id: string} | null>(
     null,
   )
@@ -522,8 +593,11 @@ export function AssetLibraryPanel({
     return (
       <Card
         key={entry.id}
-        onPointerDown={modelGesture(entry)}
+        data-placement-active={activeModelId === entry.id}
+        data-disabled={disabled}
+        onPointerDown={disabled ? undefined : modelGesture(entry)}
         onDragStart={(ev) => ev.preventDefault()}
+        title={t('pg.lib.modelCardTitle')}
         onContextMenu={(ev) => {
           ev.preventDefault()
           setMenu({x: ev.clientX, y: ev.clientY, id: entry.id})
@@ -558,6 +632,7 @@ export function AssetLibraryPanel({
     icon: string,
     onApply: ((entry: T) => void) | undefined,
     extra?: React.ReactNode,
+    label = entry.name,
   ) => {
     const rigMismatch = filterRig ? entry.rig !== filterRig : false
     const cardDisabled = disabled || applyDisabled || !onApply || rigMismatch
@@ -582,14 +657,20 @@ export function AssetLibraryPanel({
           {rigLabel(entry.rig)}
           {rigMismatch && t('pg.lib.rigMismatch')}
         </Tag>
-        <Label title={entry.name}>{entry.name}</Label>
+        <Label title={entry.name}>{label}</Label>
         {extra}
       </Card>
     )
   }
 
-  const renderAnimationCard = (entry: AnimationEntry) =>
-    renderApplyCard(
+  const renderAnimationCard = (entry: AnimationEntry) => {
+    const pack = entry.packs?.[0]
+    const prefix = `Mixamo ${pack} - `
+    const label =
+      pack && entry.name.startsWith(prefix)
+        ? entry.name.slice(prefix.length)
+        : entry.name
+    return renderApplyCard(
       entry,
       '🎬',
       onApplyAnimation,
@@ -604,7 +685,9 @@ export function AssetLibraryPanel({
       >
         {entry.duration.toFixed(2)}s
       </div>,
+      label,
     )
+  }
 
   const renderPoseCard = (entry: PoseEntry) =>
     renderApplyCard(entry, '🧍', onApplyPose)
@@ -615,7 +698,7 @@ export function AssetLibraryPanel({
       key={preset.id}
       onPointerDown={presetGesture(preset)}
       onDragStart={(ev) => ev.preventDefault()}
-      title={t('pg.lib.modelCardTitle')}
+      title={t('pg.lib.pathCardTitle')}
     >
       <Thumb style={{fontSize: 0}}>
         <PathPresetThumb preset={preset} />
@@ -624,7 +707,36 @@ export function AssetLibraryPanel({
     </Card>
   )
 
-  const visibleAnimations = sortBySelectedRig(animations)
+  const animationPacks =
+    kind === 'animation'
+      ? [...new Set(animations.flatMap((entry) => entry.packs ?? []))].sort(
+          (left, right) => left.localeCompare(right),
+        )
+      : []
+  const selectedPack = animationPacks.includes(animationPack)
+    ? animationPack
+    : ''
+  const query = animationQuery.trim().toLowerCase()
+  const animationGroups = new Map<string, AnimationEntry[]>()
+  if (kind === 'animation') {
+    for (const entry of sortBySelectedRig(animations)) {
+      if (selectedPack && !entry.packs?.includes(selectedPack)) continue
+      if (
+        query &&
+        ![
+          entry.name,
+          ...(entry.packs ?? []),
+          ...(entry.aliases?.map((alias) => alias.name) ?? []),
+        ].some((name) => name.toLowerCase().includes(query))
+      ) {
+        continue
+      }
+      const groupName = selectedPack || entry.packs?.[0] || ''
+      const group = animationGroups.get(groupName)
+      if (group) group.push(entry)
+      else animationGroups.set(groupName, [entry])
+    }
+  }
   const visiblePoses = sortBySelectedRig(poses)
 
   return (
@@ -661,6 +773,33 @@ export function AssetLibraryPanel({
       {/* filterRig 提示条:姿势/动作共用 */}
       {(kind === 'animation' || kind === 'pose') && filterRig && (
         <HintBar>{t('pg.lib.filterHint')}</HintBar>
+      )}
+
+      {kind === 'animation' && (
+        <AnimationFilters>
+          <input
+            type="search"
+            aria-label={t('pg.lib.animationSearch')}
+            placeholder={t('pg.lib.animationSearch')}
+            value={animationQuery}
+            onChange={(event) => setAnimationQuery(event.currentTarget.value)}
+            onKeyDown={(event) => event.stopPropagation()}
+          />
+          {animationPacks.length > 0 && (
+            <select
+              aria-label={t('pg.lib.animationPack')}
+              value={selectedPack}
+              onChange={(event) => setAnimationPack(event.currentTarget.value)}
+            >
+              <option value="">{t('pg.lib.animationAllPacks')}</option>
+              {animationPacks.map((pack) => (
+                <option key={pack} value={pack}>
+                  {pack}
+                </option>
+              ))}
+            </select>
+          )}
+        </AnimationFilters>
       )}
 
       {/* 姿势框体顶部工具行:抽帧存姿势(纯查看器模式隐藏) */}
@@ -705,7 +844,44 @@ export function AssetLibraryPanel({
             ? visiblePoses.map(renderPoseCard)
             : kind === 'path'
               ? PATH_PRESETS.map(renderPresetCard)
-              : visibleAnimations.map(renderAnimationCard)}
+              : [...animationGroups].map(([pack, entries]) => {
+                  const expanded = Boolean(
+                    selectedPack || query || !collapsedPacks.has(pack),
+                  )
+                  const label = pack || t('pg.lib.animationUngrouped')
+                  return (
+                    <React.Fragment key={pack}>
+                      {!selectedPack && (
+                        <PackHeading>
+                          {query ? (
+                            label
+                          ) : (
+                            <PackToggle
+                              type="button"
+                              aria-expanded={expanded}
+                              onClick={() =>
+                                setCollapsedPacks((previous) => {
+                                  const next = new Set(previous)
+                                  if (next.has(pack)) next.delete(pack)
+                                  else next.add(pack)
+                                  return next
+                                })
+                              }
+                            >
+                              {label}
+                            </PackToggle>
+                          )}
+                        </PackHeading>
+                      )}
+                      {expanded && entries.map(renderAnimationCard)}
+                    </React.Fragment>
+                  )
+                })}
+        {kind === 'animation' && query && animationGroups.size === 0 && (
+          <PackHeading as="p" role="status">
+            {t('pg.lib.animationNoResults')}
+          </PackHeading>
+        )}
       </Grid>
 
       {/* 确认清单弹层 */}

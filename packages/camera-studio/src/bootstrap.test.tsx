@@ -152,6 +152,8 @@ jest.doMock('@dreamerbird/studio/propEditors/customPropEditors', () => ({
 jest.doMock('./poseMode/PosePropEditor', () => ({
   __esModule: true,
   default: () => null,
+  DefaultPosePropEditor: () => null,
+  ScenePosePropEditor: () => null,
 }))
 jest.doMock('./gesturePropsEditor', () => ({
   __esModule: true,
@@ -241,8 +243,8 @@ test('1. StrictMode 双跑:init 只调一次,编辑器只注册一轮,ready 就�
   const h = hookHost({}, {strict: true})
   await h.mount()
   expect(initSpy).toHaveBeenCalledTimes(1)
-  // pose/gestureL/gestureR 各一次;双跑不重复注册
-  expect(registerSpy).toHaveBeenCalledTimes(3)
+  // defaultPose/pose/gestureL/gestureR 各一次;双跑不重复注册
+  expect(registerSpy).toHaveBeenCalledTimes(4)
   expect(h.result.current?.ready).toBe(true)
   expect(h.result.current?.error).toBeUndefined()
   expect(setLeftStripHiddenSpy).not.toHaveBeenCalled() // 缺省配置不动 LeftStrip

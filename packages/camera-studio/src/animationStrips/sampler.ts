@@ -7,9 +7,11 @@ import {
   PropertyBinding,
 } from 'three'
 import type {Object3D} from 'three'
+import {sampleActionEditorChannels} from '../actionEditor/keys'
+import {toBonePose} from './actionSampling'
 import {composePose} from './composer'
 import type {BonePose, BonePoseTransform, PoseSample} from './composer'
-import {evaluateStrips} from './model'
+import {editableActionFor, evaluateStrips, findAnimationStrip} from './model'
 import type {AnimationTrackState} from './model'
 
 type PoseChannel = 'position' | 'quaternion' | 'scale'
@@ -20,13 +22,19 @@ export function applyAnimationStripFrame(
   clipFor: (assetId: string) => AnimationClip | undefined,
   timeMs: number,
   applyBase: () => void,
+  applyOverlays?: () => void,
 ): void {
   sampler.resetBase()
   applyBase()
-  if (state.kind !== 'tracks') return
+  if (state.kind !== 'tracks') {
+    applyOverlays?.()
+    return
+  }
   const base = sampler.capturePose()
   const samples: PoseSample[] = []
   for (const contribution of evaluateStrips(state.document, timeMs)) {
+    const found = findAnimationStrip(state.document, contribution.stripId)
+    if (!found || found.track.kind === 'object') continue
     const clip = clipFor(contribution.assetId)
     if (!clip) continue
     samples.push({
@@ -34,13 +42,26 @@ export function applyAnimationStripFrame(
       weight: contribution.weight,
       blend: 'replace',
     })
+    const action = editableActionFor(state.document, found.strip)
+    if (action?.channels.length) {
+      samples.push({
+        pose: toBonePose(
+          sampleActionEditorChannels(action.channels, contribution.sourceTimeMs)
+            .bones,
+        ),
+        weight: contribution.weight,
+        blend: 'replace',
+      })
+    }
   }
   sampler.applyPose(composePose(base, samples))
+  applyOverlays?.()
 }
 
 export function createStripSampler(model: Object3D) {
   const samples = new Group()
   const bones = new Map<string, {target: Bone; source: Bone}>()
+  const bindPose = new Map<string, BonePoseTransform>()
   const base: Array<() => void> = []
   model.traverse((node) => {
     if (!(node as Bone).isBone) return
@@ -51,10 +72,13 @@ export function createStripSampler(model: Object3D) {
     source.quaternion.copy(target.quaternion)
     source.scale.copy(target.scale)
     samples.add(source)
-    if (!bones.has(target.name)) bones.set(target.name, {target, source})
     const position = target.position.clone()
     const quaternion = target.quaternion.clone()
     const scale = target.scale.clone()
+    if (!bones.has(target.name)) {
+      bones.set(target.name, {target, source})
+      bindPose.set(target.name, {position, quaternion, scale})
+    }
     base.push(() => {
       target.position.copy(position)
       target.quaternion.copy(quaternion)
@@ -159,6 +183,7 @@ export function createStripSampler(model: Object3D) {
 
   return {
     hasBones: bones.size > 0,
+    bindPose,
     prepare,
     sample,
     capturePose,

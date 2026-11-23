@@ -11,30 +11,41 @@ import React, {useCallback, useRef} from 'react'
 import styled from 'styled-components'
 import {useEditingToolsForSimplePropInDetailsPanel} from '@dreamerbird/studio/propEditors/useEditingToolsForSimpleProp'
 import {nextPrevCursorsTheme} from '@dreamerbird/studio/propEditors/NextPrevKeyframeCursors'
-import {BaseHeader, LeftRowContainer as BaseContainer} from './AnyCompositeRow'
-import {propNameTextCSS} from '@dreamerbird/studio/propEditors/utils/propNameTextCSS'
+import {
+  BaseHeader,
+  LeftRowContainer as BaseContainer,
+  sequenceRowLabelCSS,
+  sequenceRowPaddingLeft,
+  SequenceRowLeadingSpacer,
+} from './AnyCompositeRow'
 import {usePropHighlightMouseEnter} from './usePropHighlightMouseEnter'
 import type {GraphEditorColors} from '@dreamerbird/core/types/private'
 import {graphEditorColors} from '@dreamerbird/sync-server/state/schema'
-
-const theme = {
-  label: {
-    color: `#9a9a9a`,
-  },
-}
 
 const PrimitivePropRowContainer = styled(BaseContainer)<{}>``
 
 const PrimitivePropRowHead = styled(BaseHeader)<{
   $isSelected: boolean
   $isEven: boolean
+  $depth: number
 }>`
-  display: flex;
-  color: ${theme.label.color};
-  padding-right: 12px;
-  align-items: center;
-  justify-content: flex-end;
-  box-sizing: border-box;
+  padding-right: 6px;
+  padding-left: ${(props) => sequenceRowPaddingLeft(props.$depth)}px;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.026);
+  }
+
+  ${(props) =>
+    props.$isSelected &&
+    `
+      background: rgba(64, 170, 164, 0.13);
+      box-shadow: inset 2px 0 0 var(--theatre-accent);
+
+      &:hover {
+        background: rgba(64, 170, 164, 0.17);
+      }
+    `}
 `
 
 const PrimitivePropRowIconContainer = styled.button<{
@@ -45,11 +56,14 @@ const PrimitivePropRowIconContainer = styled.button<{
   border: none;
   outline: none;
   display: flex;
-  box-sizing: border-box;
-  font-size: 14px;
   align-items: center;
-  height: 100%;
-  margin-left: 12px;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 22px;
+  height: 22px;
+  margin-left: 2px;
+  padding: 0;
+  border-radius: 4px;
   color: ${(props) =>
     props.$isSelected
       ? graphEditorColors[props.$graphEditorColor].iconColor
@@ -57,6 +71,15 @@ const PrimitivePropRowIconContainer = styled.button<{
 
   &:not([disabled]):hover {
     color: var(--theatre-text-primary);
+    background: rgba(255, 255, 255, 0.055);
+  }
+
+  &:focus-visible {
+    outline: 1px solid var(--theatre-accent);
+  }
+
+  &:disabled {
+    cursor: default;
   }
 `
 
@@ -77,12 +100,22 @@ const GraphIcon = () => (
 )
 
 const PrimitivePropRowHead_Label = styled.span`
-  margin-right: 4px;
-  ${propNameTextCSS};
+  ${sequenceRowLabelCSS};
+  flex: 1;
+  margin-right: 8px;
 
   ${PrimitivePropRowHead}:hover & {
-    color: var(--theatre-text-secondary);
+    color: var(--theatre-text-primary);
   }
+`
+
+const PrimitivePropRowTools = styled.span`
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 0 0 auto;
+  height: 100%;
+  margin-left: auto;
 `
 
 const PrimitivePropRow: React.FC<{
@@ -152,19 +185,27 @@ const PrimitivePropRow: React.FC<{
         style={{
           height: leaf.nodeHeight + 'px',
         }}
+        $depth={leaf.depth}
         $isSelected={isSelected === true}
       >
-        <PrimitivePropRowHead_Label>{label}</PrimitivePropRowHead_Label>
-        {controlIndicators}
-        <PrimitivePropRowIconContainer
-          onClick={toggleSelect}
-          $isSelected={isSelected === true}
-          $graphEditorColor={possibleColor ?? '1'}
-          style={{opacity: isSelectable ? 1 : 0.25}}
-          disabled={!isSelectable}
-        >
-          <GraphIcon />
-        </PrimitivePropRowIconContainer>
+        <SequenceRowLeadingSpacer />
+        <PrimitivePropRowHead_Label title={String(label)}>
+          {label}
+        </PrimitivePropRowHead_Label>
+        <PrimitivePropRowTools>
+          {controlIndicators}
+          <PrimitivePropRowIconContainer
+            onClick={toggleSelect}
+            $isSelected={isSelected === true}
+            $graphEditorColor={possibleColor ?? '1'}
+            style={{opacity: isSelectable ? 1 : 0.25}}
+            disabled={!isSelectable}
+            aria-label={isSelected ? '从曲线编辑器移除' : '添加到曲线编辑器'}
+            title={isSelected ? '从曲线编辑器移除' : '添加到曲线编辑器'}
+          >
+            <GraphIcon />
+          </PrimitivePropRowIconContainer>
+        </PrimitivePropRowTools>
       </PrimitivePropRowHead>
     </PrimitivePropRowContainer>
   )

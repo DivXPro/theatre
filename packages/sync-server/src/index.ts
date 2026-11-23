@@ -4,6 +4,7 @@ import {applyWSSHandler} from '@trpc/server/adapters/ws'
 import ws from 'ws'
 import http from 'http'
 import {env} from './env'
+import {closeSaazBacks} from './saaz'
 
 const HOST = env.HOST && env.HOST !== 'localhost' ? env.HOST : undefined
 
@@ -45,9 +46,20 @@ wss.on('connection', (ws) => {
 })
 console.log('✅ WebSocket Server listening on ', env.HOST + ':' + env.PORT)
 
-process.on('SIGTERM', () => {
-  console.log('SIGTERM')
+let shuttingDown = false
+const shutdown = async (signal: string) => {
+  if (shuttingDown) return
+  shuttingDown = true
+  console.log(signal)
   handler.broadcastReconnectNotification()
   wss.close()
   server.close()
-})
+  try {
+    await closeSaazBacks()
+  } finally {
+    process.exit(0)
+  }
+}
+
+process.on('SIGTERM', () => void shutdown('SIGTERM'))
+process.on('SIGINT', () => void shutdown('SIGINT'))

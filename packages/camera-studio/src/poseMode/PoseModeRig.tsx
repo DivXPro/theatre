@@ -9,14 +9,16 @@
  */
 import {useEffect, useRef} from 'react'
 import {useFrame, useThree} from '@react-three/fiber'
-import {getStudioSync, onChange, val} from '@dreamerbird/core'
+import {onChange, val} from '@dreamerbird/core'
 import type {ISheet, ISheetObject} from '@dreamerbird/core'
-import {Raycaster, Vector2, Vector3} from 'three'
+import {Quaternion, Raycaster, Vector2, Vector3} from 'three'
 import type {Group} from 'three'
 import {SkeletonRig} from '@dreamerbird/threeik'
 import {createSkeletonControls} from '@dreamerbird/threeik/controls'
-import type {LimbControlHandle} from '@dreamerbird/threeik/controls'
-import {capturePose} from '../assetLibrary/pose'
+import type {
+  LimbControlHandle,
+  LimbControlSpec,
+} from '@dreamerbird/threeik/controls'
 import {
   deriveHumanoidFacing,
   measureSkeletonScale,
@@ -24,19 +26,17 @@ import {
   findRootBone,
 } from './controlSpec'
 import {anyControlDragging} from './dragState'
-import {determinePoseFrameMode} from './poseFrame'
-import {getPoseKeyframePositions, writePoseKeyframe} from './poseTrack'
-import {serializeCustomPose} from './poseValue'
+import {commitPoseSession, preparePoseSession} from './poseTrack'
+import type {PreparePose} from './poseTrack'
 import {
   supportedModesForSelection,
   resolvePoseModeSwitch,
 } from './selectionModes'
 import {
   clearPoseSession,
-  clearPoseSessionIfCurrent,
   getPoseManipulatorMode,
   getPoseSelectionModes,
-  getPoseSessionFrame,
+  getPoseSession,
   isPoseDirty,
   markPoseDirty,
   onPoseExitRequested,
@@ -45,6 +45,7 @@ import {
   setPoseManipulatorMode,
   setPoseSelectionModes,
   setPoseSessionFrame,
+  usePoseSession,
 } from './poseSession'
 import {registerPoseSessionRig} from '../agent/runtime/poseSessionRuntime'
 import {getExportAnimationTime} from '../videoExport/exportAnimationClock'
@@ -54,11 +55,13 @@ export function PoseModeRig({
   sheetObject,
   placementKey,
   sheet,
+  preparePose,
 }: {
   instance: Group
   sheetObject: ISheetObject<any>
   placementKey: string
   sheet: ISheet
+  preparePose?: PreparePose
 }): null {
   const gl = useThree((s) => s.gl)
   const camera = useThree((s) => s.camera)
@@ -76,23 +79,39 @@ export function PoseModeRig({
   // 装配表/选中名:useFrame 轮询选中态用(支持集推导 + 单模式点自动切换)
   const specRef = useRef<ReturnType<typeof resolveControlSpec>>(null)
   const lastSelectedRef = useRef<string | null>(null)
+  const session = usePoseSession()
+  const preparePoseRef = useRef(preparePose)
+  preparePoseRef.current = preparePose
 
   useEffect(() => {
+    if (!session || session.key !== placementKey) return
     // 播放中进会话:先暂停(spec §8.1.1)——否则播放头锁与播放钟打架,
     // Rig 的 useFrame 播放时早退 IK 永不求解;脏 Esc 还会把 mixer 帧
     // 烤进姿势关键帧。必须在 determinePoseFrameMode 读 position 之前,
     // 保证读到的播放头稳定
     if (val(sheet.sequence.pointer.playing)) sheet.sequence.pause()
     const rootBone = findRootBone(instance)
+    if (!rootBone) {
+      clearPoseSession()
+      return
+    }
+    const frame = preparePoseSession(
+      session,
+      instance,
+      sheetObject,
+      preparePoseRef.current,
+    )
+    instance.updateMatrixWorld(true)
     // 解剖学朝向(髋×脊柱反推,与模型局部轴向约定/放置旋转无关):
     // 不传则库默认 (0,0,-1)——Y Bot 这类面朝 +Z 的模型注视球会生在脑后、拖球镜像
     const facing = deriveHumanoidFacing(instance) ?? new Vector3(0, 0, -1)
     const spec = resolveControlSpec(instance, facing)
-    if (!rootBone || !spec) {
+    if (!spec) {
       // 入口已拦(菜单置灰/双击静默),这里是防御:直接清会话不挂载
       clearPoseSession()
       return
     }
+    if (frame) setPoseSessionFrame(placementKey, frame)
     const rig = new SkeletonRig(rootBone)
     rigRef.current = rig
     specRef.current = spec
@@ -139,6 +158,48 @@ export function PoseModeRig({
       hotkeys: false,
     })
     ctlRef.current = ctl
+    // threeIK 构造期会先用尚未落位的 pole（世界原点）求解一次，手臂/腿会
+    // 被拧到另一套弯折平面。这里先临时关闭所有 modifier，把骨骼恢复成
+    // 进入会话时捕获的基准姿势，再按当前肘/膝的真实弯折方向重置 pole。
+    const handles = spec.map((point) => ctl.get(point.name))
+    for (const handle of handles) handle?.setActive(false)
+    rig.update(0)
+    for (const handle of handles) handle?.setActive(true)
+    instance.updateMatrixWorld(true)
+    for (const point of spec) {
+      if (point.kind !== 'limb') continue
+      const limb = point as LimbControlSpec
+      const handle = ctl.get<LimbControlHandle>(limb.name)
+      if (!handle) continue
+      const root = instance.getObjectByName(limb.rootBone)
+      const middle = instance.getObjectByName(limb.middleBone)
+      const end = instance.getObjectByName(limb.endBone)
+      if (!root || !middle || !end) continue
+      const rootPos = root.getWorldPosition(new Vector3())
+      const middlePos = middle.getWorldPosition(new Vector3())
+      const endPos = end.getWorldPosition(new Vector3())
+      const axis = endPos.clone().sub(rootPos)
+      if (axis.lengthSq() < 1e-12) continue
+      axis.normalize()
+      const bend = middlePos.clone().sub(rootPos)
+      bend.addScaledVector(axis, -bend.dot(axis))
+      if (bend.lengthSq() < 1e-10) continue
+      handle.pole.setDirection(bend)
+      const poleDir = handle.pole.ball
+        .getWorldPosition(new Vector3())
+        .sub(rootPos)
+      poleDir.addScaledVector(axis, -poleDir.dot(axis))
+      if (poleDir.lengthSq() < 1e-10) continue
+      poleDir.normalize()
+      poleDir.applyQuaternion(
+        middle.getWorldQuaternion(new Quaternion()).invert(),
+      )
+      handle.modifier.updateConfig(0, {
+        poleDirection: 'custom',
+        poleDirectionVector: poleDir.clone(),
+      })
+    }
+    ctl.update()
     // 视觉球网格随骨架等比放大(ballRadius 保持类默认 → manipulatorSize 恒 1,
     // gizmo 标准屏尺寸)。multiplyScalar 而非 setScalar:标记球(胸口/肩髋)自带
     // 0.7 身份缩放(MARKER_SCALE),要保住相对大小;DragTarget 只在射线检测读
@@ -204,46 +265,42 @@ export function PoseModeRig({
       return raycaster.intersectObjects([instance, ...balls], true).length > 0
     })
 
-    // 帧模式判定(spec §8.1):贴网格后帧上=编辑、帧间=新建;底姿由
-    // 既有应用 effect 保证(非播放时画面恒为播放头求值,所见即所编)
-    const frame = determinePoseFrameMode(
-      getPoseKeyframePositions(sheetObject),
-      sheet.sequence.position,
-      (t) => sheet.sequence.closestGridPosition(t),
-    )
-    sheet.sequence.position = frame.position
-    setPoseSessionFrame(placementKey, frame)
+    const lockedPosition = sheet.sequence.position
+    const offPosition =
+      session.target === 'draft'
+        ? undefined
+        : onChange(sheet.sequence.pointer.position, (position) => {
+            if (
+              getPoseSession() === session &&
+              Math.abs(position - lockedPosition) > 1e-6
+            ) {
+              sheet.sequence.position = lockedPosition
+            }
+          })
 
-    // 锁播放头(spec §8.1.4):会话期间 position 被挪动即拉回会话时刻
-    const offPosition = onChange(sheet.sequence.pointer.position, (pos) => {
-      if (Math.abs((pos as number) - frame.position) > 1e-6) {
-        sheet.sequence.position = frame.position
+    const commitSession = (force = false) => {
+      if (getPoseSession() !== session) return
+      try {
+        if (force || dirtyRef.current || isPoseDirty()) {
+          commitPoseSession(session, instance, sheetObject, frame)
+        }
+      } finally {
+        if (getPoseSession() === session) clearPoseSession()
       }
-    })
-
-    // 退出提交:捕获实时骨骼 → 写姿势轨关键帧(可撤销,经 writePoseKeyframe)。
-    // 与 Agent poses.session.commit 共用——本函数即登记进
-    // poseSessionRuntime 的 commit 句柄;Esc/双击空白/播放自动退出
-    // 走 requestPoseExit → 同一函数,行为不变。
-    const commitSession = () => {
-      const studio = getStudioSync()
-      // 脏检查:没拖过控制点就不提交(threeIK 首解有微小漂移,
-      // 空进空出写回会产生幻影撤销步;语义对齐 modalGrab 的 moved)。
-      // 双通道或:dirtyRef 由 isDragging 轮询记(帧间隙完整的拖动),
-      // isPoseDirty 由 pointerdown 事件记(同帧间隙的按下-拖-松,轮询漏检)
-      if (studio && (dirtyRef.current || isPoseDirty())) {
-        const bones = capturePose(instance)
-        // 写帧(spec §7.2):帧上=覆盖、帧间=新建、无轨=建轨+首帧;
-        // 先把播放头钉回会话时刻(锁定期间理论不动,双保险)
-        const frame = getPoseSessionFrame()
-        if (frame) sheet.sequence.position = frame.position
-        writePoseKeyframe(sheetObject, serializeCustomPose(bones))
-      }
-      clearPoseSession()
     }
-    const offExit = onPoseExitRequested((key) => {
-      if (key !== placementKey) return
-      commitSession()
+    const cancelSession = () => {
+      if (getPoseSession() !== session) return
+      clearPoseSession()
+      if (session.target === 'draft') session.draft.onCancel?.()
+    }
+    const offExit = onPoseExitRequested((key, action) => {
+      if (key !== placementKey || getPoseSession() !== session) return
+      if (
+        action === 'cancel' ||
+        (session.target === 'draft' && action !== 'save')
+      )
+        cancelSession()
+      else commitSession(action === 'save')
     })
 
     // Agent 姿势会话句柄(poses.session.commit/cancel):commit 与 UI 退出
@@ -251,7 +308,7 @@ export function PoseModeRig({
     // 补刷回骨骼(poseModeActive 翻转触发,见 PlacementManager)
     const unregisterSessionRig = registerPoseSessionRig(placementKey, {
       commit: commitSession,
-      cancel: () => clearPoseSession(),
+      cancel: cancelSession,
     })
 
     invalidate() // 进姿势模式首帧:控制球立刻可见
@@ -259,7 +316,7 @@ export function PoseModeRig({
       unregisterSessionRig()
       offExit()
       offMode()
-      offPosition()
+      offPosition?.()
       setPoseHitTester(null)
       window.removeEventListener('keydown', onKey)
       ctl.dispose()
@@ -270,13 +327,15 @@ export function PoseModeRig({
       delete (window as any).__poseDebug
       // 会话外因素卸载(模型被删等):实例已毁,跳过提交只清会话态。
       // 按键清:A→B 直接切换时 session 已是 B,不能把它抹掉(切换坍塌)
-      clearPoseSessionIfCurrent(placementKey)
+      if (getPoseSession() === session) clearPoseSession()
       invalidate()
     }
   }, [
     instance,
     sheetObject,
     placementKey,
+    session,
+    sheet,
     scene,
     camera,
     gl,

@@ -1,15 +1,17 @@
 /**
  * StaticCatalogSource(内置资产目录源)契约:
  * - 条目来自入库清单 + 姿势数据模块,数量一律数据驱动(不写死);
- * - 内置模型 id = seed-model-<contentHash>,姿势 id 保持 seed-pose-*;
+ * - 新内置模型 id = seed-model-<contentHash>,替换时保持原 id。动画 id =
+ *   seed-animation-<contentHash>,姿势 id 保持 seed-pose-*;
  * - blobId 全部带 catalog: 前缀,聚合器按前缀路由回本源;
- * - 静态文件(models/poseThumbs)纯拼接 baseUrl 不探测;
+ * - 静态文件(models/animations/poseThumbs)纯拼接 baseUrl 不探测;
  * - 运行时缩略图(模型/身体姿势)走注入渲染器,内存缓存,缺注入抛 not-found;
  * - 清单 rig 与运行时 FBX 解析同一判定(parity 兜底)。
  */
 import fs from 'fs'
 import path from 'path'
-import {FBXLoader} from 'three-stdlib'
+import {FBXLoader, GLTFLoader} from 'three-stdlib'
+import {AnimationMixer, LoopOnce, Vector3} from 'three'
 import {WebIO} from '@gltf-transform/core'
 import {ALL_EXTENSIONS} from '@gltf-transform/extensions'
 import draco3dgltf from 'draco3dgltf'
@@ -21,9 +23,11 @@ import {seedPoses} from './seedPoses'
 import {seedPosesDpl} from './seedPosesDpl'
 import {seedPosesQbx} from './seedPosesQbx'
 import {collectBoneNames, rigIdOf} from './rig'
+import {hashBytes} from './hash'
+import {animationClipForModel} from './animationClipForModel'
 import {Library} from './library'
 import {loadLibraryModel} from '../PlacementManager'
-import type {ModelEntry, PoseEntry} from './types'
+import type {AnimationEntry, ModelEntry, PoseEntry} from './types'
 
 const BASE = 'https://cdn.example.com/a/'
 
@@ -32,30 +36,206 @@ describe('StaticCatalogSource', () => {
     const src = new StaticCatalogSource({baseUrl: BASE})
     const models = (await src.listEntries('model')) as ModelEntry[]
     const poses = (await src.listEntries('pose')) as PoseEntry[]
+    const animations = (await src.listEntries('animation')) as AnimationEntry[]
     // 数据驱动计数:清单与姿势数据模块是唯一事实源
     expect(models).toHaveLength(seedAssetsManifest.models.length)
+    expect(animations).toHaveLength(seedAssetsManifest.animations.length)
     expect(poses).toHaveLength(buildBuiltinPoseEntries().length)
     expect(poses).toHaveLength(
       seedPoses.length + seedPosesDpl.length + seedPosesQbx.length,
     )
     expect(models.every((m) => m.id.startsWith('seed-model-'))).toBe(true)
+    expect(animations.every((a) => a.id.startsWith('seed-animation-'))).toBe(
+      true,
+    )
     expect(poses.every((p) => p.id.startsWith('seed-pose-'))).toBe(true)
     // 模型 blobId 带 catalog: 前缀,聚合器按前缀路由;URL 纯拼接
     expect(models.every((m) => m.blobId.startsWith('catalog:models/'))).toBe(
       true,
     )
+    expect(
+      animations.every((a) => a.blobId.startsWith('catalog:animations/')),
+    ).toBe(true)
     const url = await src.getBlobUrl(models[0].blobId)
     expect(url.startsWith(`${BASE}models/`)).toBe(true)
     // getEntry 按 id 直查
     expect(await src.getEntry(models[0].id)).toMatchObject({id: models[0].id})
     expect(await src.getEntry('seed-pose-nope')).toBeUndefined()
     // 不分 kind 时全量返回
-    expect(await src.listEntries()).toHaveLength(models.length + poses.length)
+    expect(await src.listEntries()).toHaveLength(
+      models.length + poses.length + animations.length,
+    )
     // 只读目录:不可写,URL 长效可跨挂载缓存
     expect(src.capabilities).toMatchObject({
       writable: false,
       permanentUrls: true,
     })
+  })
+
+  test('重复动作只出现在列表一次，旧 id 仍可解析且保留原动作包', async () => {
+    const src = new StaticCatalogSource({baseUrl: BASE})
+    const animations = await src.listEntries('animation')
+    const walking = animations.find(
+      (entry) => entry.name === 'Mixamo Locomotion - Walking',
+    )
+    expect(walking).toMatchObject({
+      id: 'seed-animation-596a643bff763552',
+      packs: expect.arrayContaining(['Locomotion', 'Basic Locomotion']),
+    })
+    expect(
+      animations.some(
+        (entry) => entry.id === 'seed-animation-a2fe5381c78cfd7c',
+      ),
+    ).toBe(false)
+    expect(await src.getEntry('seed-animation-a2fe5381c78cfd7c')).toEqual(
+      walking,
+    )
+  })
+
+  test('替换后的模型继续使用已有场景保存的条目 id', async () => {
+    const renderModelThumb = jest.fn(async () => 'blob:guide-line')
+    const src = new StaticCatalogSource({baseUrl: BASE, renderModelThumb})
+    const entry = (await src.getEntry(
+      'seed-model-7fb79917fb779026',
+    )) as ModelEntry
+
+    expect(entry.name).toBe('MangaKa Building blocks - Guide_line')
+    expect(entry.contentHash).not.toBe('7fb79917fb779026')
+    expect(
+      (await src.listEntries('model')).find(
+        (model) => model.name === entry.name,
+      ),
+    ).toEqual(entry)
+    expect(await src.getBlobUrl(entry.thumbnailId!)).toBe('blob:guide-line')
+    expect(renderModelThumb).toHaveBeenCalledWith(entry)
+  })
+
+  test('内置动画:清单 id/hash/时长与 GLB 一致,可直接解析 URL', async () => {
+    const src = new StaticCatalogSource({baseUrl: BASE})
+    const animations = (await src.listEntries('animation')) as AnimationEntry[]
+    const walk = animations.find((a) => a.name === 'Mixamo Walk In Place')!
+    expect(walk).toMatchObject({
+      id: `seed-animation-${walk.contentHash}`,
+      rig: seedAssetsManifest.models.find((m) => m.name === 'Y Bot')!.rig,
+    })
+    expect(await src.getBlobUrl(walk.blobId)).toBe(
+      `${BASE}animations/Mixamo%20Walk%20In%20Place.glb`,
+    )
+    expect(await src.getEntry('seed-animation-ab4087fbd0abb244')).toEqual(walk)
+
+    const glb = fs.readFileSync(
+      path.resolve(
+        __dirname,
+        '../../assets/animations/Mixamo Walk In Place.glb',
+      ),
+    )
+    expect(walk.contentHash).toBe(hashBytes(new Uint8Array(glb)))
+    const io = new WebIO()
+      .registerExtensions(ALL_EXTENSIONS)
+      .registerDependencies({
+        'draco3d.decoder': await draco3dgltf.createDecoderModule(),
+      })
+    const doc = await io.readBinary(new Uint8Array(glb))
+    expect(
+      doc
+        .getRoot()
+        .listNodes()
+        .find((node) => node.getName() === 'AnimationRig')
+        ?.getExtras().animationMetersPerUnit,
+    ).toBe(0.01)
+    const duration = Math.max(
+      ...doc
+        .getRoot()
+        .listAnimations()
+        .flatMap((animation) =>
+          animation
+            .listSamplers()
+            .map((sampler) => sampler.getInput()?.getArray()?.at(-1) ?? 0),
+        ),
+    )
+    expect(walk.duration).toBeCloseTo(duration, 6)
+    expect(duration).toBeCloseTo(32 / 30, 6)
+
+    const hipsTracks = doc
+      .getRoot()
+      .listAnimations()[0]
+      .listChannels()
+      .filter(
+        (channel) => channel.getTargetNode()?.getName() === 'mixamorigHips',
+      )
+    const hipsTranslation = hipsTracks
+      .find((channel) => channel.getTargetPath() === 'translation')!
+      .getSampler()!
+      .getOutput()!
+      .getArray()!
+    const hipsRotation = hipsTracks
+      .find((channel) => channel.getTargetPath() === 'rotation')!
+      .getSampler()!
+      .getOutput()!
+      .getArray()!
+    for (let frame = 0; frame < 33; frame++) {
+      expect(hipsTranslation[frame * 3 + 1]).toBeGreaterThan(90)
+      expect(hipsTranslation[frame * 3]).toBeCloseTo(0, 6)
+      expect(hipsTranslation[frame * 3 + 2]).toBeCloseTo(0, 6)
+      expect(Math.abs(hipsRotation[frame * 4])).toBeLessThan(0.03)
+    }
+  })
+
+  test('Mixamo 起身动作在 X Bot 和 Y Bot 上保留相同的髋部位移', async () => {
+    const src = new StaticCatalogSource({baseUrl: BASE})
+    const animations = await src.listEntries('animation')
+    const standUp = animations.find(
+      (entry) => entry.name === 'Mixamo Zombie Stand Up',
+    )
+    expect(standUp).toMatchObject({
+      kind: 'animation',
+      duration: expect.any(Number),
+    })
+    const animationBytes = fs.readFileSync(
+      path.resolve(
+        __dirname,
+        '../../assets/animations/Mixamo Zombie Stand Up.glb',
+      ),
+    )
+    const gltf = await new GLTFLoader().parseAsync(
+      Uint8Array.from(animationBytes).buffer,
+      '',
+    )
+    const models = await src.listEntries('model')
+    const heights = await Promise.all(
+      ['X Bot', 'Y Bot'].map(async (name) => {
+        const entry = models.find((model) => model.name === name)
+        expect(entry).toMatchObject({rig: (standUp as AnimationEntry).rig})
+        const bytes = fs.readFileSync(
+          path.resolve(__dirname, `../../assets/models/${name}.glb`),
+        )
+        const json = JSON.parse(
+          bytes.toString('utf8', 20, 20 + bytes.readUInt32LE(12)),
+        )
+        const {scene: model} = await new GLTFLoader().parseAsync(
+          JSON.stringify({
+            asset: json.asset,
+            nodes: json.nodes.map(
+              ({mesh, skin, ...node}: Record<string, unknown>) => node,
+            ),
+            skins: json.skins,
+            scenes: json.scenes,
+            scene: json.scene,
+          }),
+          '',
+        )
+        const clip = animationClipForModel(gltf, model)!
+        const hips = model.getObjectByName('mixamorigHips')!
+        const mixer = new AnimationMixer(model)
+        mixer.clipAction(clip).setLoop(LoopOnce, 1).play()
+        mixer.setTime(0)
+        const start = hips.getWorldPosition(new Vector3()).y
+        mixer.setTime(3)
+        return hips.getWorldPosition(new Vector3()).y - start
+      }),
+    )
+    expect(heights[0]).toBeGreaterThan(0.5)
+    expect(heights[0]).toBeCloseTo(heights[1], 5)
   })
 
   test('QBX 预览图走静态文件;身体姿势缩略图走注入渲染器(内存缓存,不落地)', async () => {

@@ -13,10 +13,10 @@
  * contextMenu(studio ContextMenu)。i18n 用模块级 fallback(全局
  * translate 单例,pg.* 词条已由 camera-studio i18n 模块注册)。
  */
-import React from 'react'
-import {act} from 'react-dom/test-utils'
+import React, {act} from 'react'
 import ReactDOM from 'react-dom/client'
 import type {WritableLibrarySource} from './source'
+import type {AnimationEntry, LibraryEntry} from './types'
 ;(globalThis as any).IS_REACT_ACT_ENVIRONMENT = true
 
 const noop = () => {}
@@ -60,8 +60,9 @@ const {configureLibrary} = require('./library') as {
 }
 
 /** 造一个持有一条姿势条目(骨架 rig-test)的源;writable 决定查看器模式 */
-function makeSource(writable: boolean) {
-  const entries = [
+function makeSource(
+  writable: boolean,
+  entries: LibraryEntry[] = [
     {
       id: 'pose-1',
       kind: 'pose',
@@ -70,7 +71,8 @@ function makeSource(writable: boolean) {
       bones: {},
       createdAt: 1,
     },
-  ]
+  ],
+) {
   const base = {
     id: writable ? 'idb' : 'catalog',
     listEntries: async () => entries,
@@ -142,5 +144,82 @@ test('可写源:族标签点击弹改名 prompt(入口仍在)', async () => {
     expect(promptSpy).toHaveBeenCalledTimes(1)
   } finally {
     promptSpy.mockRestore()
+  }
+})
+
+test('动作库按包筛选共享动作，并支持动作名搜索', async () => {
+  const animate = (
+    id: string,
+    name: string,
+    packs: string[],
+  ): AnimationEntry => ({
+    id,
+    name,
+    packs,
+    kind: 'animation',
+    rig: 'rig-test',
+    blobId: id,
+    contentHash: id,
+    duration: 1,
+    createdAt: 0,
+  })
+  const walk = animate('walk', 'Mixamo Locomotion - Walking', [
+    'Locomotion',
+    'Basic Locomotion',
+  ])
+  const idle = animate('idle', 'Mixamo Locomotion - Idle', [
+    'Locomotion',
+    'Basic Locomotion',
+  ])
+  const wave = animate('wave', 'Mixamo Gestures Basic - Wave', [
+    'Gestures Basic',
+  ])
+  configureLibrary({sources: [makeSource(false, [walk, idle, wave])]})
+  const container = document.body.appendChild(document.createElement('div'))
+  const root = ReactDOM.createRoot(container)
+  try {
+    await act(async () => {
+      root.render(<AssetLibraryPanel kind="animation" onClose={noop} />)
+    })
+    expect(
+      Array.from(
+        container.querySelectorAll('h3'),
+        (heading) => heading.textContent,
+      ),
+    ).toEqual(expect.arrayContaining(['Locomotion', 'Gestures Basic']))
+
+    const pack = container.querySelector('select')!
+    const search = container.querySelector<HTMLInputElement>(
+      'input[type="search"]',
+    )!
+    const cards = () =>
+      [walk, idle, wave].filter((entry) =>
+        container.querySelector(`[title="${entry.name}"]`),
+      )
+    expect(cards()).toEqual([walk, idle, wave])
+    const locomotionHeading = [...container.querySelectorAll('h3')].find(
+      (heading) => heading.textContent?.includes('Locomotion'),
+    )
+    const togglePack = locomotionHeading!.querySelector('button')!
+    await act(async () => togglePack.click())
+    expect(togglePack.getAttribute('aria-expanded')).toBe('false')
+    expect(cards()).toEqual([wave])
+
+    await act(async () => {
+      pack.value = 'Basic Locomotion'
+      pack.dispatchEvent(new Event('change', {bubbles: true}))
+    })
+    expect(cards()).toEqual([walk, idle])
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(
+        HTMLInputElement.prototype,
+        'value',
+      )!.set!.call(search, '  WALK  ')
+      search.dispatchEvent(new Event('input', {bubbles: true}))
+    })
+    expect(cards()).toEqual([walk])
+  } finally {
+    await act(async () => root.unmount())
+    container.remove()
   }
 })

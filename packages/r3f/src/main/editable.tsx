@@ -38,6 +38,7 @@ const createEditable = <Keys extends keyof ThreeElements>(
       additionalProps?: $FixMe
       objectActions?: SheetObjectActionsConfig
       objRef?: $FixMe
+      applyValuesToObject?: boolean
     } & (T extends 'primitive'
         ? {
             editableType: U
@@ -66,6 +67,7 @@ const createEditable = <Keys extends keyof ThreeElements>(
         additionalProps,
         objectActions,
         objRef,
+        applyValuesToObject = true,
         ...props
       }: Props,
       ref,
@@ -210,30 +212,31 @@ Then you can use it in your JSX like any other editable component. Note the make
         const object = objectRef.current!
 
         const setFromTheatre = (newValues: any) => {
-          // @ts-ignore
-          Object.entries(config[actualType].props).forEach(
+          if (applyValuesToObject) {
             // @ts-ignore
-            ([key, value]) => value.apply(newValues[key], object),
-          )
-          // @ts-ignore
-          config[actualType].updateObject?.(object)
+            Object.entries(config[actualType].props).forEach(
+              // @ts-ignore
+              ([key, value]) => value.apply(newValues[key], object),
+            )
+            // @ts-ignore
+            config[actualType].updateObject?.(object)
+          }
           invalidate()
         }
 
         setFromTheatre(sheetObject.value)
 
-        const unsubscribe = sheetObject.onValuesChange(
-          setFromTheatre,
-          rafDriver,
-        )
+        return sheetObject.onValuesChange(setFromTheatre, rafDriver)
+      }, [sheetObject, rafDriver, actualType, applyValuesToObject, invalidate])
 
+      useLayoutEffect(() => {
+        if (!sheetObject) return
         return () => {
-          unsubscribe()
           sheetObject.sheet.detachObject(theatreKey)
           allRegisteredObjects.delete(sheetObject)
           editorStore.getState().removeEditable(storeKey)
         }
-      }, [sheetObject, rafDriver])
+      }, [sheetObject, theatreKey, storeKey])
 
       return (
         // @ts-ignore
@@ -268,6 +271,7 @@ Then you can use it in your JSX like any other editable component. Note the make
         additionalProps?: $FixMe
         objectActions?: SheetObjectActionsConfig
         objRef?: $FixMe
+        applyValuesToObject?: boolean
         // not exactly sure how to get the type of the threejs object itself
         ref?: Ref<unknown>
       }
@@ -281,6 +285,7 @@ Then you can use it in your JSX like any other editable component. Note the make
         additionalProps?: $FixMe
         objectActions?: SheetObjectActionsConfig
         objRef?: $FixMe
+        applyValuesToObject?: boolean
         editableType: keyof ThreeElements
         // not exactly sure how to get the type of the threejs object itself
         ref?: Ref<unknown>

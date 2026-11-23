@@ -85,6 +85,9 @@ const CurButton = styled(Button)<{
   $isOn: boolean
   $presence: PresenceFlag | undefined
 }>`
+  z-index: 1;
+  ${pointerEventsAutoInNormalMode};
+
   &:hover {
     color: #e0c917;
   }

@@ -78,20 +78,6 @@ let dropCtx: DropPointContext | null = null
 export function setDropPointContext(ctx: DropPointContext | null): void {
   dropCtx = ctx
 }
-export function isDropPointInsideCanvas(
-  clientX: number,
-  clientY: number,
-): boolean {
-  if (!dropCtx) return false
-  const rect = dropCtx.gl.domElement.getBoundingClientRect()
-  return (
-    clientX >= rect.left &&
-    clientX <= rect.right &&
-    clientY >= rect.top &&
-    clientY <= rect.bottom
-  )
-}
-
 export function dropPointFromClient(
   clientX: number,
   clientY: number,

@@ -4,6 +4,12 @@ import z from 'zod'
 const devOnly = z.object({
   DEV_DB_PORT: z.string().optional(),
   DEV_DB_PASSWORD: z.string().optional(),
+  SYNC_SERVER_STATE_DIR: z
+    .string()
+    .optional()
+    .describe(
+      'Directory for the local JSON state store. Defaults to packages/sync-server/.data',
+    ),
 })
 
 // the env variables that both development and production require

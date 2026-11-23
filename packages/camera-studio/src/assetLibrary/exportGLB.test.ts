@@ -107,6 +107,68 @@ describe('exportModelGLB', () => {
     expect(root.scale.y).toBe(root.scale.x)
     expect(root.scale.z).toBe(root.scale.x)
   })
+
+  it('保留已知米制源的大型模型尺寸', async () => {
+    const root = new Group()
+    root.add(new Mesh(new BoxGeometry(1, 1, 1000), new MeshBasicMaterial()))
+
+    await exportModelGLB(root, 'meters')
+
+    expect(new Box3().setFromObject(root).getSize(new Vector3()).z).toBe(1000)
+  })
+
+  it.each([400, 4])(
+    '把高度为 %s 的 Mixamo 人体等比校准到 1.8 米',
+    async (height) => {
+      const root = new Group()
+      const hips = new Bone()
+      hips.name = 'mixamorig:Hips'
+      hips.position.y = height / 2
+      root.add(hips)
+      for (const name of ['Head', 'LeftFoot', 'RightFoot']) {
+        const bone = new Bone()
+        bone.name = `mixamorig:${name}`
+        hips.add(bone)
+      }
+      root.add(
+        new Mesh(
+          new BoxGeometry(height / 2, height, height / 4),
+          new MeshBasicMaterial(),
+        ),
+      )
+
+      await exportModelGLB(root)
+
+      const size = new Box3().setFromObject(root).getSize(new Vector3())
+      expect(size.y).toBeCloseTo(1.8)
+      expect(size.x).toBeCloseTo(0.9)
+      expect(size.z).toBeCloseTo(0.45)
+      expect(hips.position.y).toBe(height / 2)
+    },
+  )
+
+  it('把尺寸校准与源单位换算一起烘进模型', async () => {
+    const root = new Group()
+    root.add(new Mesh(new BoxGeometry(50, 240, 30), new MeshBasicMaterial()))
+
+    await exportModelGLB(root, 'auto', 0.75)
+
+    expect(new Box3().setFromObject(root).getSize(new Vector3()).y).toBeCloseTo(
+      1.8,
+    )
+  })
+
+  it('支持按根节点局部轴烘焙非等比校准', async () => {
+    const root = new Group()
+    root.add(new Mesh(new BoxGeometry(2, 3, 4), new MeshBasicMaterial()))
+
+    await exportModelGLB(root, 'meters', [0.5, 2, 1.5])
+
+    const size = new Box3().setFromObject(root).getSize(new Vector3())
+    expect(size.x).toBeCloseTo(1, 6)
+    expect(size.y).toBeCloseTo(6, 6)
+    expect(size.z).toBeCloseTo(6, 6)
+  })
 })
 
 describe('metricScaleFactor', () => {

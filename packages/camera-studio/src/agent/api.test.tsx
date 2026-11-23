@@ -121,6 +121,8 @@ jest.doMock('@dreamerbird/studio/propEditors/customPropEditors', () => ({
 jest.doMock('../poseMode/PosePropEditor', () => ({
   __esModule: true,
   default: () => null,
+  DefaultPosePropEditor: () => null,
+  ScenePosePropEditor: () => null,
 }))
 jest.doMock('../gesturePropsEditor', () => ({
   __esModule: true,
@@ -170,7 +172,8 @@ jest.doMock('../PlacementManager', () => ({
   useGizmoMode: () => ['translate', noop],
   usePlacementController: () => ({
     placing: null,
-    pendingEntry: null,
+    getPlacing: () => null,
+    pendingEntries: [],
     startPlacingFromLibrary: async () => {},
     // 与生产形状一致:Agent createModel handler 的 {key, persisted} 契约
     placeLibraryEntryAt: () => ({key: 'm1', persisted: Promise.resolve()}),

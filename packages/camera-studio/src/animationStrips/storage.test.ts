@@ -5,9 +5,12 @@ import {getCoreTicker} from '@dreamerbird/core/coreTicker'
 import getStudio from '@dreamerbird/studio/getStudio'
 import {
   animationTracksProp,
+  addAnimationTrack,
   appendAnimationStrip,
   commitAnimationStripEdit,
   commitAnimationStripTiming,
+  insertAnimationStrip,
+  removeAnimationTrack,
 } from './storage'
 import {parseAnimationTracks} from './model'
 
@@ -111,6 +114,40 @@ test('adding and trimming are one undo each and saved strips reopen with their I
   studio.undo()
   getCoreTicker().tick()
   expect(read()).toBe(trimmed)
+
+  addAnimationTrack(actor)
+  getCoreTicker().tick()
+  expect(read()).toBe(trimmed)
+  const trackId = result.document.tracks[0]!.id
+  expect(() =>
+    insertAnimationStrip(actor, trackId, 'turn', 1000, {
+      startMs: 2500,
+      sourceInMs: 0,
+      sourceOutMs: 600,
+    }),
+  ).toThrow(/overlap/)
+  expect(read()).toBe(trimmed)
+  insertAnimationStrip(actor, trackId, 'turn', 1000, {
+    startMs: 2800,
+    sourceInMs: 0,
+    sourceOutMs: 600,
+  })
+  getCoreTicker().tick()
+  const withBothClips = read()
+  expect(JSON.parse(withBothClips).tracks).toHaveLength(1)
+  removeAnimationTrack(actor, trackId)
+  getCoreTicker().tick()
+  expect(read()).toBe('')
+  expect(() =>
+    insertAnimationStrip(actor, trackId, 'turn', 1000, {
+      startMs: 2800,
+      sourceInMs: 0,
+      sourceOutMs: 600,
+    }),
+  ).toThrow(/unavailable/)
+  studio.undo()
+  getCoreTicker().tick()
+  expect(read()).toBe(withBothClips)
   const save = studio.publicApi.createContentOfSaveFile(
     project.address.projectId,
   )
@@ -121,7 +158,7 @@ test('adding and trimming are one undo each and saved strips reopen with their I
     label: t.string('Actor'),
   })
   const stopReopened = onChange(reopenedActor.props.animationTracks, () => {})
-  expect(val(reopenedActor.props.animationTracks)).toBe(trimmed)
+  expect(val(reopenedActor.props.animationTracks)).toBe(withBothClips)
   stopReopened()
   stop()
 })

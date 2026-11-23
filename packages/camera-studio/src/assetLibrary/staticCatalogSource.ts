@@ -5,9 +5,11 @@
  * 本地 IndexedDB 同一接口,零特判。
  *
  * - 条目来自入库清单(seedAssetsManifest,脚本生成)+ 姿势数据模块;
- *   内置模型 id = seed-model-<contentHash>,姿势 id 保持 seed-pose-* 不变。
+ *   内置模型 id = seed-model-<contentHash>,动画 id =
+ *   seed-animation-<contentHash>,姿势 id 保持 seed-pose-* 不变。
  * - blobId 全部带 `catalog:` 前缀,聚合器按前缀路由回本源:
  *     catalog:models/<file>        → baseUrl 静态文件(纯拼接,不探测)
+ *     catalog:animations/<file>    → 同上(内置骨骼动作 GLB)
  *     catalog:poseThumbs/<file>    → 同上(QBX 手势源包预览图)
  *     catalog:runtime/model/<key>  → 注入的 renderModelThumb(内存缓存)
  *     catalog:runtime/pose/<id>    → 注入的 renderPoseThumb(内存缓存)
@@ -17,13 +19,23 @@ import {LibraryError} from './source'
 import type {LibrarySource} from './source'
 import {buildBuiltinPoseEntries, builtinPoseRig} from './seedBuiltinPoses'
 import {seedAssetsManifest} from './seedAssetsManifest'
-import type {SeedAssetsManifest} from './seedAssetsManifest'
-import type {EntryKind, LibraryEntry, ModelEntry, PoseEntry} from './types'
+import type {SeedAssetsManifest, SeedModelAsset} from './seedAssetsManifest'
+import type {
+  AnimationEntry,
+  EntryKind,
+  LibraryEntry,
+  ModelEntry,
+  PoseEntry,
+} from './types'
 
 /** 运行时缩略图渲染器:返回可用 URL(blob:/data:),渲染不了返回 undefined */
 export type CatalogThumbRenderer<E extends LibraryEntry> = (
   entry: E,
 ) => Promise<string | undefined>
+
+function modelEntryId(model: SeedModelAsset): string {
+  return model.entryId ?? `seed-model-${model.contentHash}`
+}
 
 export type StaticCatalogSourceOpts = {
   /** 资产文件根(以 / 结尾);缺省惰性取包内 assets/ */
@@ -61,6 +73,7 @@ export class StaticCatalogSource implements LibrarySource {
   private readonly optsBaseUrl?: string
   private resolvedBaseUrl?: string
   private entriesById?: Map<string, LibraryEntry>
+  private readonly animationAliases = new Map<string, string>()
   /** 运行时缩略图 URL 缓存:渲染是 WebGL 离屏,同一 blobId 只渲染一次 */
   private runtimeUrlCache = new Map<string, Promise<string>>()
 
@@ -86,7 +99,7 @@ export class StaticCatalogSource implements LibrarySource {
     )
     for (const m of this.manifest.models) {
       const entry: ModelEntry = {
-        id: `seed-model-${m.contentHash}`,
+        id: modelEntryId(m),
         kind: 'model',
         name: m.name,
         rig: m.rig,
@@ -98,6 +111,30 @@ export class StaticCatalogSource implements LibrarySource {
         // 内置条目 createdAt 恒 0:目录内容静态,固定值保证 id/排序稳定
         createdAt: 0,
       }
+      byId.set(entry.id, entry)
+    }
+    for (const a of this.manifest.animations) {
+      const packs = new Set<string>()
+      if (a.pack) packs.add(a.pack)
+      const entry: AnimationEntry = {
+        id: `seed-animation-${a.contentHash}`,
+        kind: 'animation',
+        name: a.name,
+        rig: a.rig,
+        blobId: `${PREFIX}animations/${a.file}`,
+        contentHash: a.contentHash,
+        duration: a.duration,
+        createdAt: 0,
+      }
+      if (a.aliases?.length) {
+        entry.aliases = a.aliases.map((alias) => {
+          const id = `seed-animation-${alias.contentHash}`
+          this.animationAliases.set(id, entry.id)
+          if (alias.pack) packs.add(alias.pack)
+          return {id, name: alias.name}
+        })
+      }
+      if (packs.size) entry.packs = [...packs]
       byId.set(entry.id, entry)
     }
     for (const p of buildBuiltinPoseEntries(builtinPoseRig(this.manifest))) {
@@ -123,7 +160,16 @@ export class StaticCatalogSource implements LibrarySource {
   }
 
   async getEntry(id: string): Promise<LibraryEntry | undefined> {
-    return this.entries().get(id)
+    const entries = this.entries()
+    const canonicalId = this.animationAliases.get(id)
+    const entry =
+      entries.get(id) ?? (canonicalId ? entries.get(canonicalId) : undefined)
+    if (entry || id !== 'seed-animation-c6ad00484cb0d5e4') return entry
+
+    const walk = this.manifest.animations.find(
+      (animation) => animation.key === 'mixamo-walk-in-place',
+    )
+    return walk && entries.get(`seed-animation-${walk.contentHash}`)
   }
 
   /**
@@ -136,7 +182,11 @@ export class StaticCatalogSource implements LibrarySource {
       throw new LibraryError('not-found', `非内置目录 blob:${blobId}`)
     }
     const rest = blobId.slice(PREFIX.length)
-    if (rest.startsWith('models/') || rest.startsWith('poseThumbs/')) {
+    if (
+      rest.startsWith('models/') ||
+      rest.startsWith('animations/') ||
+      rest.startsWith('poseThumbs/')
+    ) {
       // 逐段编码:文件名可含空格('Y Bot.glb'),目录段不动
       return this.baseUrl() + rest.split('/').map(encodeURIComponent).join('/')
     }
@@ -144,9 +194,7 @@ export class StaticCatalogSource implements LibrarySource {
       const key = rest.slice('runtime/model/'.length)
       // key 对上清单条目才认(渲染器按条目渲染,不认裸 key)
       const asset = this.manifest.models.find((m) => m.key === key)
-      const entry = asset
-        ? this.entries().get(`seed-model-${asset.contentHash}`)
-        : undefined
+      const entry = asset ? this.entries().get(modelEntryId(asset)) : undefined
       if (!this.renderModelThumb || !entry || entry.kind !== 'model') {
         throw new LibraryError(
           'not-found',

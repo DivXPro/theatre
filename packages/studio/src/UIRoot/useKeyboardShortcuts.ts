@@ -8,6 +8,7 @@ import {Atom, prism, val} from '@dreamerbird/dataverse'
 import type Sequence from '@dreamerbird/core/sequences/Sequence'
 import memoizeFn from '@dreamerbird/utils/memoizeFn'
 import type {IPlaybackRange} from '@dreamerbird/core/types/public'
+import {getSequenceEditorView} from '@dreamerbird/studio/panels/SequenceEditorPanel/additionalRows'
 
 let playPauseKeyboardShortcutIsEnabled = true
 export function disablePlayPauseKeyboardShortcut() {
@@ -56,7 +57,7 @@ export default function useKeyboardShortcuts() {
         if (!playPauseKeyboardShortcutIsEnabled) return
         // Control the playback using the `Space` key
         const seq = getSelectedSequence()
-        if (seq) {
+        if (seq && !getSequenceEditorView(seq.publicApi)) {
           if (seq.playing) {
             seq.pause()
           } else {

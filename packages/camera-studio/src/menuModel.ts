@@ -90,6 +90,7 @@ export function buildObjectMenuItems(
     onClearPose?: () => void
     /** 提供时菜单顶部出「播放动作」 */
     onPlayAnimation?: () => void
+    onAddAnimationTrack?: () => void
   },
   t: MenuT = translate,
 ): ContextMenuItem[] {
@@ -127,6 +128,13 @@ export function buildObjectMenuItems(
       label: t('pg.menu.playAnimation'),
       callback: opts.onPlayAnimation,
     } as ContextMenuItem)
+  }
+  if (opts.onAddAnimationTrack) {
+    applyItems.push({
+      type: 'normal',
+      label: t('pg.strips.addTrack'),
+      callback: opts.onAddAnimationTrack,
+    })
   }
   if (applyItems.length > 0) applyItems.push({type: 'separator'})
   return [

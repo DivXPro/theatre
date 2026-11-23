@@ -1,0 +1,112 @@
+{
+  "version": 1,
+  "source": {
+    "file": "MangaKa-Demo-Preset-Scales.xlsx",
+    "sheets": ["场景预设", "模型默认"],
+    "note": "模型库默认校准取自“场景预设”中每个模型的首个实例（GROUPID 最小）；没有场景实例的模型使用 1。"
+  },
+  "rules": [
+    "models[name].scale 会乘到 FBX 根节点局部 XYZ 轴，并在生成 GLB 时烘焙；编辑器里的默认缩放仍是 1。",
+    "“模型默认”表记录的是米制 FBX 根节点自身缩放，已经包含在源模型中，不能再次相乘。",
+    "多实例模型（BB_Block01）取首个实例作为库默认；variants 记录原场景中的不同实例数量。",
+    "新增模型未列入 models 时默认 scale=1；键名必须与 scripts/pose-pipeline/models 下的 FBX 文件名（不含扩展名）完全一致。"
+  ],
+  "models": {
+    "MangaKa Building blocks - BB_Block01": {
+      "scale": [2.818608, 7.536887, 2.96954],
+      "scene": "Scene_01",
+      "variants": 6
+    },
+    "MangaKa Building blocks - Guide_line": {"scale": 1.0},
+    "MangaKa Props - A_R_Books_08": {"scale": 1.0, "scene": "Scene_06"},
+    "MangaKa Props - A_R_Books_13": {"scale": 1.145188, "scene": "Scene_06"},
+    "MangaKa Props - A_R_Books_17": {"scale": 1.396908667, "scene": "Scene_06"},
+    "MangaKa Props - A_R_Books_32": {"scale": 1.0, "scene": "Scene_06"},
+    "MangaKa Props - A_R_Bottle_20": {"scale": 1.0, "scene": "Scene_06"},
+    "MangaKa Props - F_S_ScifiBuilding_15": {"scale": 1.0, "scene": "Scene_05"},
+    "MangaKa Props - F_S_ScifiBuilding_16": {"scale": 1.0, "scene": "Scene_05"},
+    "MangaKa Props - F_S_ScifiBuilding_18": {"scale": 1.0, "scene": "Scene_05"},
+    "MangaKa Props - F_S_ScifiBuilding_19": {"scale": 1.0, "scene": "Scene_05"},
+    "MangaKa Props - F_S_ScifiBuilding_20": {"scale": 1.0, "scene": "Scene_05"},
+    "MangaKa Props - F_S_ScifiBuilding_21": {"scale": 1.0, "scene": "Scene_05"},
+    "MangaKa Props - F_S_ScifiBuilding_24": {"scale": 1.0, "scene": "Scene_05"},
+    "MangaKa Props - F_S_ScifiBuilding_27": {"scale": 1.0, "scene": "Scene_05"},
+    "MangaKa Props - F_S_ScifiBuilding_28": {"scale": 1.0, "scene": "Scene_05"},
+    "MangaKa Props - F_S_ScifiBuilding_29": {"scale": 1.0, "scene": "Scene_05"},
+    "MangaKa Props - F_S_ScifiBuilding_30": {"scale": 1.0, "scene": "Scene_05"},
+    "MangaKa Props - F_S_ScifiBuilding_31": {"scale": 1.0, "scene": "Scene_05"},
+    "MangaKa Props - F_S_ScifiBuilding_33": {"scale": 1.0, "scene": "Scene_05"},
+    "MangaKa Props - F_S_ScifiBuilding_34": {"scale": 1.0, "scene": "Scene_05"},
+    "MangaKa Props - F_S_ScifiBuilding_38": {"scale": 1.0, "scene": "Scene_05"},
+    "MangaKa Props - F_S_ScifiBuilding_54": {"scale": 1.0, "scene": "Scene_05"},
+    "MangaKa Props - F_S_ScifiBuilding_55": {"scale": 1.0, "scene": "Scene_05"},
+    "MangaKa Props - F_S_ScifiBuilding_56": {"scale": 1.0, "scene": "Scene_05"},
+    "MangaKa Props - F_S_ScifiBuilding_57": {"scale": 1.0, "scene": "Scene_05"},
+    "MangaKa Props - F_S_ScifiBuilding_58": {"scale": 1.0, "scene": "Scene_05"},
+    "MangaKa Props - F_S_ScifiBuilding_65": {"scale": 1.0, "scene": "Scene_05"},
+    "MangaKa Props - M_Fu_R_Chair_21": {"scale": 1.0, "scene": "Scene_06"},
+    "MangaKa Props - M_Fu_R_Table_28": {"scale": 1.0, "scene": "Scene_06"},
+    "MangaKa Props - M_R_Bicycles_03": {"scale": 1.0, "scene": "Scene_04"},
+    "MangaKa Props - M_R_Bikes_01": {"scale": 1.0, "scene": "Scene_04"},
+    "MangaKa Props - M_R_City_Building_18": {
+      "scale": 0.279432567,
+      "scene": "Scene_01"
+    },
+    "MangaKa Props - M_R_City_Building_43": {
+      "scale": 0.279432567,
+      "scene": "Scene_01"
+    },
+    "MangaKa Props - M_R_ED_Camera_02": {
+      "scale": 1.541035,
+      "scene": "Scene_06"
+    },
+    "MangaKa Props - M_R_InteriorProps_Bin_01": {
+      "scale": 0.8409486,
+      "scene": "Scene_06"
+    },
+    "MangaKa Props - M_R_InteriorProps_PhotoFrame_03": {
+      "scale": 1.0,
+      "scene": "Scene_06"
+    },
+    "MangaKa Props - M_R_MilitaryWeapons_Axe_01": {
+      "scale": 1.166657667,
+      "scene": "Scene_02"
+    },
+    "MangaKa Props - M_R_MilitaryWeapons_Crossbow_01": {
+      "scale": 0.534644367,
+      "scene": "Scene_02"
+    },
+    "MangaKa Props - M_R_MilitaryWeapons_TommyGun_01": {
+      "scale": 0.5886873,
+      "scene": "Scene_02"
+    },
+    "MangaKa Props - M_R_Window_18": {"scale": 1.0, "scene": "Scene_06"},
+    "MangaKa Props - N_C_Veg_PalmTree_01": {
+      "scale": 1.46356,
+      "scene": "Scene_03"
+    },
+    "MangaKa Props - N_C_Veg_PalmTree_02": {
+      "scale": 1.195992,
+      "scene": "Scene_03"
+    },
+    "MangaKa Props - N_C_Veg_PalmTree_03": {"scale": 1.0, "scene": "Scene_03"},
+    "MangaKa Props - N_C_Veg_Rocks_01": {"scale": 1.0, "scene": "Scene_03"},
+    "MangaKa Props - N_C_Veg_Rocks_03": {
+      "scale": 0.549663167,
+      "scene": "Scene_03"
+    },
+    "MangaKa Props - N_R_Veg_Rocks_31": {
+      "scale": 2.111288,
+      "scene": "Scene_03"
+    },
+    "MangaKa Props - N_R_Veg_Rocks_39": {"scale": 1.0, "scene": "Scene_03"},
+    "MangaKa Props - N_R_Veg_Rocks_41": {
+      "scale": [1.0, 0.291416, 1.0],
+      "scene": "Scene_03"
+    },
+    "MangaKa Props - PF_MedieHouses_House_01": {
+      "scale": 1.0,
+      "scene": "Scene_03"
+    }
+  }
+}

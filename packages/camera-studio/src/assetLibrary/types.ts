@@ -47,6 +47,8 @@ export type AnimationEntry = {
   contentHash: string
   duration: number
   createdAt: number
+  packs?: string[]
+  aliases?: Array<{id: string; name: string}>
 }
 
 export type LibraryEntry = ModelEntry | PoseEntry | AnimationEntry

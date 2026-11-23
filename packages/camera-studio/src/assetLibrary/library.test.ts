@@ -112,7 +112,15 @@ describe('聚合器(多数据源)', () => {
   test('seed-* 前缀拒绝:可写源返回内置前缀条目被剔除并告警', async () => {
     const errors: LibraryError[] = []
     const writable: WritableLibrarySource = {
-      ...(fakeSource('idb', [{id: 'seed-pose-fake'} as any], true) as any),
+      ...(fakeSource(
+        'idb',
+        [
+          {id: 'seed-pose-fake'} as any,
+          {id: 'seed-model-fake'} as any,
+          {id: 'seed-animation-fake'} as any,
+        ],
+        true,
+      ) as any),
       putEntry: async () => {},
       deleteEntry: async () => {},
       putBlob: async () => 'h',
@@ -125,7 +133,11 @@ describe('聚合器(多数据源)', () => {
       onError: (e) => errors.push(e),
     })
     expect(await lib.listEntries()).toEqual([])
-    expect(errors.some((e) => e.code === 'conflict')).toBe(true)
+    expect([
+      ...new Set(
+        errors.filter((e) => e.code === 'conflict').map((e) => e.message),
+      ),
+    ]).toHaveLength(3)
   })
 
   test('纯查看器模式:无可写源,写操作抛 auth;面板照常可读', async () => {

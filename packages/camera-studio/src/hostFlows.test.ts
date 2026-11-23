@@ -26,9 +26,11 @@ import {
 import type {HostFlowDeps} from './hostFlows'
 
 const placingA: PlacingState = {
-  url: 'blob:a',
   label: 'A',
   source: {type: 'library', entryId: 'e1'},
+  mode: 'click',
+  loaded: null,
+  point: null,
 }
 
 afterEach(() => {

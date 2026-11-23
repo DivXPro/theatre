@@ -62,13 +62,15 @@ function createPlacementPoseResolver(model: Object3D): typeof resolvePoseBones {
   }
 }
 
-/** pose 属性的注册形态(spec §6.1 + 2026-10-01 属性行化):值是 JSON 字符串,
- *  面板显示为普通属性行,值区域由注册表里的 pose 编辑器渲染(弹框选预设,
- *  显示 T 姿势/预设名/自定义姿势);自定义插值器让轨道帧间平滑混合 */
+/** pose 属性的注册形态(spec §6.1 + 2026-10-01 属性行化):值是 JSON 字符串。
+ *  模型属性面板隐藏这行，场景姿势只在时间轴轨道/关键帧弹框中编辑；值区域由
+ *  注册表里的 pose 编辑器渲染(显示 T 姿势/预设名/自定义姿势)。自定义插值器
+ *  让轨道帧间平滑混合。 */
 export function posePropConfigShape(model?: Object3D): {
   defaultValue: string
   resolveBones: typeof resolvePoseBones
   opts: {
+    hidden: boolean
     label: () => string
     editor: string
     interpolate: typeof poseInterpolate
@@ -81,6 +83,7 @@ export function posePropConfigShape(model?: Object3D): {
     defaultValue: '',
     resolveBones,
     opts: {
+      hidden: true,
       label: () => translate('pg.props.pose'),
       editor: 'pose',
       interpolate:

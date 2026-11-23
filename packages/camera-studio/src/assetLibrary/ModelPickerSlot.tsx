@@ -23,6 +23,7 @@ import {AssetLibraryPanel} from './AssetLibraryPanel'
 export type ModelPickerSlotProps = {
   onPlaceModel: (entry: ModelEntry) => void
   onDragStartModel: (entry: ModelEntry) => void
+  activeModelId?: string
   disabled?: boolean
   onClose: () => void
 }
@@ -30,6 +31,7 @@ export type ModelPickerSlotProps = {
 export function ModelPickerSlot({
   onPlaceModel,
   onDragStartModel,
+  activeModelId,
   disabled,
   onClose,
 }: ModelPickerSlotProps): React.ReactElement {
@@ -56,6 +58,7 @@ export function ModelPickerSlot({
       kind="model"
       onPlaceModel={onPlaceModel}
       onDragStartModel={onDragStartModel}
+      activeModelId={activeModelId}
       disabled={disabled}
       onClose={onClose}
     />

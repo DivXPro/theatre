@@ -1,0 +1,3258 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Camera Studio · 动作轨 V2 交互样稿</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --background: #17191e;
+        --panel: #202229;
+        --raised: #282b33;
+        --border: #373a44;
+        --ink: #f0f1f5;
+        --muted: #a5aab7;
+        --blue: #bacaff;
+        --green: #b3e8d9;
+        --danger: #ffc1b7;
+        --label-width: 216px;
+        font:
+          13px/1.5 'Inter',
+          -apple-system,
+          BlinkMacSystemFont,
+          'PingFang SC',
+          'Microsoft YaHei',
+          sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--background);
+        color: var(--ink);
+      }
+      button,
+      input,
+      select {
+        font: inherit;
+        color: inherit;
+      }
+      button {
+        padding: 6px 11px;
+        min-height: 33px;
+        cursor: pointer;
+        white-space: nowrap;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--raised);
+      }
+      button:hover {
+        background: #383c47;
+      }
+      button:disabled {
+        opacity: 0.45;
+        cursor: default;
+      }
+      button.primary {
+        background: var(--blue);
+        border-color: var(--blue);
+        color: #151e36;
+        font-weight: 650;
+      }
+      button.primary:hover {
+        background: #d2dcff;
+      }
+      button.quiet {
+        background: transparent;
+        border-color: transparent;
+      }
+      button.quiet:hover {
+        background: var(--raised);
+      }
+      button.icon {
+        width: 33px;
+        padding: 3px;
+        font-size: 17px;
+      }
+      button.danger {
+        color: var(--danger);
+      }
+      :focus-visible {
+        outline: 2px solid var(--blue);
+        outline-offset: 2px;
+      }
+      input:not([type='checkbox']):not([type='range']),
+      select {
+        min-width: 0;
+        width: 100%;
+        min-height: 35px;
+        padding: 5px 8px;
+        background: #191b20;
+        border: 1px solid var(--border);
+        border-radius: 5px;
+      }
+      input[type='checkbox'],
+      input[type='range'] {
+        accent-color: var(--blue);
+      }
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+      h1 {
+        font-size: 15px;
+        font-weight: 650;
+      }
+      h2 {
+        font-size: 19px;
+        font-weight: 620;
+      }
+      h3 {
+        font-size: 12px;
+        font-weight: 650;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .numeric {
+        font-variant-numeric: tabular-nums;
+      }
+      .appbar,
+      .toolbar {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--border);
+        background: var(--panel);
+      }
+      .brand {
+        width: 12px;
+        height: 12px;
+        border: 2px solid var(--blue);
+        transform: rotate(45deg);
+        margin: 0 4px;
+      }
+      .demo-link {
+        color: var(--blue);
+        text-underline-offset: 3px;
+      }
+      .spacer {
+        flex: 1;
+      }
+      .workspace {
+        display: grid;
+        grid-template-rows: auto minmax(226px, 1fr);
+      }
+      .upper {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 292px;
+      }
+      .main {
+        min-width: 0;
+      }
+      .viewport {
+        position: relative;
+        border-bottom: 1px solid var(--border);
+      }
+      .viewport-target {
+        display: block;
+        position: relative;
+        padding: 0;
+        width: 100%;
+        height: clamp(260px, 42vh, 410px);
+        border: 0;
+        border-radius: 0;
+        overflow: hidden;
+        touch-action: manipulation;
+      }
+      .viewport-target:focus-visible {
+        outline-offset: -3px;
+      }
+      .viewport canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      .viewport-label {
+        position: absolute;
+        top: 13px;
+        left: 14px;
+        color: #dfe2ef;
+        padding: 5px 8px;
+        background: #20232acc;
+        border-radius: 5px;
+        pointer-events: none;
+      }
+      .active-label {
+        position: absolute;
+        bottom: 13px;
+        left: 14px;
+        color: #e4e7ef;
+        pointer-events: none;
+      }
+      .viewport-menu {
+        position: absolute;
+        z-index: 5;
+        padding: 5px;
+        background: var(--panel);
+        box-shadow: 0 12px 26px #0009;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+      }
+      .bone-control {
+        position: absolute;
+        width: 24px;
+        min-height: 24px;
+        padding: 0;
+        transform: translate(-50%, -50%);
+        border: 2px solid var(--blue);
+        border-radius: 50%;
+        cursor: grab;
+        touch-action: none;
+      }
+      .timeline-shell {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) min(280px, 45%);
+        min-height: 226px;
+        background: #1a1c22;
+        border-top: 1px solid var(--border);
+      }
+      .timeline-shell.no-inspector {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .timeline-stage {
+        min-width: 0;
+      }
+      .timeline {
+        min-height: 226px;
+        background: #1a1c22;
+      }
+      .transport {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+      .time-control {
+        flex: 1;
+        min-width: 75px;
+        max-width: 280px;
+        margin-inline: 5px;
+      }
+      .ruler-row,
+      .track-row {
+        display: grid;
+        grid-template-columns: var(--label-width) minmax(0, 1fr);
+      }
+      .ruler-row {
+        border-bottom: 1px solid var(--border);
+      }
+      .ruler-row > span {
+        padding: 7px 12px 7px 30px;
+        color: var(--muted);
+        border-right: 1px solid var(--border);
+      }
+      .ruler {
+        position: relative;
+        min-height: 32px;
+        cursor: crosshair;
+        user-select: none;
+        touch-action: none;
+      }
+      .tick {
+        position: absolute;
+        bottom: 6px;
+        color: var(--muted);
+        font-size: 11px;
+        transform: translateX(-50%);
+      }
+      .tick:first-child {
+        transform: translateX(5px);
+      }
+      .tick:nth-last-child(2) {
+        transform: translateX(calc(-100% - 5px));
+      }
+      .track-row {
+        min-height: 48px;
+        border-bottom: 1px solid var(--border);
+      }
+      .track-head {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        min-width: 0;
+        padding: 2px 6px 2px 8px;
+        border-right: 1px solid var(--border);
+      }
+      .track-head::before {
+        content: '';
+        flex: 0 0 18px;
+        width: 18px;
+        height: 22px;
+      }
+      .track-name {
+        min-width: 0;
+        flex: 1;
+        min-height: 22px;
+        padding: 0 6px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        text-align: start;
+        font-size: 11px;
+        font-weight: 450;
+        line-height: 22px;
+        color: var(--muted);
+      }
+      .track-head button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 22px;
+        padding: 0 6px;
+        color: var(--muted);
+        font-size: 10px;
+        line-height: 1;
+        border: 1px solid transparent;
+        border-radius: 4px;
+        background: transparent;
+      }
+      .track-head button:hover {
+        color: var(--ink);
+        background: #ffffff0e;
+        border-color: #ffffff14;
+      }
+      .track-head button.icon {
+        width: 22px;
+        padding: 0;
+        font-size: 13px;
+      }
+      .track-head button.icon svg {
+        width: 14px;
+        height: 14px;
+      }
+      .track-head button.track-name {
+        font-size: 11px;
+      }
+      .add-track-wrap {
+        position: relative;
+        flex: 0 0 auto;
+      }
+      .add-track-menu {
+        position: absolute;
+        top: calc(100% + 4px);
+        right: 0;
+        z-index: 20;
+        display: grid;
+        min-width: 148px;
+        padding: 4px;
+        background: #25272e;
+        border: 1px solid #ffffff1f;
+        border-radius: 5px;
+        box-shadow: 0 8px 24px #00000073;
+      }
+      .add-track-menu[hidden] {
+        display: none;
+      }
+      .add-track-menu button {
+        justify-content: flex-start;
+        min-height: 24px;
+        padding: 0 8px;
+        text-align: left;
+        white-space: nowrap;
+      }
+      .lane {
+        position: relative;
+        min-width: 0;
+        cursor: crosshair;
+        touch-action: none;
+        background: repeating-linear-gradient(
+          to right,
+          #858aa325 0 1px,
+          transparent 1px calc(100% / 6)
+        );
+      }
+      .needle {
+        position: absolute;
+        inset-block: 0;
+        width: 1px;
+        background: #e8b983;
+        pointer-events: none;
+        z-index: 2;
+      }
+      .snap-guide {
+        position: absolute;
+        inset-block: 0;
+        width: 2px;
+        background: var(--blue);
+        pointer-events: none;
+        z-index: 3;
+      }
+      .lane-hint {
+        position: absolute;
+        top: 13px;
+        left: 9px;
+        color: var(--muted);
+        pointer-events: none;
+      }
+      .clip {
+        position: absolute;
+        z-index: 1;
+        top: 8px;
+        height: 35px;
+        min-height: 0;
+        padding: 3px 7px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-align: start;
+        cursor: grab;
+        touch-action: none;
+        font-weight: 600;
+        background: #343f65;
+        color: #e1e9ff;
+        border: 1px solid #5e73aa;
+      }
+      .clip:hover {
+        background: #465681;
+      }
+      .clip.library {
+        background: #264a44;
+        color: #d5f5e9;
+        border-color: #528677;
+      }
+      .clip.library:hover {
+        background: #346359;
+      }
+      .clip[aria-pressed='true'] {
+        outline: 2px solid var(--blue);
+        outline-offset: 1px;
+      }
+      .clip:focus-visible {
+        outline-offset: 3px;
+      }
+      .clip.invalid {
+        color: var(--danger);
+        background: #5a3434;
+        border-color: var(--danger);
+      }
+      .timeline-empty {
+        padding: 22px 16px;
+        color: var(--muted);
+      }
+      .timeline-empty strong {
+        display: block;
+        color: var(--ink);
+        margin-bottom: 3px;
+      }
+      .sidebar {
+        min-width: 0;
+        background: var(--panel);
+        border-left: 1px solid var(--border);
+      }
+      .timeline-sidebar {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        min-height: 0;
+        background: var(--panel);
+        border-left: 1px solid var(--border);
+      }
+      .timeline-sidebar .sidebar-content {
+        flex: 1;
+        min-height: 0;
+        overflow: auto;
+      }
+      .timeline-sidebar .sidebar-content:has(#recording-draft-status) {
+        max-height: 42vh;
+      }
+      .timeline-shell.no-inspector .timeline-sidebar {
+        display: none;
+      }
+      .sidebar-top {
+        display: flex;
+        gap: 4px;
+        align-items: center;
+        min-height: 54px;
+        padding: 0 11px;
+        border-bottom: 1px solid var(--border);
+      }
+      .sidebar-top strong {
+        padding: 6px 4px;
+      }
+      .sidebar-content {
+        padding: 15px;
+      }
+      .section {
+        display: grid;
+        gap: 9px;
+        padding: 14px 0;
+        border-top: 1px solid var(--border);
+        margin-top: 13px;
+      }
+      .fields {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 9px;
+      }
+      .fields.axes {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+      .field {
+        display: grid;
+        align-content: start;
+        gap: 4px;
+        color: var(--muted);
+        min-width: 0;
+      }
+      .field input,
+      .field select {
+        color: var(--ink);
+      }
+      .readout {
+        min-height: 35px;
+        display: flex;
+        align-items: center;
+        color: var(--ink);
+        padding: 5px 8px;
+        border-radius: 5px;
+        background: #ffffff08;
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+        align-items: center;
+      }
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+      }
+      .chips span {
+        padding: 2px 7px;
+        background: #303b59;
+        color: #d9e4ff;
+        border-radius: 4px;
+      }
+      .chips span.bone {
+        background: #2b453f;
+        color: var(--green);
+      }
+      .error {
+        color: var(--danger);
+        margin-top: 5px;
+      }
+      .status {
+        min-height: 39px;
+        padding: 9px 14px;
+        color: var(--muted);
+        border-top: 1px solid var(--border);
+      }
+      dialog {
+        width: min(470px, calc(100% - 24px));
+        max-height: calc(100dvh - 32px);
+        padding: 17px;
+        color: var(--ink);
+        background: var(--panel);
+        border: 1px solid #4a4e60;
+        border-radius: 10px;
+        box-shadow: 0 20px 80px #000a;
+        overflow: auto;
+      }
+      dialog::backdrop {
+        background: #0c0e16ac;
+      }
+      dialog form {
+        display: grid;
+        gap: 11px;
+      }
+      dialog footer {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+        justify-content: flex-end;
+      }
+      .checks {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin: 0;
+        padding: 7px 9px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+      }
+      .checks legend {
+        color: var(--muted);
+        padding: 0 4px;
+      }
+      .checks label {
+        display: flex;
+        gap: 4px;
+        align-items: center;
+      }
+      .recording {
+        background: #1a1c22;
+      }
+      .recording .toolbar {
+        border-top: 2px solid var(--blue);
+      }
+      .recording .toolbar h3 {
+        font-size: 13px;
+        color: var(--blue);
+      }
+      .recording-heading {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+      .recording-heading::before {
+        content: '';
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--blue);
+        box-shadow: 0 0 0 3px #bacaff24;
+      }
+      .local-time {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .local-time input {
+        max-width: 78px;
+      }
+      .recording .track-head {
+        padding-inline: 14px;
+      }
+      .recording .lane {
+        background: repeating-linear-gradient(
+          to right,
+          #858aa325 0 1px,
+          transparent 1px 25%
+        );
+      }
+      .clip-window {
+        position: absolute;
+        inset-block: 0;
+        background: #bacaff12;
+        pointer-events: none;
+      }
+      .key-marker {
+        position: absolute;
+        z-index: 3;
+        top: 50%;
+        left: clamp(15px, var(--marker-position), calc(100% - 15px));
+        transform: translate(-50%, -50%);
+        min-width: 30px;
+        min-height: 30px;
+        padding: 2px;
+        color: var(--blue);
+        font-size: 17px;
+      }
+      .key-marker[aria-pressed='true'] {
+        background: #414e77;
+        border-color: var(--blue);
+      }
+      .key-field {
+        display: grid;
+        gap: 5px;
+        padding-block: 8px;
+        border-bottom: 1px solid var(--border);
+      }
+      .key-field:last-child {
+        border-bottom: 0;
+      }
+      .key-field-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+      }
+      .key-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 2px 7px;
+        color: var(--blue);
+        min-height: 29px;
+      }
+      .key-button[aria-pressed='true'] {
+        color: #151e36;
+        background: var(--blue);
+        border-color: var(--blue);
+      }
+      .key-button > span:first-child {
+        font-size: 16px;
+      }
+      .pending-caption {
+        min-height: 20px;
+      }
+      .path-track .track-head {
+        gap: 3px;
+      }
+      .path-track .track-name {
+        color: var(--muted);
+        font-weight: 450;
+      }
+      .path-key-at-playhead {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 22px;
+        gap: 3px;
+        width: 22px;
+        min-height: 22px;
+        padding: 0;
+        color: var(--blue);
+        white-space: nowrap;
+      }
+      .path-progress-inline {
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+        color: var(--muted);
+        font-size: 10px;
+        white-space: nowrap;
+      }
+      .path-progress-inline input {
+        width: 43px;
+        min-height: 22px;
+        height: 22px;
+        padding: 0 3px;
+        font-size: 10px;
+        background: #ffffff08;
+        border-color: #ffffff14;
+        border-radius: 4px;
+      }
+      .path-key-marker {
+        color: var(--green);
+      }
+      .path-key-marker[aria-pressed='true'] {
+        color: #17191e;
+        background: var(--green);
+        border-color: var(--green);
+      }
+      .path-status {
+        display: grid;
+        gap: 4px;
+        padding: 9px;
+        border-radius: 6px;
+        background: #ffffff08;
+        border: 1px solid var(--border);
+      }
+      .path-status strong {
+        color: var(--blue);
+      }
+      .action-summary {
+        display: grid;
+        gap: 10px;
+        padding: 13px;
+        margin-top: 13px;
+        border: 1px solid #5e73aa;
+        border-radius: 8px;
+        background: #343f652b;
+      }
+      .action-summary button {
+        justify-self: start;
+      }
+      .action-summary h3 {
+        margin-bottom: 3px;
+      }
+      .action-summary p + p {
+        margin-top: 3px;
+      }
+      [hidden] {
+        display: none !important;
+      }
+      @media (max-width: 740px) {
+        .upper {
+          grid-template-columns: 1fr;
+        }
+        .sidebar {
+          border-left: 0;
+          border-top: 1px solid var(--border);
+        }
+        .timeline-shell {
+          grid-template-columns: minmax(0, 1fr) min(260px, 45%);
+        }
+        .viewport-target {
+          height: 250px;
+        }
+        .timeline {
+          min-height: auto;
+        }
+      }
+      @media (max-width: 430px) {
+        :root {
+          --label-width: 140px;
+        }
+        .timeline-shell {
+          grid-template-columns: minmax(0, 1fr) min(220px, 46%);
+        }
+        .track-name {
+          padding-inline: 4px;
+        }
+        .toolbar {
+          padding-inline: 8px;
+        }
+        .viewport-target {
+          height: 220px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="appbar">
+      <span class="brand" aria-hidden="true"></span>
+      <h1>Camera Studio</h1>
+      <span class="muted">动作轨 V2 · 交互样稿</span>
+      <span class="spacer"></span>
+      <a class="demo-link" href="?demo=walk">五次走路循环</a>
+      <a class="demo-link" href="?demo=path">圆弧路径行走</a>
+      <button id="undo" type="button" disabled>撤销</button>
+      <button id="redo" type="button" disabled>重做</button>
+    </header>
+    <div class="workspace">
+      <div class="upper">
+        <main class="main">
+          <section class="viewport" aria-label="导演视口">
+            <button
+              id="model"
+              class="viewport-target"
+              type="button"
+              aria-label="选择白模角色"
+              aria-haspopup="true"
+            >
+              <canvas id="scene" aria-hidden="true"></canvas>
+            </button>
+            <span class="viewport-label">白模角色</span>
+            <span id="active-clips" class="active-label"></span>
+            <div id="model-menu" class="viewport-menu" hidden>
+              <button type="button" data-add-track>
+                ＋ 添加动作轨到时间轴
+              </button>
+            </div>
+            <button
+              id="bone-control"
+              class="bone-control"
+              type="button"
+              aria-label="拖动左前臂"
+              hidden
+            >
+              ↕
+            </button>
+          </section>
+        </main>
+        <aside class="sidebar" aria-label="物体属性面板">
+          <div class="sidebar-top"><strong>对象属性</strong></div>
+          <div class="sidebar-content" id="object-inspector"></div>
+        </aside>
+      </div>
+      <section
+        class="timeline-shell"
+        id="timeline-shell"
+        aria-label="时间轴编辑器"
+      >
+        <div class="timeline-stage">
+          <section
+            class="timeline"
+            id="sequence-timeline"
+            aria-label="动作时间轴"
+          >
+            <div class="toolbar">
+              <h3>动作时间轴</h3>
+              <span class="spacer"></span>
+              <div class="transport">
+                <button id="play" type="button" class="icon" aria-label="播放">
+                  ▷
+                </button>
+                <output for="seek" id="time" class="numeric">0.00 s</output>
+              </div>
+              <input
+                id="seek"
+                class="time-control"
+                type="range"
+                min="0"
+                max="6"
+                step="0.01"
+                value="0"
+                aria-label="播放头时间（秒）"
+              />
+            </div>
+            <div class="ruler-row">
+              <div class="track-head object-ruler-cell">
+                <span class="track-name">白模角色</span>
+                <div class="add-track-wrap">
+                  <button
+                    id="timeline-add-track"
+                    class="icon"
+                    type="button"
+                    aria-label="添加动作轨"
+                    aria-haspopup="menu"
+                    aria-expanded="false"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path
+                        d="M12 5v14M5 12h14"
+                        stroke="currentColor"
+                        stroke-width="1.6"
+                        stroke-linecap="round"
+                      />
+                    </svg>
+                  </button>
+                  <div
+                    id="timeline-add-track-menu"
+                    class="add-track-menu"
+                    role="menu"
+                    aria-label="添加动作轨"
+                    hidden
+                  >
+                    <button
+                      type="button"
+                      role="menuitem"
+                      data-add-track-kind="bone"
+                    >
+                      骨骼动作轨
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      data-add-track-kind="object"
+                    >
+                      变换轨
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="ruler numeric" id="ruler" aria-hidden="true"></div>
+            </div>
+            <div id="tracks"></div>
+            <div id="timeline-empty" class="timeline-empty">
+              <strong>还没有动作轨</strong>
+              点角色行右侧的「＋」，再选择骨骼动作轨或变换轨。
+            </div>
+          </section>
+          <section
+            class="recording"
+            id="recording-timeline"
+            aria-label="动作关键帧编辑视图"
+            hidden
+          >
+            <div class="toolbar">
+              <div class="recording-heading">
+                <h3 id="recording-title">动作编辑</h3>
+              </div>
+              <span class="spacer"></span>
+              <button
+                id="previous-frame"
+                class="icon"
+                type="button"
+                aria-label="上一帧"
+                hidden
+              >
+                ‹
+              </button>
+              <label class="local-time">
+                <span id="recording-time-label">动作内时间（秒）</span>
+                <input
+                  id="recording-time"
+                  type="number"
+                  min="0"
+                  step="any"
+                  value="0"
+                />
+              </label>
+              <button
+                id="next-frame"
+                class="icon"
+                type="button"
+                aria-label="下一帧"
+                hidden
+              >
+                ›
+              </button>
+            </div>
+            <div class="ruler-row">
+              <span id="recording-ruler-label">动作内时间</span>
+              <div
+                class="ruler numeric"
+                id="recording-ruler"
+                data-recording-scrub
+                aria-hidden="true"
+              ></div>
+            </div>
+            <div id="recording-channels"></div>
+          </section>
+        </div>
+        <aside
+          class="timeline-sidebar"
+          id="timeline-sidebar"
+          aria-label="时间轴检查器"
+        >
+          <div class="sidebar-top" id="inspector-header"></div>
+          <div class="sidebar-content" id="inspector"></div>
+          <div class="toolbar" id="recording-actions" hidden>
+            <button id="cancel-recording" type="button">取消</button>
+            <button id="save-recording" type="button" class="primary">
+              应用并返回
+            </button>
+          </div>
+        </aside>
+      </section>
+    </div>
+    <div class="status" id="status" role="status"></div>
+    <dialog id="dialog" aria-labelledby="dialog-title"></dialog>
+    <script>
+      const find = (id) => document.getElementById(id)
+      const duration = 6
+      const channelNames = {
+        position: '位置',
+        rotation: '旋转',
+        scale: '缩放',
+        leftArm: '左上臂',
+        leftForearm: '左前臂',
+      }
+      const base = {position: [0, 0, 0], rotation: [0, 0, 0], scale: [1, 1, 1]}
+      const fps = 30
+      const presets = {
+        walk: {name: '走路', duration: 3},
+        wave: {name: '挥手', duration: 2},
+        walkCycle: {
+          name: '原地走路',
+          duration: 32 / fps,
+          channels: ['leftArm', 'leftForearm'],
+          keys: [0, 8, 16, 24, 32].map((frame, index) => ({
+            time: frame / fps,
+            values: {
+              leftArm: [0, 0, 0],
+              leftForearm: [([8, 25, 8, 15, 8][index] * Math.PI) / 180, 0, 0],
+            },
+          })),
+        },
+      }
+      const past = []
+      const future = []
+      let state = {tracks: [], actions: [], path: null}
+      let selection = {kind: 'object'}
+      let time = 0
+      let nextId = 1
+      let playing = null
+      let dialogTrigger = null
+      let dialogAfterClose = null
+      let recording = null
+      let pathDraft = null
+
+      const clone = (value) => structuredClone(value)
+      const id = () => String(nextId++)
+      const display = (value) => String(Number(Number(value).toFixed(2)))
+      const escape = (text) =>
+        String(text).replace(
+          /[&<>"']/g,
+          (character) =>
+            ({
+              '&': '&amp;',
+              '<': '&lt;',
+              '>': '&gt;',
+              '"': '&quot;',
+              "'": '&#39;',
+            })[character],
+        )
+      const source = (documentState, clip) =>
+        clip.kind === 'library' && !clip.actionId
+          ? presets[clip.sourceId]
+          : documentState.actions.find(
+              (action) => action.id === (clip.actionId ?? clip.sourceId),
+            )
+      const repeats = (clip) => clip.repeat ?? 1
+      const end = (clip) => clip.start + (clip.out - clip.in) * repeats(clip)
+      const localAt = (clip, sceneTime) => {
+        const length = clip.out - clip.in
+        if (sceneTime < clip.start) return {localTime: clip.in, iteration: 1}
+        if (sceneTime >= end(clip))
+          return {localTime: clip.out, iteration: repeats(clip)}
+        const iteration = Math.floor((sceneTime - clip.start) / length + 1e-9)
+        return {
+          localTime:
+            clip.in + Math.max(0, sceneTime - clip.start - iteration * length),
+          iteration: iteration + 1,
+        }
+      }
+      const trackById = (trackId) =>
+        state.tracks.find((track) => track.id === trackId)
+
+      function pathProgressAt(documentState, sceneTime) {
+        const path = documentState.path
+        if (!path?.bound) return 0
+        const keys = [...path.keys].sort(
+          (left, right) => left.time - right.time,
+        )
+        if (!keys.length) return path.progress ?? 0
+        if (sceneTime <= keys[0].time) return keys[0].value
+        if (sceneTime >= keys.at(-1).time) return keys.at(-1).value
+        const rightIndex = keys.findIndex((key) => key.time >= sceneTime)
+        const left = keys[rightIndex - 1]
+        const right = keys[rightIndex]
+        const weight = (sceneTime - left.time) / (right.time - left.time)
+        return left.value + (right.value - left.value) * weight
+      }
+
+      function pathSample(progress) {
+        const radius = state.path.radius
+        const angle =
+          ((Math.max(0, Math.min(100, progress)) / 100) * Math.PI) / 2
+        return {
+          position: [radius * Math.cos(angle), 0, radius * Math.sin(angle)],
+          yaw: (-angle * 180) / Math.PI,
+          distance:
+            (Math.max(0, Math.min(100, progress)) / 100) * state.path.length,
+        }
+      }
+
+      function notify(message) {
+        find('status').textContent = message
+      }
+
+      function commit(next, nextSelection, message) {
+        past.push({state, selection})
+        future.length = 0
+        state = next
+        selection = nextSelection
+        render()
+        notify(message)
+      }
+
+      function historyStep(from, to, message) {
+        if (!from.length) return
+        to.push({state, selection})
+        const revision = from.pop()
+        state = revision.state
+        selection = revision.selection
+        render()
+        notify(message)
+      }
+
+      function closeAddTrackMenu() {
+        find('timeline-add-track-menu').hidden = true
+        find('timeline-add-track').setAttribute('aria-expanded', 'false')
+      }
+
+      function toggleAddTrackMenu() {
+        const menu = find('timeline-add-track-menu')
+        menu.hidden = !menu.hidden
+        find('timeline-add-track').setAttribute(
+          'aria-expanded',
+          String(!menu.hidden),
+        )
+        if (!menu.hidden) menu.querySelector('[role="menuitem"]')?.focus()
+      }
+
+      function addTrack(kind = 'bone') {
+        const next = clone(state)
+        const label = kind === 'object' ? '变换轨' : '骨骼动作轨'
+        let index = 1
+        while (next.tracks.some((track) => track.name === `${label} ${index}`))
+          index++
+        const track = {
+          id: id(),
+          name: `${label} ${index}`,
+          kind,
+          clips: [],
+        }
+        next.tracks.push(track)
+        commit(
+          next,
+          {kind: 'track', trackId: track.id},
+          `已添加「${track.name}」`,
+        )
+        find(`add-clip-${track.id}`).focus()
+      }
+
+      function channelsOf(documentState, clip) {
+        return clip.kind === 'library'
+          ? ['skeleton']
+          : source(documentState, clip).channels
+      }
+
+      function explainConflict(documentState, track, clip) {
+        const action = source(documentState, clip)
+        if (!action || action.duration <= 0) return '此动作没有可用时长。'
+        if (
+          ![clip.start, clip.in, clip.out].every(Number.isFinite) ||
+          clip.in < 0 ||
+          clip.out - clip.in < 0.000001 ||
+          clip.out > action.duration + 0.000001
+        ) {
+          return `素材范围必须在 0–${display(
+            action.duration,
+          )} 秒内，且出点须晚于入点。`
+        }
+        if (!Number.isSafeInteger(repeats(clip)) || repeats(clip) < 1)
+          return '重复次数须为正整数。'
+        if (clip.start < 0 || end(clip) > duration + 0.000001)
+          return '片段必须位于时间轴 0–6 秒内。'
+        for (const otherTrack of documentState.tracks) {
+          for (const other of otherTrack.clips) {
+            if (clip.id === other.id) continue
+            const overlapStart = Math.max(clip.start, other.start)
+            const overlapEnd = Math.min(end(clip), end(other))
+            if (overlapEnd - overlapStart < 0.000001) continue
+            const overlap = `${display(overlapStart)}–${display(overlapEnd)} 秒`
+            if (track.id === otherTrack.id) {
+              return `同轨重叠。「${track.name}」的「${
+                source(documentState, other).name
+              }」已占用 ${overlap}。`
+            }
+            const shared = channelsOf(documentState, clip).filter((channel) =>
+              channelsOf(documentState, other).includes(channel),
+            )
+            if (shared.length) {
+              const names = shared
+                .map((channel) => channelNames[channel] ?? '骨骼')
+                .join('、')
+              return `「${track.name}」的「${action.name}」与「${
+                otherTrack.name
+              }」的「${
+                source(documentState, other).name
+              }」在 ${overlap}同时控制${names}。`
+            }
+          }
+        }
+        return ''
+      }
+
+      function showError(container, message) {
+        const error = container.querySelector('[role=alert]')
+        error.textContent = message
+        error.hidden = !message
+      }
+
+      function field(label, name, value, attributes = '') {
+        return `<label class="field">${label}<input name="${name}" value="${escape(
+          value,
+        )}" ${attributes}></label>`
+      }
+
+      function selectOption(value, label, current) {
+        return `<option value="${escape(value)}"${
+          value === current ? ' selected' : ''
+        }>${escape(label)}</option>`
+      }
+
+      function render() {
+        find('undo').disabled = Boolean(recording) || !past.length
+        find('redo').disabled = Boolean(recording) || !future.length
+        find('sequence-timeline').hidden = Boolean(recording)
+        find('recording-timeline').hidden = !recording
+        find('recording-actions').hidden = !recording
+        find('bone-control').hidden = !recording?.viewport
+        find('timeline-add-track').hidden = false
+        find('timeline-empty').hidden =
+          Boolean(state.tracks.length) || Boolean(state.path?.bound)
+        const showTimelineInspector =
+          Boolean(recording) || selection.kind !== 'object'
+        find('timeline-shell').classList.toggle(
+          'no-inspector',
+          !showTimelineInspector,
+        )
+        find('timeline-sidebar').hidden = !showTimelineInspector
+        renderObjectInspector()
+        if (recording) {
+          renderRecordingTimeline()
+          renderRecordingInspector()
+          drawFrame()
+          return
+        }
+        renderTracks()
+        renderInspector()
+        drawFrame()
+      }
+
+      function renderTracks() {
+        const path = state.path?.bound
+          ? (() => {
+              const progress = pathDraft ?? pathProgressAt(state, time)
+              const currentKey = state.path.keys.find(
+                (key) =>
+                  Math.abs(key.time - Math.round(time * fps) / fps) < 1e-6,
+              )
+              return `<div class="track-row path-track">
+          <div class="track-head">
+            <span class="track-name">路径进度 (%)</span>
+            <label class="path-progress-inline" title="当前进度">
+              <input id="path-progress" type="number" min="0" max="100" step="0.1"
+                value="${display(progress)}" aria-label="路径进度 (%)">
+            </label>
+            <button type="button" class="path-key-at-playhead" data-write-path-key
+              aria-label="${currentKey ? '更新' : '添加'}当前帧路径进度关键帧"
+              title="${
+                currentKey ? '更新' : '添加'
+              }当前帧关键帧 · 沿 90° 圆弧 · ${state.path.length.toFixed(
+                2,
+              )} m">${currentKey ? '◆' : '◇'}</button>
+          </div>
+          <div class="lane" data-path-lane>
+            ${state.path.keys
+              .map(
+                (key) => `
+              <button type="button" class="quiet key-marker path-key-marker"
+                data-path-key-time="${key.time}"
+                style="--marker-position:${(key.time / duration) * 100}%"
+                aria-label="路径进度 ${display(key.value)}% · 第 ${Math.round(
+                  key.time * fps,
+                )} 帧"
+                aria-pressed="${
+                  Math.abs(key.time - Math.round(time * fps) / fps) < 1e-6
+                }"
+                title="${display(key.value)}% · ${display(
+                  key.time,
+                )} 秒">◆</button>`,
+              )
+              .join('')}
+            <span class="needle"></span>
+          </div>
+        </div>`
+            })()
+          : ''
+        find('tracks').innerHTML =
+          path +
+          state.tracks
+            .map(
+              (track) => `
+        <div class="track-row">
+          <div class="track-head">
+            <button type="button" class="quiet track-name" data-track="${
+              track.id
+            }">${escape(track.name)}</button>
+            <button type="button" class="icon quiet" id="add-clip-${
+              track.id
+            }" data-add-clip="${track.id}"
+              title="添加片段" aria-label="${escape(
+                `${track.name} 添加片段`,
+              )}"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+              </svg></button>
+          </div>
+          <div class="lane" data-lane="${track.id}">
+            ${
+              track.clips.length
+                ? ''
+                : '<span class="lane-hint">点轨道行头 ＋ 添加片段</span>'
+            }
+            ${track.clips
+              .map((clip) => {
+                const name =
+                  escape(source(state, clip).name) +
+                  (repeats(clip) > 1 ? ` ×${repeats(clip)}` : '')
+                return `<button type="button" class="clip ${
+                  clip.kind
+                }" data-clip="${clip.id}" data-clip-track="${track.id}"
+                style="left:${(clip.start / duration) * 100}%;width:${
+                  ((end(clip) - clip.start) / duration) * 100
+                }%"
+                aria-pressed="${selection.clipId === clip.id}"
+                title="${name} · ${display(clip.start)}–${display(
+                  end(clip),
+                )} 秒">${name}</button>`
+              })
+              .join('')}
+            <span class="needle"></span>
+          </div>
+        </div>`,
+            )
+            .join('')
+      }
+
+      function renderObjectInspector() {
+        const path = state.path
+        find('object-inspector').innerHTML = `<h2>白模角色</h2>
+        <p class="muted">角色模型</p>
+        <section class="section">
+          <h3>动作轨</h3>
+          <p class="muted">${
+            state.tracks.length
+              ? `已添加 ${state.tracks.length} 条动作轨`
+              : '尚未添加动作轨'
+          }</p>
+          <div class="actions"><button type="button" id="object-add-track" class="primary" data-add-track ${
+            recording ? 'disabled' : ''
+          }>＋ 添加动作轨到时间轴</button></div>
+        </section>
+        ${
+          path
+            ? `<section class="section">
+          <h3>角色路径</h3>
+          <div class="path-status">
+            ${
+              path?.bound
+                ? `<strong>90° 圆弧 · 半径 ${path.radius.toFixed(2)} m</strong>
+                <span class="muted">${
+                  path.orient
+                    ? '路径接管位置与朝向'
+                    : '路径只接管位置，朝向保持原值'
+                }</span>
+                <span id="path-draft-status" class="muted" aria-live="polite"></span>`
+                : `<strong>未绑定路径</strong><span class="muted">角色的位置关键帧继续生效。</span>`
+            }
+          </div>
+          <label class="field">场景路径
+            <select id="path-choice"><option value="arc">90° 圆弧 · 半径 3.18 m</option></select>
+          </label>
+          <label><input id="path-orient" type="checkbox" ${
+            path?.orient ? 'checked' : ''
+          } ${path?.bound ? '' : 'disabled'}>沿路径转向</label>
+          <div class="actions">
+            ${
+              path?.bound
+                ? `<button type="button" data-unbind-path class="quiet danger">解除绑定</button>`
+                : `<button type="button" data-bind-path class="primary">确认绑定</button>`
+            }
+          </div>
+          ${
+            path?.bound && path.keys.length
+              ? `<p class="muted">进度轨道已有 ${path.keys.length} 个关键帧。改速度只改打点时间；摆臂仍由骨骼动作轨控制。</p>`
+              : ''
+          }
+        </section>`
+            : ''
+        }`
+      }
+
+      function renderInspector() {
+        const inspector = find('inspector')
+        const header = find('inspector-header')
+        const track = trackById(selection.trackId)
+        const clip = track?.clips.find((item) => item.id === selection.clipId)
+        if (selection.kind === 'object') {
+          header.innerHTML = ''
+          inspector.innerHTML = ''
+          return
+        }
+        header.innerHTML = track
+          ? `<button type="button" class="quiet" data-object>对象</button><span class="muted">/</span><strong>${
+              clip ? '片段' : '轨道'
+            }</strong>`
+          : '<strong>时间轴检查器</strong>'
+        if (clip) {
+          const action = source(state, clip)
+          const channelSummary =
+            clip.kind === 'object'
+              ? action.channels
+                  .map(
+                    (channel) =>
+                      `${channelNames[channel]} ${
+                        action.keys.filter((key) => key.values[channel]).length
+                      } 点`,
+                  )
+                  .join(' · ')
+              : '骨骼姿势'
+          inspector.innerHTML = `<h2>${escape(action.name)}</h2>
+          <p class="muted">${
+            clip.kind === 'library' ? '预设骨骼动作' : '对象动作'
+          }</p>
+          ${
+            action.channels
+              ? `<section class="action-summary">
+            <div>
+              <h3>动作内容 · ${channelSummary}</h3>
+              <p class="muted">关键帧属于动作，不写在编排轨上。</p>
+              <p class="muted">新建和已有动作共用同一录制视图，可随时返回继续编辑。</p>
+            </div>
+            <button type="button" class="primary" data-edit-action>编辑动作</button>
+          </section>`
+              : ''
+          }
+          <form id="clip-form">
+            <section class="section">
+              <h3>片段编排</h3>
+              <label class="field">目标轨道<select name="trackId">${state.tracks
+                .map((item) => selectOption(item.id, item.name, track.id))
+                .join('')}</select></label>
+              <div class="fields">
+                ${field(
+                  '起点（秒）',
+                  'start',
+                  clip.start,
+                  'type="number" step="any" required',
+                )}
+                <label class="field">终点（秒）<output class="readout numeric" id="clip-end">${display(
+                  end(clip),
+                )}</output></label>
+                ${field(
+                  '重复次数',
+                  'repeat',
+                  repeats(clip),
+                  'type="number" min="1" step="1" required',
+                )}
+              </div>
+              <div class="fields">
+                ${field(
+                  '素材入点（秒）',
+                  'in',
+                  clip.in,
+                  'type="number" step="any" required',
+                )}
+                ${field(
+                  '素材出点（秒）',
+                  'out',
+                  clip.out,
+                  'type="number" step="any" required',
+                )}
+              </div>
+              <p class="muted">素材范围 0–${display(action.duration)} 秒</p>
+              <p class="error" role="alert" hidden></p>
+              <div class="actions">
+                <button type="submit" class="primary" disabled>应用片段属性</button>
+                <button type="button" data-delete-clip class="quiet danger">删除片段</button>
+              </div>
+            </section>
+          </form>
+          ${
+            clip.kind === 'library'
+              ? `<section class="section">
+            <h3>动作内容</h3>
+            <div class="chips"><span class="bone">骨骼姿势</span></div>
+          </section>`
+              : ''
+          }`
+          const form = find('clip-form')
+          const proposedClip = () => {
+            const fields = new FormData(form)
+            return {
+              ...clip,
+              start: Number(fields.get('start')),
+              in: Number(fields.get('in')),
+              out: Number(fields.get('out')),
+              repeat: Number(fields.get('repeat')),
+            }
+          }
+          form.addEventListener('input', () => {
+            find('clip-end').textContent = form.checkValidity()
+              ? display(end(proposedClip()))
+              : '—'
+            form.querySelector('[type=submit]').disabled = false
+            showError(form, '')
+          })
+          form.addEventListener('submit', (event) => {
+            event.preventDefault()
+            const updated = proposedClip()
+            const next = clone(state)
+            const target = next.tracks.find(
+              (item) => item.id === new FormData(form).get('trackId'),
+            )
+            const message = explainConflict(next, target, updated)
+            if (message) return showError(form, message)
+            next.tracks.find((item) => item.id === track.id).clips =
+              track.clips.filter((item) => item.id !== clip.id)
+            target.clips.push(updated)
+            commit(
+              next,
+              {kind: 'clip', trackId: target.id, clipId: clip.id},
+              '片段属性已应用',
+            )
+            find('clip-form').elements.start.focus()
+          })
+          return
+        }
+        if (track) {
+          inspector.innerHTML = `<h2>${escape(track.name)}</h2>
+          <form id="track-form" class="section">
+            ${field('轨道名称', 'name', track.name, 'required maxlength="32"')}
+            <div class="actions">
+              <button type="submit">保存名称</button>
+              <button type="button" class="quiet danger" data-delete-track>删除轨道</button>
+            </div>
+          </form>
+          <div class="section">
+            <button type="button" class="primary" data-add-clip="${
+              track.id
+            }">＋ 添加片段</button>
+            <button type="button" data-add-track>＋ 添加动作轨</button>
+          </div>`
+          find('track-form').addEventListener('submit', (event) => {
+            event.preventDefault()
+            const name = new FormData(event.currentTarget).get('name').trim()
+            if (!name || name === track.name) return
+            const next = clone(state)
+            next.tracks.find((item) => item.id === track.id).name = name
+            commit(next, selection, '轨道名称已保存')
+          })
+          return
+        }
+      }
+
+      function getSelection() {
+        const track = trackById(selection.trackId)
+        return {
+          track,
+          clip: track?.clips.find((item) => item.id === selection.clipId),
+        }
+      }
+
+      function showDialog(markup, afterClose) {
+        pause()
+        const dialog = find('dialog')
+        dialogTrigger = document.activeElement
+        dialogAfterClose = afterClose
+        dialog.innerHTML = markup
+        dialog.showModal()
+        return dialog.querySelector('form')
+      }
+
+      function closeDialog(focusNext) {
+        if (focusNext) dialogTrigger = focusNext
+        find('dialog').close()
+      }
+
+      function addClipDialog(track) {
+        const start = Number(display(time))
+        const form = showDialog(`<form>
+        <h2 id="dialog-title">添加片段</h2>
+        <p class="muted">白模角色 / ${escape(track.name)}</p>
+        <label class="field">动作来源<select name="kind">
+          <option value="new">新建对象动作</option>
+          <option value="library">预设骨骼动作</option>
+          ${
+            state.actions.length
+              ? '<option value="existing">已有对象动作</option>'
+              : ''
+          }
+        </select></label>
+        <div id="source-fields"></div>
+        <div class="fields">
+          ${field(
+            '起点（秒）',
+            'start',
+            display(start),
+            'type="number" step="0.01" required',
+          )}
+          ${field(
+            '时长（秒）',
+            'clipDuration',
+            display(Math.min(1, duration - start)),
+            'type="number" step="0.01" required',
+          )}
+        </div>
+        <p class="error" role="alert" hidden></p>
+        <footer>
+          <button type="button" data-close>取消</button>
+          <button type="submit" class="primary">创建片段</button>
+        </footer>
+      </form>`)
+        const renderSourceFields = () => {
+          const kind = form.elements.kind.value
+          const fields = find('source-fields')
+          if (kind === 'new') {
+            fields.innerHTML = `${field(
+              '动作名称',
+              'name',
+              '入场',
+              'required maxlength="32"',
+            )}
+            <fieldset class="checks"><legend>控制的变换</legend>
+            ${Object.keys(base)
+              .map(
+                (channel) =>
+                  `<label><input type="checkbox" name="channel" value="${channel}" checked>${channelNames[channel]}</label>`,
+              )
+              .join('')}
+            </fieldset>`
+            form.elements.clipDuration.value = display(
+              Math.min(
+                1,
+                Math.max(0, duration - Number(form.elements.start.value)),
+              ),
+            )
+            return
+          }
+          const options =
+            kind === 'library'
+              ? Object.entries(presets).map(([key, action]) => ({
+                  id: key,
+                  ...action,
+                }))
+              : state.actions
+          fields.innerHTML = `<label class="field">选择动作<select name="source">
+          ${options
+            .map((action) => selectOption(action.id, action.name))
+            .join('')}
+        </select></label>`
+          const updateLength = () => {
+            form.elements.clipDuration.value = display(
+              options.find((action) => action.id === form.elements.source.value)
+                .duration,
+            )
+          }
+          form.elements.source.addEventListener('change', updateLength)
+          updateLength()
+        }
+        form.elements.kind.addEventListener('change', renderSourceFields)
+        form.addEventListener('input', () => showError(form, ''))
+        renderSourceFields()
+        form.addEventListener('submit', (event) => {
+          event.preventDefault()
+          const values = new FormData(form)
+          const kind = values.get('kind')
+          const next = clone(state)
+          const clip = {
+            id: id(),
+            kind: kind === 'library' ? 'library' : 'object',
+            sourceId: values.get('source'),
+            start: Number(values.get('start')),
+            in: 0,
+            out: Number(values.get('clipDuration')),
+          }
+          if (kind === 'new') {
+            const channels = values.getAll('channel')
+            if (!channels.length) return showError(form, '至少选择一项变换。')
+            const name = values.get('name').trim()
+            if (!name) return showError(form, '请填写动作名称。')
+            clip.sourceId = id()
+            const transform = frameAt(time).transform
+            next.actions.push({
+              id: clip.sourceId,
+              name,
+              duration: clip.out,
+              channels,
+              keys: [
+                {
+                  time: 0,
+                  values: Object.fromEntries(
+                    channels.map((key) => [key, transform[key]]),
+                  ),
+                },
+              ],
+            })
+          }
+          const target = next.tracks.find((item) => item.id === track.id)
+          const message = explainConflict(next, target, clip)
+          if (message) return showError(form, message)
+          target.clips.push(clip)
+          commit(
+            next,
+            {kind: 'clip', trackId: track.id, clipId: clip.id},
+            `已添加「${source(next, clip).name}」`,
+          )
+          closeDialog(find('tracks').querySelector(`[data-clip="${clip.id}"]`))
+        })
+      }
+
+      function beginRecording(clip) {
+        const original = source(state, clip)
+        if (!original.channels) return
+        pause()
+        const references = original.id
+          ? state.tracks
+              .flatMap((track) => track.clips)
+              .filter(
+                (item) => (item.actionId ?? item.sourceId) === original.id,
+              ).length
+          : 1
+        const {localTime, iteration} = localAt(clip, time)
+        recording = {
+          clip,
+          original,
+          action: clone(original),
+          references,
+          scope: 'clip',
+          sceneTime: time,
+          iteration,
+          useFrames: clip.kind === 'library',
+          localTime:
+            clip.kind === 'library'
+              ? Math.round(localTime * fps) / fps
+              : Number(display(localTime)),
+          channel: original.channels[0],
+          boneDetails: false,
+          draft: {},
+          viewport: null,
+        }
+        render()
+        find('recording-time').focus()
+        notify(
+          recording.useFrames
+            ? '拖动局部播放头预览动作，点「在视口摆姿」或直接双击模型调整当前帧。'
+            : '移动局部播放头，修改右侧数值后点菱形打点。',
+        )
+      }
+
+      const localValue = (seconds) =>
+        recording.useFrames
+          ? Math.round(seconds * fps)
+          : Number(display(seconds))
+      const localCaption = (seconds) =>
+        recording.useFrames
+          ? `第 ${localValue(seconds)} 帧`
+          : `${display(seconds)} 秒`
+
+      function keyAt(channel, localTime) {
+        return recording.action.keys.find(
+          (key) => key.time === localTime && key.values[channel],
+        )
+      }
+
+      function renderRecordingTimeline(syncTime = true) {
+        const {
+          action,
+          localTime,
+          clip,
+          channel,
+          viewport,
+          useFrames,
+          boneDetails,
+        } = recording
+        find('recording-title').textContent = `动作编辑 · ${
+          action.name || '对象动作'
+        }`
+        const position = (value) => (value / action.duration) * 100
+        const localInput = find('recording-time')
+        localInput.max = localValue(action.duration)
+        localInput.disabled = Boolean(viewport)
+        find('recording-time-label').textContent = useFrames
+          ? '局部帧'
+          : '局部时间（秒）'
+        find('recording-ruler-label').textContent = useFrames
+          ? '局部帧'
+          : '动作内时间'
+        find('previous-frame').hidden = !useFrames
+        find('next-frame').hidden = !useFrames
+        find('previous-frame').disabled = Boolean(viewport) || localTime <= 0
+        find('next-frame').disabled =
+          Boolean(viewport) || localTime >= action.duration
+        if (syncTime) localInput.value = localValue(localTime)
+        find('recording-ruler').innerHTML =
+          Array.from(
+            {length: 5},
+            (_, index) =>
+              `<span class="tick" style="left:${index * 25}%">${localValue(
+                (action.duration * index) / 4,
+              )}${useFrames ? '' : 's'}</span>`,
+          ).join('') + '<span class="needle"></span>'
+        const rows = useFrames
+          ? ['pose', ...(boneDetails ? [channel] : [])]
+          : action.channels
+        find('recording-channels').innerHTML = rows
+          .map((keyChannel) => {
+            const name =
+              keyChannel === 'pose' ? '姿势关键帧' : channelNames[keyChannel]
+            return `<div class="track-row">
+          <div class="track-head">${name}</div>
+          <div class="lane" data-recording-scrub>
+            <span class="clip-window" style="left:${position(
+              clip.in,
+            )}%;width:${position(clip.out - clip.in)}%"></span>
+            ${action.keys
+              .filter((key) => keyChannel === 'pose' || key.values[keyChannel])
+              .map(
+                (key) => `
+              <button type="button" class="quiet key-marker" data-key-channel="${keyChannel}" data-key-time="${
+                key.time
+              }"
+                style="--marker-position:${position(key.time)}%"
+                aria-label="${name} ${localCaption(
+                  key.time,
+                )}关键帧" title="${name} · ${localCaption(key.time)}" ${
+                  viewport ? 'disabled' : ''
+                }
+                aria-pressed="${
+                  (keyChannel === 'pose' || channel === keyChannel) &&
+                  localTime === key.time
+                }">◆</button>`,
+              )
+              .join('')}
+            <span class="needle"></span>
+          </div>
+        </div>`
+          })
+          .join('')
+      }
+
+      function renderRecordingInspector() {
+        const {
+          action,
+          localTime,
+          channel,
+          draft,
+          references,
+          scope,
+          useFrames,
+          sceneTime,
+          iteration,
+          clip,
+          viewport,
+          boneDetails,
+        } = recording
+        const values = {...sampleAction(action, localTime), ...draft}
+        find('inspector-header').innerHTML =
+          `<strong>动作编辑器</strong><span class="muted">场景第 ${Math.round(
+            sceneTime * fps,
+          )} 帧 · 第 ${iteration}/${repeats(clip)} 次循环</span>`
+        if (viewport) {
+          find('save-recording').disabled = true
+          find('cancel-recording').disabled = true
+          find('inspector').innerHTML =
+            `<p>拖动视口控制点调整当前帧姿势；记录时会一次写入实际变化的骨骼。</p>
+          <div class="actions section">
+            <button type="button" id="discard-viewport">放弃试摆</button>
+            <button type="button" id="record-viewport" class="primary">记录当前姿势</button>
+          </div>`
+          return
+        }
+        find('cancel-recording').disabled = false
+        find('inspector').innerHTML = `
+        ${
+          useFrames
+            ? `<div class="actions">
+          <button type="button" id="edit-viewport" class="primary">在视口摆姿</button>
+          <button type="button" id="toggle-bone-details" aria-expanded="${boneDetails}">骨骼明细</button></div>
+          ${
+            boneDetails
+              ? `<label class="field">骨骼<select id="recording-bone">${action.channels
+                  .map((bone) =>
+                    selectOption(bone, channelNames[bone], channel),
+                  )
+                  .join('')}</select></label>`
+              : ''
+          }`
+            : field(
+                '动作名称',
+                'recording-name',
+                action.name,
+                'id="recording-name" maxlength="32"',
+              )
+        }
+        ${
+          !useFrames || boneDetails
+            ? `<div class="section">
+          <h3>${useFrames ? '旋转（弧度）' : '变换'}</h3>
+          ${(useFrames ? [channel] : action.channels)
+            .map((keyChannel) => {
+              const name = channelNames[keyChannel]
+              const hasKey = Boolean(keyAt(keyChannel, localTime))
+              const operation = hasKey
+                ? `更新${localCaption(localTime)}`
+                : `在${localCaption(localTime)}打点`
+              return `<div class="key-field">
+              <div class="key-field-heading">
+                <h3>${name}</h3>
+                <button type="button" class="key-button" data-write-key="${keyChannel}" aria-pressed="${hasKey}"
+                  aria-label="${
+                    hasKey ? '更新' : '添加'
+                  }${name}关键帧"><span aria-hidden="true">${
+                    hasKey ? '◆' : '◇'
+                  }</span><span>${operation}</span></button>
+              </div>
+              <div class="fields axes">
+                ${['X', 'Y', 'Z']
+                  .map((axis, index) =>
+                    field(
+                      `${axis}${keyChannel === 'rotation' ? '（°）' : ''}`,
+                      `${keyChannel}-${index}`,
+                      display(values[keyChannel][index]),
+                      `id="recording-${keyChannel}-${index}" data-draft-channel="${keyChannel}" type="number" step="any" aria-label="${name} ${axis}"`,
+                    ),
+                  )
+                  .join('')}
+              </div>
+            </div>`
+            })
+            .join('')}
+          <p class="muted pending-caption" id="recording-draft-status" aria-live="polite"></p>
+          <div class="actions"><button id="recording-discard-draft" type="button" class="quiet">恢复试摆值</button></div>
+        </div>`
+            : ''
+        }
+        ${
+          (!useFrames || boneDetails) && keyAt(channel, localTime)
+            ? `<div class="section">
+          <h3>${channelNames[channel]}关键帧 · ${localCaption(localTime)}</h3>
+          ${field(
+            useFrames ? '关键帧帧号' : '移动到（秒）',
+            'key-destination',
+            localValue(localTime),
+            'id="key-destination" type="number" min="0" step="any"',
+          )}
+          <div class="actions">
+            <button type="button" id="move-key">移动关键帧</button>
+            <button type="button" id="delete-key" class="quiet danger"
+              ${
+                action.keys.filter((key) => key.values[channel]).length > 1
+                  ? ''
+                  : 'disabled title="每组变换至少保留一个关键帧"'
+              }>删除关键帧</button>
+          </div>
+        </div>`
+            : ''
+        }
+        ${
+          references > 1
+            ? `<div class="section">
+          <label class="field">保存范围 · ${references} 个片段共用
+            <select id="recording-scope">
+              ${selectOption('clip', '仅此片段（复制动作）', scope)}
+              ${selectOption('all', `全部 ${references} 个引用片段`, scope)}
+            </select>
+          </label>
+        </div>`
+            : ''
+        }
+        <p class="error" role="alert" hidden></p>`
+        updateDraftStatus()
+      }
+
+      function updateDraftStatus() {
+        const pending = Object.keys(recording.draft).map(
+          (channel) => channelNames[channel],
+        )
+        const caption = find('recording-draft-status')
+        if (caption)
+          caption.textContent = pending.length
+            ? `未打点 · ${pending.join('、')}`
+            : ''
+        const discard = find('recording-discard-draft')
+        if (discard) discard.hidden = !pending.length
+        find('save-recording').disabled = Boolean(pending.length)
+      }
+
+      function setRecordingTime(
+        value,
+        channel = recording.channel,
+        syncTime = true,
+      ) {
+        const {action, localTime} = recording
+        const clamped = Math.max(0, Math.min(action.duration, value))
+        const nextTime = recording.useFrames
+          ? Math.round(clamped * fps) / fps
+          : Number(display(clamped))
+        if (nextTime !== localTime && Object.keys(recording.draft).length) {
+          recording.draft = {}
+          notify('切换时间后已恢复未打点的试摆值。')
+        }
+        recording.localTime = nextTime
+        recording.channel = channel
+        renderRecordingTimeline(syncTime)
+        renderRecordingInspector()
+        drawFrame()
+      }
+
+      function putKey(channel, localTime, value) {
+        const {keys} = recording.action
+        const existing = keys.find((key) => key.time === localTime)
+        if (existing) {
+          existing.values[channel] = value
+          return
+        }
+        keys.push({time: localTime, values: {[channel]: value}})
+        keys.sort((left, right) => left.time - right.time)
+      }
+
+      function removeKey(channel, localTime) {
+        const key = keyAt(channel, localTime)
+        delete key.values[channel]
+        recording.action.keys = recording.action.keys.filter(
+          (item) => Object.keys(item.values).length,
+        )
+      }
+
+      function writeRecordingKey(channel) {
+        const {action, localTime, draft} = recording
+        const values =
+          draft[channel] ?? sampleAction(action, localTime)[channel]
+        if (!values.every(Number.isFinite))
+          return showError(find('inspector'), '请输入有效的 XYZ 数值再打点。')
+        const hasKey = Boolean(keyAt(channel, localTime))
+        putKey(channel, localTime, [...values])
+        delete draft[channel]
+        setRecordingTime(localTime, channel)
+        find('inspector').querySelector(`[data-write-key="${channel}"]`).focus()
+        notify(
+          `${localCaption(localTime)}${hasKey ? '已更新' : '已添加'}${
+            channelNames[channel]
+          }关键帧。`,
+        )
+      }
+
+      function moveRecordingKey() {
+        const {action, channel, localTime, draft} = recording
+        const destination = readLocalTime('key-destination', action.duration)
+        if (destination === null)
+          return showError(
+            find('inspector'),
+            `时间超出动作范围，终点为${localCaption(action.duration)}。`,
+          )
+        if (Object.keys(draft).length)
+          return showError(find('inspector'), '请先打点或恢复试摆值。')
+        if (destination === localTime) return
+        if (keyAt(channel, destination))
+          return showError(find('inspector'), '该通道在目标时间已有关键帧。')
+        const value = keyAt(channel, localTime).values[channel]
+        removeKey(channel, localTime)
+        putKey(channel, destination, value)
+        setRecordingTime(destination)
+        find('move-key').focus()
+        notify(`关键帧已移动到${localCaption(destination)}。`)
+      }
+
+      function readLocalTime(elementId, max) {
+        const input = find(elementId).valueAsNumber
+        const value = recording.useFrames ? input / fps : input
+        const epsilon = 0.000001
+        if (
+          !Number.isFinite(value) ||
+          value < -epsilon ||
+          value > max + epsilon
+        )
+          return null
+        return recording.useFrames
+          ? Math.round(Math.min(max, Math.max(0, value)) * fps) / fps
+          : Number(display(Math.min(max, Math.max(0, value))))
+      }
+
+      function changedRecording() {
+        return (
+          JSON.stringify(recording.action) !==
+          JSON.stringify(recording.original)
+        )
+      }
+
+      function leaveRecording(message, next) {
+        const {clip, sceneTime} = recording
+        recording = null
+        time = sceneTime
+        if (next) commit(next, selection, message)
+        else {
+          render()
+          notify(message)
+        }
+        find('tracks').querySelector(`[data-clip="${clip.id}"]`)?.focus()
+      }
+
+      function saveRecording() {
+        const {action, references, scope, draft, clip} = recording
+        if (Object.keys(draft).length)
+          return showError(
+            find('inspector'),
+            '请给修改的属性打点，或恢复试摆值。',
+          )
+        action.name = action.name.trim()
+        if (!action.name)
+          return showError(find('inspector'), '请填写动作名称。')
+        if (!changedRecording()) return leaveRecording('已返回动作时间轴。')
+        const next = clone(state)
+        if (!action.id || (references > 1 && scope === 'clip')) {
+          action.id = id()
+          const target = next.tracks
+            .flatMap((track) => track.clips)
+            .find((item) => item.id === clip.id)
+          if (target.kind === 'library') target.actionId = action.id
+          else target.sourceId = action.id
+          next.actions.push(action)
+        } else {
+          next.actions = next.actions.map((item) =>
+            item.id === action.id ? action : item,
+          )
+        }
+        leaveRecording('动作关键帧已保存。', next)
+      }
+
+      function cancelRecording() {
+        if (!changedRecording() && !Object.keys(recording.draft).length)
+          return leaveRecording('已返回动作时间轴。')
+        const form = showDialog(`<form>
+        <h2 id="dialog-title">放弃本次编辑？</h2>
+        <p>本次录制和试摆会一并清除。</p>
+        <footer>
+          <button type="button" data-close>继续编辑</button>
+          <button type="submit" class="danger">放弃并返回</button>
+        </footer>
+      </form>`)
+        form.addEventListener('submit', (event) => {
+          event.preventDefault()
+          closeDialog()
+          leaveRecording('已放弃本次编辑。')
+        })
+      }
+
+      function deleteTrack(track) {
+        const remove = () => {
+          const next = clone(state)
+          next.tracks = next.tracks.filter((item) => item.id !== track.id)
+          commit(next, {kind: 'object'}, `已删除「${track.name}」`)
+        }
+        if (!track.clips.length) {
+          remove()
+          return
+        }
+        const form = showDialog(`<form>
+        <h2 id="dialog-title">删除轨道</h2>
+        <p>「${escape(track.name)}」里的 ${
+          track.clips.length
+        } 个片段会一起移除。</p>
+        <footer><button type="button" data-close>取消</button><button type="submit" class="danger">删除轨道</button></footer>
+      </form>`)
+        form.addEventListener('submit', (event) => {
+          event.preventDefault()
+          remove()
+          closeDialog(find('object-add-track'))
+        })
+      }
+
+      function sampleAction(action, localTime) {
+        return Object.fromEntries(
+          action.channels.map((channel) => {
+            const keys = action.keys.filter((key) => key.values[channel])
+            const rightIndex = keys.findIndex((key) => key.time >= localTime)
+            if (rightIndex < 0) return [channel, keys.at(-1).values[channel]]
+            if (rightIndex === 0) return [channel, keys[0].values[channel]]
+            const left = keys[rightIndex - 1]
+            const right = keys[rightIndex]
+            const weight = (localTime - left.time) / (right.time - left.time)
+            const interpolated = left.values[channel].map((value, axis) => {
+              const delta = right.values[channel][axis] - value
+              const distance =
+                channel === 'rotation'
+                  ? ((((delta + 180) % 360) + 360) % 360) - 180
+                  : delta
+              return value + distance * weight
+            })
+            return [channel, interpolated]
+          }),
+        )
+      }
+
+      function frameAt(frameTime) {
+        const transform = {...base}
+        if (recording) {
+          const {action, localTime, draft, useFrames, viewport} = recording
+          const validDraft = Object.fromEntries(
+            Object.entries(draft).filter(([, values]) =>
+              values.every(Number.isFinite),
+            ),
+          )
+          const values = {...sampleAction(action, localTime), ...validDraft}
+          if (useFrames) {
+            return {
+              transform,
+              active: [],
+              motion: {
+                kind: 'walkCycle',
+                time: localTime,
+                leftArm: viewport?.leftArm ?? values.leftArm,
+                leftForearm: viewport?.leftForearm ?? values.leftForearm,
+              },
+            }
+          }
+          Object.assign(transform, values)
+          return {transform, active: [], motion: null}
+        }
+        const active = []
+        let motion = null
+        for (const track of state.tracks) {
+          const clip = track.clips.find(
+            (item) => item.start <= frameTime && frameTime < end(item),
+          )
+          if (!clip) continue
+          const {localTime} = localAt(clip, frameTime)
+          const action = source(state, clip)
+          active.push(action.name)
+          if (clip.kind === 'library')
+            motion = (() => {
+              const sampled = action.channels && sampleAction(action, localTime)
+              return {
+                kind: clip.sourceId,
+                time: localTime,
+                leftArm: sampled.leftArm,
+                leftForearm: sampled.leftForearm,
+              }
+            })()
+          else Object.assign(transform, sampleAction(action, localTime))
+        }
+        let path
+        if (state.path?.bound) {
+          const progress = pathDraft ?? pathProgressAt(state, frameTime)
+          const sample = pathSample(progress)
+          transform.position = sample.position
+          if (state.path.orient) transform.rotation = [0, sample.yaw, 0]
+          path = {...sample, progress}
+        }
+        return {transform, active, motion, path}
+      }
+
+      function writePathKey(value = pathDraft ?? pathProgressAt(state, time)) {
+        if (!state.path?.bound) return
+        const keyTime = Math.round(time * fps) / fps
+        const next = clone(state)
+        const existing = next.path.keys.find(
+          (key) => Math.abs(key.time - keyTime) < 1e-6,
+        )
+        if (existing) existing.value = value
+        else next.path.keys.push({time: keyTime, value})
+        next.path.keys.sort((left, right) => left.time - right.time)
+        pathDraft = null
+        commit(
+          next,
+          selection,
+          `${existing ? '已更新' : '已添加'}路径进度关键帧 · 第 ${Math.round(
+            keyTime * fps,
+          )} 帧`,
+        )
+      }
+
+      function drawFrame() {
+        find('time').textContent = `${time.toFixed(2)} s · 第 ${Math.round(
+          time * fps,
+        )} 帧`
+        find('seek').value = time
+        const playheadPercent = recording
+          ? recording.localTime / recording.action.duration
+          : time / duration
+        document.querySelectorAll('.needle').forEach((needle) => {
+          needle.style.left = `${playheadPercent * 100}%`
+        })
+        const frame = frameAt(time)
+        const pathLabel = frame.path
+          ? `路径 ${Math.round(
+              frame.path.progress,
+            )}% · ${frame.path.distance.toFixed(
+              2,
+            )} / ${state.path.length.toFixed(2)} m`
+          : ''
+        find('active-clips').textContent = recording
+          ? `动作预览 · ${localCaption(recording.localTime)}`
+          : [
+              frame.active.length
+                ? `当前片段 · ${frame.active.join(' + ')}`
+                : '',
+              pathLabel,
+            ]
+              .filter(Boolean)
+              .join(' · ')
+        const progressInput = find('path-progress')
+        if (progressInput && document.activeElement !== progressInput) {
+          progressInput.value = display(frame.path?.progress ?? 0)
+        }
+        const draftStatus = find('path-draft-status')
+        if (draftStatus) {
+          draftStatus.textContent =
+            pathDraft === null ? '' : `未打点 · 当前预览 ${display(pathDraft)}%`
+        }
+        const keyTime = Math.round(time * fps) / fps
+        document.querySelectorAll('[data-path-key-time]').forEach((marker) => {
+          marker.setAttribute(
+            'aria-pressed',
+            String(
+              Math.abs(Number(marker.dataset.pathKeyTime) - keyTime) < 1e-6,
+            ),
+          )
+        })
+        drawScene(frame)
+      }
+
+      function drawScene({transform, motion, path}) {
+        const canvas = find('scene')
+        const width = canvas.clientWidth
+        const height = canvas.clientHeight
+        if (!width || !height) return
+        const ratio = Math.min(window.devicePixelRatio || 1, 2)
+        if (
+          canvas.width !== Math.round(width * ratio) ||
+          canvas.height !== Math.round(height * ratio)
+        ) {
+          canvas.width = Math.round(width * ratio)
+          canvas.height = Math.round(height * ratio)
+        }
+        const context = canvas.getContext('2d')
+        context.setTransform(ratio, 0, 0, ratio, 0, 0)
+        const background = context.createRadialGradient(
+          width * 0.51,
+          height * 0.39,
+          8,
+          width * 0.5,
+          height * 0.54,
+          width * 0.64,
+        )
+        background.addColorStop(0, '#3a424e')
+        background.addColorStop(1, '#20252e')
+        context.fillStyle = background
+        context.fillRect(0, 0, width, height)
+        const viewScale = height * 0.25
+        const project = ([horizontal, elevation, depth]) => [
+          width * 0.5 + viewScale * (horizontal * 0.9 - depth * 0.49),
+          height * 0.77 -
+            viewScale * (elevation * 0.94 - horizontal * 0.2 - depth * 0.36),
+        ]
+        const polygon = (points, fill, stroke) => {
+          context.beginPath()
+          points.forEach((point, index) => {
+            const [screenX, screenY] = project(point)
+            if (index === 0) context.moveTo(screenX, screenY)
+            else context.lineTo(screenX, screenY)
+          })
+          if (fill) {
+            context.closePath()
+            context.fillStyle = fill
+            context.fill()
+          }
+          if (stroke) {
+            context.strokeStyle = stroke
+            context.stroke()
+          }
+        }
+        context.lineWidth = 1
+        for (let grid = -8; grid <= 8; grid++) {
+          polygon(
+            [
+              [grid, 0, -8],
+              [grid, 0, 8],
+            ],
+            null,
+            '#8593a52b',
+          )
+          polygon(
+            [
+              [-8, 0, grid],
+              [8, 0, grid],
+            ],
+            null,
+            '#8593a52b',
+          )
+        }
+        if (state.path?.bound) {
+          const radius = state.path.radius
+          const steps = 32
+          context.beginPath()
+          for (let index = 0; index <= steps; index++) {
+            const angle = ((index / steps) * Math.PI) / 2
+            const [screenX, screenY] = project([
+              radius * Math.cos(angle),
+              0.015,
+              radius * Math.sin(angle),
+            ])
+            if (index === 0) context.moveTo(screenX, screenY)
+            else context.lineTo(screenX, screenY)
+          }
+          context.setLineDash([7, 5])
+          context.lineWidth = 2
+          context.strokeStyle = '#bacaffb8'
+          context.stroke()
+          context.setLineDash([])
+          for (const [horizontal, , depth] of [
+            [radius, 0, 0],
+            [0, 0, radius],
+          ]) {
+            const [screenX, screenY] = project([horizontal, 0.02, depth])
+            context.beginPath()
+            context.arc(screenX, screenY, 3.5, 0, Math.PI * 2)
+            context.fillStyle = '#bacaff'
+            context.fill()
+          }
+          if (path) {
+            const [screenX, screenY] = project(path.position)
+            context.beginPath()
+            context.arc(screenX, screenY, 5, 0, Math.PI * 2)
+            context.fillStyle = '#b3e8d9'
+            context.fill()
+          }
+        }
+        const [offsetX, offsetY, offsetZ] = transform.position.map((value) =>
+          Math.max(-3, Math.min(3, value)),
+        )
+        const [shadowX, shadowY] = project([offsetX, 0.01, offsetZ])
+        context.beginPath()
+        context.ellipse(
+          shadowX,
+          shadowY + 2,
+          viewScale * 0.56,
+          viewScale * 0.17,
+          0.15,
+          0,
+          Math.PI * 2,
+        )
+        context.fillStyle = '#10141b85'
+        context.fill()
+        const radians = transform.rotation.map(
+          (angle) => (angle * Math.PI) / 180,
+        )
+        const rotatePair = (first, second, angle) => [
+          first * Math.cos(angle) - second * Math.sin(angle),
+          first * Math.sin(angle) + second * Math.cos(angle),
+        ]
+        const world = (point) => {
+          let [horizontal, elevation, depth] = point.map(
+            (value, index) => value * transform.scale[index],
+          )
+          ;[horizontal, elevation] = rotatePair(
+            horizontal,
+            elevation,
+            radians[2],
+          )
+          ;[depth, horizontal] = rotatePair(depth, horizontal, radians[1])
+          ;[elevation, depth] = rotatePair(elevation, depth, radians[0])
+          return [horizontal + offsetX, elevation + offsetY, depth + offsetZ]
+        }
+        const faces = []
+        const armPoint = (point, pivot, angle) => {
+          const [elevation, depth] = rotatePair(
+            point[1] - pivot[1],
+            point[2] - pivot[2],
+            angle,
+          )
+          return [point[0], elevation + pivot[1], depth + pivot[2]]
+        }
+        const box = (
+          center,
+          size,
+          angle = 0,
+          pivot = center,
+          bend = (point) => point,
+        ) => {
+          const vertices = [
+            [-1, -1, -1],
+            [1, -1, -1],
+            [1, 1, -1],
+            [-1, 1, -1],
+            [-1, -1, 1],
+            [1, -1, 1],
+            [1, 1, 1],
+            [-1, 1, 1],
+          ].map((signs) => {
+            const point = signs.map(
+              (sign, axis) => center[axis] + (sign * size[axis]) / 2,
+            )
+            return world(armPoint(bend(point), pivot, angle))
+          })
+          const surface = [
+            [0, 3, 2, 1],
+            [4, 5, 6, 7],
+            [0, 4, 7, 3],
+            [1, 2, 6, 5],
+            [3, 7, 6, 2],
+            [0, 1, 5, 4],
+          ]
+          surface.forEach((indices, index) => {
+            const points = indices.map((vertex) => vertices[vertex])
+            const outline = points.map(project)
+            const area = outline.reduce((sum, point, pointIndex) => {
+              const next = outline[(pointIndex + 1) % outline.length]
+              return sum + point[0] * next[1] - next[0] * point[1]
+            }, 0)
+            if (area <= 0) return
+            const depth = points.reduce(
+              (sum, point) =>
+                sum + point[0] * 0.49 + point[2] * 0.9 + point[1] * 0.42,
+              0,
+            )
+            faces.push({
+              points,
+              depth,
+              fill: [
+                '#dfe3e8',
+                '#e9ecf1',
+                '#b8c1cf',
+                '#b0bccd',
+                '#f8f8fb',
+                '#8d9caf',
+              ][index],
+            })
+          })
+        }
+        const walk =
+          motion?.kind === 'walkCycle'
+            ? Math.sin(
+                (motion.time / presets.walkCycle.duration) * 2 * Math.PI,
+              ) * 0.43
+            : motion?.kind === 'walk'
+              ? Math.sin(motion.time * Math.PI * 3.5) * 0.43
+              : 0
+        const wave =
+          motion?.kind === 'wave' ? 1.75 + Math.sin(motion.time * 9) * 0.25 : 0
+        box([0, 2.16, 0], [0.39, 0.44, 0.35])
+        box([0, 1.87, 0], [0.16, 0.18, 0.17])
+        box([0, 1.52, 0], [0.61, 0.6, 0.37])
+        box([0, 1.13, 0], [0.45, 0.24, 0.31])
+        for (const side of [-1, 1]) {
+          const legPivot = [side * 0.14, 1.04, 0]
+          const armPivot = [side * 0.4, 1.75, 0]
+          box([side * 0.14, 0.79, 0], [0.23, 0.52, 0.26], side * walk, legPivot)
+          box([side * 0.14, 0.32, 0], [0.2, 0.42, 0.23], side * walk, legPivot)
+          box(
+            [side * 0.14, 0.075, 0.07],
+            [0.23, 0.13, 0.4],
+            side * walk,
+            legPivot,
+          )
+          const shoulder =
+            side === 1 && motion?.leftArm ? motion.leftArm[0] * 0.6 : 0
+          const armAngle = side * -walk + (side === 1 ? wave : 0) + shoulder
+          const elbow = [side * 0.4, 1.34, 0]
+          const bend =
+            side === 1 && motion?.leftForearm
+              ? (point) => {
+                  const [pitch, yaw, roll] = motion.leftForearm
+                  let [horizontal, elevation, depth] = point.map(
+                    (value, axis) => value - elbow[axis],
+                  )
+                  ;[horizontal, elevation] = rotatePair(
+                    horizontal,
+                    elevation,
+                    roll,
+                  )
+                  ;[depth, horizontal] = rotatePair(depth, horizontal, yaw)
+                  ;[elevation, depth] = rotatePair(elevation, depth, pitch)
+                  return [
+                    horizontal + elbow[0],
+                    elevation + elbow[1],
+                    depth + elbow[2],
+                  ]
+                }
+              : undefined
+          box([side * 0.4, 1.52, 0], [0.19, 0.4, 0.22], armAngle, armPivot)
+          box(
+            [side * 0.4, 1.19, 0],
+            [0.17, 0.31, 0.2],
+            armAngle,
+            armPivot,
+            bend,
+          )
+          if (bend) {
+            const [horizontal, vertical] = project(
+              world(armPoint(bend([side * 0.4, 1.04, 0]), armPivot, armAngle)),
+            )
+            find('bone-control').style.left = `${horizontal}px`
+            find('bone-control').style.top = `${vertical}px`
+          }
+        }
+        for (const face of faces.sort(
+          (left, right) => left.depth - right.depth,
+        )) {
+          polygon(face.points, face.fill, '#657181')
+        }
+      }
+
+      function seek(nextTime) {
+        if (pathDraft !== null) pathDraft = null
+        time = Math.min(duration, Math.max(0, nextTime))
+        drawFrame()
+      }
+
+      function pause() {
+        if (playing !== null) cancelAnimationFrame(playing)
+        playing = null
+        find('play').textContent = '▷'
+        find('play').setAttribute('aria-label', '播放')
+      }
+
+      function togglePlayback() {
+        if (playing !== null) return pause()
+        if (time >= duration) seek(0)
+        const origin = performance.now() - time * 1000
+        const advance = (timestamp) => {
+          seek((timestamp - origin) / 1000)
+          if (time >= duration) pause()
+          else playing = requestAnimationFrame(advance)
+        }
+        playing = requestAnimationFrame(advance)
+        find('play').textContent = 'Ⅱ'
+        find('play').setAttribute('aria-label', '暂停')
+      }
+
+      function select(next) {
+        selection = next
+        const showTimelineInspector = selection.kind !== 'object'
+        find('timeline-shell').classList.toggle(
+          'no-inspector',
+          !showTimelineInspector,
+        )
+        find('timeline-sidebar').hidden = !showTimelineInspector
+        renderInspector()
+        document.querySelectorAll('[data-clip]').forEach((button) => {
+          button.setAttribute(
+            'aria-pressed',
+            String(button.dataset.clip === next.clipId),
+          )
+        })
+      }
+
+      find('ruler').innerHTML =
+        Array.from(
+          {length: duration + 1},
+          (_, index) =>
+            `<span class="tick" style="left:${
+              (index / duration) * 100
+            }%">${index}s</span>`,
+        ).join('') + '<span class="needle"></span>'
+      find('seek').addEventListener('input', (event) => {
+        pause()
+        seek(event.target.valueAsNumber)
+      })
+      find('play').addEventListener('click', togglePlayback)
+      find('undo').addEventListener('click', () =>
+        historyStep(past, future, '已撤销'),
+      )
+      find('redo').addEventListener('click', () =>
+        historyStep(future, past, '已重做'),
+      )
+      find('model').addEventListener('click', () => {
+        if (!recording) select({kind: 'object'})
+      })
+      find('model').addEventListener('dblclick', (event) => {
+        if (!recording || recording.viewport) return
+        event.preventDefault()
+        enterViewportPose()
+        notify('已从当前局部帧进入视口摆姿。')
+      })
+      find('model').addEventListener('contextmenu', (event) => {
+        event.preventDefault()
+        if (recording) return
+        select({kind: 'object'})
+        const menu = find('model-menu')
+        const bounds = event.currentTarget.getBoundingClientRect()
+        menu.hidden = false
+        menu.style.left = `${Math.max(
+          4,
+          Math.min(
+            bounds.width - menu.offsetWidth - 4,
+            event.clientX - bounds.left,
+          ),
+        )}px`
+        menu.style.top = `${Math.max(
+          4,
+          Math.min(
+            bounds.height - menu.offsetHeight - 4,
+            event.clientY - bounds.top,
+          ),
+        )}px`
+        menu.querySelector('button').focus()
+      })
+      find('dialog').addEventListener('close', () => {
+        dialogAfterClose?.()
+        dialogAfterClose = null
+        if (dialogTrigger?.isConnected) dialogTrigger.focus()
+      })
+      find('recording-time').addEventListener('input', () => {
+        const value = readLocalTime('recording-time', recording.action.duration)
+        if (value !== null && value !== recording.localTime)
+          setRecordingTime(value, recording.channel, false)
+      })
+      find('recording-time').addEventListener('change', (event) => {
+        event.target.value = localValue(recording.localTime)
+      })
+      find('previous-frame').addEventListener('click', () =>
+        setRecordingTime(recording.localTime - 1 / fps),
+      )
+      find('next-frame').addEventListener('click', () =>
+        setRecordingTime(recording.localTime + 1 / fps),
+      )
+      find('save-recording').addEventListener('click', saveRecording)
+      find('cancel-recording').addEventListener('click', cancelRecording)
+      find('recording-timeline').addEventListener('pointerdown', (event) => {
+        if (
+          recording.viewport ||
+          event.button !== 0 ||
+          event.target.closest('button')
+        )
+          return
+        const lane = event.target.closest('[data-recording-scrub]')
+        if (!lane) return
+        const bounds = lane.getBoundingClientRect()
+        const target = event.currentTarget
+        const scrub = (pointer) =>
+          setRecordingTime(
+            ((pointer.clientX - bounds.left) / bounds.width) *
+              recording.action.duration,
+          )
+        target.setPointerCapture(event.pointerId)
+        scrub(event)
+        target.addEventListener('pointermove', scrub)
+        target.addEventListener(
+          'lostpointercapture',
+          () => target.removeEventListener('pointermove', scrub),
+          {once: true},
+        )
+      })
+      find('recording-channels').addEventListener('click', (event) => {
+        const key = event.target.closest('[data-key-channel]')
+        if (!key) return
+        const {keyChannel, keyTime} = key.dataset
+        const nextChannel =
+          keyChannel === 'pose' ? recording.channel : keyChannel
+        setRecordingTime(Number(keyTime), nextChannel)
+        find(`recording-${nextChannel}-0`)?.focus({preventScroll: true})
+      })
+      find('bone-control').addEventListener('pointerdown', (event) => {
+        if (!recording?.viewport || event.button !== 0) return
+        const target = event.currentTarget
+        const startY = event.clientY
+        const startForearm = recording.viewport.leftForearm[0]
+        const startArm = recording.viewport.leftArm[0]
+        const move = (pointer) => {
+          const delta = (startY - pointer.clientY) * 0.015
+          recording.viewport.leftForearm[0] = startForearm + delta
+          recording.viewport.leftArm[0] = startArm + delta * 0.25
+          drawFrame()
+        }
+        target.setPointerCapture(event.pointerId)
+        target.addEventListener('pointermove', move)
+        target.addEventListener(
+          'lostpointercapture',
+          () => target.removeEventListener('pointermove', move),
+          {once: true},
+        )
+      })
+      function closeViewport(keep) {
+        if (keep) {
+          const {action, localTime, viewport} = recording
+          const before = sampleAction(action, localTime)
+          const changed = Object.entries(viewport).filter(([channel, values]) =>
+            values.some(
+              (value, index) => Math.abs(value - before[channel][index]) > 1e-5,
+            ),
+          )
+          for (const [channel, values] of changed)
+            putKey(channel, localTime, [...values])
+          recording.draft = {}
+          notify(
+            changed.length
+              ? `已记录 ${changed.length} 根骨骼到${localCaption(localTime)}。`
+              : '姿势没有变化。',
+          )
+        }
+        recording.viewport = null
+        render()
+        find('edit-viewport').focus()
+      }
+      function enterViewportPose() {
+        if (!recording || recording.viewport) return
+        const {action, localTime, draft} = recording
+        const sampled = sampleAction(action, localTime)
+        recording.viewport = {
+          leftArm: [...(draft.leftArm ?? sampled.leftArm)],
+          leftForearm: [...(draft.leftForearm ?? sampled.leftForearm)],
+        }
+        render()
+        find('bone-control').focus()
+      }
+      find('inspector').addEventListener('input', (event) => {
+        if (!recording) return
+        const {target} = event
+        const channel = target.dataset.draftChannel
+        if (channel) {
+          recording.draft[channel] = [0, 1, 2].map(
+            (index) => find(`recording-${channel}-${index}`).valueAsNumber,
+          )
+          updateDraftStatus()
+          showError(find('inspector'), '')
+          drawFrame()
+        }
+        if (target.id === 'recording-name') {
+          recording.action.name = target.value
+          find('recording-title').textContent = `动作编辑 · ${
+            target.value || '对象动作'
+          }`
+        }
+      })
+      find('inspector').addEventListener('change', (event) => {
+        if (recording && event.target.id === 'recording-scope')
+          recording.scope = event.target.value
+        if (recording && event.target.id === 'recording-bone') {
+          recording.channel = event.target.value
+          renderRecordingTimeline(false)
+          renderRecordingInspector()
+          drawFrame()
+        }
+      })
+      find('tracks').addEventListener('input', (event) => {
+        if (event.target.id !== 'path-progress' || recording) return
+        const value = Number(event.target.value)
+        if (!Number.isFinite(value)) return
+        pathDraft = Math.max(0, Math.min(100, value))
+        drawFrame()
+      })
+      find('object-inspector').addEventListener('change', (event) => {
+        if (
+          event.target.id !== 'path-orient' ||
+          !state.path?.bound ||
+          recording
+        )
+          return
+        const next = clone(state)
+        next.path.orient = event.target.checked
+        commit(
+          next,
+          {kind: 'object'},
+          next.path.orient
+            ? '已开启沿路径转向'
+            : '已关闭沿路径转向，保持原朝向',
+        )
+      })
+      document.addEventListener('click', (event) => {
+        const button = event.target.closest('button')
+        if (!event.target.closest('.add-track-wrap')) closeAddTrackMenu()
+        if (!event.target.closest('#model-menu'))
+          find('model-menu').hidden = true
+        if (!button) return
+        if (button.hasAttribute('data-close')) closeDialog()
+        if (recording) {
+          if (button.id === 'edit-viewport') {
+            return enterViewportPose()
+          }
+          if (button.id === 'toggle-bone-details') {
+            recording.boneDetails = !recording.boneDetails
+            render()
+            find('toggle-bone-details').focus()
+            return
+          }
+          if (button.id === 'record-viewport') return closeViewport(true)
+          if (button.id === 'discard-viewport') return closeViewport(false)
+          const channel = button.dataset.writeKey
+          if (channel) writeRecordingKey(channel)
+          if (button.id === 'move-key') moveRecordingKey()
+          if (button.id === 'recording-discard-draft') {
+            recording.draft = {}
+            setRecordingTime(recording.localTime)
+            find('recording-time').focus()
+          }
+          if (button.id === 'delete-key' && !button.disabled) {
+            const {channel: selectedChannel, localTime} = recording
+            if (Object.keys(recording.draft).length)
+              return showError(find('inspector'), '请先打点或恢复试摆值。')
+            removeKey(selectedChannel, localTime)
+            setRecordingTime(localTime)
+            find('inspector')
+              .querySelector(`[data-write-key="${selectedChannel}"]`)
+              .focus()
+            notify('关键帧已删除。')
+          }
+          return
+        }
+        if (button.dataset.pathKeyTime !== undefined) {
+          seek(Number(button.dataset.pathKeyTime))
+          return
+        }
+        if (button.hasAttribute('data-write-path-key')) {
+          writePathKey()
+          return
+        }
+        if (button.hasAttribute('data-bind-path')) {
+          const next = clone(state)
+          next.path.bound = true
+          next.path.progress = pathProgressAt(next, time)
+          pathDraft = null
+          commit(next, {kind: 'object'}, '已绑定 90° 圆弧路径')
+          return
+        }
+        if (button.hasAttribute('data-unbind-path')) {
+          const next = clone(state)
+          next.path.bound = false
+          pathDraft = null
+          commit(next, {kind: 'object'}, '已解除路径，位置关键帧恢复生效')
+          return
+        }
+        if (button.hasAttribute('data-object')) {
+          select({kind: 'object'})
+          find('object-add-track').focus()
+        }
+        if (button.id === 'timeline-add-track') {
+          toggleAddTrackMenu()
+          return
+        }
+        if (button.dataset.addTrackKind) {
+          closeAddTrackMenu()
+          addTrack(button.dataset.addTrackKind)
+          return
+        }
+        if (button.hasAttribute('data-add-track')) {
+          find('model-menu').hidden = true
+          addTrack()
+        }
+        if (button.dataset.track)
+          select({kind: 'track', trackId: button.dataset.track})
+        if (button.dataset.addClip)
+          addClipDialog(trackById(button.dataset.addClip))
+        if (button.dataset.clip)
+          select({
+            kind: 'clip',
+            trackId: button.dataset.clipTrack,
+            clipId: button.dataset.clip,
+          })
+        if (button.hasAttribute('data-edit-action'))
+          beginRecording(getSelection().clip)
+        if (button.hasAttribute('data-delete-track'))
+          deleteTrack(getSelection().track)
+        if (button.hasAttribute('data-delete-clip')) {
+          const {track, clip} = getSelection()
+          const next = clone(state)
+          next.tracks.find((item) => item.id === track.id).clips =
+            track.clips.filter((item) => item.id !== clip.id)
+          commit(next, {kind: 'track', trackId: track.id}, '片段已删除')
+          find(`add-clip-${track.id}`).focus()
+        }
+      })
+      document.addEventListener('keydown', (event) => {
+        if (event.key !== 'Escape') return
+        closeAddTrackMenu()
+        find('timeline-add-track').focus()
+      })
+      find('tracks').addEventListener('dblclick', (event) => {
+        const button = event.target.closest('[data-clip]')
+        if (!button) return
+        select({
+          kind: 'clip',
+          trackId: button.dataset.clipTrack,
+          clipId: button.dataset.clip,
+        })
+        beginRecording(getSelection().clip)
+      })
+      document.addEventListener('keydown', (event) => {
+        if (find('dialog').open) return
+        if (recording) {
+          if (recording.viewport && event.key === 'Escape')
+            return closeViewport(false)
+          if (event.key === 'Escape') cancelRecording()
+          return
+        }
+        if (event.key === 'Escape' && !find('model-menu').hidden) {
+          find('model-menu').hidden = true
+          find('model').focus()
+        }
+        if (event.target.closest('input, select, textarea')) return
+        if (
+          (event.metaKey || event.ctrlKey) &&
+          event.key.toLowerCase() === 'z'
+        ) {
+          event.preventDefault()
+          if (event.shiftKey) historyStep(future, past, '已重做')
+          else historyStep(past, future, '已撤销')
+        }
+      })
+      document.addEventListener('pointerdown', (event) => {
+        if (recording || event.button !== 0) return
+        const pathLane = event.target.closest('[data-path-lane]')
+        if (pathLane && !event.target.closest('[data-path-key-time]')) {
+          const bounds = pathLane.getBoundingClientRect()
+          pause()
+          const scrub = (pointer) =>
+            seek(((pointer.clientX - bounds.left) / bounds.width) * duration)
+          pathLane.setPointerCapture(event.pointerId)
+          scrub(event)
+          pathLane.addEventListener('pointermove', scrub)
+          pathLane.addEventListener(
+            'lostpointercapture',
+            () => pathLane.removeEventListener('pointermove', scrub),
+            {once: true},
+          )
+          return
+        }
+        const button = event.target.closest('[data-clip]')
+        const lane = event.target.closest('[data-lane], #ruler')
+        if (!lane) return
+        const bounds = lane.getBoundingClientRect()
+        pause()
+        if (!button) {
+          const scrub = (pointer) =>
+            seek(((pointer.clientX - bounds.left) / bounds.width) * duration)
+          lane.setPointerCapture(event.pointerId)
+          scrub(event)
+          lane.addEventListener('pointermove', scrub)
+          lane.addEventListener(
+            'lostpointercapture',
+            () => lane.removeEventListener('pointermove', scrub),
+            {once: true},
+          )
+          return
+        }
+        const track = trackById(button.dataset.clipTrack)
+        const clip = track.clips.find((item) => item.id === button.dataset.clip)
+        const nextSelection = {kind: 'clip', trackId: track.id, clipId: clip.id}
+        button.setPointerCapture(event.pointerId)
+        const guide = document.createElement('span')
+        guide.className = 'snap-guide'
+        guide.hidden = true
+        lane.append(guide)
+        let candidate = null
+        const move = (pointer) => {
+          const delta = pointer.clientX - event.clientX
+          if (candidate === null && Math.abs(delta) < 4) return
+          let start = clip.start + (delta / bounds.width) * duration
+          const length = end(clip) - clip.start
+          const edges = [
+            0,
+            time,
+            duration,
+            ...state.tracks.flatMap((item) =>
+              item.clips
+                .filter((other) => other.id !== clip.id)
+                .flatMap((other) => [other.start, end(other)]),
+            ),
+          ]
+          const nearby = edges
+            .flatMap((edge) => [
+              {edge, start: edge},
+              {edge, start: edge - length},
+            ])
+            .filter(
+              (snap) => snap.start >= 0 && snap.start + length <= duration,
+            )
+            .sort(
+              (left, right) =>
+                Math.abs(left.start - start) - Math.abs(right.start - start),
+            )[0]
+          const snapped =
+            nearby &&
+            (Math.abs(nearby.start - start) * bounds.width) / duration <= 7
+          start = snapped ? nearby.start : Math.round(start * 10) / 10
+          start = Math.min(duration - length, Math.max(0, start))
+          const updated = {...clip, start}
+          candidate = {updated, message: explainConflict(state, track, updated)}
+          button.style.left = `${(start / duration) * 100}%`
+          button.classList.toggle('invalid', Boolean(candidate.message))
+          guide.hidden = !snapped || Boolean(candidate.message)
+          if (!guide.hidden)
+            guide.style.left = `${(nearby.edge / duration) * 100}%`
+          notify(
+            candidate.message ||
+              `移到 ${display(start)}–${display(end(updated))} 秒`,
+          )
+        }
+        const listeners = new AbortController()
+        listeners.signal.addEventListener('abort', () => guide.remove(), {
+          once: true,
+        })
+        button.addEventListener('pointermove', move, {signal: listeners.signal})
+        button.addEventListener('lostpointercapture', () => listeners.abort(), {
+          signal: listeners.signal,
+        })
+        button.addEventListener(
+          'pointercancel',
+          () => {
+            candidate = null
+            button.style.left = `${(clip.start / duration) * 100}%`
+            button.classList.remove('invalid')
+            listeners.abort()
+          },
+          {signal: listeners.signal},
+        )
+        button.addEventListener(
+          'pointerup',
+          () => {
+            listeners.abort()
+            if (!candidate) return
+            if (candidate.message || candidate.updated.start === clip.start) {
+              button.style.left = `${(clip.start / duration) * 100}%`
+              button.classList.remove('invalid')
+              return
+            }
+            const next = clone(state)
+            next.tracks.find((item) => item.id === track.id).clips =
+              track.clips.map((item) =>
+                item.id === clip.id ? candidate.updated : item,
+              )
+            commit(next, nextSelection, '已移动片段')
+            find('tracks').querySelector(`[data-clip="${clip.id}"]`)?.focus()
+          },
+          {signal: listeners.signal},
+        )
+      })
+      new ResizeObserver(drawFrame).observe(find('model'))
+      const demo = new URLSearchParams(location.search).get('demo')
+      if (demo === 'walk') {
+        const clip = {
+          id: id(),
+          kind: 'library',
+          sourceId: 'walkCycle',
+          start: 1 / fps,
+          in: 0,
+          out: presets.walkCycle.duration,
+          repeat: 5,
+        }
+        const track = {id: id(), name: '骨骼动作轨 1', clips: [clip]}
+        state = {tracks: [track], actions: []}
+        selection = {kind: 'clip', trackId: track.id, clipId: clip.id}
+        time = 73 / fps
+        render()
+      } else if (demo === 'path') {
+        const clip = {
+          id: id(),
+          kind: 'library',
+          sourceId: 'walkCycle',
+          start: 1 / fps,
+          in: 0,
+          out: presets.walkCycle.duration,
+          repeat: 5,
+        }
+        const track = {id: id(), name: '骨骼动作轨 1', clips: [clip]}
+        const radius = 3.18
+        const length = (radius * Math.PI) / 2
+        const start = 1 / fps
+        const endTime = start + presets.walkCycle.duration * 5
+        state = {
+          tracks: [track],
+          actions: [],
+          path: {
+            bound: true,
+            orient: true,
+            radius,
+            length,
+            progress: 0,
+            keys: [
+              {time: start, value: 0},
+              {time: (start + endTime) / 2, value: 50},
+              {time: endTime, value: 100},
+            ],
+          },
+        }
+        selection = {kind: 'object'}
+        time = (start + endTime) / 2
+        render()
+      } else if (demo === 'keyframes') {
+        const action = {
+          id: id(),
+          name: '入场',
+          duration: 3,
+          channels: Object.keys(base),
+          keys: [
+            {time: 0, values: clone(base)},
+            {
+              time: 3,
+              values: {
+                position: [2, 0, 0],
+                rotation: [0, 45, 0],
+                scale: [1.3, 1.3, 1.3],
+              },
+            },
+          ],
+        }
+        const clip = {
+          id: id(),
+          kind: 'object',
+          sourceId: action.id,
+          start: 0,
+          in: 0,
+          out: 3,
+        }
+        const track = {id: id(), name: '动作 1', clips: [clip]}
+        const walking = {
+          id: id(),
+          kind: 'library',
+          sourceId: 'walk',
+          start: 0,
+          in: 0,
+          out: 3,
+        }
+        state = {
+          tracks: [track, {id: id(), name: '动作 2', clips: [walking]}],
+          actions: [action],
+        }
+        selection = {kind: 'clip', trackId: track.id, clipId: clip.id}
+        time = 1.5
+        beginRecording(clip)
+      } else {
+        render()
+      }
+    </script>
+  </body>
+</html>

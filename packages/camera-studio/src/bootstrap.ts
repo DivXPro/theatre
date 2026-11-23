@@ -44,7 +44,10 @@ import type {LibrarySource} from './assetLibrary/source'
 import {cleanupLegacySeeds} from './assetLibrary/legacySeedCleanup'
 import {setUiConfig} from './uiConfig'
 import {mountStudioRootWhenReady} from './studioRoot'
-import PosePropEditor from './poseMode/PosePropEditor'
+import {
+  DefaultPosePropEditor,
+  ScenePosePropEditor,
+} from './poseMode/PosePropEditor'
 import {
   GesturePropEditorLeft,
   GesturePropEditorRight,
@@ -422,6 +425,7 @@ async function boot(config: CameraStudioConfig): Promise<BootCtx> {
     config,
     library,
     unregisterEditors: () => {
+      unregisterCustomPropEditor('defaultPose')
       unregisterCustomPropEditor('pose')
       unregisterCustomPropEditor('gestureL')
       unregisterCustomPropEditor('gestureR')
@@ -460,7 +464,8 @@ function withStudioUi(fn: (ui: IStudioUI) => void): Promise<void> {
 function acquireSession(ctx: BootCtx): void {
   if (sessionTeardown) return
   // 姿势/手势属性编辑器注册(自 App.tsx 挪来,与库生命周期对齐)
-  registerCustomPropEditor('pose', PosePropEditor)
+  registerCustomPropEditor('defaultPose', DefaultPosePropEditor)
+  registerCustomPropEditor('pose', ScenePosePropEditor)
   registerCustomPropEditor('gestureL', GesturePropEditorLeft)
   registerCustomPropEditor('gestureR', GesturePropEditorRight)
   // Agent JS API 会话(Task 15,spec §7):每次挂载新建 runtime——

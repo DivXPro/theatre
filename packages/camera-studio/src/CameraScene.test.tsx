@@ -105,7 +105,8 @@ jest.doMock('./PlacementManager', () => ({
   useGizmoMode: () => ['translate', noop],
   usePlacementController: () => ({
     placing: null,
-    pendingEntry: null,
+    getPlacing: () => null,
+    pendingEntries: [],
     startPlacingFromLibrary: async () => {},
     placeLibraryEntryAt: noop,
     cancelPlacing: noop,

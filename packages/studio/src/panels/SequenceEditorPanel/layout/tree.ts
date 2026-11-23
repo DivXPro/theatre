@@ -16,7 +16,7 @@ import logger from '@dreamerbird/utils/logger'
 import {titleBarHeight} from '@dreamerbird/studio/panels/BasePanel/common'
 import type {Studio} from '@dreamerbird/studio/Studio'
 import type {SequenceTrackId} from '@dreamerbird/core/types/public'
-import {getAdditionalSequenceRow} from '@dreamerbird/studio/panels/SequenceEditorPanel/additionalRows'
+import {getAdditionalSequenceRows} from '@dreamerbird/studio/panels/SequenceEditorPanel/additionalRows'
 import type {AdditionalSequenceRow} from '@dreamerbird/studio/panels/SequenceEditorPanel/additionalRows'
 
 /**
@@ -68,9 +68,9 @@ export type SequenceEditorTree_SheetObject =
     children: Array<
       SequenceEditorTree_PropWithChildren | SequenceEditorTree_PrimitiveProp
     >
-    additionalRow?: SequenceEditorTree_Row<'additional'> & {
-      content: AdditionalSequenceRow
-    }
+    additionalRows: Array<
+      SequenceEditorTree_Row<'additional'> & {content: AdditionalSequenceRow}
+    >
   }
 
 export type SequenceEditorTree_PropWithChildren =
@@ -163,8 +163,9 @@ export const calculateSequenceEditorTree = (
     )
     const objectConfig = val(sheetObject.template.configPointer)
 
-    const additional = getAdditionalSequenceRow(sheetObject.publicApi)
-    if (Object.keys(trackSetups).length === 0 && !additional) return
+    const additionalRows = getAdditionalSequenceRows(sheetObject.publicApi)
+    if (Object.keys(trackSetups).length === 0 && additionalRows.length === 0)
+      return
 
     const isCollapsedP =
       collapsableItemSetP.byId[
@@ -179,6 +180,7 @@ export const calculateSequenceEditorTree = (
       shouldRender,
       top: topSoFar,
       children: [],
+      additionalRows: [],
       depth: level,
       n: nSoFar,
       sheetObject: sheetObject,
@@ -204,22 +206,23 @@ export const calculateSequenceEditorTree = (
       shouldRender && !isCollapsed,
     )
 
-    if (additional) {
-      const visible = shouldRender && !isCollapsed
-      const height = visible ? HEIGHT_OF_ANY_TITLE : 0
-      row.additionalRow = {
+    const visible = shouldRender && !isCollapsed
+    for (const additional of additionalRows) {
+      const rowIsVisible = visible && (additional.isHeaderVisible?.() ?? true)
+      const height = rowIsVisible ? HEIGHT_OF_ANY_TITLE : 0
+      row.additionalRows.push({
         type: 'additional',
         content: additional,
         sheetItemKey: createStudioSheetItemKey.forSheetObjectProp(sheetObject, [
           additional.id,
         ]),
-        shouldRender: visible,
+        shouldRender: rowIsVisible,
         top: topSoFar,
         depth: level + 1,
         n: nSoFar,
         nodeHeight: height,
         heightIncludingChildren: height,
-      }
+      })
       if (visible) {
         nSoFar += 1
         topSoFar += height

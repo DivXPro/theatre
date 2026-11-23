@@ -198,7 +198,7 @@ export function createMaterialOverridesConfig(slots: MaterialSlot[]) {
         }),
       ]),
     ),
-    {label: 'Materials'},
+    {label: 'Materials', hidden: true},
   )
   configCache.set(slots, config)
   return config

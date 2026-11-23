@@ -145,8 +145,12 @@ const BasePanel: React.FC<{
       bottom = windowSize.height
     }
 
-    const width = Math.max(right - left, minDims.width)
-    const height = Math.max(bottom - top, minDims.height)
+    const width =
+      docked === 'bottom' ? right - left : Math.max(right - left, minDims.width)
+    const height =
+      docked === 'bottom'
+        ? bottom - top
+        : Math.max(bottom - top, minDims.height)
 
     // memo-ing dims so its ref can be used as a cache key
     const dims = prism.memo(

@@ -2,6 +2,9 @@
 import {
   enterPoseSession,
   getPoseSession,
+  enterDraftPoseSession,
+  requestPoseCancel,
+  requestPoseSave,
   clearPoseSession,
   clearPoseSessionIfCurrent,
   requestPoseExit,
@@ -198,4 +201,54 @@ test('非当前会话 key 写入帧信息被忽略(A→B 切换防护)', () => {
   setPoseSessionFrame('kA', {mode: 'edit', position: 2})
   expect(getPoseSessionFrame()).toBe(null)
   clearPoseSession()
+})
+test('switching the same character from static to scene ends the static session', () => {
+  const exit = jest.fn()
+  enterPoseSession('m1', 'static')
+  expect(getPoseSession()).toMatchObject({key: 'm1', target: 'static'})
+  const unsubscribe = onPoseExitRequested(exit)
+  try {
+    enterPoseSession('m1', 'scene')
+    expect(exit).toHaveBeenCalledWith('m1')
+    expect(getPoseSession()).toMatchObject({key: 'm1', target: 'scene'})
+  } finally {
+    unsubscribe()
+    clearPoseSession()
+  }
+})
+
+test('save and cancel signal different outcomes to the mounted rig', () => {
+  const exit = jest.fn()
+  const unsubscribe = onPoseExitRequested(exit)
+  try {
+    enterPoseSession('m1', 'static')
+    requestPoseSave()
+    expect(exit).toHaveBeenLastCalledWith('m1', 'save')
+    expect(getPoseSession()).toBeNull()
+
+    enterPoseSession('m1', 'scene')
+    requestPoseCancel()
+    expect(exit).toHaveBeenLastCalledWith('m1', 'cancel')
+    expect(getPoseSession()).toBeNull()
+  } finally {
+    unsubscribe()
+  }
+})
+
+test('an action draft session carries its own preview and capture callbacks', () => {
+  const draft = {applyPreview: jest.fn(), onCapture: jest.fn()}
+  enterDraftPoseSession('m1', draft)
+  expect(getPoseSession()).toMatchObject({key: 'm1', target: 'draft', draft})
+  expect(getPoseSessionFrame()).toBeNull()
+})
+
+test('a timeline entry can request its key position independently of the playhead', () => {
+  enterPoseSession('m1', 'scene', 3)
+  expect(getPoseSession()).toMatchObject({
+    key: 'm1',
+    target: 'scene',
+    position: 3,
+  })
+  enterPoseSession('m1', 'scene', 7)
+  expect(getPoseSession()).toMatchObject({position: 7})
 })

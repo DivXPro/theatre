@@ -1,10 +1,10 @@
-import {useEffect, useState} from 'react'
+import {useEffect, useMemo, useState} from 'react'
 import {IndexedDBBackend} from './indexedDBBackend'
 import {isWritableSource, LibraryError} from './source'
 import type {LibrarySource, WritableLibrarySource} from './source'
 import {StaticCatalogSource} from './staticCatalogSource'
 import {seedAssetsManifest} from './seedAssetsManifest'
-import type {EntryKind, LibraryEntry, RigAlias} from './types'
+import type {AnimationEntry, EntryKind, LibraryEntry, RigAlias} from './types'
 
 export type LibraryOpts = {
   sources: LibrarySource[]
@@ -13,7 +13,7 @@ export type LibraryOpts = {
 }
 
 /** 内置目录条目的保留 id 前缀:出现在可写源即剔除并告警(内置数据只读) */
-const BUILTIN_ID_PREFIXES = ['seed-pose-', 'seed-model-']
+const BUILTIN_ID_PREFIXES = ['seed-pose-', 'seed-model-', 'seed-animation-']
 
 /** 内置骨架族(Mixamo 角色同一套骨骼命名)的默认别名 */
 export const SEED_RIG_ALIAS = 'Mixamo'
@@ -129,7 +129,8 @@ export class Library {
 
   /**
    * 聚合列条目:合并各源。同 id 先注册者胜并上告 conflict;
-   * 可写源里的内置前缀条目(seed-pose- 与 seed-model- 开头)剔除并上告
+   * 可写源里的内置前缀条目(seed-pose-/seed-model-/seed-animation- 开头)
+   * 剔除并上告
    * conflict——内置数据由内置目录源提供,可写源不得侵占其命名空间。
    *
    * 模型条目(kind 'model')额外按 contentHash 去重(2026-10-12 修复轮
@@ -486,6 +487,21 @@ export function useLibraryEntries(kind?: EntryKind): LibraryEntry[] {
     }
   }, [kind])
   return entries
+}
+
+export function useAnimationEntriesById(): ReadonlyMap<string, AnimationEntry> {
+  const entries = useLibraryEntries('animation')
+  return useMemo(() => {
+    const byId = new Map<string, AnimationEntry>()
+    for (const entry of entries) {
+      if (entry.kind !== 'animation') continue
+      byId.set(entry.id, entry)
+      for (const {id} of entry.aliases ?? []) {
+        if (!byId.has(id)) byId.set(id, entry)
+      }
+    }
+    return byId
+  }, [entries])
 }
 
 /** 订阅式读骨架族别名:rig → 名字;改名后自动刷新 */

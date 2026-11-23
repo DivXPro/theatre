@@ -24,6 +24,10 @@
  */
 import React, {useContext, useEffect, useMemo, useState} from 'react'
 import {createPortal} from 'react-dom'
+import styled from 'styled-components'
+import {val} from '@dreamerbird/core'
+import {privateAPI} from '@dreamerbird/core/privateAPIs'
+import {usePrism} from '@dreamerbird/react'
 import {useI18n} from '@dreamerbird/studio/i18n'
 import {PopoverAutoCloseLock} from '@dreamerbird/studio/uiComponents/Popover/usePopover'
 import type {PropTypeConfig_AllSimples} from '@dreamerbird/core/types/public'
@@ -32,7 +36,15 @@ import type {ISheetObject} from '@dreamerbird/core'
 import {getLibrary, useLibraryEntries} from '../assetLibrary/library'
 import {useModelThumbUrl} from '../assetLibrary/useModelThumbUrl'
 import type {PoseEntry} from '../assetLibrary/types'
-import {getPlacementEntryForObject} from '../PlacementManager'
+import {
+  getPlacementEntryForObject,
+  getPlacementInstanceForObject,
+} from '../PlacementManager'
+import {
+  evaluateStrips,
+  hasSkeletalStripLayer,
+  parseAnimationTracks,
+} from '../animationStrips/model'
 import {buildPoseOptions} from './poseOptions'
 import {poseDisplayText} from './poseDisplayText'
 import {poseEntryName} from '../poseNames'
@@ -41,12 +53,25 @@ import {isHandPoseEntry} from '../gestureProps'
 import {getRegisteredPicker} from '../pickerRegistry'
 import {PosePickerFrame} from './PosePickerFrame'
 import {getUiConfig} from '../uiConfig'
+import {resolveControlSpec} from './controlSpec'
+import {getScenePoseCoverage} from './poseFrame'
+import {
+  enterPoseSession,
+  requestPoseCancel,
+  requestPoseSave,
+  usePoseSession,
+} from './poseSession'
+import {
+  getPoseKeyframePositions,
+  resolveDefaultPose,
+  writeDefaultPose,
+} from './poseTrack'
+
+type EditorProps = ISimplePropEditorReactProps<PropTypeConfig_AllSimples>
 
 // 注册表组件按 AllSimples 声明(注册表对任意 simple 类型开放);
 // pose 属性实为 string,值在使用处收窄
-const PosePropEditor: React.FC<
-  ISimplePropEditorReactProps<PropTypeConfig_AllSimples>
-> = ({editingTools, value, obj}) => {
+const PosePropEditor: React.FC<EditorProps> = ({editingTools, value, obj}) => {
   const {t} = useI18n()
   const poseEntries = useLibraryEntries('pose') as PoseEntry[]
   // 内置姿势由 StaticCatalogSource 目录提供(2026-10-10 去播种),无需触发
@@ -72,9 +97,7 @@ const PosePropEditor: React.FC<
   >(undefined)
   useEffect(() => {
     let cancelled = false
-    const entry = obj
-      ? getPlacementEntryForObject(obj as unknown as ISheetObject)
-      : undefined
+    const entry = obj ? getPlacementEntryForObject(obj.publicApi) : undefined
     if (!entry?.libraryEntryId) {
       setRig(undefined)
       setModelEntry(undefined)
@@ -175,3 +198,209 @@ const PosePropEditor: React.FC<
 }
 
 export default PosePropEditor
+
+const PoseRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  width: 100%;
+  height: 100%;
+`
+
+const PoseStatus = styled.span`
+  min-width: 0;
+  color: var(--theatre-text-secondary, #b8b8b8);
+  font-size: 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`
+
+const PoseRowButton = styled.button`
+  flex: 0 0 auto;
+  padding: 2px 4px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  &:hover:not(:disabled),
+  &:focus-visible {
+    background: #ffffff14;
+    border-color: #ffffff26;
+  }
+  &:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+`
+
+function usePoseEditorPlacement(object?: ISheetObject<any>) {
+  const placement = object && getPlacementInstanceForObject(object)
+  const instance = placement?.instance
+  const supported = useMemo(
+    () => !!instance && resolveControlSpec(instance) !== null,
+    [instance],
+  )
+  return {key: placement?.entry.key, supported}
+}
+
+function isSkeletalAnimationAt(object: ISheetObject<any>, position: number) {
+  const state = parseAnimationTracks(
+    (val(object.props.animationTracks) as string) ?? '',
+  )
+  if (!hasSkeletalStripLayer(state)) return !!val(object.props.animation)
+  if (state.kind !== 'tracks') return false
+  const tracks = state.document.tracks.filter(
+    (track) => track.kind !== 'object',
+  )
+  return evaluateStrips({...state.document, tracks}, position * 1000).length > 0
+}
+
+export function DefaultPosePropEditor(props: EditorProps): React.ReactElement {
+  const {t} = useI18n()
+  const object = props.obj?.publicApi
+  const placement = usePoseEditorPlacement(object)
+  const session = usePoseSession()
+  const editing = session?.target === 'static' && session.key === placement.key
+  const value = usePrism(
+    () => (object ? resolveDefaultPose(object) : props.value),
+    [object, props.value],
+  )
+  const driven = usePrism(() => {
+    if (!object || !editing) return false
+    const position = val(object.sheet.sequence.pointer.position)
+    return (
+      getPoseKeyframePositions(object).length > 0 ||
+      isSkeletalAnimationAt(object, position)
+    )
+  }, [object, editing])
+  if (editing) {
+    return (
+      <PoseRow>
+        <PoseRowButton type="button" onClick={requestPoseSave}>
+          {t('pg.pose.saveDefault')}
+        </PoseRowButton>
+        <PoseRowButton type="button" onClick={requestPoseCancel}>
+          {t('pg.pose.cancelEdit')}
+        </PoseRowButton>
+        {driven && (
+          <PoseStatus role="status" title={t('pg.pose.animationDriven')}>
+            {t('pg.pose.animationDriven')}
+          </PoseStatus>
+        )}
+      </PoseRow>
+    )
+  }
+  return (
+    <PoseRow>
+      <PosePropEditor
+        {...props}
+        value={value}
+        editingTools={{
+          ...props.editingTools,
+          permanentlySetValue: (next) => {
+            if (object && typeof next === 'string')
+              writeDefaultPose(object, next)
+          },
+        }}
+      />
+      <PoseRowButton
+        type="button"
+        disabled={!placement.supported}
+        onClick={() => {
+          if (placement.key) enterPoseSession(placement.key, 'static')
+        }}
+      >
+        {t('pg.pose.editDefault')}
+      </PoseRowButton>
+    </PoseRow>
+  )
+}
+
+const coverageLabels = {
+  none: 'pg.pose.firstSceneKey',
+  key: 'pg.pose.sceneKey',
+  between: 'pg.pose.sceneBetween',
+  'hold-before': 'pg.pose.sceneHoldBefore',
+  'hold-after': 'pg.pose.sceneHoldAfter',
+} as const
+
+export function ScenePosePropEditor(
+  props: EditorProps & {keyframePosition?: number},
+): React.ReactElement {
+  if (!('type' in props.editingTools) && props.keyframePosition === undefined) {
+    return <PosePropEditor {...props} />
+  }
+  return <ScenePoseRow {...props} />
+}
+
+function ScenePoseRow({
+  obj,
+  keyframePosition,
+}: EditorProps & {keyframePosition?: number}): React.ReactElement {
+  const {t} = useI18n()
+  const object = obj?.publicApi
+  const placement = usePoseEditorPlacement(object)
+  const session = usePoseSession()
+  const {coverage, label} = usePrism(() => {
+    if (!object) return {coverage: 'none' as const, label: ''}
+    const sequence = object.sheet.sequence
+    const position =
+      keyframePosition ??
+      sequence.closestGridPosition(val(sequence.pointer.position))
+    return {
+      coverage: getScenePoseCoverage(
+        getPoseKeyframePositions(object),
+        position,
+      ),
+      label: privateAPI(sequence).positionFormatter.formatForPlayhead(position),
+    }
+  }, [object, keyframePosition])
+  const editing =
+    !!placement.key &&
+    session?.key === placement.key &&
+    (session.target ?? 'scene') === 'scene'
+  const isKey = coverage === 'key'
+  const action = t(isKey ? 'pg.pose.editFrame' : 'pg.pose.addKeyframe')
+  const status = t(coverageLabels[coverage])
+  const title =
+    coverage === 'none'
+      ? status
+      : `${status} · ${t('pg.pose.sceneOverridesAnimation')}`
+  return (
+    <PoseRow>
+      {editing ? (
+        <>
+          <PoseRowButton type="button" onClick={requestPoseSave}>
+            {t('pg.pose.saveScene')}
+          </PoseRowButton>
+          <PoseRowButton type="button" onClick={requestPoseCancel}>
+            {t('pg.pose.cancelEdit')}
+          </PoseRowButton>
+        </>
+      ) : (
+        <PoseRowButton
+          type="button"
+          data-testid="ScenePoseDiamond"
+          disabled={!placement.supported}
+          aria-label={action}
+          title={action}
+          onClick={() => {
+            if (placement.key)
+              enterPoseSession(placement.key, 'scene', keyframePosition)
+          }}
+        >
+          {isKey ? '◆' : '◇'}
+        </PoseRowButton>
+      )}
+      <PoseStatus data-coverage={coverage} title={title} aria-label={title}>
+        {label && `${label} · `}
+        {status}
+      </PoseStatus>
+    </PoseRow>
+  )
+}

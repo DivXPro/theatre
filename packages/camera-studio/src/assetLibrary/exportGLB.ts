@@ -2,6 +2,7 @@ import {Bone, Box3, Group, Vector3} from 'three'
 import type {AnimationClip, Mesh, Object3D, Texture} from 'three'
 import {GLTFExporter} from 'three-stdlib'
 import {compressGLBDraco} from './draco'
+import {measureMixamoCalibration} from './mixamoScale'
 
 /**
  * 场景单位 = 米(2026-10-21 起,替代此前「最长边统一拉成 5 单位」的
@@ -121,20 +122,43 @@ function exportGLB(
   })
 }
 
+/** 尺寸校准:标量为等比,三元组按根节点局部 X/Y/Z 非等比烘焙 */
+export type CalibrationScale = number | readonly [number, number, number]
+
 /** 模型入库:剥掉动画,只留网格+骨架+绑定姿势;几何走 Draco 压缩 */
-export function exportModelGLB(root: Object3D): Promise<ArrayBuffer> {
+export function exportModelGLB(
+  root: Object3D,
+  sourceUnit: 'auto' | 'meters' = 'auto',
+  calibrationScale: CalibrationScale = 1,
+): Promise<ArrayBuffer> {
   const stripped = stripInvalidTextures(root)
   if (stripped > 0) {
     console.warn(
       `[assetLibrary] ${stripped} 张贴图数据无效(源文件引用的贴图缺失或加载失败),已移除后继续导出,模型将以灰模/部分贴图入库`,
     )
   }
-  const factor = bakeMetricScale(root)
-  if (factor !== 1) {
-    console.info(
-      `[assetLibrary] 已把源尺寸换算成米烘进模型(系数 ${factor.toFixed(
-        4,
-      )}),放置时缩放基线为 1 = 真实大小`,
+  const mixamo = measureMixamoCalibration(root)
+  if (mixamo) {
+    root.scale.multiplyScalar(mixamo.scale)
+  } else if (sourceUnit === 'auto') {
+    const factor = bakeMetricScale(root)
+    if (factor !== SCENE_UNIT_METERS) {
+      console.info(
+        `[assetLibrary] 已把源尺寸换算成米烘进模型(系数 ${factor.toFixed(
+          4,
+        )}),放置时缩放基线为 1 = 真实大小`,
+      )
+    }
+  }
+  if (typeof calibrationScale === 'number') {
+    root.scale.multiplyScalar(calibrationScale)
+  } else {
+    root.scale.multiply(
+      new Vector3(
+        calibrationScale[0],
+        calibrationScale[1],
+        calibrationScale[2],
+      ),
     )
   }
   return exportGLB(root, []).then(compressGLBDraco)

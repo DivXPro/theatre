@@ -16,10 +16,23 @@ import type {ModelEntry} from './types'
 /**
  * 离屏渲染模型缩略图(128×128 PNG)。WebGL 上下文创建失败、
  * 解析失败等情况一律返回 undefined,调用方降级为图标占位。
+ *
+ * 串行执行:内置模型目录一次渲染几十张卡片(2026-11 起 64 个模型),
+ * 并发 new WebGLRenderer 会撞浏览器 WebGL 上下文数量上限,后建的
+ * 直接失败。排队逐个渲染,渲染完 forceContextLoss 立即归还上下文。
  */
-export async function renderThumbnail(
-  glb: ArrayBuffer,
-): Promise<Blob | undefined> {
+let renderQueue: Promise<unknown> = Promise.resolve()
+
+export function renderThumbnail(glb: ArrayBuffer): Promise<Blob | undefined> {
+  const run = renderQueue.then(
+    () => renderThumbnailNow(glb),
+    () => renderThumbnailNow(glb),
+  )
+  renderQueue = run.catch(() => undefined)
+  return run
+}
+
+async function renderThumbnailNow(glb: ArrayBuffer): Promise<Blob | undefined> {
   try {
     const canvas = document.createElement('canvas')
     canvas.width = 128
@@ -66,6 +79,7 @@ export async function renderThumbnail(
       )
     } finally {
       renderer.dispose()
+      renderer.forceContextLoss()
     }
   } catch {
     return undefined

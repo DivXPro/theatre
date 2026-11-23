@@ -13,7 +13,7 @@ export const createStudioSheetItemKey = {
   forSheet(): StudioSheetItemKey {
     return 'sheet' as StudioSheetItemKey
   },
-  forSheetObject(obj: SheetObject): StudioSheetItemKey {
+  forSheetObject(obj: Pick<SheetObject, 'address'>): StudioSheetItemKey {
     return stableValueHash({
       o: obj.address.objectKey,
     }) as StudioSheetItemKey

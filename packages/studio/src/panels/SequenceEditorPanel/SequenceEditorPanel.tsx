@@ -2,7 +2,7 @@ import {outlineSelection} from '@dreamerbird/studio/selectors'
 import {usePrism} from '@dreamerbird/react'
 import {valToAtom} from '@dreamerbird/utils/valToAtom'
 import {prism, val} from '@dreamerbird/dataverse'
-import React, {useState} from 'react'
+import React, {useEffect, useLayoutEffect, useState} from 'react'
 import styled from 'styled-components'
 
 import DopeSheet from './DopeSheet/DopeSheet'
@@ -27,7 +27,11 @@ import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
 import getStudio from '@dreamerbird/studio/getStudio'
 import type {UIPanelId} from '@dreamerbird/core/types/private'
 import {__private} from '@dreamerbird/core'
-import {getAdditionalSequenceRow} from './additionalRows'
+import {
+  getAdditionalSequenceRows,
+  getSequenceEditorView,
+  onRevealAdditionalSequenceRows,
+} from './additionalRows'
 const {isSheet, isSheetObject} = __private.instanceTypes
 
 const Container = styled(PanelWrapper)`
@@ -47,12 +51,35 @@ const LeftBackground = styled.div`
 
 // 工具条之下是原布局的全部内容:内部组件都按绝对定位排,套一层偏移容器
 // 就不用动 tree/layout 里那套纵向坐标
-const ContentBody = styled.div`
+const ContentBody = styled.div<{$sidebarWidth: number; $offset?: number}>`
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
-  top: ${transportBarHeight}px;
+  top: ${({$offset = transportBarHeight}) => $offset}px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) ${({$sidebarWidth}) => $sidebarWidth}px;
+`
+
+const TimelineArea = styled.div`
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+`
+
+const EditorTimelineArea = styled(TimelineArea)`
+  overflow: auto;
+  overscroll-behavior: contain;
+  background: var(--theatre-panel-bg-99);
+`
+
+const TimelineSidebar = styled.aside`
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  background: var(--theatre-panel-bg-99);
+  border-left: 1px solid var(--theatre-panel-border, #555);
 `
 
 // 收拢后的停靠条:贴屏幕底边撑满,只剩一行工具条
@@ -135,22 +162,38 @@ function useHasAnyTracks(sheet: Sheet | undefined): boolean {
         obj.template.getMapOfValidSequenceTracks_forStudio(),
       )
       if (Object.keys(trackSetups).length > 0) return true
-      if (getAdditionalSequenceRow(obj.publicApi)?.hasContent()) return true
+      if (
+        getAdditionalSequenceRows(obj.publicApi).some(
+          (row) => row.countsAsTrack !== false && (row.hasContent?.() ?? true),
+        )
+      )
+        return true
     }
     return false
   }, [sheet])
 }
 
-const SequenceEditorPanel: React.FC<{}> = (props) => {
+const SequenceEditorPanel: React.FC<{
+  onDockTopChange?: (top: number | undefined) => void
+}> = ({onDockTopChange}) => {
   // 收拢状态只是临时 UI 态,不进历史(不想产生撤销步)、不持久化。
   // null = 用户没手动切换过,跟随默认:没有任何关键帧轨道时收拢,有轨道时展开;
   // 一旦用户点过收拢/展开按钮,就以用户的选择为准
   const [collapsedOverride, setCollapsedOverride] = useState<boolean | null>(
     null,
   )
+  useEffect(
+    () => onRevealAdditionalSequenceRows(() => setCollapsedOverride(false)),
+    [],
+  )
   const sheet = useSelectedSheet()
   const hasAnyTracks = useHasAnyTracks(sheet)
-  const collapsed = collapsedOverride ?? !hasAnyTracks
+  const editorView = usePrism(
+    () =>
+      sheet ? getSequenceEditorView(sheet.getSequence().publicApi) : undefined,
+    [sheet],
+  )
+  const collapsed = !editorView && (collapsedOverride ?? !hasAnyTracks)
 
   if (collapsed) {
     return (
@@ -171,7 +214,12 @@ const SequenceEditorPanel: React.FC<{}> = (props) => {
       minDims={minDims}
       docked="bottom"
     >
-      <Content sheet={sheet} onCollapse={() => setCollapsedOverride(true)} />
+      <Content
+        sheet={sheet}
+        onCollapse={() => setCollapsedOverride(true)}
+        onDockTopChange={onDockTopChange}
+        editorView={editorView}
+      />
     </BasePanel>
   )
 }
@@ -179,34 +227,72 @@ const SequenceEditorPanel: React.FC<{}> = (props) => {
 const Content: React.FC<{
   sheet: Sheet | undefined
   onCollapse: () => void
-}> = ({sheet, onCollapse}) => {
+  onDockTopChange?: (top: number | undefined) => void
+  editorView: ReturnType<typeof getSequenceEditorView>
+}> = ({sheet, onCollapse, onDockTopChange, editorView}) => {
   const {dims} = usePanel()
+  useLayoutEffect(() => {
+    onDockTopChange?.(sheet ? dims.top : undefined)
+  }, [sheet, dims.top, onDockTopChange])
+  useLayoutEffect(() => () => onDockTopChange?.(undefined), [onDockTopChange])
   const [containerNode, setContainerNode] = useState<null | HTMLDivElement>(
     null,
   )
   usePresenceListenersOnRootElement(containerNode)
   return usePrism(() => {
+    if (!sheet) return <></>
+
+    if (editorView) {
+      return (
+        <Container>
+          <ContentBody
+            $sidebarWidth={Math.min(320, Math.floor(dims.width * 0.45))}
+            $offset={0}
+          >
+            <EditorTimelineArea data-sequence-editor-tracks="">
+              {editorView.timeline}
+            </EditorTimelineArea>
+            <TimelineSidebar data-sequence-editor-sidebar="">
+              {editorView.sidebar}
+            </TimelineSidebar>
+          </ContentBody>
+        </Container>
+      )
+    }
+
+    const selectedObject = outlineSelection
+      .getValue()
+      .find(
+        (item): item is SheetObject =>
+          isSheetObject(item) && item.sheet === sheet,
+      )
+    const sidebar = selectedObject
+      ? getAdditionalSequenceRows(selectedObject.publicApi)
+          .map((row) => row.renderSidebar?.())
+          .find(Boolean)
+      : null
+    const sidebarWidth = sidebar
+      ? Math.min(280, Math.floor(dims.width * 0.45))
+      : 0
     const panelSize = prism.memo(
       'panelSize',
       (): PanelDims => {
         // 顶部让出工具条一行,其余交给原布局
-        const width = dims.width
+        const width = dims.width - sidebarWidth
         const height = dims.height - transportBarHeight
         return {
           width: width,
           height: height,
 
-          widthWithoutBorder: width - 2,
-          heightWithoutBorder: height - 4,
+          widthWithoutBorder: Math.max(0, width - 2),
+          heightWithoutBorder: Math.max(0, height - 4),
 
           screenX: dims.left,
           screenY: dims.top + transportBarHeight,
         }
       },
-      [dims],
+      [dims, sidebarWidth],
     )
-
-    if (!sheet) return <></>
 
     const panelSizeP = valToAtom('panelSizeP', panelSize).pointer
 
@@ -246,20 +332,29 @@ const Content: React.FC<{
         }}
       >
         <TransportBar sheet={sheet} collapsed={false} onToggle={onCollapse} />
-        <ContentBody>
-          <LeftBackground style={{width: `${val(layoutP.leftDims.width)}px`}} />
-          <FrameStampPositionProvider layoutP={layoutP}>
-            <DopeSheet key={key + '-dopeSheet'} layoutP={layoutP} />
-            {graphEditorOpen && (
-              <GraphEditor key={key + '-graphEditor'} layoutP={layoutP} />
-            )}
-            {graphEditorAvailable && <GraphEditorToggle layoutP={layoutP} />}
-            <RightOverlay layoutP={layoutP} />
-          </FrameStampPositionProvider>
+        <ContentBody $sidebarWidth={sidebarWidth}>
+          <TimelineArea data-sequence-editor-tracks="">
+            <LeftBackground
+              style={{width: `${val(layoutP.leftDims.width)}px`}}
+            />
+            <FrameStampPositionProvider layoutP={layoutP}>
+              <DopeSheet key={key + '-dopeSheet'} layoutP={layoutP} />
+              {graphEditorOpen && (
+                <GraphEditor key={key + '-graphEditor'} layoutP={layoutP} />
+              )}
+              {graphEditorAvailable && <GraphEditorToggle layoutP={layoutP} />}
+              <RightOverlay layoutP={layoutP} />
+            </FrameStampPositionProvider>
+          </TimelineArea>
+          {sidebar && (
+            <TimelineSidebar data-sequence-editor-sidebar="">
+              {sidebar}
+            </TimelineSidebar>
+          )}
         </ContentBody>
       </Container>
     )
-  }, [dims, containerNode, sheet, onCollapse])
+  }, [dims, containerNode, sheet, onCollapse, editorView])
 }
 
 export default SequenceEditorPanel

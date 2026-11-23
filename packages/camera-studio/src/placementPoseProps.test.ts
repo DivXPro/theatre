@@ -34,19 +34,13 @@ test('isPoseEntryUsed:旧裸 id 与新格式 lib 引用都算使用;custom 不�
 test('posePropConfigShape:editor=pose + poseInterpolate + 空默认(属性行化)', () => {
   const shape = posePropConfigShape()
   expect(shape.defaultValue).toBe('')
+  expect(shape.opts.hidden).toBe(true)
   expect(shape.opts.editor).toBe('pose')
   expect(shape.opts.interpolate).toBe(poseInterpolate)
   expect(typeof shape.opts.label).toBe('function')
 })
 
-test.each([
-  'Erika Archer',
-  'Maria J J Ong',
-  'Remy',
-  'Sporty Granny',
-  'The Boss',
-  'Y Bot',
-])('%s 套用内置站立姿势后保持直立', async (name) => {
+test.each(['X Bot', 'Y Bot'])('%s 套用内置站立姿势后保持直立', async (name) => {
   const bytes = readFileSync(resolve(__dirname, `../assets/models/${name}.glb`))
   const json = JSON.parse(
     bytes.toString('utf8', 20, 20 + bytes.readUInt32LE(12)),

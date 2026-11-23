@@ -170,6 +170,7 @@ export type SequenceEditorPanelLayout = {
  * right side is 80%
  */
 const panelSplitRatio = 0.2
+const minimumLeftPanelWidth = 196
 
 const initialClippedSpaceRange: IRange = [0, 10]
 
@@ -215,7 +216,13 @@ export function sequenceEditorPanelLayout(
       'leftDims',
       () => {
         const leftDims: DimsOfPanelPart = {
-          width: Math.floor(panelDims.width * panelSplitRatio),
+          width: Math.min(
+            Math.floor(panelDims.width * 0.45),
+            Math.max(
+              minimumLeftPanelWidth,
+              Math.floor(panelDims.width * panelSplitRatio),
+            ),
+          ),
           height: panelDims.height,
           screenX: panelDims.screenX,
           screenY: panelDims.screenY,
