@@ -42,8 +42,7 @@ export const en: Messages = {
   'pg.toolbar.render.line': 'Line art',
   'pg.toolbar.render.shadow': 'Cast shadow',
   'pg.toolbar.render.shadow.label': 'Shadow',
-  'pg.toolbar.render.shadow.hint':
-    'Fill self-shadowing and cast shadows with fine halftone dots',
+  'pg.toolbar.render.shadow.hint': 'Fill shadows with fine halftone dots',
   'pg.toolbar.pip.show': 'Show the shot preview in the bottom-right corner',
   'pg.toolbar.pip.hide': 'Hide the shot preview',
   'pg.toolbar.pip.disabled': 'Add a camera first',
@@ -310,7 +309,7 @@ export const zhCN: Messages = {
   'pg.toolbar.render.line': '线稿',
   'pg.toolbar.render.shadow': '投射阴影',
   'pg.toolbar.render.shadow.label': '阴影',
-  'pg.toolbar.render.shadow.hint': '用细小网点绘制物体投下的阴影',
+  'pg.toolbar.render.shadow.hint': '用细小网点填充阴影面和投射阴影',
   'pg.toolbar.pip.show': '显示右下角的镜头画中画',
   'pg.toolbar.pip.hide': '隐藏右下角的镜头画中画',
   'pg.toolbar.pip.disabled': '先添加相机',

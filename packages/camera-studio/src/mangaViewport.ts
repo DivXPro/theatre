@@ -86,6 +86,23 @@ type ShadowSwap = {
   receiveShadow: boolean
   castShadow: boolean
 }
+type ShadowState = {
+  bias: number
+  normalBias: number
+  mapSize: Vector2
+  camera: {
+    isOrthographicCamera?: boolean
+    left: number
+    right: number
+    near: number
+    far: number
+  }
+}
+type ShadowLight = {
+  isLight?: boolean
+  castShadow?: boolean
+  shadow?: ShadowState
+}
 
 function makeDataMaterial(): DataMaterial {
   const material = Object.assign(
@@ -133,7 +150,8 @@ function makeDataMaterial(): DataMaterial {
  *
  * 用 Lambert 是因为它原生包含法线/透明裁剪/骨骼变形等顶点链路,又带
  * shadowmap 采样;只把最终输出换掉,材质本身仍按真实光源与 shadow map
- * 计算 getShadowMask(),因此拿到的是物体彼此投下的阴影,而不是法线明暗。
+ * 计算 getShadowMask()。再叠加"背向主光"的遮挡,网点浓度取两者较暗的
+ * 那个:被别的东西挡住(投射阴影)和背光面都铺点,完全受光的亮面不铺点。
  */
 function makeShadowMaskMaterial(): ShadowMaskMaterial {
   const material = Object.assign(
@@ -151,8 +169,19 @@ function makeShadowMaskMaterial(): ShadowMaskMaterial {
       .replace(
         '#include <opaque_fragment>',
         /* glsl */ `
-        float castShadowMask = 1.0 - getShadowMask();
-        gl_FragColor = vec4(vec3(castShadowMask), 1.0);
+        float facingLight = 1.0;
+        #if NUM_DIR_LIGHTS > 0
+          facingLight = 0.0;
+          for ( int lightIndex = 0; lightIndex < NUM_DIR_LIGHTS; lightIndex ++ ) {
+            vec3 lightDirection = normalize(directionalLights[lightIndex].direction);
+            facingLight = max(
+              facingLight,
+              smoothstep(-0.05, 0.12, dot(normal, lightDirection))
+            );
+          }
+        #endif
+        float lit = min(getShadowMask(), facingLight);
+        gl_FragColor = vec4(vec3(1.0 - lit), 1.0);
         `,
       )
       .replace('#include <tonemapping_fragment>', '')
@@ -175,6 +204,36 @@ function usesMangaData(material: Surface) {
     !('isShaderMaterial' in material) &&
     material.onBeforeCompile === Material.prototype.onBeforeCompile
   )
+}
+
+/**
+ * 投影遮罩只看"有没有被挡住",不需要成片那种精细的 bias。低多边形/大尺度
+ * 场景里原始 bias 往往偏小,法线方向的自遮挡会被整片判成阴影,网点就会爬满
+ * 受光面。按 shadow map 的每纹素世界尺寸临时放大 normalBias/bias,渲染完还原。
+ */
+function withShadowMaskBias(scene: Scene, render: () => void) {
+  const saved: {shadow: ShadowState; bias: number; normalBias: number}[] = []
+  scene.traverse((node) => {
+    const light = node as unknown as ShadowLight
+    const shadow = light.shadow
+    if (!light.isLight || !light.castShadow || !shadow) return
+    const span = shadow.camera.isOrthographicCamera
+      ? shadow.camera.right - shadow.camera.left
+      : 10
+    const texel = span / Math.max(1, shadow.mapSize.x)
+    const depth = Math.max(1, shadow.camera.far - shadow.camera.near)
+    saved.push({shadow, bias: shadow.bias, normalBias: shadow.normalBias})
+    shadow.normalBias = Math.max(shadow.normalBias, texel * 2)
+    shadow.bias = Math.min(shadow.bias, (-texel * 2) / depth)
+  })
+  try {
+    render()
+  } finally {
+    for (const {shadow, bias, normalBias} of saved) {
+      shadow.bias = bias
+      shadow.normalBias = normalBias
+    }
+  }
 }
 
 function syncDataMaterial(data: DataMaterial, source: Surface) {
@@ -453,7 +512,7 @@ export function createMangaViewport() {
         }
       })
       try {
-        gl.render(scene, camera)
+        withShadowMaskBias(scene, () => gl.render(scene, camera))
       } finally {
         for (const swap of shadowSwaps) {
           swap.object.material = swap.original
