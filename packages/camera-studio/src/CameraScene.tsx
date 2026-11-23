@@ -877,6 +877,7 @@ export function CameraScene({
     viewportRendering?.initialMode ?? 'original',
   )
   const isManga = renderMode !== 'original'
+  const [characterNamesVisible, setCharacterNamesVisible] = useState(false)
   // 画中画开关(顶栏按钮):只管编辑视角右下角的小窗,不影响镜头全屏视角
   const [pipVisible, setPipVisible] = useState(true)
   // 画中画底部留白:悬在时间轴面板上方,随面板高度/收拢展开自动跟
@@ -1968,6 +1969,10 @@ export function CameraScene({
           onSelectGizmoMode={setGizmoMode}
           renderMode={renderMode}
           onSelectRenderMode={setRenderMode}
+          characterNamesVisible={characterNamesVisible}
+          onToggleCharacterNames={() =>
+            setCharacterNamesVisible((visible) => !visible)
+          }
           onToggleModelLibrary={handleToggleModel}
           onTogglePathLibrary={handleTogglePath}
           onAddCamera={addCamera}
@@ -2395,6 +2400,13 @@ export function CameraScene({
               sheet={sheet}
               project={project}
               pendingEntries={pendingEntries}
+              characterNameStyle={
+                characterNamesVisible && !shotView
+                  ? isManga
+                    ? 'manga'
+                    : 'original'
+                  : undefined
+              }
               onPersisted={clearPending}
               selectLocked={!!placing}
               onObjectMenu={(key, x, y) => setObjectMenu({key, x, y})}

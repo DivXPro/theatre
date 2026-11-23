@@ -36,6 +36,11 @@ import {
 import type {Object3D, AnimationClip, AnimationAction} from 'three'
 import {SkeletonUtils} from 'three-stdlib'
 import {registerBoneAnchors, unregisterBoneAnchors} from './boneAnchors'
+import {
+  CharacterNameLabel,
+  findCharacterNameAnchor,
+  type CharacterNameStyle,
+} from './CharacterNameLabel'
 import {notifyTargetRegistryChange, sheetObjectExists} from './aimTargets'
 import {animationClipForModel} from './assetLibrary/animationClipForModel'
 import {createGLTFLoader} from './assetLibrary/gltfLoader'
@@ -1056,11 +1061,16 @@ export class PlacementRigErrorBoundary extends React.Component<
   }
 }
 
+const CharacterNameStyleContext = React.createContext<
+  CharacterNameStyle | undefined
+>(undefined)
+
 /** 已放置的模型们:按清单渲染(外加刚确认、待提交的那条),每个是独立的 theatre 可编辑对象 */
 export function PlacedModels({
   sheet,
   project,
   pendingEntries,
+  characterNameStyle,
   onPersisted,
   selectLocked,
   onObjectMenu,
@@ -1068,6 +1078,7 @@ export function PlacedModels({
   sheet: ISheet
   project: IProject
   pendingEntries: PendingPlacementEntry[]
+  characterNameStyle?: CharacterNameStyle
   onPersisted: (key: string) => void
   selectLocked?: boolean
   onObjectMenu?: (key: string, x: number, y: number) => void
@@ -1093,7 +1104,7 @@ export function PlacedModels({
   }, [ready, entriesKey])
   if (!ready) return null
   return (
-    <>
+    <CharacterNameStyleContext.Provider value={characterNameStyle}>
       {entries.map((entry) => (
         <Suspense
           key={`${entry.key}:${entry.loadAttempt ?? 0}`}
@@ -1109,7 +1120,7 @@ export function PlacedModels({
           />
         </Suspense>
       ))}
-    </>
+    </CharacterNameStyleContext.Provider>
   )
 }
 
@@ -2016,6 +2027,12 @@ function PlacedModelCore({
     }
   }, [])
 
+  const characterNameStyle = React.useContext(CharacterNameStyleContext)
+  const showCharacterName = characterNameStyle !== undefined
+  const characterNameAnchor = useMemo(
+    () => (showCharacterName ? findCharacterNameAnchor(instance) : null),
+    [instance, showCharacterName],
+  )
   const modelContent = <primitive object={instance} position={[0, lift, 0]} />
   return (
     <e.group
@@ -2047,6 +2064,14 @@ function PlacedModelCore({
           {/* 浮动小条跟模型走(挂头骨锚点):移动/旋转互斥切换,与 W/E 键同一状态源 */}
           <PoseModeBar instance={instance} />
         </>
+      )}
+      {characterNameStyle && characterNameAnchor && (
+        <CharacterNameLabel
+          name={entry.key.replace(/^Models \/ /, '')}
+          anchor={characterNameAnchor}
+          appearance={characterNameStyle}
+          posing={poseModeActive}
+        />
       )}
     </e.group>
   )

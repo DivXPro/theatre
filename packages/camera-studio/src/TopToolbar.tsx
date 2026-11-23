@@ -4,7 +4,7 @@
  *     右键菜单共用 useGizmoMode 的 state;选择模式下只点选不挂手柄;
  *     无选中对象时也可先设好模式)
  *   [添加模型|添加路径|添加相机|添加锚点] 各弹各的框体
- *   [漫画模式开关|线稿|网点] 视口渲染模式(开关关闭即原始)
+ *   [漫画模式开关|线稿|网点|人物名称] 视口显示
  *   [画中画|导出视频] 输出
  * 姿势/动作绑定具体物体,入口在右键模型的菜单里;物体的属性设置在各自
  * 面板(见 docs/superpowers/specs/2026-09-12-asset-library-split-design.md)。
@@ -136,7 +136,7 @@ const SwitchTrack = styled.span`
   }
 `
 
-const MangaModeBtn = styled(Btn)`
+const ViewportSwitchBtn = styled(Btn)`
   width: auto;
   min-width: 78px;
   gap: 7px;
@@ -230,6 +230,8 @@ export function TopToolbar({
   onSelectGizmoMode,
   renderMode,
   onSelectRenderMode,
+  characterNamesVisible,
+  onToggleCharacterNames,
   onToggleModelLibrary,
   onTogglePathLibrary,
   onAddCamera,
@@ -249,6 +251,8 @@ export function TopToolbar({
   onSelectGizmoMode: (mode: GizmoMode) => void
   renderMode: ViewportRenderMode
   onSelectRenderMode: (mode: ViewportRenderMode) => void
+  characterNamesVisible: boolean
+  onToggleCharacterNames: () => void
   onToggleModelLibrary: () => void
   onTogglePathLibrary: () => void
   onAddCamera: () => void
@@ -275,6 +279,7 @@ export function TopToolbar({
   const [exportMenuNode, openExportMenu] = useMenu({items: exportMenuItems})
   const lastMangaModeRef = useRef<MangaRenderMode>('line')
   const mangaEnabled = renderMode !== 'original'
+  const characterNamesLabel = t('pg.toolbar.characterNames')
   if (mangaEnabled) lastMangaModeRef.current = renderMode
 
   return (
@@ -337,7 +342,7 @@ export function TopToolbar({
         aria-label={t('pg.toolbar.render')}
       >
         <ToolbarBtn
-          as={MangaModeBtn}
+          as={ViewportSwitchBtn}
           role="switch"
           aria-label={t('pg.toolbar.render.manga')}
           aria-checked={mangaEnabled}
@@ -366,6 +371,18 @@ export function TopToolbar({
               <Icon size={16} />
             </ToolbarBtn>
           ))}
+        <ToolbarBtn
+          as={ViewportSwitchBtn}
+          role="switch"
+          aria-label={characterNamesLabel}
+          aria-checked={characterNamesVisible}
+          className={characterNamesVisible ? 'selected' : undefined}
+          onClick={onToggleCharacterNames}
+          tip={characterNamesLabel}
+        >
+          <span>{characterNamesLabel}</span>
+          <SwitchTrack aria-hidden />
+        </ToolbarBtn>
       </ToolbarSwitchSelectContainer>
       <ToolbarSwitchSelectContainer>
         <ToolbarBtn
