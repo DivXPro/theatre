@@ -38,6 +38,8 @@ function renderToolbar(overrides: {
   onSelectRenderMode?: (mode: ViewportRenderMode) => void
   mangaShadows?: boolean
   onToggleMangaShadows?: () => void
+  characterNamesVisible?: boolean
+  onToggleCharacterNames?: () => void
 }) {
   const el = document.createElement('div')
   document.body.appendChild(el)
@@ -61,6 +63,8 @@ function renderToolbar(overrides: {
       onSelectRenderMode: next.onSelectRenderMode ?? (() => {}),
       mangaShadows: next.mangaShadows ?? false,
       onToggleMangaShadows: next.onToggleMangaShadows ?? (() => {}),
+      characterNamesVisible: next.characterNamesVisible ?? false,
+      onToggleCharacterNames: next.onToggleCharacterNames ?? (() => {}),
     } as const
     act(() => {
       root.render(<TopToolbar {...props} />)
@@ -94,10 +98,35 @@ describe('TopToolbar 分组', () => {
     expect(groups.length).toBe(4)
     expect(groups[0].querySelectorAll('button').length).toBe(4)
     expect(groups[1].querySelectorAll('button').length).toBe(4)
-    expect(groups[2].querySelectorAll('button').length).toBe(1)
+    expect(groups[2].querySelectorAll('button').length).toBe(2)
     expect(groups[3].querySelectorAll('button').length).toBe(2)
     unmount()
   })
+})
+
+it('toggles character names independently of manga mode', () => {
+  const onToggleCharacterNames = jest.fn()
+  const {el, rerender, unmount} = renderToolbar({onToggleCharacterNames})
+  try {
+    const toggle = () =>
+      el.querySelector<HTMLButtonElement>(
+        'button[role="switch"][aria-label="Character names"]',
+      )!
+    expect(toggle()?.getAttribute('aria-checked')).toBe('false')
+    act(() => toggle().click())
+    expect(onToggleCharacterNames).toHaveBeenCalledTimes(1)
+
+    rerender({
+      renderMode: 'line',
+      characterNamesVisible: true,
+      onToggleCharacterNames,
+    })
+    expect(toggle().getAttribute('aria-checked')).toBe('true')
+    act(() => toggle().click())
+    expect(onToggleCharacterNames).toHaveBeenCalledTimes(2)
+  } finally {
+    unmount()
+  }
 })
 
 it('toggles manga mode and reveals line art and cast shadows', () => {

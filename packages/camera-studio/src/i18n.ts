@@ -32,6 +32,7 @@ export const en: Messages = {
   'pg.toolbar.addAnchor.hint':
     'Place an empty anchor in front of the current view (aim target / parentable)',
   'pg.toolbar.pip': 'Picture in picture',
+  'pg.toolbar.characterNames': 'Character names',
   'pg.toolbar.render': 'Viewport render mode',
   'pg.toolbar.render.manga': 'Manga mode',
   'pg.toolbar.render.manga.label': 'Manga',
@@ -301,6 +302,7 @@ export const zhCN: Messages = {
     '在当前视角前方放一个空锚点(可被相机瞄准、可绑父级)',
   'pg.toolbar.pip': '画中画',
   'pg.toolbar.render': '视口渲染模式',
+  'pg.toolbar.characterNames': '人物名称',
   'pg.toolbar.render.manga': '漫画模式',
   'pg.toolbar.render.manga.label': '漫画',
   'pg.toolbar.render.manga.hint': '关闭回到原始渲染,开启进入线稿渲染',
