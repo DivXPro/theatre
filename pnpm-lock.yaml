@@ -566,8 +566,8 @@ importers:
         specifier: '*'
         version: 1.0.0(@dreamerbird/core@1.0.0)
       '@dreamerbird/threeik':
-        specifier: 0.2.1
-        version: 0.2.1(three@0.185.1)
+        specifier: 0.2.2
+        version: 0.2.2(three@0.185.1)
       '@gltf-transform/core':
         specifier: ^4.0.0
         version: 4.5.0
@@ -778,8 +778,8 @@ importers:
         specifier: workspace:*
         version: link:../camera-studio
       '@dreamerbird/threeik':
-        specifier: 0.2.1
-        version: 0.2.1(three@0.185.1)
+        specifier: 0.2.2
+        version: 0.2.2(three@0.185.1)
       '@phosphor-icons/react':
         specifier: ^2.1.10
         version: 2.1.10(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -2215,8 +2215,8 @@ packages:
     peerDependencies:
       '@dreamerbird/core': '*'
 
-  '@dreamerbird/threeik@0.2.1':
-    resolution: {integrity: sha512-Kp11ruJSKIsqsKxU9d+vcfZOkdACwQG2gb097hp56JdV0yZX6l/lOtYlu0TbFqM75RxWAlkfkya6mVMxxjsnBw==}
+  '@dreamerbird/threeik@0.2.2':
+    resolution: {integrity: sha512-6WZOnfNkfJ33OJY5geYzuT31egGIAYie4HckLcWIS1D1yOtsNdUmmLWpcoJM3ToCA/Au2qX4pibz1j94nAO9SA==}
     peerDependencies:
       three: '>=0.160.0'
 
@@ -15496,7 +15496,7 @@ snapshots:
       '@dreamerbird/core': 1.0.0
       '@dreamerbird/dataverse': 1.0.0
 
-  '@dreamerbird/threeik@0.2.1(three@0.185.1)':
+  '@dreamerbird/threeik@0.2.2(three@0.185.1)':
     dependencies:
       three: 0.185.1
 

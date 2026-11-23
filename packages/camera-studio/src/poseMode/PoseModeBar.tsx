@@ -2,8 +2,6 @@
 /**
  * 摆姿势浮动小条:挂在被摆模型头顶(Head 骨骼世界位置 + 等比偏移),
  * 跟着模型/相机走(drei Html 把 DOM 钉到 3D 位置,屏幕恒定大小)。
- * 内容只有 [移动|旋转] 两个按钮(悬停提示保留);帧模式判定仍在
- * PoseModeRig 照常进行,只是不再显示在条上。
  *
  * 移动/旋转与 W/E 键共用 poseSession 的 manipulatorMode(单一状态源):
  * 按钮 setPoseManipulatorMode → 本组件订阅刷新高亮;PoseModeRig 同一

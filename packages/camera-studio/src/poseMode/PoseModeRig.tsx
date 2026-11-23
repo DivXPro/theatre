@@ -1,11 +1,7 @@
 // packages/camera-studio/src/poseMode/PoseModeRig.tsx
 /**
- * 姿势模式运行时:SkeletonRig + threeIK 控制点的生命周期、每帧求解、退出提交。
+ * 姿势模式运行时:IK 控制点的生命周期、每帧求解、退出提交。
  * 会话命中时由 PlacedModelCore 挂载;卸载(模型删除/会话切换)即 dispose 干净。
- *
- * 帧更新契约(threeIK README):基准姿势在进入时 captureBasePose 一次
- * (= 当前姿势,含 poseOverride/库姿势/绑定姿势;不接 mixer 时无需每帧采),
- * 之后每帧 rig.update + ctl.update;demand 帧循环下只在按下指针期间续帧。
  */
 import {useEffect, useRef} from 'react'
 import {useFrame, useThree} from '@react-three/fiber'
@@ -26,6 +22,8 @@ import {
   findRootBone,
 } from './controlSpec'
 import {anyControlDragging} from './dragState'
+import {createFullbodyControls} from './fullbodyControls'
+import {resolveFullbodyRig} from './fullbodyPoints'
 import {commitPoseSession, preparePoseSession} from './poseTrack'
 import type {PreparePose} from './poseTrack'
 import {
@@ -47,6 +45,7 @@ import {
   setPoseSessionFrame,
   usePoseSession,
 } from './poseSession'
+import type {PoseManipulatorMode} from './poseSession'
 import {registerPoseSessionRig} from '../agent/runtime/poseSessionRuntime'
 import {getExportAnimationTime} from '../videoExport/exportAnimationClock'
 
@@ -71,13 +70,13 @@ export function PoseModeRig({
     enabled: boolean
   } | null
   const invalidate = useThree((s) => s.invalidate)
-  const rigRef = useRef<SkeletonRig | null>(null)
-  const ctlRef = useRef<ReturnType<typeof createSkeletonControls> | null>(null)
+  const ctlRef = useRef<
+    | ReturnType<typeof createFullbodyControls>
+    | ReturnType<typeof createLegacyControls>
+    | null
+  >(null)
+  const solverRef = useRef<'fullbody' | 'legacy'>('fullbody')
   const pressingRef = useRef(false)
-  const dirtyRef = useRef(false)
-  const controlNamesRef = useRef<string[]>([])
-  // 装配表/选中名:useFrame 轮询选中态用(支持集推导 + 单模式点自动切换)
-  const specRef = useRef<ReturnType<typeof resolveControlSpec>>(null)
   const lastSelectedRef = useRef<string | null>(null)
   const session = usePoseSession()
   const preparePoseRef = useRef(preparePose)
@@ -102,121 +101,56 @@ export function PoseModeRig({
       preparePoseRef.current,
     )
     instance.updateMatrixWorld(true)
-    // 解剖学朝向(髋×脊柱反推,与模型局部轴向约定/放置旋转无关):
-    // 不传则库默认 (0,0,-1)——Y Bot 这类面朝 +Z 的模型注视球会生在脑后、拖球镜像
-    const facing = deriveHumanoidFacing(instance) ?? new Vector3(0, 0, -1)
-    const spec = resolveControlSpec(instance, facing)
-    if (!spec) {
-      // 入口已拦(菜单置灰/双击静默),这里是防御:直接清会话不挂载
+    if (frame) setPoseSessionFrame(placementKey, frame)
+    let orbitWasEnabled: boolean | undefined
+    const dragControl = {
+      lock() {
+        if (!orbitControls || orbitWasEnabled !== undefined) return
+        orbitWasEnabled = orbitControls.enabled
+        orbitControls.enabled = false
+      },
+      unlock() {
+        if (!orbitControls || orbitWasEnabled === undefined) return
+        orbitControls.enabled = orbitWasEnabled
+        orbitWasEnabled = undefined
+      },
+    }
+    const mountControls = () => {
+      ctlRef.current?.flush()
+      ctlRef.current?.dispose()
+      pressingRef.current = false
+      instance.updateMatrixWorld(true)
+      const facing = deriveHumanoidFacing(instance) ?? new Vector3(0, 0, -1)
+      const scale = measureSkeletonScale(instance)
+      const fullbody = resolveFullbodyRig(instance, facing)
+      const context = {scene, camera, dom: gl.domElement, scale, dragControl}
+      const ctl = fullbody
+        ? createFullbodyControls({
+            ...context,
+            rig: fullbody,
+            invalidate,
+            onEdit: markPoseDirty,
+          })
+        : createLegacyControls(instance, rootBone, facing, context)
+      ctlRef.current = ctl
+      solverRef.current = fullbody ? 'fullbody' : 'legacy'
+      lastSelectedRef.current = null
+      setPoseSelectionModes({move: true, rotate: true})
+      ctl?.setManipulatorMode(getPoseManipulatorMode())
+      ;(window as any).__poseDebug = {
+        ctl,
+        camera,
+        engine: solverRef.current,
+        instance,
+      }
+      invalidate()
+    }
+    mountControls()
+    if (!ctlRef.current) {
+      delete (window as any).__poseDebug
       clearPoseSession()
       return
     }
-    if (frame) setPoseSessionFrame(placementKey, frame)
-    const rig = new SkeletonRig(rootBone)
-    rigRef.current = rig
-    specRef.current = spec
-    lastSelectedRef.current = null
-    rig.on('warning', (payload) =>
-      console.warn('[poseMode]', (payload as {message?: string})?.message),
-    )
-    // 基准 = 当前姿势:没被控制点覆盖的骨骼保持原样,不弹回绑定姿势
-    rig.captureBasePose()
-    controlNamesRef.current = spec.map((c) => c.name)
-    dirtyRef.current = false
-    const sizeScale = measureSkeletonScale(instance)
-    // 尺寸语义随 0.1.0 换芯拆分:ringRadius/ballRadius 已变成操纵器屏尺寸倍率
-    // (÷类默认后传给 TransformControls.size,gizmo 屏幕恒定大小)——乘 sizeScale
-    // 会把 gizmo 放大成 sizeScale 倍屏尺寸(0.0.1 的世界尺寸语义已作废),保持默认;
-    // rootRadius(重心活动球域)、lookAtRadius(注视球恒距)与 joystickRadius(头顶摇杆
-    // 球离头距离,0.2.1 起独立默认项)仍是世界单位语义,随骨架等比
-    const ctl = createSkeletonControls({
-      rig,
-      scene,
-      camera,
-      dom: gl.domElement,
-      controls: spec,
-      facing,
-      defaults: {
-        rootRadius: 0.4 * sizeScale,
-        lookAtRadius: 0.35 * sizeScale,
-        // 0.16×倍率 ≈ 球心嵌头顶表面内侧:球收进头部轮廓内偏顶,不悬空(0.35 注视
-        // 距离会悬在头顶上方一截);球 depthTest:false 透显,嵌入头内仍可见可拖
-        // (命中是纯数学判定,头部网格不挡);推杆时球沿贴头球面滑动
-        joystickRadius: 0.16 * sizeScale,
-      },
-      dragControl: {
-        lock: () => {
-          if (orbitControls) orbitControls.enabled = false
-        },
-        unlock: () => {
-          if (orbitControls) orbitControls.enabled = true
-        },
-      },
-      // 0.1.0 起装配器内置 Maya 热键(W/E/Escape)默认绑 window:W/E 与我们
-      // 自监听(经 poseSession 共享状态、浮条高亮同源)双触发,Escape 会抢
-      // 退出会话。全关,自绑路径不变
-      hotkeys: false,
-    })
-    ctlRef.current = ctl
-    // threeIK 构造期会先用尚未落位的 pole（世界原点）求解一次，手臂/腿会
-    // 被拧到另一套弯折平面。这里先临时关闭所有 modifier，把骨骼恢复成
-    // 进入会话时捕获的基准姿势，再按当前肘/膝的真实弯折方向重置 pole。
-    const handles = spec.map((point) => ctl.get(point.name))
-    for (const handle of handles) handle?.setActive(false)
-    rig.update(0)
-    for (const handle of handles) handle?.setActive(true)
-    instance.updateMatrixWorld(true)
-    for (const point of spec) {
-      if (point.kind !== 'limb') continue
-      const limb = point as LimbControlSpec
-      const handle = ctl.get<LimbControlHandle>(limb.name)
-      if (!handle) continue
-      const root = instance.getObjectByName(limb.rootBone)
-      const middle = instance.getObjectByName(limb.middleBone)
-      const end = instance.getObjectByName(limb.endBone)
-      if (!root || !middle || !end) continue
-      const rootPos = root.getWorldPosition(new Vector3())
-      const middlePos = middle.getWorldPosition(new Vector3())
-      const endPos = end.getWorldPosition(new Vector3())
-      const axis = endPos.clone().sub(rootPos)
-      if (axis.lengthSq() < 1e-12) continue
-      axis.normalize()
-      const bend = middlePos.clone().sub(rootPos)
-      bend.addScaledVector(axis, -bend.dot(axis))
-      if (bend.lengthSq() < 1e-10) continue
-      handle.pole.setDirection(bend)
-      const poleDir = handle.pole.ball
-        .getWorldPosition(new Vector3())
-        .sub(rootPos)
-      poleDir.addScaledVector(axis, -poleDir.dot(axis))
-      if (poleDir.lengthSq() < 1e-10) continue
-      poleDir.normalize()
-      poleDir.applyQuaternion(
-        middle.getWorldQuaternion(new Quaternion()).invert(),
-      )
-      handle.modifier.updateConfig(0, {
-        poleDirection: 'custom',
-        poleDirectionVector: poleDir.clone(),
-      })
-    }
-    ctl.update()
-    // 视觉球网格随骨架等比放大(ballRadius 保持类默认 → manipulatorSize 恒 1,
-    // gizmo 标准屏尺寸)。multiplyScalar 而非 setScalar:标记球(胸口/肩髋)自带
-    // 0.7 身份缩放(MARKER_SCALE),要保住相对大小;DragTarget 只在射线检测读
-    // ball.scale,从不覆写,外部设置安全
-    for (const t of ctl.targets) t.ball.scale.multiplyScalar(sizeScale)
-    // 四肢 pole(PoleOrbit)不是 DragTarget、不在 ctl.targets,按 spec 的 limb 名
-    // 从句柄取出补同样的等比;其射线容差随相机距离走(cameraDist×0.011,远大于
-    // 球径),网格等比后点按区域不受影响
-    for (const c of spec) {
-      if (c.kind !== 'limb') continue
-      ctl
-        .get<LimbControlHandle>(c.name)
-        ?.pole.ball.scale.multiplyScalar(sizeScale)
-    }
-    // 调试/自动化验证挂钩(同 __cameraShot):浏览器冒烟直接读选中态
-    // (getSelected)与各控制球世界坐标,免去按像素猜点
-    ;(window as any).__poseDebug = {ctl, camera}
 
     // threeIK 0.0.1 无内置热键:自监听 W/E 经 poseSession 共享状态切操纵器
     // 模式(浮动小条按钮同一入口,UI 高亮因此永远同步;直接调 ctl 会让小条瞎)。
@@ -245,9 +179,8 @@ export function PoseModeRig({
     window.addEventListener('keydown', onKey)
 
     // 共享状态 → threeIK:小条按钮切换时转发;进会话用记住的偏好初始化
-    ctl.setManipulatorMode(getPoseManipulatorMode())
     const offMode = onPoseManipulatorModeChange((m) => {
-      ctl.setManipulatorMode(m)
+      ctlRef.current?.setManipulatorMode(m)
       invalidate()
     })
 
@@ -261,7 +194,10 @@ export function PoseModeRig({
         -(((clientY - rect.top) / rect.height) * 2 - 1),
       )
       raycaster.setFromCamera(ndc, camera)
-      const balls = ctl.targets.map((t) => t.ball)
+      const balls =
+        ctlRef.current?.targets
+          .map((t) => t.ball)
+          .filter((ball) => ball.visible) ?? []
       return raycaster.intersectObjects([instance, ...balls], true).length > 0
     })
 
@@ -281,7 +217,8 @@ export function PoseModeRig({
     const commitSession = (force = false) => {
       if (getPoseSession() !== session) return
       try {
-        if (force || dirtyRef.current || isPoseDirty()) {
+        if (force || isPoseDirty()) {
+          ctlRef.current?.flush()
           commitPoseSession(session, instance, sheetObject, frame)
         }
       } finally {
@@ -319,10 +256,8 @@ export function PoseModeRig({
       offPosition?.()
       setPoseHitTester(null)
       window.removeEventListener('keydown', onKey)
-      ctl.dispose()
+      ctlRef.current?.dispose()
       ctlRef.current = null
-      rigRef.current = null
-      specRef.current = null
       lastSelectedRef.current = null
       delete (window as any).__poseDebug
       // 会话外因素卸载(模型被删等):实例已毁,跳过提交只清会话态。
@@ -353,7 +288,7 @@ export function PoseModeRig({
       // 由这里兜底;空白/模型身上的按下(含双击空白退出的第一击)不记——
       // 否则转下视角、退出手势本身都会制造幻影提交
       const ctl = ctlRef.current
-      if (ctl) {
+      if (ctl && solverRef.current === 'legacy') {
         const rect = dom.getBoundingClientRect()
         ndc.set(
           ((ev.clientX - rect.left) / rect.width) * 2 - 1,
@@ -372,36 +307,139 @@ export function PoseModeRig({
     }
     dom.addEventListener('pointerdown', down)
     window.addEventListener('pointerup', up)
+    window.addEventListener('pointercancel', up)
     return () => {
       dom.removeEventListener('pointerdown', down)
       window.removeEventListener('pointerup', up)
+      window.removeEventListener('pointercancel', up)
     }
   }, [gl, camera, invalidate])
 
   useFrame((_, delta) => {
-    const rig = rigRef.current
     const ctl = ctlRef.current
-    if (!rig || !ctl) return
+    if (!ctl) return
     // 离线导出由导出核心逐帧写姿势;绝不能用导出帧的毫秒 delta 推 IK。
     if (getExportAnimationTime() !== null) return
     if (val(sheet.sequence.pointer.playing)) return // 播放时 mixer 写骨骼,不抢
-    rig.update(delta)
-    ctl.update()
+    ctl.update(delta)
     // 选中态轮询:threeIK 无选中事件,getSelected() 是便宜字段读。
     // 变化时刷新支持集(浮条禁用)并自动切到可用模式(单模式点)
     const sel = ctl.getSelected()
     if (sel !== lastSelectedRef.current) {
       lastSelectedRef.current = sel
-      const support = supportedModesForSelection(specRef.current ?? [], sel)
+      const support = ctl.getSelectionModes()
       setPoseSelectionModes(support)
       const next = resolvePoseModeSwitch(support, getPoseManipulatorMode())
       if (next) setPoseManipulatorMode(next)
-    }
-    if (!dirtyRef.current && anyControlDragging(ctl, controlNamesRef.current)) {
-      dirtyRef.current = true
     }
     if (pressingRef.current) invalidate()
   })
 
   return null
+}
+
+function createLegacyControls(
+  instance: Group,
+  rootBone: NonNullable<ReturnType<typeof findRootBone>>,
+  facing: Vector3,
+  {
+    scene,
+    camera,
+    dom,
+    scale,
+    dragControl,
+  }: {
+    scene: Parameters<typeof createSkeletonControls>[0]['scene']
+    camera: Parameters<typeof createSkeletonControls>[0]['camera']
+    dom: HTMLCanvasElement
+    scale: number
+    dragControl: NonNullable<
+      Parameters<typeof createSkeletonControls>[0]['dragControl']
+    >
+  },
+) {
+  const spec = resolveControlSpec(instance, facing)
+  if (!spec) return null
+  const rig = new SkeletonRig(rootBone)
+  rig.on('warning', (payload) =>
+    console.warn('[poseMode]', (payload as {message?: string})?.message),
+  )
+  rig.captureBasePose()
+  const ctl = createSkeletonControls({
+    rig,
+    scene,
+    camera,
+    dom,
+    controls: spec,
+    facing,
+    defaults: {
+      rootRadius: 0.4 * scale,
+      lookAtRadius: 0.35 * scale,
+      joystickRadius: 0.16 * scale,
+    },
+    dragControl,
+    hotkeys: false,
+  })
+  const names = spec.map((point) => point.name)
+  const handles = names.map((name) => ctl.get(name))
+  for (const handle of handles) handle?.setActive(false)
+  rig.update(0)
+  for (const handle of handles) handle?.setActive(true)
+  instance.updateMatrixWorld(true)
+  for (const point of spec) {
+    if (point.kind !== 'limb') continue
+    const limb = point as LimbControlSpec
+    const handle = ctl.get<LimbControlHandle>(limb.name)
+    if (!handle) continue
+    const root = instance.getObjectByName(limb.rootBone)
+    const middle = instance.getObjectByName(limb.middleBone)
+    const end = instance.getObjectByName(limb.endBone)
+    if (!root || !middle || !end) continue
+    const rootPos = root.getWorldPosition(new Vector3())
+    const axis = end.getWorldPosition(new Vector3()).sub(rootPos)
+    if (axis.lengthSq() < 1e-12) continue
+    axis.normalize()
+    const bend = middle.getWorldPosition(new Vector3()).sub(rootPos)
+    bend.addScaledVector(axis, -bend.dot(axis))
+    if (bend.lengthSq() < 1e-10) continue
+    handle.pole.setDirection(bend)
+    const poleDir = handle.pole.ball
+      .getWorldPosition(new Vector3())
+      .sub(rootPos)
+    poleDir.addScaledVector(axis, -poleDir.dot(axis))
+    if (poleDir.lengthSq() < 1e-10) continue
+    poleDir
+      .normalize()
+      .applyQuaternion(middle.getWorldQuaternion(new Quaternion()).invert())
+    handle.modifier.updateConfig(0, {
+      poleDirection: 'custom',
+      poleDirectionVector: poleDir,
+    })
+  }
+  ctl.update()
+  for (const target of ctl.targets) target.ball.scale.multiplyScalar(scale)
+  for (const point of spec) {
+    if (point.kind === 'limb')
+      ctl
+        .get<LimbControlHandle>(point.name)
+        ?.pole.ball.scale.multiplyScalar(scale)
+  }
+  return {
+    targets: ctl.targets,
+    getSelected: () => ctl.getSelected(),
+    setManipulatorMode: (mode: PoseManipulatorMode) =>
+      ctl.setManipulatorMode(mode),
+    dispose: () => ctl.dispose(),
+    getSelectionModes: () =>
+      supportedModesForSelection(spec, ctl.getSelected()),
+    update(delta: number) {
+      rig.update(delta)
+      ctl.update()
+      if (anyControlDragging(ctl, names)) markPoseDirty()
+    },
+    flush() {
+      rig.update(0)
+      ctl.update()
+    },
+  }
 }

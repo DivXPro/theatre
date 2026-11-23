@@ -24,7 +24,8 @@
   },
   "files": [
     "dist/**/*",
-    "assets/**/*"
+    "assets/**/*",
+    "LICENSE.fullbody-pose-maker"
   ],
   "scripts": {
     "build:ts": "tsc -b tsconfig.json",
@@ -43,7 +44,7 @@
     "@dreamerbird/dataverse": "workspace:*",
     "@dreamerbird/r3f": "workspace:*",
     "@dreamerbird/react": "workspace:*",
-    "@dreamerbird/threeik": "0.2.1",
+    "@dreamerbird/threeik": "0.2.2",
     "@gltf-transform/core": "^4.0.0",
     "@gltf-transform/extensions": "^4.0.0",
     "@gltf-transform/functions": "^4.0.0",
