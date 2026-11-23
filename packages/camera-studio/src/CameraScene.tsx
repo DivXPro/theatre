@@ -876,6 +876,13 @@ export function CameraScene({
   const [renderMode, setRenderMode] = useState<ViewportRenderMode>(
     viewportRendering?.initialMode ?? 'original',
   )
+  const [mangaShadows, setMangaShadows] = useState(
+    viewportRendering?.castShadow ?? false,
+  )
+  const mangaOptions = useMemo(
+    () => ({...viewportRendering, castShadow: mangaShadows}),
+    [viewportRendering, mangaShadows],
+  )
   const isManga = renderMode !== 'original'
   // 画中画开关(顶栏按钮):只管编辑视角右下角的小窗,不影响镜头全屏视角
   const [pipVisible, setPipVisible] = useState(true)
@@ -1968,6 +1975,8 @@ export function CameraScene({
           onSelectGizmoMode={setGizmoMode}
           renderMode={renderMode}
           onSelectRenderMode={setRenderMode}
+          mangaShadows={mangaShadows}
+          onToggleMangaShadows={() => setMangaShadows((value) => !value)}
           onToggleModelLibrary={handleToggleModel}
           onTogglePathLibrary={handleTogglePath}
           onAddCamera={addCamera}
@@ -2279,10 +2288,7 @@ export function CameraScene({
               enabled={!shotView}
             />
             {!shotView && isManga && (
-              <MangaViewportFrame
-                mode={renderMode}
-                options={viewportRendering}
-              />
+              <MangaViewportFrame mode={renderMode} options={mangaOptions} />
             )}
             {!shotView && (
               <GizmoNav
@@ -2303,7 +2309,7 @@ export function CameraScene({
                 pipVisible={pipVisible}
                 pipBottom={pipBottom}
                 renderMode={renderMode}
-                mangaOptions={viewportRendering}
+                mangaOptions={mangaOptions}
                 cameraObjRef={getShotRefs(entry.cameraKey).camera}
                 onCameraContextMenu={(x, y) =>
                   setCameraMenu({cameraKey: entry.cameraKey, x, y})

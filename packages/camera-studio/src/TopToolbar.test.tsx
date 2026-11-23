@@ -5,8 +5,8 @@
  * 顶栏分组与变换模式组(移动/旋转/缩放)的测试:
  * 四组连体容器带间隔排列;模式组互斥单选(当前模式带 selected 高亮),
  * 点击把对应 mode 传给 onSelectGizmoMode(与 G/R/S、右键菜单同源)。
- * 漫画模式用一个开关收起原始/线稿/网点三种状态:关闭即原始,开启后
- * 显示线稿/网点并从最近一次选择的漫画子模式恢复。
+ * 漫画模式用一个开关收起原始/线稿两种状态:关闭即原始,开启后显示
+ * 线稿与投射阴影开关。
  * jsdom 直渲(无 testing-library),与 App.hostFlows.test.tsx 同一套手法。
  */
 import React from 'react'
@@ -36,6 +36,8 @@ function renderToolbar(overrides: {
   onSelectGizmoMode?: (mode: GizmoMode) => void
   renderMode?: ViewportRenderMode
   onSelectRenderMode?: (mode: ViewportRenderMode) => void
+  mangaShadows?: boolean
+  onToggleMangaShadows?: () => void
 }) {
   const el = document.createElement('div')
   document.body.appendChild(el)
@@ -57,6 +59,8 @@ function renderToolbar(overrides: {
       onSelectGizmoMode: next.onSelectGizmoMode ?? (() => {}),
       renderMode: next.renderMode ?? 'original',
       onSelectRenderMode: next.onSelectRenderMode ?? (() => {}),
+      mangaShadows: next.mangaShadows ?? false,
+      onToggleMangaShadows: next.onToggleMangaShadows ?? (() => {}),
     } as const
     act(() => {
       root.render(<TopToolbar {...props} />)
@@ -96,7 +100,7 @@ describe('TopToolbar 分组', () => {
   })
 })
 
-it('toggles manga mode and reveals the line/halftone choices', () => {
+it('toggles manga mode and reveals line art and cast shadows', () => {
   const onSelectRenderMode = jest.fn()
   const {el, unmount} = renderToolbar({
     onSelectRenderMode,
@@ -106,17 +110,20 @@ it('toggles manga mode and reveals the line/halftone choices', () => {
   )!
   expect(toggle.getAttribute('aria-checked')).toBe('false')
   expect(el.querySelector('button[aria-label="Line art"]')).toBeNull()
-  expect(el.querySelector('button[aria-label="Halftone"]')).toBeNull()
+  expect(el.querySelector('button[aria-label="Cast shadow"]')).toBeNull()
   act(() => toggle.click())
   expect(onSelectRenderMode).toHaveBeenLastCalledWith('line')
   unmount()
 })
 
-it('announces the active manga style and turns the whole mode off', () => {
+it('toggles cast shadows inside manga mode and can turn the mode off', () => {
   const onSelectRenderMode = jest.fn()
-  const {el, unmount} = renderToolbar({
+  const onToggleMangaShadows = jest.fn()
+  const {el, rerender, unmount} = renderToolbar({
     renderMode: 'line',
+    mangaShadows: false,
     onSelectRenderMode,
+    onToggleMangaShadows,
   })
   const toggle = el.querySelector<HTMLButtonElement>(
     'button[role="switch"][aria-label="Manga mode"]',
@@ -124,32 +131,31 @@ it('announces the active manga style and turns the whole mode off', () => {
   const line = el.querySelector<HTMLButtonElement>(
     'button[aria-label="Line art"]',
   )!
-  const halftone = el.querySelector<HTMLButtonElement>(
-    'button[aria-label="Halftone"]',
+  const shadow = el.querySelector<HTMLButtonElement>(
+    'button[role="switch"][aria-label="Cast shadow"]',
   )!
   expect(toggle.getAttribute('aria-checked')).toBe('true')
   expect(line.getAttribute('aria-pressed')).toBe('true')
-  expect(halftone.getAttribute('aria-pressed')).toBe('false')
-  act(() => halftone.click())
-  expect(onSelectRenderMode).toHaveBeenLastCalledWith('halftone')
+  expect(shadow.getAttribute('aria-checked')).toBe('false')
+  act(() => shadow.click())
+  expect(onToggleMangaShadows).toHaveBeenCalledTimes(1)
+
+  rerender({
+    renderMode: 'line',
+    mangaShadows: true,
+    onSelectRenderMode,
+    onToggleMangaShadows,
+  })
+  expect(
+    el
+      .querySelector<HTMLButtonElement>(
+        'button[role="switch"][aria-label="Cast shadow"]',
+      )!
+      .getAttribute('aria-checked'),
+  ).toBe('true')
+
   act(() => toggle.click())
   expect(onSelectRenderMode).toHaveBeenLastCalledWith('original')
-  unmount()
-})
-
-it('restores the last manga style after being switched off', () => {
-  const onSelectRenderMode = jest.fn()
-  const {el, rerender, unmount} = renderToolbar({
-    renderMode: 'halftone',
-    onSelectRenderMode,
-  })
-  rerender({renderMode: 'original', onSelectRenderMode})
-  const toggle = el.querySelector<HTMLButtonElement>(
-    'button[role="switch"][aria-label="Manga mode"]',
-  )!
-  expect(toggle.getAttribute('aria-checked')).toBe('false')
-  act(() => toggle.click())
-  expect(onSelectRenderMode).toHaveBeenLastCalledWith('halftone')
   unmount()
 })
 

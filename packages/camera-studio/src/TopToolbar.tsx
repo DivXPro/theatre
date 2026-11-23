@@ -4,7 +4,7 @@
  *     右键菜单共用 useGizmoMode 的 state;选择模式下只点选不挂手柄;
  *     无选中对象时也可先设好模式)
  *   [添加模型|添加路径|添加相机|添加锚点] 各弹各的框体
- *   [漫画模式开关|线稿|网点] 视口渲染模式(开关关闭即原始)
+ *   [漫画模式开关|线稿|投射阴影] 视口渲染模式(开关关闭即原始)
  *   [画中画|导出视频] 输出
  * 姿势/动作绑定具体物体,入口在右键模型的菜单里;物体的属性设置在各自
  * 面板(见 docs/superpowers/specs/2026-09-12-asset-library-split-design.md)。
@@ -219,17 +219,13 @@ const GIZMO_MODES: ReadonlyArray<{
   },
 ]
 
-const MANGA_MODES = [
-  {mode: 'line', label: 'pg.toolbar.render.line', Icon: PencilSimpleLine},
-  {mode: 'halftone', label: 'pg.toolbar.render.halftone', Icon: DotsNine},
-] as const
-type MangaRenderMode = (typeof MANGA_MODES)[number]['mode']
-
 export function TopToolbar({
   gizmoMode,
   onSelectGizmoMode,
   renderMode,
   onSelectRenderMode,
+  mangaShadows,
+  onToggleMangaShadows,
   onToggleModelLibrary,
   onTogglePathLibrary,
   onAddCamera,
@@ -249,6 +245,9 @@ export function TopToolbar({
   onSelectGizmoMode: (mode: GizmoMode) => void
   renderMode: ViewportRenderMode
   onSelectRenderMode: (mode: ViewportRenderMode) => void
+  /** 漫画模式下是否用网点材质绘制真实投射阴影 */
+  mangaShadows: boolean
+  onToggleMangaShadows: () => void
   onToggleModelLibrary: () => void
   onTogglePathLibrary: () => void
   onAddCamera: () => void
@@ -273,9 +272,7 @@ export function TopToolbar({
     [exportSinks, onPickExportSink],
   )
   const [exportMenuNode, openExportMenu] = useMenu({items: exportMenuItems})
-  const lastMangaModeRef = useRef<MangaRenderMode>('line')
   const mangaEnabled = renderMode !== 'original'
-  if (mangaEnabled) lastMangaModeRef.current = renderMode
 
   return (
     <Positioning data-paper={mangaEnabled ? '' : undefined}>
@@ -342,30 +339,40 @@ export function TopToolbar({
           aria-label={t('pg.toolbar.render.manga')}
           aria-checked={mangaEnabled}
           className={mangaEnabled ? 'selected' : undefined}
-          onClick={() =>
-            onSelectRenderMode(
-              mangaEnabled ? 'original' : lastMangaModeRef.current,
-            )
-          }
+          onClick={() => onSelectRenderMode(mangaEnabled ? 'original' : 'line')}
           tip={t('pg.toolbar.render.manga')}
           hint={t('pg.toolbar.render.manga.hint')}
         >
           <span>{t('pg.toolbar.render.manga.label')}</span>
           <SwitchTrack aria-hidden />
         </ToolbarBtn>
-        {mangaEnabled &&
-          MANGA_MODES.map(({mode, label, Icon}) => (
+        {mangaEnabled && (
+          <>
             <ToolbarBtn
-              key={mode}
-              className={renderMode === mode ? 'selected' : undefined}
-              aria-label={t(label)}
-              aria-pressed={renderMode === mode}
-              onClick={() => onSelectRenderMode(mode)}
-              tip={t(label)}
+              className="selected"
+              aria-label={t('pg.toolbar.render.line')}
+              aria-pressed
+              onClick={() => onSelectRenderMode('line')}
+              tip={t('pg.toolbar.render.line')}
             >
-              <Icon size={16} />
+              <PencilSimpleLine size={16} />
             </ToolbarBtn>
-          ))}
+            <ToolbarBtn
+              as={MangaModeBtn}
+              role="switch"
+              aria-label={t('pg.toolbar.render.shadow')}
+              aria-checked={mangaShadows}
+              className={mangaShadows ? 'selected' : undefined}
+              onClick={onToggleMangaShadows}
+              tip={t('pg.toolbar.render.shadow')}
+              hint={t('pg.toolbar.render.shadow.hint')}
+            >
+              <DotsNine size={16} />
+              <span>{t('pg.toolbar.render.shadow.label')}</span>
+              <SwitchTrack aria-hidden />
+            </ToolbarBtn>
+          </>
+        )}
       </ToolbarSwitchSelectContainer>
       <ToolbarSwitchSelectContainer>
         <ToolbarBtn

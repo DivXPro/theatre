@@ -7,6 +7,7 @@ import {
   Material,
   Matrix4,
   Mesh,
+  MeshLambertMaterial,
   MeshNormalMaterial,
   NearestFilter,
   NoBlending,
@@ -14,22 +15,23 @@ import {
   Scene,
   ShaderMaterial,
   Vector2,
-  Vector3,
   Vector4,
   WebGLRenderTarget,
 } from 'three'
 import type {Camera, MeshPhysicalMaterial, Object3D, WebGLRenderer} from 'three'
 import {withEditorOnlyHidden} from './editorOnly'
 
-export type ViewportRenderMode = 'original' | 'line' | 'halftone'
+export type ViewportRenderMode = 'original' | 'line'
 
 export interface MangaViewportOptions {
   outerWidth?: number
   innerWidth?: number
   depthThreshold?: number
   normalThreshold?: number
+  /** 投影网点间距(屏幕 CSS 像素),越小颗粒越细 */
   dotSpacing?: number
-  lightDirection?: readonly [number, number, number]
+  /** 是否用网点材质绘制真实投射阴影 */
+  castShadow?: boolean
 }
 
 export const mangaViewportDefaults: Required<MangaViewportOptions> = {
@@ -37,8 +39,8 @@ export const mangaViewportDefaults: Required<MangaViewportOptions> = {
   innerWidth: 0.95,
   depthThreshold: 0.003,
   normalThreshold: 0.13,
-  dotSpacing: 4.8,
-  lightDirection: [-0.42, 0.6, 0.7],
+  dotSpacing: 3.4,
+  castShadow: false,
 }
 
 type Surface = Material &
@@ -58,6 +60,16 @@ type Surface = Material &
   >
 type DataMaterial = MeshNormalMaterial &
   Pick<MeshPhysicalMaterial, 'map' | 'alphaMap'>
+type ShadowMaskMaterial = MeshLambertMaterial &
+  Pick<
+    MeshPhysicalMaterial,
+    | 'map'
+    | 'alphaMap'
+    | 'flatShading'
+    | 'displacementMap'
+    | 'displacementScale'
+    | 'displacementBias'
+  >
 type DrawObject = Object3D & {
   isMesh?: boolean
   material?: Material | Material[]
@@ -67,6 +79,12 @@ type MaterialSwap = {
   original: Material | Material[]
   data: Material | Material[]
   overlay: Material | Material[]
+}
+type ShadowSwap = {
+  object: DrawObject
+  original: Material | Material[]
+  receiveShadow: boolean
+  castShadow: boolean
 }
 
 function makeDataMaterial(): DataMaterial {
@@ -106,6 +124,42 @@ function makeDataMaterial(): DataMaterial {
         #include <alphahash_fragment>`,
       )
       .replace('diffuseColor.a );', '1.0 );')
+  }
+  return material
+}
+
+/**
+ * 把场景渲染成"投影遮罩"数据贴图:1 = 处于投射阴影内,0 = 被照亮。
+ *
+ * 用 Lambert 是因为它原生包含法线/透明裁剪/骨骼变形等顶点链路,又带
+ * shadowmap 采样;只把最终输出换掉,材质本身仍按真实光源与 shadow map
+ * 计算 getShadowMask(),因此拿到的是物体彼此投下的阴影,而不是法线明暗。
+ */
+function makeShadowMaskMaterial(): ShadowMaskMaterial {
+  const material = Object.assign(
+    new MeshLambertMaterial({color: 0xffffff, toneMapped: false}),
+    {map: null, alphaMap: null},
+  )
+  material.fog = false
+  material.onBeforeCompile = (shader) => {
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        '#include <shadowmap_pars_fragment>',
+        (chunk) => `${chunk}
+        #include <shadowmask_pars_fragment>`,
+      )
+      .replace(
+        '#include <opaque_fragment>',
+        /* glsl */ `
+        float castShadowMask = 1.0 - getShadowMask();
+        gl_FragColor = vec4(vec3(castShadowMask), 1.0);
+        `,
+      )
+      .replace('#include <tonemapping_fragment>', '')
+      .replace('#include <colorspace_fragment>', '')
+      .replace('#include <fog_fragment>', '')
+      .replace('#include <premultiplied_alpha_fragment>', '')
+      .replace('#include <dithering_fragment>', '')
   }
   return material
 }
@@ -165,18 +219,50 @@ function syncDataMaterial(data: DataMaterial, source: Surface) {
   data.polygonOffsetUnits = source.polygonOffsetUnits
 }
 
+function syncShadowMaskMaterial(data: ShadowMaskMaterial, source: Surface) {
+  const masked = source.alphaTest > 0 || source.alphaHash
+  const map = masked ? source.map ?? null : null
+  const alphaMap = masked ? source.alphaMap ?? null : null
+  const displacementMap = source.displacementMap ?? null
+  const vertexColors = masked && source.vertexColors
+  const flatShading = source.flatShading ?? false
+  if (
+    data.map !== map ||
+    data.alphaMap !== alphaMap ||
+    data.displacementMap !== displacementMap ||
+    data.vertexColors !== vertexColors ||
+    data.flatShading !== flatShading ||
+    data.side !== source.side ||
+    data.alphaHash !== source.alphaHash
+  ) {
+    data.needsUpdate = true
+  }
+  data.map = map
+  data.alphaMap = alphaMap
+  data.alphaTest = source.alphaTest
+  data.alphaHash = source.alphaHash
+  data.vertexColors = vertexColors
+  data.flatShading = flatShading
+  data.side = source.side
+  data.displacementMap = displacementMap
+  data.displacementScale = source.displacementScale ?? 1
+  data.displacementBias = source.displacementBias ?? 0
+  data.clippingPlanes = source.clippingPlanes
+  data.clipIntersection = source.clipIntersection
+}
+
 const compositeFragment = /* glsl */ `
   varying vec2 vUv;
   uniform sampler2D tNormals;
   uniform sampler2D tDepth;
+  uniform sampler2D tShadow;
   uniform mat4 inverseProjection;
   uniform vec2 texel;
   uniform vec2 texelsPerCssPixel;
   uniform vec2 lineWidths;
   uniform vec2 thresholds;
-  uniform bool halftone;
+  uniform bool castShadow;
   uniform float dotSpacing;
-  uniform vec3 lightDirection;
 
   vec3 viewPosition(vec2 uv, float depth) {
     vec4 view = inverseProjection * vec4(uv * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
@@ -200,14 +286,14 @@ const compositeFragment = /* glsl */ `
     return vec2(depthEdge, crease);
   }
 
-  float screenInk(vec3 normal) {
-    float diffuse = max(dot(normal, lightDirection), 0.0);
-    float radius = diffuse >= 0.72 ? 0.0 : diffuse >= 0.42 ? 0.19 : 0.35;
+  float screenShadow(float shadow) {
+    float amount = clamp(shadow, 0.0, 1.0);
     vec2 cssPixel = vUv / (texel * texelsPerCssPixel);
     vec2 grid = mat2(0.9, 0.436, -0.436, 0.9) * cssPixel / dotSpacing;
     float distanceToDot = length(fract(grid) - 0.5);
     float smoothing = max(0.001, 0.5 * fwidth(distanceToDot));
-    return step(0.01, radius) *
+    float radius = 0.36 * amount;
+    return step(0.001, amount) *
       (1.0 - smoothstep(radius - smoothing, radius + smoothing, distanceToDot));
   }
 
@@ -232,7 +318,8 @@ const compositeFragment = /* glsl */ `
       }
     }
 
-    if (halftone) ink = max(ink, center.a * screenInk(normal));
+    if (castShadow)
+      ink = max(ink, center.a * screenShadow(texture2D(tShadow, vUv).r));
     gl_FragDepth = depth;
     gl_FragColor = vec4(vec3(1.0 - ink), 1.0);
     #include <colorspace_fragment>
@@ -246,11 +333,20 @@ export function createMangaViewport() {
     depthTexture: new DepthTexture(1, 1),
   })
   target.texture.name = 'Manga view normals and coverage'
+  const shadowTarget = new WebGLRenderTarget(1, 1, {
+    minFilter: NearestFilter,
+    magFilter: NearestFilter,
+  })
+  shadowTarget.texture.name = 'Manga cast shadow mask'
   const hidden = new Material()
   hidden.visible = false
   const variants = new Map<
     Material,
     {data: DataMaterial; dispose: () => void}
+  >()
+  const shadowVariants = new Map<
+    Material,
+    {data: ShadowMaskMaterial; dispose: () => void}
   >()
   const swaps: MaterialSwap[] = []
   const clearColor = new Color()
@@ -259,14 +355,14 @@ export function createMangaViewport() {
   const uniforms = {
     tNormals: {value: target.texture},
     tDepth: {value: target.depthTexture},
+    tShadow: {value: shadowTarget.texture},
     inverseProjection: {value: new Matrix4()},
     texel: {value: new Vector2()},
     texelsPerCssPixel: {value: new Vector2()},
     lineWidths: {value: new Vector2()},
     thresholds: {value: new Vector2()},
-    halftone: {value: false},
+    castShadow: {value: false},
     dotSpacing: {value: mangaViewportDefaults.dotSpacing},
-    lightDirection: {value: new Vector3()},
   }
   const geometry = new BufferGeometry()
   geometry.setAttribute(
@@ -307,6 +403,65 @@ export function createMangaViewport() {
     }
     syncDataMaterial(variant.data, source)
     return variant.data
+  }
+
+  function shadowMaskMaterial(source: Surface) {
+    let variant = shadowVariants.get(source)
+    if (!variant) {
+      const data = makeShadowMaskMaterial()
+      const dispose = () => {
+        source.removeEventListener('dispose', dispose)
+        shadowVariants.delete(source)
+        data.dispose()
+      }
+      variant = {data, dispose}
+      source.addEventListener('dispose', dispose)
+      shadowVariants.set(source, variant)
+    }
+    syncShadowMaskMaterial(variant.data, source)
+    return variant.data
+  }
+
+  function captureShadows(gl: WebGLRenderer, scene: Scene, camera: Camera) {
+    const shadowSwaps: ShadowSwap[] = []
+    withEditorOnlyHidden(() => {
+      scene.traverseVisible((node: DrawObject) => {
+        const original = node.material
+        if (!node.isMesh || !original || !node.layers.test(camera.layers))
+          return
+        const source = Array.isArray(original) ? original : [original]
+        if (source.every((material) => !material.visible)) return
+
+        const receiving = source.map((material) =>
+          usesMangaData(material) ? shadowMaskMaterial(material) : hidden,
+        )
+        const receivesShadow = receiving.some((material) => material !== hidden)
+        const previousReceiveShadow = node.receiveShadow
+        const previousCastShadow = node.castShadow
+        node.castShadow = true
+        if (receivesShadow) {
+          node.material = Array.isArray(original) ? receiving : receiving[0]
+          node.receiveShadow = true
+        }
+        if (receivesShadow || !previousCastShadow) {
+          shadowSwaps.push({
+            object: node,
+            original,
+            receiveShadow: previousReceiveShadow,
+            castShadow: previousCastShadow,
+          })
+        }
+      })
+      try {
+        gl.render(scene, camera)
+      } finally {
+        for (const swap of shadowSwaps) {
+          swap.object.material = swap.original
+          swap.object.receiveShadow = swap.receiveShadow
+          swap.object.castShadow = swap.castShadow
+        }
+      }
+    })
   }
 
   function captureData(gl: WebGLRenderer, scene: Scene, camera: Camera) {
@@ -375,18 +530,14 @@ export function createMangaViewport() {
         options?.normalThreshold ?? mangaViewportDefaults.normalThreshold,
       ),
     )
-    uniforms.halftone.value = mode === 'halftone'
+    const castShadow =
+      mode !== 'original' &&
+      (options?.castShadow ?? mangaViewportDefaults.castShadow)
+    uniforms.castShadow.value = castShadow
     uniforms.dotSpacing.value = Math.max(
       2,
       options?.dotSpacing ?? mangaViewportDefaults.dotSpacing,
     )
-    const light = uniforms.lightDirection.value
-    light.set(
-      ...(options?.lightDirection ?? mangaViewportDefaults.lightDirection),
-    )
-    if (light.lengthSq() === 0)
-      light.set(...mangaViewportDefaults.lightDirection)
-    light.normalize()
     uniforms.inverseProjection.value.copy(camera.projectionMatrixInverse)
 
     const output = gl.getRenderTarget()
@@ -404,6 +555,14 @@ export function createMangaViewport() {
       gl.autoClear = false
       gl.shadowMap.autoUpdate = false
       gl.shadowMap.needsUpdate = false
+      if (castShadow) {
+        shadowTarget.setSize(width, height)
+        gl.shadowMap.needsUpdate = true
+        gl.setRenderTarget(shadowTarget)
+        gl.setClearColor(0, 0)
+        gl.clear(true, true, false)
+        captureShadows(gl, scene, camera)
+      }
       gl.setRenderTarget(target)
       gl.setClearColor(0, 0)
       gl.clear(true, true, false)
@@ -437,7 +596,9 @@ export function createMangaViewport() {
     render,
     dispose() {
       for (const variant of variants.values()) variant.dispose()
+      for (const variant of shadowVariants.values()) variant.dispose()
       target.dispose()
+      shadowTarget.dispose()
       hidden.dispose()
       composite.dispose()
       geometry.dispose()
