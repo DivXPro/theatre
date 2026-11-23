@@ -32,6 +32,8 @@ import {translate} from '@dreamerbird/studio/i18n'
 // 否则入口文件 import 顺序不保险时会把原始 key 烘焙进配置
 import './i18n'
 import {registerEditorOnly, withEditorOnlyHidden} from './editorOnly'
+import {useMangaViewport} from './MangaViewportFrame'
+import type {MangaViewportOptions, ViewportRenderMode} from './mangaViewport'
 import {useSelectionGizmoTarget} from './PlacementManager'
 import {
   getPathMeta,
@@ -325,6 +327,8 @@ export function ShotCamera({
   shotView,
   pipVisible,
   pipBottom,
+  renderMode,
+  mangaOptions,
   cameraObjRef,
   onCameraContextMenu,
 }: {
@@ -337,6 +341,8 @@ export function ShotCamera({
   pipVisible: boolean
   /** 画中画底部留白(px,DOM 边框层同源):悬在时间轴面板上方 */
   pipBottom: number
+  renderMode: ViewportRenderMode
+  mangaOptions?: MangaViewportOptions
   cameraObjRef: MutableRefObject<ISheetObject<any> | undefined>
   /** 右键相机:弹出相机菜单 */
   onCameraContextMenu?: (x: number, y: number) => void
@@ -687,6 +693,8 @@ export function ShotCamera({
           pip={!makeDefault}
           pipVisible={pipVisible}
           pipBottom={pipBottom}
+          renderMode={renderMode}
+          mangaOptions={mangaOptions}
         />
       )}
     </>
@@ -705,12 +713,17 @@ function ShotCameraRenderer({
   pip,
   pipVisible,
   pipBottom,
+  renderMode,
+  mangaOptions,
 }: {
   camRef: MutableRefObject<PerspectiveCameraImpl>
   pip: boolean
   pipVisible: boolean
   pipBottom: number
+  renderMode: ViewportRenderMode
+  mangaOptions?: MangaViewportOptions
 }) {
+  const manga = useMangaViewport(renderMode, mangaOptions)
   // frameloop="demand":切换镜头视角/画中画只是 React 状态变化,
   // 不触发新帧的话画布上会留着上一帧(全屏取景的右下角)当"画中画"
   const invalidate = useThree((s) => s.invalidate)
@@ -737,7 +750,19 @@ function ShotCameraRenderer({
       // 镜头视角:全屏取景(wrapper 传了 manual,aspect 归这里管)
       shotCam.aspect = w / h
       shotCam.updateProjectionMatrix()
-      gl.render(scene, shotCam)
+      if (manga.current) {
+        manga.current.render(
+          gl,
+          scene,
+          shotCam,
+          size,
+          renderMode,
+          mangaOptions,
+          true,
+        )
+      } else {
+        gl.render(scene, shotCam)
+      }
       return
     }
 
@@ -750,9 +775,10 @@ function ShotCameraRenderer({
     // gl viewport 原点在左下角;底部留白与 DOM 边框层同源(悬在时间轴上方)
     const y = pipBottom
 
-    withEditorOnlyHidden(() => {
-      shotCam.aspect = pipW / pipH
-      shotCam.updateProjectionMatrix()
+    if (pipW < 1 || pipH < 1) return
+    shotCam.aspect = pipW / pipH
+    shotCam.updateProjectionMatrix()
+    try {
       // setViewport/setScissor 接收 CSS 像素,three 内部会自己乘 pixelRatio,
       // 这里再乘一遍 dpr 矩形会被推到画布外(踩过这个坑)
       gl.setViewport(x, y, pipW, pipH)
@@ -761,10 +787,23 @@ function ShotCameraRenderer({
       // autoClear 保持 true:剪刀会把清屏裁到小窗内,颜色和深度都清。
       // 不关 autoClear 的话,主视角的深度值留在小窗区域,
       // 会把小窗里的片元深度测试杀掉(踩过:画面只剩零星碎屑)
-      gl.render(scene, shotCam)
+      if (manga.current) {
+        manga.current.render(
+          gl,
+          scene,
+          shotCam,
+          {width: pipW, height: pipH},
+          renderMode,
+          mangaOptions,
+          false,
+        )
+      } else {
+        withEditorOnlyHidden(() => gl.render(scene, shotCam))
+      }
+    } finally {
       gl.setScissorTest(false)
       gl.setViewport(0, 0, w, h)
-    })
+    }
   }, 2)
   return null
 }

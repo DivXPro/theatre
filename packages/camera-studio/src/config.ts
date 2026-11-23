@@ -13,6 +13,11 @@ import type {WritableLibrarySource} from './assetLibrary/source'
 import type {CameraStudioErrorHandler} from './errors'
 import type {CameraFlows} from './hostFlows'
 import type {CameraStudioApi} from './agent/api'
+import type {MangaViewportOptions, ViewportRenderMode} from './mangaViewport'
+
+export type ViewportRenderingConfig = MangaViewportOptions & {
+  initialMode?: ViewportRenderMode
+}
 
 /**
  * Agent 桥接连接配置(spec §10.3/§10.4,Task 6)。
@@ -67,6 +72,7 @@ export interface CameraStudioConfig {
   scene?: {
     /** 是否渲染内置 Thingy 演示模型;缺省 true */
     includeDemoModel?: boolean
+    viewportRendering?: ViewportRenderingConfig
   }
   ui?: {
     portalContainer?: HTMLElement
@@ -89,6 +95,7 @@ export type CameraSceneProps = {
   onFlows?: (flows: CameraFlows) => void
   onError?: CameraStudioErrorHandler
   includeDemoModel?: boolean
+  viewportRendering?: ViewportRenderingConfig
 }
 
 export interface CameraStudioHandle {

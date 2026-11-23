@@ -32,6 +32,14 @@ export const en: Messages = {
   'pg.toolbar.addAnchor.hint':
     'Place an empty anchor in front of the current view (aim target / parentable)',
   'pg.toolbar.pip': 'Picture in picture',
+  'pg.toolbar.render': 'Viewport render mode',
+  'pg.toolbar.render.manga': 'Manga mode',
+  'pg.toolbar.render.manga.label': 'Manga',
+  'pg.toolbar.render.manga.hint':
+    'Off restores the original render; on restores the last manga style',
+  'pg.toolbar.render.original': 'Original',
+  'pg.toolbar.render.line': 'Line art',
+  'pg.toolbar.render.halftone': 'Halftone',
   'pg.toolbar.pip.show': 'Show the shot preview in the bottom-right corner',
   'pg.toolbar.pip.hide': 'Hide the shot preview',
   'pg.toolbar.pip.disabled': 'Add a camera first',
@@ -281,6 +289,13 @@ export const zhCN: Messages = {
   'pg.toolbar.addAnchor.hint':
     '在当前视角前方放一个空锚点(可被相机瞄准、可绑父级)',
   'pg.toolbar.pip': '画中画',
+  'pg.toolbar.render': '视口渲染模式',
+  'pg.toolbar.render.manga': '漫画模式',
+  'pg.toolbar.render.manga.label': '漫画',
+  'pg.toolbar.render.manga.hint': '关闭回到原始渲染,开启恢复上次的漫画样式',
+  'pg.toolbar.render.original': '原始',
+  'pg.toolbar.render.line': '线稿',
+  'pg.toolbar.render.halftone': '网点',
   'pg.toolbar.pip.show': '显示右下角的镜头画中画',
   'pg.toolbar.pip.hide': '隐藏右下角的镜头画中画',
   'pg.toolbar.pip.disabled': '先添加相机',

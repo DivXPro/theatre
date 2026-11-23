@@ -1,9 +1,10 @@
 /**
- * 顶栏工具条:三组连体按钮,组间留空——
+ * 顶栏工具条:四组连体按钮,组间留空——
  *   [选择|移动|旋转|缩放] 变换模式(互斥单选,和 W/G/R/S 快捷键、对象
  *     右键菜单共用 useGizmoMode 的 state;选择模式下只点选不挂手柄;
  *     无选中对象时也可先设好模式)
  *   [添加模型|添加路径|添加相机|添加锚点] 各弹各的框体
+ *   [漫画模式开关|线稿|网点] 视口渲染模式(开关关闭即原始)
  *   [画中画|导出视频] 输出
  * 姿势/动作绑定具体物体,入口在右键模型的菜单里;物体的属性设置在各自
  * 面板(见 docs/superpowers/specs/2026-09-12-asset-library-split-design.md)。
@@ -26,8 +27,10 @@ import {
   Crosshair,
   Cube,
   Cursor,
+  DotsNine,
   Export,
   Path,
+  PencilSimpleLine,
   PictureInPicture,
   Stop,
 } from '@phosphor-icons/react'
@@ -38,6 +41,7 @@ import {useT} from '@dreamerbird/studio/i18n'
 import {buildExportMenuItems} from './menuModel'
 import type {ExportSink} from './videoExport/sinks'
 import type {GizmoMode} from './PlacementManager'
+import type {ViewportRenderMode} from './mangaViewport'
 
 // ---------------------------------------------------------------------------
 
@@ -50,6 +54,11 @@ const Positioning = styled.div`
   display: flex;
   gap: 8px;
   align-items: flex-start;
+
+  &[data-paper] {
+    --theatre-panel-bg-80: rgba(36, 39, 44, 0.94);
+    --theatre-panel-bg-95: rgb(36, 39, 44);
+  }
 `
 
 /** 原生 ToolbarIconButton + 本页需要的两个变体:禁用置灰、导出中转红 */
@@ -98,6 +107,52 @@ const Btn = styled(ToolbarIconButton)`
   &:hover > .tip {
     opacity: 1;
     visibility: visible;
+  }
+`
+
+/** 开关横向文字比图标按钮宽;轨道用纯 CSS,不额外引入控件依赖 */
+const SwitchTrack = styled.span`
+  position: relative;
+  flex: 0 0 auto;
+  width: 22px;
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+  transition: background 140ms ease;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #a8a8a9;
+    transition:
+      transform 140ms ease,
+      background 140ms ease;
+  }
+`
+
+const MangaModeBtn = styled(Btn)`
+  width: auto;
+  min-width: 78px;
+  gap: 7px;
+  padding: 0 9px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+
+  &[aria-checked='true'] > ${SwitchTrack} {
+    background: rgba(255, 255, 255, 0.82);
+  }
+
+  &[aria-checked='true'] > ${SwitchTrack}::after {
+    transform: translateX(10px);
+    background: #24272c;
   }
 `
 
@@ -164,9 +219,17 @@ const GIZMO_MODES: ReadonlyArray<{
   },
 ]
 
+const MANGA_MODES = [
+  {mode: 'line', label: 'pg.toolbar.render.line', Icon: PencilSimpleLine},
+  {mode: 'halftone', label: 'pg.toolbar.render.halftone', Icon: DotsNine},
+] as const
+type MangaRenderMode = (typeof MANGA_MODES)[number]['mode']
+
 export function TopToolbar({
   gizmoMode,
   onSelectGizmoMode,
+  renderMode,
+  onSelectRenderMode,
   onToggleModelLibrary,
   onTogglePathLibrary,
   onAddCamera,
@@ -184,6 +247,8 @@ export function TopToolbar({
   /** 变换模式组的当前模式,与 G/R/S 快捷键、对象右键菜单同源 */
   gizmoMode: GizmoMode
   onSelectGizmoMode: (mode: GizmoMode) => void
+  renderMode: ViewportRenderMode
+  onSelectRenderMode: (mode: ViewportRenderMode) => void
   onToggleModelLibrary: () => void
   onTogglePathLibrary: () => void
   onAddCamera: () => void
@@ -208,9 +273,12 @@ export function TopToolbar({
     [exportSinks, onPickExportSink],
   )
   const [exportMenuNode, openExportMenu] = useMenu({items: exportMenuItems})
+  const lastMangaModeRef = useRef<MangaRenderMode>('line')
+  const mangaEnabled = renderMode !== 'original'
+  if (mangaEnabled) lastMangaModeRef.current = renderMode
 
   return (
-    <Positioning>
+    <Positioning data-paper={mangaEnabled ? '' : undefined}>
       <ToolbarSwitchSelectContainer>
         {GIZMO_MODES.map(({mode, tipKey, hintKey, Icon}) => (
           <ToolbarBtn
@@ -263,6 +331,41 @@ export function TopToolbar({
         >
           <Crosshair size={16} />
         </ToolbarBtn>
+      </ToolbarSwitchSelectContainer>
+      <ToolbarSwitchSelectContainer
+        role="group"
+        aria-label={t('pg.toolbar.render')}
+      >
+        <ToolbarBtn
+          as={MangaModeBtn}
+          role="switch"
+          aria-label={t('pg.toolbar.render.manga')}
+          aria-checked={mangaEnabled}
+          className={mangaEnabled ? 'selected' : undefined}
+          onClick={() =>
+            onSelectRenderMode(
+              mangaEnabled ? 'original' : lastMangaModeRef.current,
+            )
+          }
+          tip={t('pg.toolbar.render.manga')}
+          hint={t('pg.toolbar.render.manga.hint')}
+        >
+          <span>{t('pg.toolbar.render.manga.label')}</span>
+          <SwitchTrack aria-hidden />
+        </ToolbarBtn>
+        {mangaEnabled &&
+          MANGA_MODES.map(({mode, label, Icon}) => (
+            <ToolbarBtn
+              key={mode}
+              className={renderMode === mode ? 'selected' : undefined}
+              aria-label={t(label)}
+              aria-pressed={renderMode === mode}
+              onClick={() => onSelectRenderMode(mode)}
+              tip={t(label)}
+            >
+              <Icon size={16} />
+            </ToolbarBtn>
+          ))}
       </ToolbarSwitchSelectContainer>
       <ToolbarSwitchSelectContainer>
         <ToolbarBtn

@@ -31,6 +31,7 @@ import {
   computeViewPlanePoint,
 } from './dropPoint'
 import {getPlacedModelRoots, getPlacementSurfaces} from './PlacementManager'
+import {registerEditorOnly} from './editorOnly'
 
 type AxisConstraint = 'vertical' | 'horizontal'
 
@@ -101,6 +102,8 @@ export function PathPresetDropRig({
   const markerRef = useRef<Mesh>(null!)
   const raycaster = useMemo(() => new Raycaster(), [])
   const guide = useMemo(makeGuide, [])
+  useEffect(() => registerEditorOnly(markerRef.current), [])
+  useEffect(() => registerEditorOnly(guide), [guide])
   // 视平面锚点:拖动开始(第一次进入画布)时定死,之后整次拖动不变
   const anchorRef = useRef<Vector3 | null>(null)
   // 当前生效点位:标记显示和松手确认共用,保证「看到的=生成的」

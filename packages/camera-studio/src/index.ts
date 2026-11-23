@@ -23,10 +23,12 @@ export type {
   CameraStudioConfig,
   CameraStudioHandle,
   CameraSceneProps,
+  ViewportRenderingConfig,
   CameraStudioAgentConfig,
   // 桥接连接配置(agent.bridge);桥接客户端本身不公开(内部接线)
   CameraStudioAgentBridgeConfig,
 } from './config'
+export type {ViewportRenderMode} from './mangaViewport'
 // flows.onFlows 回调句柄类型(指南 §2 config 表已点名)及其签名用到的类型
 export type {CameraFlows, Vec3} from './hostFlows'
 export type {PathPreset} from './pathPresets'

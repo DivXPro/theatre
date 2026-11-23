@@ -70,6 +70,8 @@ import {
   buildPathMenuItems,
 } from './menuModel'
 import {TopToolbar} from './TopToolbar'
+import {MangaViewportFrame} from './MangaViewportFrame'
+import type {ViewportRenderMode} from './mangaViewport'
 import {Anchors} from './Anchors'
 import {collectAnchorChildResets, setAimOptionsSheet} from './aimTargets'
 import {
@@ -610,8 +612,10 @@ function MainOrbitControls({
  */
 function GizmoNav({
   cameraObjRef,
+  renderPriority,
 }: {
   cameraObjRef: React.MutableRefObject<ISheetObject<any> | undefined>
+  renderPriority: number
 }) {
   const camera = useThree((s) => s.camera)
   const scrubRef = useRef<IScrub | undefined>(undefined)
@@ -666,6 +670,7 @@ function GizmoNav({
       alignment="top-right"
       margin={[340, 70]}
       onUpdate={onUpdate}
+      renderPriority={renderPriority}
     >
       <GizmoViewport labelColor="white" />
     </GizmoHelper>
@@ -830,6 +835,7 @@ export function CameraScene({
   onFlows,
   onError,
   includeDemoModel = true,
+  viewportRendering,
 }: CameraSceneProps) {
   const t = useT()
   const cameraTargetRef = useRef<Mesh>(null!)
@@ -867,6 +873,10 @@ export function CameraScene({
   }
   // true = 全屏镜头视角(导演视角让位,轨道控制器/导航块停用)
   const [shotView, setShotView] = useState(false)
+  const [renderMode, setRenderMode] = useState<ViewportRenderMode>(
+    viewportRendering?.initialMode ?? 'original',
+  )
+  const isManga = renderMode !== 'original'
   // 画中画开关(顶栏按钮):只管编辑视角右下角的小窗,不影响镜头全屏视角
   const [pipVisible, setPipVisible] = useState(true)
   // 画中画底部留白:悬在时间轴面板上方,随面板高度/收拢展开自动跟
@@ -1956,6 +1966,8 @@ export function CameraScene({
         <TopToolbar
           gizmoMode={gizmoMode}
           onSelectGizmoMode={setGizmoMode}
+          renderMode={renderMode}
+          onSelectRenderMode={setRenderMode}
           onToggleModelLibrary={handleToggleModel}
           onTogglePathLibrary={handleTogglePath}
           onAddCamera={addCamera}
@@ -1979,9 +1991,11 @@ export function CameraScene({
               bottom: pipBottom,
               width: '28%',
               aspectRatio: '16 / 9',
-              border: '1px solid rgba(255,255,255,0.14)',
+              border: isManga
+                ? '1px solid rgba(35,38,43,0.35)'
+                : '1px solid rgba(255,255,255,0.14)',
               borderRadius: 2,
-              background: 'rgba(24,24,28,0.4)',
+              background: isManga ? 'transparent' : 'rgba(24,24,28,0.4)',
               pointerEvents: 'none',
               zIndex: 5,
             }}
@@ -2024,7 +2038,7 @@ export function CameraScene({
           <div
             style={{
               position: 'absolute',
-              top: 12,
+              top: 48,
               left: '50%',
               transform: 'translateX(-50%)',
               padding: '4px 10px',
@@ -2264,7 +2278,18 @@ export function CameraScene({
               targetObjRef={targetObjRef}
               enabled={!shotView}
             />
-            {!shotView && <GizmoNav cameraObjRef={cameraObjRef} />}
+            {!shotView && isManga && (
+              <MangaViewportFrame
+                mode={renderMode}
+                options={viewportRendering}
+              />
+            )}
+            {!shotView && (
+              <GizmoNav
+                cameraObjRef={cameraObjRef}
+                renderPriority={isManga ? 1.25 : 1}
+              />
+            )}
             <ExitPathEditOnEmptyClick
               isEditing={isPathEditing}
               onExit={exitPathEditOnBlur}
@@ -2277,6 +2302,8 @@ export function CameraScene({
                 shotView={shotView}
                 pipVisible={pipVisible}
                 pipBottom={pipBottom}
+                renderMode={renderMode}
+                mangaOptions={viewportRendering}
                 cameraObjRef={getShotRefs(entry.cameraKey).camera}
                 onCameraContextMenu={(x, y) =>
                   setCameraMenu({cameraKey: entry.cameraKey, x, y})

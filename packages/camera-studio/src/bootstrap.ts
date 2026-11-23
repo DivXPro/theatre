@@ -145,6 +145,9 @@ export function resolveSceneProps(
     ...(config.scene?.includeDemoModel === undefined
       ? {}
       : {includeDemoModel: config.scene.includeDemoModel}),
+    ...(config.scene?.viewportRendering === undefined
+      ? {}
+      : {viewportRendering: config.scene.viewportRendering}),
   }
 }
 
