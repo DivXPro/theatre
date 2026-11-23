@@ -9,7 +9,8 @@
     "models[name].scale 会乘到 FBX 根节点局部 XYZ 轴，并在生成 GLB 时烘焙；编辑器里的默认缩放仍是 1。",
     "“模型默认”表记录的是米制 FBX 根节点自身缩放，已经包含在源模型中，不能再次相乘。",
     "多实例模型（BB_Block01）取首个实例作为库默认；variants 记录原场景中的不同实例数量。",
-    "新增模型未列入 models 时默认 scale=1；键名必须与 scripts/pose-pipeline/models 下的 FBX 文件名（不含扩展名）完全一致。"
+    "新增模型未列入 models 时默认 scale=1；键名必须与 scripts/pose-pipeline/models 下的 FBX 文件名（不含扩展名）完全一致。",
+    "ModKit 模型源文件按真实米制导出（4m 墙 = 4 单位），scale=1，不列入 models；其他米制包同理。"
   ],
   "models": {
     "MangaKa Building blocks - BB_Block01": {
