@@ -41,7 +41,6 @@ export const en: Messages = {
   'pg.toolbar.render.manga.hint':
     'Off restores the original render; on switches to line-art rendering',
   'pg.toolbar.render.original': 'Original',
-  'pg.toolbar.render.line': 'Line art',
   'pg.toolbar.render.shadow': 'Cast shadow',
   'pg.toolbar.render.shadow.hint': 'Fill cast shadows with fine halftone dots',
   'pg.toolbar.pip.show': 'Show the shot preview in the bottom-right corner',
@@ -309,7 +308,6 @@ export const zhCN: Messages = {
   'pg.toolbar.render.manga': '漫画模式',
   'pg.toolbar.render.manga.hint': '关闭回到原始渲染,开启进入线稿渲染',
   'pg.toolbar.render.original': '原始',
-  'pg.toolbar.render.line': '线稿',
   'pg.toolbar.render.shadow': '投射阴影',
   'pg.toolbar.render.shadow.hint': '用细小网点填充投射阴影',
   'pg.toolbar.pip.show': '显示右下角的镜头画中画',

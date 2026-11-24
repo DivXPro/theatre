@@ -23,12 +23,13 @@ import useLockSet from '@dreamerbird/studio/uiComponents/useLockSet'
 import {usePresenceListenersOnRootElement} from '@dreamerbird/studio/uiComponents/usePresence'
 import {__private} from '@dreamerbird/core'
 import {useT} from '@dreamerbird/studio/i18n'
+import {transportBarHeight} from '@dreamerbird/studio/panels/SequenceEditorPanel/TransportBar'
 const {isSheetObject} = __private.instanceTypes
 
 const headerHeight = 37
 const panelTop = 52
 
-const Container = styled.div<{$pin: boolean}>`
+const Container = styled.div<{$pin: boolean; $dockTop?: number}>`
   ${pointerEventsAutoInNormalMode};
   background-color: var(--theatre-panel-bg-80);
   position: fixed;
@@ -38,6 +39,13 @@ const Container = styled.div<{$pin: boolean}>`
   // Temporary, see comment about CSS grid in SingleRowPropEditor.
   width: min(306px, calc(100% - 24px));
   height: fit-content;
+  --timeline-top: ${({$dockTop}) =>
+    $dockTop === undefined
+      ? `calc(100% - ${transportBarHeight + 12}px)`
+      : `${$dockTop}px`};
+  max-height: max(0px, calc(var(--timeline-top) - var(--inspector-top) - 12px));
+  flex-direction: column;
+  overflow: hidden;
   z-index: ${panelZIndexes.propsPanel};
 
   box-shadow:
@@ -48,10 +56,10 @@ const Container = styled.div<{$pin: boolean}>`
   border-radius: var(--theatre-panel-radius);
   box-sizing: border-box;
 
-  display: ${({$pin}) => ($pin ? 'block' : 'none')};
+  display: ${({$pin}) => ($pin ? 'flex' : 'none')};
 
   &:hover {
-    display: block;
+    display: flex;
   }
 
   @media (max-width: 859px) {
@@ -90,6 +98,7 @@ const Title = styled.div`
 
 const Header = styled.div`
   height: ${headerHeight}px;
+  flex: none;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -103,23 +112,13 @@ const Heading = styled.span`
   font-weight: 600;
 `
 
-const Body = styled.div<{$dockTop?: number}>`
+const Body = styled.div`
   ${pointerEventsAutoInNormalMode};
-  max-height: calc(100vh - 100px);
-  @media (max-width: 1049px) {
-    max-height: ${({$dockTop}) =>
-      $dockTop === undefined
-        ? 'calc(100vh - var(--inspector-top) - 48px)'
-        : `max(0px, calc(${
-            $dockTop - headerHeight - 12
-          }px - var(--inspector-top)))`};
-  }
-  overflow-y: scroll;
-  &::-webkit-scrollbar {
-    display: none;
-  }
-
-  scrollbar-width: none;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--theatre-panel-border) transparent;
   padding: 0 6px 7px;
   user-select: none;
 
@@ -178,6 +177,7 @@ const DetailPanel: React.FC<{sequenceDockTop?: number}> = ({
         <Container
           data-testid="DetailPanel-Object"
           $pin={showDetailsPanel}
+          $dockTop={sequenceDockTop}
           ref={setContainerElt}
           onMouseEnter={() => {
             isDetailPanelHoveredB.set(true)
@@ -202,7 +202,7 @@ const DetailPanel: React.FC<{sequenceDockTop?: number}> = ({
               <TitleBar_Piece>{shownName}</TitleBar_Piece>
             </Title>
           </Header>
-          <Body $dockTop={sequenceDockTop}>
+          <Body>
             <ObjectDetails objects={[obj]} />
           </Body>
         </Container>

@@ -5,8 +5,7 @@
  * 顶栏分组与变换模式组(移动/旋转/缩放)的测试:
  * 四组连体容器带间隔排列;模式组互斥单选(当前模式带 selected 高亮),
  * 点击把对应 mode 传给 onSelectGizmoMode(与 G/R/S、右键菜单同源)。
- * 漫画模式用一个开关收起原始/线稿两种状态:关闭即原始,开启后显示
- * 线稿与投射阴影开关。
+ * 漫画模式用一个开关切换原始/线稿两种状态，开启后显示投射阴影开关。
  * jsdom 直渲(无 testing-library),与 App.hostFlows.test.tsx 同一套手法。
  */
 import React from 'react'
@@ -148,7 +147,7 @@ it('toggles character names independently of manga mode', () => {
   }
 })
 
-it('toggles manga mode and reveals line art and cast shadows', () => {
+it('switches directly from the original render to line art', () => {
   const onSelectRenderMode = jest.fn()
   const {el, unmount} = renderToolbar({
     onSelectRenderMode,
@@ -157,7 +156,6 @@ it('toggles manga mode and reveals line art and cast shadows', () => {
     'button[role="switch"][aria-label="Manga mode"]',
   )!
   expect(toggle.getAttribute('aria-checked')).toBe('false')
-  expect(el.querySelector('button[aria-label="Line art"]')).toBeNull()
   expect(el.querySelector('button[aria-label="Cast shadow"]')).toBeNull()
   act(() => toggle.click())
   expect(onSelectRenderMode).toHaveBeenLastCalledWith('line')
@@ -176,14 +174,11 @@ it('toggles cast shadows inside manga mode and can turn the mode off', () => {
   const toggle = el.querySelector<HTMLButtonElement>(
     'button[role="switch"][aria-label="Manga mode"]',
   )!
-  const line = el.querySelector<HTMLButtonElement>(
-    'button[aria-label="Line art"]',
-  )!
   const shadow = el.querySelector<HTMLButtonElement>(
     'button[role="switch"][aria-label="Cast shadow"]',
   )!
   expect(toggle.getAttribute('aria-checked')).toBe('true')
-  expect(line.getAttribute('aria-pressed')).toBe('true')
+  expect(el.querySelector('button[aria-label="Line art"]')).toBeNull()
   expect(shadow.getAttribute('aria-checked')).toBe('false')
   act(() => shadow.click())
   expect(onToggleMangaShadows).toHaveBeenCalledTimes(1)

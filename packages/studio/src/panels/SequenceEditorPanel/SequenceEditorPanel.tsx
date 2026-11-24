@@ -1,5 +1,5 @@
 import {outlineSelection} from '@dreamerbird/studio/selectors'
-import {usePrism, useVal} from '@dreamerbird/react'
+import {usePrism} from '@dreamerbird/react'
 import {valToAtom} from '@dreamerbird/utils/valToAtom'
 import {prism, val} from '@dreamerbird/dataverse'
 import React, {useEffect, useLayoutEffect, useState} from 'react'
@@ -203,10 +203,6 @@ const SequenceEditorPanel: React.FC<{
         .some((item) => isSheetObject(item) && item.sheet === sheet),
     [sheet],
   )
-  const detailsHidden = useVal(
-    getStudio().ephemeralAtom.pointer.hiddenPanels.details,
-  )
-  const detailsPinned = useVal(getStudio().atomP.ahistoric.pinDetails) !== false
   const editorView = usePrism(
     () =>
       sheet ? getSequenceEditorView(sheet.getSequence().publicApi) : undefined,
@@ -235,7 +231,7 @@ const SequenceEditorPanel: React.FC<{
       docked="bottom"
       dockInsets={{
         left: 12,
-        right: hasFocusedObject && detailsPinned && !detailsHidden ? 330 : 12,
+        right: 12,
         bottom: 12,
       }}
       defaultDockHeight={210}

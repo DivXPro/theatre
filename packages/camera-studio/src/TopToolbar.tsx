@@ -4,7 +4,7 @@
  *     右键菜单共用 useGizmoMode 的 state;选择模式下只点选不挂手柄;
  *     无选中对象时也可先设好模式)
  *   [添加模型|添加路径|添加相机|添加锚点] 各弹各的框体
- *   [漫画模式开关|线稿|投射阴影|人物名称] 视口显示
+ *   [漫画模式开关|投射阴影|人物名称] 视口显示
  *   [画中画|导出视频] 输出
  * 姿势/动作绑定具体物体,入口在右键模型的菜单里;物体的属性设置在各自
  * 面板(见 docs/superpowers/specs/2026-09-12-asset-library-split-design.md)。
@@ -32,7 +32,6 @@ import {
   Export,
   IdentificationBadge,
   Path,
-  PencilSimpleLine,
   PictureInPicture,
   Stop,
 } from '@phosphor-icons/react'
@@ -374,26 +373,16 @@ export function TopToolbar({
               <BookOpenText size={18} aria-hidden />
             </ToolbarBtn>
             {mangaEnabled && (
-              <>
-                <ToolbarBtn
-                  className="selected"
-                  aria-pressed
-                  onClick={() => onSelectRenderMode('line')}
-                  tip={t('pg.toolbar.render.line')}
-                >
-                  <PencilSimpleLine size={18} />
-                </ToolbarBtn>
-                <ToolbarBtn
-                  role="switch"
-                  aria-checked={mangaShadows}
-                  className={mangaShadows ? 'selected' : undefined}
-                  onClick={onToggleMangaShadows}
-                  tip={t('pg.toolbar.render.shadow')}
-                  hint={t('pg.toolbar.render.shadow.hint')}
-                >
-                  <DotsNine size={18} />
-                </ToolbarBtn>
-              </>
+              <ToolbarBtn
+                role="switch"
+                aria-checked={mangaShadows}
+                className={mangaShadows ? 'selected' : undefined}
+                onClick={onToggleMangaShadows}
+                tip={t('pg.toolbar.render.shadow')}
+                hint={t('pg.toolbar.render.shadow.hint')}
+              >
+                <DotsNine size={18} />
+              </ToolbarBtn>
             )}
             <ToolbarBtn
               role="switch"
