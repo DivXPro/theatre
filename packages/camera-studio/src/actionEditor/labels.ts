@@ -1,12 +1,8 @@
-import type {
-  useT} from '@dreamerbird/studio/i18n';
-import {
-  registerFallback,
-  registerMessages
-} from '@dreamerbird/studio/i18n'
+import type {useT} from '@dreamerbird/studio/i18n'
+import {registerFallback, registerMessages} from '@dreamerbird/studio/i18n'
 import type {ActionEditorChannelRef} from './keys'
 
-const en = {
+export const actionEditorEn = {
   'pg.actionEditor.title': 'Action editor',
   'pg.actionEditor.timeline': 'Action timeline',
   'pg.actionEditor.localTime': 'Local time (s)',
@@ -58,7 +54,7 @@ const en = {
   'pg.actionEditor.keepEditing': 'Keep editing',
 }
 
-const zh: Record<keyof typeof en, string> = {
+const zh: Record<keyof typeof actionEditorEn, string> = {
   'pg.actionEditor.title': '动作编辑',
   'pg.actionEditor.timeline': '动作时间轴',
   'pg.actionEditor.localTime': '局部时间（秒）',
@@ -108,7 +104,7 @@ const zh: Record<keyof typeof en, string> = {
   'pg.actionEditor.keepEditing': '继续编辑',
 }
 
-registerMessages('en', en)
+registerMessages('en', actionEditorEn)
 registerMessages('zh-CN', zh)
 registerFallback('zh', 'zh-CN')
 

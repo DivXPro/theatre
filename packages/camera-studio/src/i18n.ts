@@ -1,5 +1,5 @@
 /**
- * camera 场景的词条注册:en + zh-CN 两部词典,模块加载即注入 studio
+ * camera 场景的词条在模块加载时注入 studio
  * 的 i18n 单例(与宿主共享实例,宿主可后注册覆盖同名 key 做品牌定制)。
  *
  * 收编范围:顶栏 tooltip、右键/导出菜单、面板动作名、相机/放置对象的
@@ -18,6 +18,8 @@ import {
   type Messages,
 } from '@dreamerbird/studio/i18n'
 import {poseNameEn, poseNameZhCN} from './poseNameMessages'
+import {cameraLocales} from './i18nLocales'
+import {pathMessages} from './i18nLocales/paths'
 
 export const en: Messages = {
   'pg.toolbar.addModel': 'Add model',
@@ -573,11 +575,19 @@ export const zhCN: Messages = {
  * camera 词条显式注册(bootstrap 用它再注册一次;模块加载的自调用也走
  * 这里——ShotCamera 模块加载期就 translate,副作用必须保留)。
  * registerMessages/registerFallback 均为合并/覆盖语义,重复调用安全。
- * 姿势名词典单独成册(poseNameMessages.ts,约 180 条 × 双语),此处合并注册。
+ * 这里统一注册场景、内置姿势和动作编辑器的翻译。
  */
 export function registerCameraMessages(): void {
   registerMessages('en', {...en, ...poseNameEn})
   registerMessages('zh-CN', {...zhCN, ...poseNameZhCN})
+  for (const [locale, {camera, poseNames, actionEditor}] of Object.entries(
+    cameraLocales,
+  )) {
+    registerMessages(locale, {...camera, ...poseNames, ...actionEditor})
+  }
+  for (const [locale, messages] of Object.entries(pathMessages)) {
+    registerMessages(locale, messages)
+  }
   // navigator.language 是 'zh' / 'zh-TW' 等时也能落到 zh-CN 词典
   registerFallback('zh', 'zh-CN')
 }

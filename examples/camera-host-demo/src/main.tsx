@@ -9,14 +9,24 @@
  * - sync: false:协作关闭(缺省即 false,这里显式写出);
  * - onError: 模块错误交给宿主自己的提示条(不内置错误条)。
  */
-import React, {useCallback, useEffect, useRef, useState} from 'react'
+import React, {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react'
 import ReactDOM from 'react-dom/client'
+import {
+  getLanguage,
+  onLanguageChange,
+  setLanguage,
+} from '@dreamerbird/studio/i18n'
 import {
   useCameraStudio,
   CameraScene,
   loadSceneSyncState,
   resetCameraStudio,
-  setCameraStudioLocale,
   type CameraStudioAgentBridgeConfig,
   type CameraStudioError,
   type CameraStudioExport,
@@ -26,6 +36,7 @@ import {
 } from '@dreamerbird/camera-studio'
 import {MemorySource} from './memorySource'
 import {createDemoSceneSyncAdapter} from './sceneSync'
+import hostMessages from './hostMessages.json'
 import './host-nav.css'
 
 /**
@@ -101,30 +112,19 @@ type SyncPhase =
   | 'conflict'
   | 'error'
 
-function syncNotice(phase: SyncPhase): string {
-  switch (phase) {
-    case 'remote':
-      return '场景有新版本，等待编辑器就绪后自动加载'
-    case 'reloading':
-      return '正在加载最新场景…'
-    case 'updated':
-      return '场景已更新'
-    case 'conflict':
-      return '场景有新版本，当前编辑未保存，未自动覆盖'
-    case 'error':
-      return '加载最新场景失败，请刷新重试'
-    default:
-      return ''
-  }
+function getHostMessages(locale: string): typeof hostMessages.en {
+  return hostMessages[locale as keyof typeof hostMessages] ?? hostMessages.en
 }
 
 /** 宿主自己的错误提示组件:模块只上告结构化错误,不规定 UI 形态 */
 function HostErrorToast({
   error,
   onClose,
+  messages,
 }: {
   error: CameraStudioError
   onClose: () => void
+  messages: typeof hostMessages.en
 }) {
   return (
     <div
@@ -145,12 +145,7 @@ function HostErrorToast({
       }}
     >
       <strong style={{display: 'block', marginBottom: 4}}>
-        {
-          {library: '资产库', export: '视频导出', state: '场景保存'}[
-            error.source
-          ]
-        }
-        ({error.code})
+        {messages[error.source]} ({error.code})
       </strong>
       {error.message}
       <button
@@ -165,7 +160,7 @@ function HostErrorToast({
           cursor: 'pointer',
         }}
       >
-        关闭
+        {messages.close}
       </button>
     </div>
   )
@@ -184,7 +179,6 @@ function StudioRoute({
   onReady,
   onSceneClosed,
   locale,
-  onLocaleChange,
 }: {
   sync: SceneSyncState
   phase: SyncPhase
@@ -192,8 +186,8 @@ function StudioRoute({
   onReady: () => void
   onSceneClosed: () => void
   locale: string
-  onLocaleChange: (locale: string) => void
 }) {
+  const messages = getHostMessages(locale)
   const [notice, setNotice] = useState<CameraStudioError | null>(null)
   const {ready, error, sceneProps, flushState, hasTemporaryChanges} =
     useCameraStudio({
@@ -232,24 +226,31 @@ function StudioRoute({
   return (
     <>
       {notice && (
-        <HostErrorToast error={notice} onClose={() => setNotice(null)} />
+        <HostErrorToast
+          error={notice}
+          onClose={() => setNotice(null)}
+          messages={messages}
+        />
       )}
       <CameraScene
         {...sceneProps}
         headerActions={
           <select
             className="camera-host-nav__language"
-            aria-label="界面语言 / Language"
+            aria-label={messages.interfaceLanguage}
             value={locale}
-            onChange={(event) => onLocaleChange(event.currentTarget.value)}
+            onChange={(event) => setLanguage(event.currentTarget.value)}
           >
-            <option value="zh-CN">中文</option>
-            <option value="en">English</option>
+            {Object.entries(hostMessages).map(([code, {name}]) => (
+              <option key={code} value={code} lang={code}>
+                {name}
+              </option>
+            ))}
           </select>
         }
       />
       <span className="camera-host-nav__status" role="status">
-        {syncNotice(phase)}
+        {phase === 'idle' ? '' : messages[phase]}
       </span>
     </>
   )
@@ -269,7 +270,8 @@ function App({
   const [sceneClosed, setSceneClosed] = useState(false)
   const [opening, setOpening] = useState(false)
   const [openError, setOpenError] = useState<string>()
-  const [locale, setLocale] = useState('zh-CN')
+  const locale = useSyncExternalStore(onLanguageChange, getLanguage)
+  const messages = getHostMessages(locale)
   const [remoteRevision, setRemoteRevision] = useState<string>()
   const controlsRef = useRef<StudioControls | undefined>(undefined)
   const handledRevision = useRef<string | undefined>(undefined)
@@ -279,10 +281,10 @@ function App({
     setStudioReady(false)
     setPhase('idle')
   }, [])
-  const onLocaleChange = (next: string) => {
-    setCameraStudioLocale(next)
-    setLocale(next)
-  }
+  useEffect(() => {
+    document.documentElement.lang = locale
+    document.title = messages.webTitle
+  }, [locale, messages.webTitle])
   const openScene = async () => {
     setOpening(true)
     setOpenError(undefined)
@@ -377,7 +379,7 @@ function App({
     return (
       <main className="camera-host-nav__home">
         <button type="button" onClick={openScene} disabled={opening}>
-          {opening ? '正在打开…' : '打开场景'}
+          {opening ? messages.opening : messages.open}
         </button>
         {openError && <p role="alert">{openError}</p>}
       </main>
@@ -394,7 +396,7 @@ function App({
             font: '13px/1.5 system-ui, sans-serif',
           }}
         >
-          正在加载最新场景…
+          {messages.reloading}
         </div>
       ) : (
         <StudioRoute
@@ -405,7 +407,6 @@ function App({
           onReady={onStudioReady}
           onSceneClosed={onSceneClosed}
           locale={locale}
-          onLocaleChange={onLocaleChange}
         />
       )}
     </div>

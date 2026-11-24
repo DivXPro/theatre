@@ -186,7 +186,11 @@ const TransportBar: React.FC<{
       <ButtonGroup>
         <TransportButton
           onClick={onToggle}
-          title={collapsed ? '展开时间轴' : '收拢时间轴'}
+          title={t(
+            collapsed
+              ? 'workspace.timeline.expand'
+              : 'workspace.timeline.collapse',
+          )}
         >
           <ChevronDown
             style={collapsed ? {transform: 'rotate(180deg)'} : undefined}
@@ -198,14 +202,14 @@ const TransportBar: React.FC<{
         <TransportButton
           onClick={goToStart}
           disabled={!hasSeq}
-          title="回到开头"
+          title={t('workspace.goToStart')}
         >
           <DoubleChevronLeft />
         </TransportButton>
         <TransportButton
           onClick={togglePlay}
           disabled={!hasSeq}
-          title={playing ? '暂停' : '播放'}
+          title={t(playing ? 'workspace.pause' : 'workspace.play')}
         >
           {playing ? <Pause /> : <Play />}
         </TransportButton>
@@ -234,7 +238,7 @@ const TransportBar: React.FC<{
           />
         ) : (
           <LengthValue
-            title="点击修改播放时长(秒)"
+            title={t('workspace.editPlaybackDuration')}
             onClick={() => {
               if (!hasSeq) return
               setDraft(lengthSec.toFixed(2))

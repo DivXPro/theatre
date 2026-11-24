@@ -1,0 +1,57 @@
+export const messages = {
+  'toolbar.outline.tooltip': 'Szenenübersicht',
+  'toolbar.outline.conflict.one':
+    'Im Projekt „{projectId}“ gibt es einen Zustandskonflikt. Wähle das Projekt unten in der Übersicht aus, um den Konflikt zu beheben.',
+  'toolbar.outline.conflict.many':
+    'In {count} Projekten gibt es Zustandskonflikte. Die Projekte sind unten in der Übersicht hervorgehoben.',
+
+  'menu.whatsNew': 'Was gibt’s Neues?',
+  'menu.chatWithUs': 'Mit uns chatten',
+  'menu.help': 'Hilfe',
+  'menu.settings': 'Einstellungen',
+  'menu.docs': 'Dokumentation',
+  'menu.changelog': 'Änderungsprotokoll',
+  'menu.github': 'GitHub',
+  'menu.twitter': 'Twitter',
+  'menu.discord': 'Discord',
+  'menu.version': 'Version',
+  'menu.language': 'Sprache',
+
+  'detailPanel.propsRoot': 'Eigenschaften',
+  'workspace.objects': 'Szenenobjekte',
+  'workspace.outline.collapse': 'Szenenobjekte einklappen',
+  'workspace.outline.expand': 'Szenenobjekte ausklappen',
+  'workspace.timeline': 'Zeitleiste',
+  'workspace.timeline.expand': 'Zeitleiste ausklappen',
+  'workspace.timeline.collapse': 'Zeitleiste einklappen',
+  'workspace.goToStart': 'Zum Anfang',
+  'workspace.play': 'Wiedergabe',
+  'workspace.pause': 'Pause',
+  'workspace.editPlaybackDuration':
+    'Klicken, um die Wiedergabedauer zu ändern (Sekunden)',
+  'workspace.track.expand': 'Ausklappen',
+  'workspace.track.collapse': 'Einklappen',
+  'workspace.curves.add': 'Zum Kurveneditor hinzufügen',
+  'workspace.curves.remove': 'Aus dem Kurveneditor entfernen',
+  'workspace.goToEnd': 'Zum Ende springen',
+  'workspace.transform': 'Transformation',
+  'workspace.lens': 'Objektiv',
+
+  'keyframes.add': 'Keyframe hinzufügen',
+  'keyframes.remove': 'Keyframe entfernen',
+  'keyframes.track': 'Keyframes der Eigenschaft',
+  'keyframes.previous': 'Vorheriger Keyframe',
+  'keyframes.next': 'Nächster Keyframe',
+  'keyframes.empty':
+    'Klicke auf die Raute neben einer Eigenschaft, um einen Keyframe hinzuzufügen',
+
+  'outline.ctx.copy': 'Kopieren',
+  'outline.ctx.paste': 'Einfügen',
+  'outline.ctx.rename': 'Umbenennen',
+  'outline.ctx.delete': 'Löschen',
+  'outline.ctx.newCollection': 'Neue Sammlung',
+  'outline.ctx.moveToCollection': 'In Sammlung „{name}“ verschieben',
+  'outline.ctx.removeFromCollection': 'Aus Sammlung entfernen',
+  'outline.ctx.deleteCollection': 'Sammlung löschen',
+  'outline.ctx.defaultCollectionName': 'Sammlung {n}',
+}

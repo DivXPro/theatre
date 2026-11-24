@@ -1,15 +1,12 @@
 /** @jest-environment jsdom */
 import React, {act} from 'react'
 import {createRoot} from 'react-dom/client'
+import '../i18n'
 ;(globalThis as any).IS_REACT_ACT_ENVIRONMENT = true
 
 jest.mock('@dreamerbird/react', () => ({
   usePrism: (read: () => unknown) => read(),
   useVal: (value: unknown) => value,
-}))
-
-jest.mock('@dreamerbird/studio/i18n', () => ({
-  useI18n: () => ({language: 'en'}),
 }))
 
 jest.mock('@dreamerbird/studio/uiComponents/Popover/usePopover', () => ({

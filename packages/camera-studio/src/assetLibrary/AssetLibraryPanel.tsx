@@ -9,7 +9,7 @@
  */
 import React, {useCallback, useEffect, useRef, useState} from 'react'
 import DetailPanelButton from '@dreamerbird/studio/uiComponents/DetailPanelButton'
-import {useI18n} from '@dreamerbird/studio/i18n'
+import {useT} from '@dreamerbird/studio/i18n'
 import {CanvasContextMenu} from '../contextMenu'
 import {countLibraryEntryUsage} from '../PlacementManager'
 import {PATH_PRESETS} from '../pathPresets'
@@ -36,11 +36,6 @@ const KIND_TITLE_KEYS: Record<AssetKind, string> = {
   pose: 'pg.lib.title.pose',
   animation: 'pg.lib.title.animation',
   path: 'pg.lib.title.path',
-}
-
-/** 预设卡片的显示名:内置预设自带中英双名,按界面语言取 */
-function presetDisplayName(preset: PathPreset, language: string): string {
-  return language.toLowerCase().startsWith('zh') ? preset.name : preset.en
 }
 
 /** 多框体同开时贴左边缘按类型错开,避免完全重叠 */
@@ -206,7 +201,7 @@ export function AssetLibraryPanel({
   const models = useLibraryEntries('model') as ModelEntry[]
   const poses = useLibraryEntries('pose') as PoseEntry[]
   const animations = useLibraryEntries('animation') as AnimationEntry[]
-  const {t, language} = useI18n()
+  const t = useT()
   const fileRef = useRef<HTMLInputElement>(null)
   const [plan, setPlan] = useState<ImportPlan | null>(null)
   const [choices, setChoices] = useState<Array<'reuse' | 'keep'>>([])
@@ -434,9 +429,7 @@ export function AssetLibraryPanel({
       <div className="cs-asset-thumb" style={{fontSize: 0}}>
         <PathPresetThumb preset={preset} />
       </div>
-      <div className="cs-asset-label">
-        {presetDisplayName(preset, language)}
-      </div>
+      <div className="cs-asset-label">{t(`pg.pathPreset.${preset.id}`)}</div>
     </div>
   )
 

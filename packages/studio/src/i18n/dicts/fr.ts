@@ -1,0 +1,57 @@
+export const messages = {
+  'toolbar.outline.tooltip': 'Plan de la scène',
+  'toolbar.outline.conflict.one':
+    'Le projet « {projectId} » présente un conflit d’état. Sélectionnez-le dans le plan ci-dessous pour résoudre le conflit.',
+  'toolbar.outline.conflict.many':
+    '{count} projets présentent des conflits d’état. Ils sont mis en évidence dans le plan ci-dessous.',
+
+  'menu.whatsNew': 'Quoi de neuf ?',
+  'menu.chatWithUs': 'Discuter avec nous',
+  'menu.help': 'Aide',
+  'menu.settings': 'Paramètres',
+  'menu.docs': 'Documentation',
+  'menu.changelog': 'Journal des modifications',
+  'menu.github': 'GitHub',
+  'menu.twitter': 'Twitter',
+  'menu.discord': 'Discord',
+  'menu.version': 'Version',
+  'menu.language': 'Langue',
+
+  'detailPanel.propsRoot': 'Propriétés',
+  'workspace.objects': 'Objets de la scène',
+  'workspace.outline.collapse': 'Replier les objets de la scène',
+  'workspace.outline.expand': 'Déplier les objets de la scène',
+  'workspace.timeline': 'Chronologie',
+  'workspace.timeline.expand': 'Déployer la timeline',
+  'workspace.timeline.collapse': 'Replier la timeline',
+  'workspace.goToStart': 'Aller au début',
+  'workspace.play': 'Lire',
+  'workspace.pause': 'Mettre en pause',
+  'workspace.editPlaybackDuration':
+    'Cliquez pour modifier la durée de lecture (en secondes)',
+  'workspace.track.expand': 'Déployer',
+  'workspace.track.collapse': 'Replier',
+  'workspace.curves.add': 'Ajouter à l’éditeur de courbes',
+  'workspace.curves.remove': 'Retirer de l’éditeur de courbes',
+  'workspace.goToEnd': 'Aller à la fin',
+  'workspace.transform': 'Transformation',
+  'workspace.lens': 'Objectif',
+
+  'keyframes.add': 'Ajouter une image clé',
+  'keyframes.remove': 'Retirer l’image clé',
+  'keyframes.track': 'Images clés de la propriété',
+  'keyframes.previous': 'Image clé précédente',
+  'keyframes.next': 'Image clé suivante',
+  'keyframes.empty':
+    'Cliquez sur le losange à côté d’une propriété pour ajouter une image clé',
+
+  'outline.ctx.copy': 'Copier',
+  'outline.ctx.paste': 'Coller',
+  'outline.ctx.rename': 'Renommer',
+  'outline.ctx.delete': 'Supprimer',
+  'outline.ctx.newCollection': 'Nouvelle collection',
+  'outline.ctx.moveToCollection': 'Déplacer vers la collection « {name} »',
+  'outline.ctx.removeFromCollection': 'Retirer de la collection',
+  'outline.ctx.deleteCollection': 'Supprimer la collection',
+  'outline.ctx.defaultCollectionName': 'Collection {n}',
+}

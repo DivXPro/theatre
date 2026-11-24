@@ -1,6 +1,7 @@
 import {getStudioSync, types} from '@dreamerbird/core'
 import type {ISheet, ISheetObject} from '@dreamerbird/core'
-import {getLanguage} from '@dreamerbird/studio/i18n'
+import {translate} from '@dreamerbird/studio/i18n'
+import '../i18n'
 import {getPathMeta} from '../CameraPath'
 import {parsePathPoints} from '../pathModel'
 import type {PathTransform, Vec3Like} from '../pathModel'
@@ -14,15 +15,13 @@ export const CHARACTER_PATH_EDITOR = 'characterPathBinding'
 
 export const characterPathPropConfig = {
   characterPathId: types.string('', {
-    label: () =>
-      getLanguage().startsWith('zh') ? '角色路径' : 'Character path',
+    label: () => translate('pg.characterPath.property'),
     editor: CHARACTER_PATH_EDITOR,
   }),
   characterPathOrient: types.boolean(true, {hidden: true}),
   characterPathProgress: types.number(0, {
     range: [0, 100],
-    label: () =>
-      getLanguage().startsWith('zh') ? '路径进度 (%)' : 'Path Progress (%)',
+    label: () => translate('pg.characterPath.progress'),
     hidden: true,
   }),
 }

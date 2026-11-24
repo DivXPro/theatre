@@ -3,10 +3,11 @@ import {
   type CameraStudioDesktopHost,
   type CameraStudioDesktopScene,
 } from '@dreamerbird/camera-studio'
+import hostMessages from './hostMessages.json'
 
 type DesktopCommand =
   | {type: 'open' | 'close' | 'quit'}
-  | {type: 'locale'; locale: string}
+  | {type: 'locale'; locale: keyof typeof hostMessages}
 
 type DesktopIpc = CameraStudioDesktopHost & {
   loadScene(): Promise<CameraStudioDesktopScene>
@@ -78,6 +79,9 @@ async function handleCommand(command: DesktopCommand) {
       await editor.closeScene()
       break
     case 'locale':
+      document.documentElement.lang = command.locale
+      document.title = hostMessages[command.locale].desktopTitle
+      openButton.textContent = hostMessages[command.locale].openLocal
       editor.setLocale(command.locale)
       break
     case 'quit':

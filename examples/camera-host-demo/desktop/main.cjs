@@ -18,8 +18,9 @@ const {
   sep,
 } = require('node:path')
 const {pathToFileURL} = require('node:url')
+const hostMessages = require('../src/hostMessages.json')
 
-const title = 'Camera Studio 桌面示例'
+const defaultLocale = 'zh-CN'
 const projectId = 'Desktop Scene'
 const entry = 'app://camera-studio/desktop.html'
 const dist = resolve(__dirname, '../dist')
@@ -52,8 +53,9 @@ function serveBundle(request) {
 }
 
 function createWindow() {
+  let locale = defaultLocale
   const window = new BrowserWindow({
-    title,
+    title: hostMessages[locale].desktopTitle,
     width: 1280,
     height: 800,
     webPreferences: {
@@ -96,7 +98,7 @@ function createWindow() {
     } catch (error) {
       if (error.code !== 'ENOENT') throw error
     }
-    window.setTitle(title)
+    send({type: 'locale', locale})
     return {projectId, initialState}
   })
   handle('save-scene', async ({projectId: id, state}) => {
@@ -159,29 +161,40 @@ function createWindow() {
   window.webContents.setWindowOpenHandler(() => ({action: 'deny'}))
   window.webContents.on('will-navigate', (event) => event.preventDefault())
 
-  Menu.setApplicationMenu(
-    Menu.buildFromTemplate([
-      {
-        label: '场景',
-        submenu: [
-          {label: '打开本地场景', click: () => send({type: 'open'})},
-          {label: '关闭场景', click: () => send({type: 'close'})},
-          {
-            label: '退出桌面示例',
-            accelerator: 'CommandOrControl+Q',
-            click: () => window.close(),
-          },
-        ],
-      },
-      {
-        label: '语言',
-        submenu: [
-          {label: '中文', click: () => send({type: 'locale', locale: 'zh-CN'})},
-          {label: 'English', click: () => send({type: 'locale', locale: 'en'})},
-        ],
-      },
-    ]),
-  )
+  function updateMenu() {
+    const messages = hostMessages[locale]
+    window.setTitle(messages.desktopTitle)
+    Menu.setApplicationMenu(
+      Menu.buildFromTemplate([
+        {
+          label: messages.scene,
+          submenu: [
+            {label: messages.openLocal, click: () => send({type: 'open'})},
+            {label: messages.closeScene, click: () => send({type: 'close'})},
+            {
+              label: messages.quit,
+              accelerator: 'CommandOrControl+Q',
+              click: () => window.close(),
+            },
+          ],
+        },
+        {
+          label: messages.language,
+          submenu: Object.entries(hostMessages).map(([code, {name}]) => ({
+            label: name,
+            type: 'radio',
+            checked: locale === code,
+            click: () => {
+              locale = code
+              send({type: 'locale', locale})
+              updateMenu()
+            },
+          })),
+        },
+      ]),
+    )
+  }
+  updateMenu()
   void window.loadURL(entry)
 }
 

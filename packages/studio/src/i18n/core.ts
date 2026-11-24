@@ -27,6 +27,11 @@ let currentExplicit = false
 /** 启动时是否已经做过一次语言决策(initI18nLanguage) */
 let resolved = false
 
+function registeredBaseLanguage(lang: string): string | undefined {
+  const base = lang.split('-')[0]
+  return base !== lang && dictionaries.has(base) ? base : undefined
+}
+
 function lookup(lang: string, key: string): string | undefined {
   let l: string | undefined = lang
   const guard = new Set<string>()
@@ -34,7 +39,7 @@ function lookup(lang: string, key: string): string | undefined {
     guard.add(l)
     const hit = dictionaries.get(l)?.[key]
     if (hit !== undefined) return hit
-    l = fallbacks.get(l)
+    l = fallbacks.get(l) ?? registeredBaseLanguage(l)
   }
   // 链走完后兜底 en:任何语言缺词条都退回英文,不出现 key 原文
   return dictionaries.get('en')?.[key]
@@ -55,13 +60,20 @@ export function resolveLanguage(explicit?: string): {
   language: string
   source: LanguageSource
 } {
-  if (explicit && (dictionaries.has(explicit) || explicit === 'en')) {
-    return {language: explicit, source: 'explicit'}
+  if (explicit) {
+    const language =
+      dictionaries.has(explicit) || explicit === 'en'
+        ? explicit
+        : registeredBaseLanguage(explicit)
+    if (language) return {language, source: 'explicit'}
   }
   try {
     const persisted = window.localStorage.getItem(STORAGE_KEY)
-    if (persisted && dictionaries.has(persisted)) {
-      return {language: persisted, source: 'persisted'}
+    if (persisted) {
+      const language = dictionaries.has(persisted)
+        ? persisted
+        : registeredBaseLanguage(persisted)
+      if (language) return {language, source: 'persisted'}
     }
   } catch {
     // 隐私模式等场景 localStorage 不可达:跳过
@@ -72,8 +84,8 @@ export function resolveLanguage(explicit?: string): {
     // ('zh' 吃 zh-CN 词典,取第一个以 nav 为前缀的注册语言)→ 回退链命中
     // (zh-TW navigator 对 zh-CN 词典,若注册了 zh-TW→zh-CN 回退)
     if (dictionaries.has(nav)) return {language: nav, source: 'navigator'}
-    const prefix = nav.split('-')[0]
-    if (dictionaries.has(prefix)) return {language: prefix, source: 'navigator'}
+    const base = registeredBaseLanguage(nav)
+    if (base) return {language: base, source: 'navigator'}
     for (const lang of dictionaries.keys()) {
       if (lang.startsWith(nav + '-'))
         return {language: lang, source: 'navigator'}
@@ -134,12 +146,16 @@ export function languageDisplayName(code: string, inLanguage?: string): string {
  * 偏好);用户手动切换(explicit=false)持久化,下次启动优先。
  */
 export function setLanguage(lang: string, opts?: {explicit?: boolean}): void {
-  if (lang === currentLanguage) return
-  currentLanguage = lang
+  const language =
+    dictionaries.has(lang) || fallbacks.has(lang)
+      ? lang
+      : registeredBaseLanguage(lang) ?? lang
+  if (language === currentLanguage) return
+  currentLanguage = language
   currentExplicit = opts?.explicit === true
   if (!currentExplicit) {
     try {
-      window.localStorage.setItem(STORAGE_KEY, lang)
+      window.localStorage.setItem(STORAGE_KEY, language)
     } catch {
       // 持久化失败不阻塞切换
     }

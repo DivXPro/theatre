@@ -148,7 +148,7 @@ function SceneEditor({scene, host, locale}) {
 
 - **退出。** 工具栏和宿主调用 `closeScene()` 走同一保存及关闭流程。保存失败或仍有临时编辑时保留场景。成功后 `ready` 变为 `false`，场景会话清理完成，再调用 `onSceneClosed({projectId})`。切换场景时，等关闭完成后为新的宿主快照挂载新的 `SceneEditor`。若宿主直接卸载编辑器，可以先等待 `flushState()`，卸载后再调用 `resetCameraStudio()` 以载入另一份快照。
 - **导出。** `onSaveExport` 收到 `kind`、`blob`、`fileName`、`mimeType` 和渲染元数据。图片是当前镜头在播放头位置的 PNG。视频使用编码器实际生成的 MP4 或 WebM，并携带帧率和时长。回调可返回 Promise，失败经 `onError` 报告。省略回调时，图片直接下载，视频仍提供浏览器保存选项。
-- **语言。** `ui.locale` 设置初始语言。场景挂载后，调用 `setCameraStudioLocale('zh-CN')` 或 `setCameraStudioLocale('en')` 即时更新视口和 Studio 面板，同时保留浏览器中的用户语言偏好。
+- **语言。** `ui.locale` 设置初始语言。内置简体中文 `zh-CN`、英语 `en`、日语 `ja`、韩语 `ko`、俄语 `ru`、德语 `de`、西班牙语 `es`、巴西葡萄牙语 `pt` 和法语 `fr`。`ja-JP`、`ko-KR`、`pt-BR` 等地区代码会匹配对应的基础语言词典。场景挂载后，调用 `setCameraStudioLocale('ja')` 即时更新视口和 Studio 面板，同时保留浏览器中的用户语言偏好。
 
 ### 单机桌面接入
 

@@ -1,10 +1,18 @@
 /**
- * r3f 基础属性的界面词条(en + zh-CN 四部词典,纯数据无依赖)。
+ * r3f 基础属性和编辑器的界面词条(纯数据)。
  * 由 main/i18n.ts 与 extension/i18n.ts 两个薄注册壳分别注入 studio
  * i18n 单例——src 根部禁值导入 @dreamerbird/studio 子路径(生产构建
  * 不可用),main/extension 各自的 eslint 规则又互禁跨边,所以词典
  * 放共享根部,注册壳放两侧。
  */
+import {messages as ja} from './i18nLocales/ja'
+import {messages as ko} from './i18nLocales/ko'
+import {messages as ru} from './i18nLocales/ru'
+import {messages as de} from './i18nLocales/de'
+import {messages as es} from './i18nLocales/es'
+import {messages as pt} from './i18nLocales/pt'
+import {messages as fr} from './i18nLocales/fr'
+
 export const r3fPropsEn = {
   // 通用变换(所有可编辑对象)
   'r3f.props.position': 'Position',
@@ -84,4 +92,19 @@ export const r3fEditorZhCN: Record<keyof typeof r3fEditorEn, string> = {
   'r3f.editor.transformControls': '变换控制',
   'r3f.editor.mode': '模式',
   'r3f.editor.space': '空间',
+}
+
+export const r3fMessages: Record<
+  string,
+  Record<keyof typeof r3fPropsEn | keyof typeof r3fEditorEn, string>
+> = {
+  en: {...r3fPropsEn, ...r3fEditorEn},
+  'zh-CN': {...r3fPropsZhCN, ...r3fEditorZhCN},
+  ja,
+  ko,
+  ru,
+  de,
+  es,
+  pt,
+  fr,
 }

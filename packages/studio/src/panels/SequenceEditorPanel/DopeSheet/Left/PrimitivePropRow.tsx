@@ -4,7 +4,7 @@ import {encodePathToProp} from '@dreamerbird/utils/pathToProp'
 import pointerDeep from '@dreamerbird/utils/pointerDeep'
 import {usePrism} from '@dreamerbird/react'
 import type {$IntentionalAny} from '@dreamerbird/core/types/public'
-import {usePropLabel} from '@dreamerbird/studio/i18n'
+import {usePropLabel, useT} from '@dreamerbird/studio/i18n'
 import type {Pointer} from '@dreamerbird/dataverse'
 import {val} from '@dreamerbird/dataverse'
 import React, {useCallback, useRef} from 'react'
@@ -147,6 +147,10 @@ const PrimitivePropRow: React.FC<{
   const isSelectedRef = useRef<boolean>(false)
   const isSelected = typeof possibleColor === 'string'
   isSelectedRef.current = isSelected
+  const t = useT()
+  const curveAction = t(
+    isSelected ? 'workspace.curves.remove' : 'workspace.curves.add',
+  )
 
   const toggleSelect = useCallback(() => {
     const c = leaf.sheetObject.address
@@ -200,8 +204,8 @@ const PrimitivePropRow: React.FC<{
             $graphEditorColor={possibleColor ?? '1'}
             style={{opacity: isSelectable ? 1 : 0.25}}
             disabled={!isSelectable}
-            aria-label={isSelected ? '从曲线编辑器移除' : '添加到曲线编辑器'}
-            title={isSelected ? '从曲线编辑器移除' : '添加到曲线编辑器'}
+            aria-label={curveAction}
+            title={curveAction}
           >
             <GraphIcon />
           </PrimitivePropRowIconContainer>

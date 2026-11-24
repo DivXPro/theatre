@@ -2,7 +2,7 @@ import React, {useState} from 'react'
 import type {ISheetObject} from '@dreamerbird/core'
 import type {PropTypeConfig_AllSimples} from '@dreamerbird/core/types/public'
 import {usePrism, useVal} from '@dreamerbird/react'
-import {useI18n} from '@dreamerbird/studio/i18n'
+import {useT} from '@dreamerbird/studio/i18n'
 import {
   registerCustomPropEditor,
   unregisterCustomPropEditor,
@@ -24,51 +24,6 @@ import type {
   CharacterPathEvaluation,
 } from './index'
 
-const labels = {
-  en: {
-    bind: 'Bind path…',
-    settings: 'Character path settings',
-    repair: 'Repair path…',
-    missing: 'The bound path is missing or has no usable curve.',
-    empty: 'Add a usable scene path from the path library.',
-    path: 'Scene path',
-    choose: 'Choose a path',
-    orient: 'Orient along path',
-    bound: 'Bound',
-    heading: 'Heading',
-    fixedHeading: 'Fixed heading',
-    confirm: 'Confirm binding',
-    unbind: 'Unbind',
-    cancel: 'Cancel',
-    position: 'The path drives position. Position keys resume when unbound.',
-    positionAndRotation:
-      'The path drives position and heading. Their keys resume when unbound.',
-  },
-  zh: {
-    bind: '绑定路径…',
-    settings: '角色路径设置',
-    repair: '修复路径…',
-    missing: '绑定的路径已丢失或没有可用曲线。',
-    empty: '请从路径库添加一条可用的场景路径。',
-    path: '场景路径',
-    choose: '选择路径',
-    orient: '沿路径转向',
-    bound: '已绑定',
-    heading: '转向',
-    fixedHeading: '固定朝向',
-    confirm: '确认绑定',
-    unbind: '解除绑定',
-    cancel: '取消',
-    position: '路径接管位置。解除绑定后恢复位置关键帧。',
-    positionAndRotation: '路径接管位置和朝向。解除绑定后恢复原有关键帧。',
-  },
-}
-
-function usePathLabels() {
-  const {language} = useI18n()
-  return labels[language.startsWith('zh') ? 'zh' : 'en']
-}
-
 type CharacterPathBindingFormProps = {
   choices: PathEntry[]
   evaluation: CharacterPathEvaluation
@@ -87,7 +42,7 @@ export const CharacterPathBindingForm = React.forwardRef<
   {choices, evaluation, orient, commit, close, style},
   ref,
 ) {
-  const text = usePathLabels()
+  const t = useT()
   const [pathKey, setPathKey] = useState(
     evaluation.status === 'active' ? evaluation.pathKey : '',
   )
@@ -103,7 +58,7 @@ export const CharacterPathBindingForm = React.forwardRef<
   return (
     <form
       ref={ref}
-      aria-label={text.settings}
+      aria-label={t('pg.characterPath.settings')}
       onSubmit={(event) => {
         event.preventDefault()
         if (canBind) submit(pathKey)
@@ -117,13 +72,19 @@ export const CharacterPathBindingForm = React.forwardRef<
       className="cs-character-path-popup"
       style={style}
     >
-      {evaluation.status === 'missing' && <div>{text.missing}</div>}
+      {evaluation.status === 'missing' && (
+        <div>{t('pg.characterPath.missing')}</div>
+      )}
       {evaluation.status === 'active' && (
-        <div>{orient ? text.positionAndRotation : text.position}</div>
+        <div>
+          {orient
+            ? t('pg.characterPath.positionAndRotation')
+            : t('pg.characterPath.position')}
+        </div>
       )}
       {choices.length > 0 ? (
         <label className="cs-character-path-field">
-          {text.path}
+          {t('pg.characterPath.path')}
           <select
             autoFocus
             value={canBind ? pathKey : ''}
@@ -133,7 +94,7 @@ export const CharacterPathBindingForm = React.forwardRef<
             }}
           >
             <option value="" disabled>
-              {text.choose}
+              {t('pg.characterPath.choose')}
             </option>
             {choices.map(({pathKey: key}) => (
               <option key={key} value={key}>
@@ -143,7 +104,7 @@ export const CharacterPathBindingForm = React.forwardRef<
           </select>
         </label>
       ) : (
-        <div>{text.empty}</div>
+        <div>{t('pg.characterPath.empty')}</div>
       )}
       <label>
         <input
@@ -154,20 +115,20 @@ export const CharacterPathBindingForm = React.forwardRef<
             setError('')
           }}
         />
-        {text.orient}
+        {t('pg.characterPath.orient')}
       </label>
       {error && <div role="alert">{error}</div>}
       <div style={{display: 'flex', flexWrap: 'wrap', gap: 6}}>
         <button type="submit" disabled={!canBind}>
-          {text.confirm}
+          {t('pg.characterPath.confirm')}
         </button>
         {evaluation.status !== 'unbound' && (
           <button type="button" onClick={() => submit('')}>
-            {text.unbind}
+            {t('pg.characterPath.unbind')}
           </button>
         )}
         <button type="button" onClick={close}>
-          {text.cancel}
+          {t('pg.characterPath.cancel')}
         </button>
       </div>
     </form>
@@ -179,7 +140,7 @@ function CharacterPathRow({
 }: {
   character: ISheetObject<typeof characterPathPropConfig>
 }) {
-  const text = usePathLabels()
+  const t = useT()
   const evaluation = usePrism(
     () => evaluateCharacterPath(character.sheet, character.value),
     [character],
@@ -198,15 +159,23 @@ function CharacterPathRow({
   )
   const caption =
     evaluation.status === 'active'
-      ? `${text.bound} · ${orient ? text.heading : text.fixedHeading}`
+      ? `${t('pg.characterPath.bound')} · ${
+          orient
+            ? t('pg.characterPath.heading')
+            : t('pg.characterPath.fixedHeading')
+        }`
       : evaluation.status === 'missing'
-        ? text.repair
-        : text.bind
+        ? t('pg.characterPath.repair')
+        : t('pg.characterPath.bind')
   return (
     <div className="cs-character-path-control">
       <button
         type="button"
-        aria-label={evaluation.status === 'active' ? text.settings : caption}
+        aria-label={
+          evaluation.status === 'active'
+            ? t('pg.characterPath.settings')
+            : caption
+        }
         aria-expanded={popover.isOpen}
         title={
           evaluation.status === 'active'

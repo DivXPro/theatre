@@ -1,6 +1,15 @@
-import {en} from './en'
-import {zhCN} from './zh-CN'
+import {studioMessages} from '.'
 
-test('studio 内置词典 en/zh-CN key 集合一致', () => {
-  expect(Object.keys(zhCN).sort()).toEqual(Object.keys(en).sort())
-})
+test.each(Object.entries(studioMessages))(
+  '%s has all studio messages and preserves their interpolation variables',
+  (_locale, messages) => {
+    const en = studioMessages.en
+    expect(Object.keys(messages).sort()).toEqual(Object.keys(en).sort())
+    for (const [key, message] of Object.entries(messages)) {
+      expect(message.trim()).not.toBe('')
+      expect((message.match(/\{\w+\}/g) ?? []).sort()).toEqual(
+        (en[key].match(/\{\w+\}/g) ?? []).sort(),
+      )
+    }
+  },
+)

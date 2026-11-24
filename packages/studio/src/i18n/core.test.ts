@@ -138,6 +138,28 @@ describe('语言决策(resolveLanguage)', () => {
     expect(resolveLanguage()).toEqual({language: 'zh-CN', source: 'navigator'})
   })
 
+  it('matches host, saved, and browser regional locales to a registered base language', () => {
+    registerMessages('pt', {hello: 'Olá'})
+    mockNavigatorLanguage('pt-PT')
+    expect(resolveLanguage()).toEqual({language: 'pt', source: 'navigator'})
+    window.localStorage.setItem('theatre-i18n-language', 'pt-BR')
+    expect(resolveLanguage()).toEqual({language: 'pt', source: 'persisted'})
+    expect(resolveLanguage('pt-BR')).toEqual({
+      language: 'pt',
+      source: 'explicit',
+    })
+    expect(translate('hello', undefined, 'pt-PT')).toBe('Olá')
+  })
+
+  it('prefers a registered regional dictionary over its base language', () => {
+    registerMessages('es', {label: 'Color', save: 'Guardar'})
+    registerMessages('es-MX', {label: 'Tono'})
+    setLanguage('es-MX')
+    expect(getLanguage()).toBe('es-MX')
+    expect(translate('label')).toBe('Tono')
+    expect(translate('save')).toBe('Guardar')
+  })
+
   it('浏览器语言沿回退链命中(zh-TW → zh-CN)', () => {
     registerMessages('zh-CN', {})
     registerFallback('zh-TW', 'zh-CN')

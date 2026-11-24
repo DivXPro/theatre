@@ -5,6 +5,7 @@ import type {
   SequenceEditorTree_SheetObject,
 } from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/tree'
 import type {VoidFn} from '@dreamerbird/core/types/public'
+import {useT} from '@dreamerbird/studio/i18n'
 import React, {useRef} from 'react'
 import {HiOutlineChevronRight} from 'react-icons/hi'
 import styled, {css} from 'styled-components'
@@ -220,6 +221,7 @@ const AnyCompositeRow: React.FC<{
   isCollapsed,
   headerActions,
 }) => {
+  const t = useT()
   const hasChildren = Array.isArray(children) && children.length > 0
 
   const rowHeaderRef = useRef<HTMLDivElement | null>(null)
@@ -240,7 +242,9 @@ const AnyCompositeRow: React.FC<{
       >
         <LeftRowHead_Icon
           type="button"
-          aria-label={isCollapsed ? '展开' : '折叠'}
+          aria-label={t(
+            isCollapsed ? 'workspace.track.expand' : 'workspace.track.collapse',
+          )}
           aria-expanded={!isCollapsed}
           $isCollapsed={isCollapsed}
           onClick={(event) => {

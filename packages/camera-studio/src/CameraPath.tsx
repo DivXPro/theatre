@@ -29,7 +29,7 @@ import {
 import type {CurvePath, Object3D} from 'three'
 import {registerEditorOnly} from './editorOnly'
 import {useModalGrab} from './modalGrab'
-import {translate} from '@dreamerbird/studio/i18n'
+import {translate, useT} from '@dreamerbird/studio/i18n'
 // 模块顶层 label 用 translate:自带副作用导入,保证词条先注册(同 ShotCamera)
 import './i18n'
 import {
@@ -1059,6 +1059,7 @@ export function PathEditBar({
   onAddPoint: () => void
   onDeleteSelected: () => void
 }) {
+  const t = useT()
   const btn = (disabled: boolean): React.CSSProperties => ({
     padding: '3px 10px',
     borderRadius: 4,
@@ -1090,17 +1091,19 @@ export function PathEditBar({
       <button
         style={btn(false)}
         onClick={onAddPoint}
-        title="在路径末尾续一个控制点"
+        title={t('pg.pathEdit.appendHint')}
       >
-        加点
+        {t('pg.pathEdit.add')}
       </button>
       <button
         style={btn(!hasSelection)}
         disabled={!hasSelection}
         onClick={onDeleteSelected}
-        title={hasSelection ? '删除选中的控制点' : '先点选一个控制点'}
+        title={t(
+          hasSelection ? 'pg.pathEdit.deleteHint' : 'pg.pathEdit.selectHint',
+        )}
       >
-        删除选中点
+        {t('pg.pathEdit.delete')}
       </button>
     </div>
   )
@@ -1130,6 +1133,7 @@ export function PathPointEditor({
   /** 行进进度轨道的关键帧(时刻秒 + 进度值),列出"这个点钉在了哪些时间"用 */
   progressKeyframes?: readonly {position: number; value: number}[]
 }) {
+  const t = useT()
   const meta = useMemo(() => getPathMeta(sheet, metaKey), [sheet, metaKey])
   const entries = usePathPointEntries(meta)
   const curve = useMemo(() => buildCurve(entries), [entries])
@@ -1218,8 +1222,8 @@ export function PathPointEditor({
       ))}
       {isMiddle && (
         <NumberInput
-          label="进度"
-          title="进度锚点(0~1):行进进度走到这个值时相机正好过这个点;改它不改路径形状,只改节奏(局部变速)"
+          label={t('pg.pathEdit.progress')}
+          title={t('pg.pathEdit.progressHint')}
           value={Math.round(uEffective * 1000) / 1000}
           step={0.01}
           width={56}
@@ -1229,7 +1233,7 @@ export function PathPointEditor({
       {isMiddle && entry.u !== undefined && (
         <button
           onClick={resetU}
-          title="清掉手动锚点,回到自动(弧长等比)"
+          title={t('pg.pathEdit.autoHint')}
           style={{
             background: 'transparent',
             border: '1px solid #555',
@@ -1240,13 +1244,13 @@ export function PathPointEditor({
             padding: '2px 6px',
           }}
         >
-          自动
+          {t('pg.pathEdit.auto')}
         </button>
       )}
       {onPinAtPlayhead && (
         <button
           onClick={() => onPinAtPlayhead(uEffective)}
-          title="在当前播放头时间给行进进度打一个值=该点锚点的关键帧:这个点的抵达时间就此上时间轴,拖关键帧即改时间"
+          title={t('pg.pathEdit.pinHint')}
           style={{
             background: '#3a4a66',
             border: '1px solid #557',
@@ -1257,13 +1261,16 @@ export function PathPointEditor({
             padding: '2px 8px',
           }}
         >
-          钉到播放头
+          {t('pg.pathEdit.pin')}
         </button>
       )}
       {pinnedTimes.length > 0 && (
         <span style={{color: '#9fb8dd'}}>
-          已钉:
-          {pinnedTimes.map((t) => `t=${t.toFixed(2)}s`).join('、')}
+          {t('pg.pathEdit.pinned', {
+            times: pinnedTimes
+              .map((time) => `t=${time.toFixed(2)}s`)
+              .join(', '),
+          })}
         </span>
       )}
     </div>
@@ -1279,10 +1286,11 @@ function AxisInput({
   value: number
   onCommit: (v: number) => void
 }) {
+  const t = useT()
   return (
     <NumberInput
       label={axis}
-      title="控制点的局部坐标(相对路径原点);整体挪路径用对象模式的位置属性/移动箭头"
+      title={t('pg.pathEdit.pointCoordinates')}
       value={value}
       step={0.1}
       width={72}

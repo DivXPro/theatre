@@ -5,12 +5,8 @@
  * 与 extension/i18n.ts 内容相同;重复注册同值合并,无副作用。
  */
 import {registerMessages} from '@dreamerbird/studio/i18n'
-import {
-  r3fPropsEn,
-  r3fPropsZhCN,
-  r3fEditorEn,
-  r3fEditorZhCN,
-} from '../i18nDicts'
+import {r3fMessages} from '../i18nDicts'
 
-registerMessages('en', {...r3fPropsEn, ...r3fEditorEn})
-registerMessages('zh-CN', {...r3fPropsZhCN, ...r3fEditorZhCN})
+for (const [locale, messages] of Object.entries(r3fMessages)) {
+  registerMessages(locale, messages)
+}

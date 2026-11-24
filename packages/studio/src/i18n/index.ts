@@ -1,7 +1,7 @@
 /**
  * i18n 公共入口。宿主应用与 playground 从这里拿 t()/useT()。
  *
- * 模块加载即注册内置词条(en/zh-CN)并完成一次语言决策
+ * 模块加载即注册内置词条并完成一次语言决策
  * (持久化的用户选择 > 浏览器语言 > 'en');宿主通过
  * studio.extend({i18n:{language}}) 或 studio.i18n.setLanguage
  * 覆盖/切换。
@@ -28,8 +28,7 @@ export {
   type TFunction,
 } from './react'
 
-import {en} from './dicts/en'
-import {zhCN} from './dicts/zh-CN'
+import {studioMessages} from './dicts'
 import {
   getLanguage,
   getRegisteredLanguages,
@@ -39,8 +38,9 @@ import {
   translate,
 } from './core'
 
-registerMessages('en', en)
-registerMessages('zh-CN', zhCN)
+for (const [locale, messages] of Object.entries(studioMessages)) {
+  registerMessages(locale, messages)
+}
 initI18nLanguage()
 
 // 浏览器控制台调试钩子(对齐 __cameraShot 的先例):切换后跑
