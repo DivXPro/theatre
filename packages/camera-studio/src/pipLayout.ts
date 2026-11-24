@@ -1,69 +1,113 @@
 import {useEffect, useState} from 'react'
+import type {RefObject} from 'react'
 
-/**
- * 时间轴面板在 studio 的 shadow DOM 里(studio UI 整体挂
- * #theatrejs-studio-root 的开放 shadow root),普通 DOM 选择器够不到,
- * 必须从 host 先进 shadowRoot 再 querySelector。
- */
 const STUDIO_HOST_ID = 'theatrejs-studio-root'
 const SEQUENCE_PANEL_SELECTOR = '[data-panel-id="sequenceEditor"]'
-/** 画中画与时间轴面板之间的空隙 */
+const DETAIL_PANEL_SELECTOR = '[data-testid="DetailPanel-Object"]'
 const GAP_PX = 12
-/** 时间轴收拢(只剩停靠条)时的底部留白 */
-const COLLAPSED_BOTTOM_PX = 48
+const MIN_PREVIEW_BOTTOM = 60
+const DEFAULT_RIGHT = 16
 
-/**
- * 画中画底部留白(px):时间轴面板展开时悬在它上方留 GAP_PX 空隙,
- * 收拢/不存在时回落到 COLLAPSED_BOTTOM_PX。
- * 面板高度可拖拽、可收拢,所以监听尺寸/DOM/窗口变化实时重算。
- */
-export function usePipBottom(): number {
-  const [bottom, setBottom] = useState(COLLAPSED_BOTTOM_PX)
+export function previewWidth(viewportWidth: number): number {
+  return Math.round(Math.min(viewportWidth * 0.2, 232))
+}
+
+/** The canvas and DOM preview share their rectangle, even in an embedded host. */
+export function usePreviewLayout(sceneRef: RefObject<HTMLDivElement | null>) {
+  const [layout, setLayout] = useState({
+    bottom: MIN_PREVIEW_BOTTOM,
+    right: DEFAULT_RIGHT,
+  })
 
   useEffect(() => {
-    const findPanel = (): HTMLElement | null =>
-      document
-        .getElementById(STUDIO_HOST_ID)
-        ?.shadowRoot?.querySelector<HTMLElement>(SEQUENCE_PANEL_SELECTOR) ??
-      null
+    let shadow: ShadowRoot | null = null
+    let studioHost: HTMLElement | null = null
+    let timeline: HTMLElement | null = null
+    let details: HTMLElement | null = null
+    const scene = sceneRef.current
+    const resize = new ResizeObserver(compute)
+    const panelMutations = new MutationObserver(compute)
+    const hostMutations = new MutationObserver(connect)
 
-    const shadowRoot = document.getElementById(STUDIO_HOST_ID)?.shadowRoot
-    // 面板高度拖拽 → 尺寸变化;收拢/展开 → DOM 增删(面板元素会重建,
-    // ResizeObserver 每次重挂到当前元素上)
-    let observed: HTMLElement | null = null
-    const resizeObserver = new ResizeObserver(compute)
-    const mutationObserver = new MutationObserver(compute)
-    if (shadowRoot) {
-      mutationObserver.observe(shadowRoot, {subtree: true, childList: true})
-    }
-    window.addEventListener('resize', compute)
-    compute()
-    return () => {
-      resizeObserver.disconnect()
-      mutationObserver.disconnect()
-      window.removeEventListener('resize', compute)
+    function connect() {
+      const host = document.getElementById(STUDIO_HOST_ID)
+      const root = host?.shadowRoot
+      if (!root) return
+      studioHost = host
+      shadow = root
+      hostMutations.disconnect()
+      panelMutations.observe(root, {subtree: true, childList: true})
+      compute()
     }
 
     function compute() {
-      const panel = findPanel()
-      if (panel !== observed) {
-        resizeObserver.disconnect()
-        if (panel) resizeObserver.observe(panel)
-        observed = panel
+      const nextTimeline =
+        shadow?.querySelector<HTMLElement>(SEQUENCE_PANEL_SELECTOR) ?? null
+      const nextDetails =
+        shadow?.querySelector<HTMLElement>(DETAIL_PANEL_SELECTOR) ?? null
+      if (timeline !== nextTimeline || details !== nextDetails) {
+        if (timeline) resize.unobserve(timeline)
+        if (details) resize.unobserve(details)
+        timeline = nextTimeline
+        details = nextDetails
+        if (timeline) resize.observe(timeline)
+        if (details) resize.observe(details)
       }
-      if (!panel) {
-        setBottom(COLLAPSED_BOTTOM_PX)
-        return
+
+      const viewport = scene?.getBoundingClientRect()
+      if (viewport && studioHost) {
+        const offset = Math.max(
+          0,
+          viewport.top - studioHost.getBoundingClientRect().top,
+        )
+        const top = `${offset}px`
+        if (studioHost.style.getPropertyValue('--theatre-camera-top') !== top) {
+          studioHost.style.setProperty('--theatre-camera-top', top)
+        }
       }
-      // 面板顶边距屏幕底 = 视口高 - top,再留一条空隙
-      setBottom(
-        Math.max(
-          COLLAPSED_BOTTOM_PX,
-          window.innerHeight - panel.getBoundingClientRect().top + GAP_PX,
-        ),
+      const timelineRect = timeline?.getBoundingClientRect()
+      const detailRect = details?.getBoundingClientRect()
+      const bottomClearance = timelineRect?.height
+        ? Math.max(
+            MIN_PREVIEW_BOTTOM,
+            window.innerHeight - timelineRect.top + GAP_PX,
+          )
+        : MIN_PREVIEW_BOTTOM
+      const width = previewWidth(viewport?.width ?? window.innerWidth)
+      const inspectorInset =
+        viewport && detailRect?.width
+          ? viewport.right - detailRect.left + GAP_PX
+          : DEFAULT_RIGHT
+      const right =
+        viewport && viewport.width - inspectorInset >= width + GAP_PX
+          ? Math.max(DEFAULT_RIGHT, inspectorInset)
+          : DEFAULT_RIGHT
+      const bottom = Math.max(
+        GAP_PX,
+        bottomClearance +
+          (viewport?.bottom ?? window.innerHeight) -
+          window.innerHeight,
+      )
+      setLayout((prev) =>
+        prev.bottom === bottom && prev.right === right ? prev : {bottom, right},
       )
     }
-  }, [])
 
-  return bottom
+    if (scene) resize.observe(scene)
+    hostMutations.observe(document.body, {subtree: true, childList: true})
+    connect()
+    compute()
+    window.addEventListener('resize', compute)
+    window.addEventListener('scroll', compute, true)
+    return () => {
+      resize.disconnect()
+      panelMutations.disconnect()
+      hostMutations.disconnect()
+      studioHost?.style.removeProperty('--theatre-camera-top')
+      window.removeEventListener('resize', compute)
+      window.removeEventListener('scroll', compute, true)
+    }
+  }, [sceneRef])
+
+  return layout
 }

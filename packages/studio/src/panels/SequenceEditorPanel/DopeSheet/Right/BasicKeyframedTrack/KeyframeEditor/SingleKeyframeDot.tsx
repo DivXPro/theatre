@@ -35,7 +35,7 @@ const {keyframeUtils} = __private
 const DOT_HOVER_SIZE_PX = DOT_SIZE_PX + 2
 
 const dotTheme = {
-  normalColor: '#40AAA4',
+  normalColor: 'var(--theatre-accent)',
   selectedColor: '#F2C95C',
   inlineEditorOpenColor: '#FCF3DC',
   selectedAndInlineEditorOpenColor: '#CBEBEA',

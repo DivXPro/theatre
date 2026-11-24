@@ -54,6 +54,7 @@ function DetailSimplePropEditor<
         editingTools: editingTools,
         propConfig,
         pointerToProp,
+        obj,
         isPropHighlightedD,
       }}
     >

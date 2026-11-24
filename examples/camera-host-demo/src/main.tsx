@@ -1,5 +1,5 @@
 /**
- * camera-studio 最小宿主 demo:顶部宿主导航条 + 整页 CameraScene。
+ * camera-studio 最小宿主 demo:整页 CameraScene + 工具栏返回入口。
  * 集成指南(docs/guides/camera-studio-embedding.md)的配套可跑示例,
  * 运行(仓库根):pnpm --filter camera-host-demo dev
  *
@@ -23,6 +23,7 @@ import {
 } from '@dreamerbird/camera-studio'
 import {MemorySource} from './memorySource'
 import {createDemoSceneSyncAdapter} from './sceneSync'
+import './host-nav.css'
 
 /**
  * Agent HTTP 桥接(可选,默认关闭):三个 Vite 环境变量齐全才连接本机桥接
@@ -87,38 +88,6 @@ function syncNotice(phase: SyncPhase): string {
   }
 }
 
-/** 宿主应用自己的顶栏——嵌入单位是「整页/整路由」时,顶栏仍在文档流里,
- * 但 studio 覆盖层铺满视口(z-100)会压在它上面:这是预期行为,不是
- * z-index bug,见指南「约束」一节。 */
-function HostNav({phase}: {phase: SyncPhase}) {
-  return (
-    <header
-      style={{
-        height: 44,
-        display: 'flex',
-        alignItems: 'center',
-        gap: 16,
-        padding: '0 16px',
-        boxSizing: 'border-box',
-        background: '#1d1f24',
-        borderBottom: '1px solid #33363c',
-        color: '#e8e8e8',
-        font: '13px/1.4 system-ui, sans-serif',
-      }}
-    >
-      <strong style={{fontSize: 14}}>宿主应用</strong>
-      <span style={{color: '#9aa0a6'}}>相机工作台(嵌入整页路由)</span>
-      <span style={{flex: 1}} />
-      <span role="status" style={{color: '#badaff'}}>
-        {syncNotice(phase)}
-      </span>
-      <a href="#" style={{color: '#9aa0a6', textDecoration: 'none'}}>
-        返回首页
-      </a>
-    </header>
-  )
-}
-
 /** 宿主自己的错误提示组件:模块只上告结构化错误,不规定 UI 形态 */
 function HostErrorToast({
   error,
@@ -180,10 +149,12 @@ type StudioControls = {
 
 function StudioRoute({
   sync,
+  phase,
   controlsRef,
   onReady,
 }: {
   sync?: SceneSyncState
+  phase: SyncPhase
   controlsRef: {current: StudioControls | undefined}
   onReady: () => void
 }) {
@@ -224,7 +195,31 @@ function StudioRoute({
       {notice && (
         <HostErrorToast error={notice} onClose={() => setNotice(null)} />
       )}
-      <CameraScene {...sceneProps} />
+      <CameraScene
+        {...sceneProps}
+        headerActions={
+          <a
+            className="camera-host-nav__back"
+            href="#"
+            aria-label="返回首页"
+            title="返回首页"
+          >
+            <svg width={18} height={18} viewBox="0 0 16 16" aria-hidden="true">
+              <path
+                d="M6.5 2.5H3.25a.75.75 0 0 0-.75.75v9.5a.75.75 0 0 0 .75.75H6.5M6 8h7.5m-3-3 3 3-3 3"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={1.25}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </a>
+        }
+      />
+      <span className="camera-host-nav__status" role="status">
+        {syncNotice(phase)}
+      </span>
     </>
   )
 }
@@ -322,7 +317,6 @@ function App({
 
   return (
     <div>
-      <HostNav phase={phase} />
       {phase === 'reloading' ? (
         <div
           style={{
@@ -337,6 +331,7 @@ function App({
         <StudioRoute
           key={generation}
           sync={sync}
+          phase={phase}
           controlsRef={controlsRef}
           onReady={onStudioReady}
         />

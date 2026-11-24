@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101112">
+  <title>Theatre · 3D 场景 UI 原型</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script type="module" src="./demo.js"></script>
+</head>
+<body class="dark">
+  <header class="topbar">
+    <div class="breadcrumbs">
+      <span class="brand" aria-label="Theatre"><span data-icon="theatre"></span></span>
+      <span class="header-divider"></span>
+      <span class="project-name">雨后站台</span>
+      <span data-icon="chevron-right"></span>
+      <h1>3D 场景</h1>
+    </div>
+    <div class="header-actions">
+      <span class="prototype-label">静态原型</span>
+      <button class="button" id="preview-toggle" aria-label="镜头预览" aria-pressed="false"><span data-icon="video"></span><span>镜头预览</span></button>
+      <button class="button primary" id="export-button"><span data-icon="download"></span>导出</button>
+    </div>
+  </header>
+  <main class="workspace">
+    <section class="panel outliner" aria-labelledby="outliner-title">
+      <header class="panel-heading">
+        <span data-icon="layers"></span><h2 id="outliner-title">场景对象</h2>
+        <button class="icon-button end" id="search-toggle" aria-label="搜索场景对象" aria-controls="object-search" aria-expanded="false"><span data-icon="search"></span></button>
+      </header>
+      <div class="tree-scroll">
+        <div class="scene-root"><span data-icon="box"></span><span>雨后站台</span></div>
+        <div id="object-search" class="search-row" hidden><input type="search" aria-label="搜索名称" placeholder="搜索名称"></div>
+        <div id="scene-tree"></div>
+        <p class="empty-tree" hidden>没有匹配的对象</p>
+      </div>
+      <footer class="outliner-footer"><span id="object-count">7 个对象</span><button class="icon-button end" id="clear-selection" aria-label="清除选择"><span data-icon="scan"></span></button></footer>
+    </section>
+
+    <section class="viewport" aria-label="3D 视口">
+      <figure class="scene-image" aria-label="雨后站台三维场景示例">
+        <img id="scene-art" src="./platform.webp" alt="带有顶棚、铁轨和人物的灰模站台">
+      </figure>
+      <div class="viewport-top">
+        <label class="select-wrap view-select"><span data-icon="box"></span><select id="view-select" aria-label="视口取景"><option value="director">导演视角</option><option value="camera">镜头视角</option></select><span data-icon="chevron-down"></span></label>
+        <div class="viewport-display">
+          <button class="icon-button" id="grid-toggle" aria-label="显示参考网格" aria-pressed="true"><span data-icon="grid"></span></button>
+          <button class="icon-button" id="fit-view" aria-label="适应视口"><span data-icon="scan"></span></button>
+        </div>
+      </div>
+      <div class="view-axis" aria-hidden="true"><i></i><i></i><i></i><span class="axis-y">Y</span><span class="axis-z">Z</span><span class="axis-x">X</span></div>
+      <div class="camera-frame" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+      <div class="camera-preview" id="camera-preview" hidden>
+        <img src="./platform.webp" alt="主摄像机示例画面">
+        <span><span data-icon="video"></span>主摄像机</span>
+      </div>
+      <div class="viewport-bottom">
+        <span class="viewport-caption"><span class="status-dot"></span><span id="view-caption">透视</span></span>
+        <div class="tool-dock" aria-label="视口工具" role="toolbar">
+          <button class="icon-button" data-tool="select" aria-label="选择" aria-pressed="true"><span data-icon="cursor"></span></button>
+          <button class="icon-button" data-tool="move" aria-label="移动" aria-pressed="false"><span data-icon="move"></span></button>
+          <button class="icon-button" data-tool="rotate" aria-label="旋转" aria-pressed="false"><span data-icon="rotate"></span></button>
+          <button class="icon-button" data-tool="scale" aria-label="缩放" aria-pressed="false"><span data-icon="scale"></span></button>
+        </div>
+      </div>
+    </section>
+
+    <aside class="inspector" aria-labelledby="inspector-title">
+      <header class="inspector-heading">
+        <span data-icon="sliders"></span><h2 id="inspector-title">属性</h2>
+        <span class="inspector-context" id="inspector-context">相机</span>
+      </header>
+      <div id="inspector-content"></div>
+    </aside>
+
+    <section class="panel timeline" aria-labelledby="timeline-title">
+      <header class="timeline-heading">
+        <div class="timeline-name"><span data-icon="timeline"></span><h2 id="timeline-title">时间轴</h2></div>
+        <div class="transport" role="group" aria-label="播放控制">
+          <button class="icon-button" id="rewind" aria-label="回到起点"><span data-icon="skip-back"></span></button>
+          <button class="icon-button play" id="play" aria-label="播放"><span data-icon="play"></span></button>
+          <button class="icon-button" id="forward" aria-label="跳到结尾"><span data-icon="skip-forward"></span></button>
+        </div>
+        <div class="timeline-meta"><output id="timecode" aria-label="当前时间码" aria-live="off">00:02:12</output><span class="fps">24 fps</span></div>
+      </header>
+      <div class="timeline-body">
+        <div class="track-labels" aria-label="轨道">
+          <div class="ruler-label">轨道</div>
+          <div class="property-track-label">
+            <label class="select-wrap">
+              <span data-icon="diamond"></span>
+              <select id="keyframe-property" aria-label="关键帧轨道属性"></select>
+              <span data-icon="chevron-down"></span>
+            </label>
+            <button class="icon-button" id="previous-keyframe" aria-label="上一关键帧" title="上一关键帧"><span data-icon="chevron-left"></span></button>
+            <button class="icon-button" id="next-keyframe" aria-label="下一关键帧" title="下一关键帧"><span data-icon="chevron-right"></span></button>
+          </div>
+          <button class="track-label" data-object="camera"><span data-icon="video"></span>主摄像机</button>
+          <button class="track-label" data-object="actor"><span data-icon="person"></span>站台人物</button>
+          <button class="track-label" data-object="key"><span data-icon="sun"></span>主光</button>
+        </div>
+        <div class="timeline-grid">
+          <div class="ticks" aria-hidden="true"><span>0s</span><span>1s</span><span>2s</span><span>3s</span><span>4s</span><span>5s</span><span>6s</span><span>7s</span><span>8s</span></div>
+          <input id="scrubber" class="scrubber" type="range" min="0" max="192" value="60" aria-label="时间轴播放位置">
+          <div id="property-keyframes" class="track property-keyframes" aria-label="属性关键帧" role="group"></div>
+          <div id="track-content"></div>
+          <div class="playhead" aria-hidden="true"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <p id="keyframe-status" class="sr-only" role="status"></p>
+  <dialog id="export-dialog" aria-labelledby="export-title">
+    <header class="panel-heading"><span data-icon="download"></span><h2 id="export-title">导出</h2><form method="dialog" class="end"><button class="icon-button" aria-label="关闭"><span data-icon="x"></span></button></form></header>
+    <div class="dialog-content"><p>此静态原型仅展示导出入口。</p><form method="dialog"><button class="button primary">返回工作台</button></form></div>
+  </dialog>
+</body>
+</html>

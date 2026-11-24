@@ -94,15 +94,26 @@ const BasePanel: React.FC<{
   defaultPosition: PanelPosition
   minDims: {width: number; height: number}
   docked?: 'bottom'
+  dockInsets?: {left: number; right: number; bottom: number}
+  defaultDockHeight?: number
   children: React.ReactNode
-}> = ({panelId, children, defaultPosition, minDims, docked}) => {
+}> = ({
+  panelId,
+  children,
+  defaultPosition,
+  minDims,
+  docked,
+  dockInsets,
+  defaultDockHeight,
+}) => {
   const windowSize = usePanelSize()
   const [boundsHighlighted, addBoundsHighlightLock] = useLockSet()
 
   const {stuff} = usePrism(() => {
-    const {edges} =
-      val(getStudio()!.atomP.historic.panelPositions[panelId]) ??
-      defaultPosition
+    const savedPosition = val(
+      getStudio()!.atomP.historic.panelPositions[panelId],
+    )
+    const {edges} = savedPosition ?? defaultPosition
 
     let left = Math.floor(
       windowSize.width *
@@ -135,14 +146,22 @@ const BasePanel: React.FC<{
     if (docked === 'bottom') {
       // 停靠底边:左右撑满,高度仍取持久化值(顶边拖拽调节),无视历史的
       // 水平位置和顶边位置——那是浮动时代的遗留
-      left = 0
-      right = windowSize.width
+      const bottomInset = dockInsets?.bottom ?? 0
+      left = dockInsets?.left ?? 0
+      right =
+        windowSize.width -
+        (windowSize.width >= 1050
+          ? dockInsets?.right ?? 0
+          : dockInsets?.left ?? 0)
       const dockedHeight = Math.min(
-        Math.max(bottom - top, minDims.height),
-        windowSize.height,
+        Math.max(
+          savedPosition ? bottom - top : defaultDockHeight ?? bottom - top,
+          minDims.height,
+        ),
+        Math.max(0, windowSize.height - bottomInset),
       )
-      top = windowSize.height - dockedHeight
-      bottom = windowSize.height
+      bottom = windowSize.height - bottomInset
+      top = bottom - dockedHeight
     }
 
     const width =
@@ -173,7 +192,17 @@ const BasePanel: React.FC<{
       docked,
     }
     return {stuff}
-  }, [panelId, windowSize, boundsHighlighted, addBoundsHighlightLock, docked])
+  }, [
+    panelId,
+    windowSize,
+    boundsHighlighted,
+    addBoundsHighlightLock,
+    docked,
+    dockInsets,
+    defaultDockHeight,
+    defaultPosition,
+    minDims,
+  ])
 
   return <PanelContext.Provider value={stuff}>{children}</PanelContext.Provider>
 }

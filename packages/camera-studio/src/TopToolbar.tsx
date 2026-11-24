@@ -1,5 +1,5 @@
 /**
- * 顶栏工具条:四组连体按钮,组间留空——
+ * 工作台顶部工具条:变换、添加、渲染和输出操作。
  *   [选择|移动|旋转|缩放] 变换模式(互斥单选,和 W/G/R/S 快捷键、对象
  *     右键菜单共用 useGizmoMode 的 state;选择模式下只点选不挂手柄;
  *     无选中对象时也可先设好模式)
@@ -23,6 +23,7 @@ import {
   ArrowClockwise,
   ArrowsOut,
   ArrowsOutCardinal,
+  BookOpenText,
   Camera,
   Crosshair,
   Cube,
@@ -35,7 +36,10 @@ import {
   Stop,
 } from '@phosphor-icons/react'
 import ToolbarIconButton from '@dreamerbird/studio/uiComponents/toolbar/ToolbarIconButton'
-import ToolbarSwitchSelectContainer from '@dreamerbird/studio/uiComponents/toolbar/ToolbarSwitchSelectContainer'
+import {
+  cameraWorkspaceLayout,
+  compactCameraWorkspace,
+} from '@dreamerbird/studio/panels/cameraWorkspaceLayout'
 import useMenu from '@dreamerbird/studio/uiComponents/simpleContextMenu/useMenu'
 import {useT} from '@dreamerbird/studio/i18n'
 import {buildExportMenuItems} from './menuModel'
@@ -46,23 +50,91 @@ import type {ViewportRenderMode} from './mangaViewport'
 // ---------------------------------------------------------------------------
 
 const Positioning = styled.div`
+  ${cameraWorkspaceLayout};
   position: absolute;
-  top: 12px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: var(--theatre-camera-panel-inset);
+  inset-inline: calc(
+      var(--theatre-camera-sidebar-width) + var(--theatre-camera-panel-inset) +
+        8px
+    )
+    calc(
+      var(--theatre-camera-inspector-width) + var(--theatre-camera-panel-inset) +
+        8px
+    );
   z-index: 10;
   display: flex;
-  gap: 8px;
-  align-items: flex-start;
+  justify-content: center;
+  pointer-events: none;
 
-  &[data-paper] {
-    --theatre-panel-bg-80: rgba(36, 39, 44, 0.94);
-    --theatre-panel-bg-95: rgb(36, 39, 44);
+  @media ${compactCameraWorkspace} {
+    inset-inline: var(--theatre-camera-panel-inset);
+  }
+`
+
+const ActionBar = styled.div`
+  --theatre-panel-bg-80: #151617;
+  --theatre-panel-bg-95: #151617;
+  --theatre-text-primary: #e5e6e7;
+  --theatre-accent: #b7e0d0;
+  display: flex;
+  gap: 8px;
+  max-width: 100%;
+  pointer-events: auto;
+
+  @media (max-width: 600px) {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+`
+
+const ActionTray = styled.div`
+  display: flex;
+  flex: none;
+  align-items: center;
+  padding: var(--theatre-camera-tool-tray-padding);
+  border: 1px solid #303334;
+  border-radius: 9px;
+  background: var(--theatre-panel-bg-95);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 24%);
+`
+
+const ActionGroup = styled.div`
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+
+  & + & {
+    margin-left: 4px;
+    padding-left: 4px;
+    border-left: 1px solid #303334;
   }
 `
 
 /** 原生 ToolbarIconButton + 本页需要的两个变体:禁用置灰、导出中转红 */
 const Btn = styled(ToolbarIconButton)`
+  && {
+    flex: none;
+    box-sizing: border-box;
+    width: var(--theatre-camera-tool-size);
+    height: var(--theatre-camera-tool-size);
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    color: #c1c5c7;
+    background: transparent;
+  }
+  &&:hover:not(:disabled) {
+    background: #25292a;
+  }
+  &&.selected {
+    color: var(--theatre-accent);
+    border-color: #3b5148;
+    background: #202c27;
+  }
+  &&:focus-visible {
+    outline: 1px solid var(--theatre-accent);
+  }
   &:disabled {
     opacity: 0.45;
     cursor: default;
@@ -104,63 +176,10 @@ const Btn = styled(ToolbarIconButton)`
       color: var(--theatre-text-secondary, #cccccc);
     }
   }
-  &:hover > .tip {
+  &:hover > .tip,
+  &:focus-visible > .tip {
     opacity: 1;
     visibility: visible;
-  }
-`
-
-/** 开关横向文字比图标按钮宽;轨道用纯 CSS,不额外引入控件依赖 */
-const SwitchTrack = styled.span`
-  position: relative;
-  flex: 0 0 auto;
-  width: 22px;
-  height: 12px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.14);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
-  transition: background 140ms ease;
-
-  &::after {
-    content: '';
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #a8a8a9;
-    transition:
-      transform 140ms ease,
-      background 140ms ease;
-  }
-`
-
-const MangaModeBtn = styled(Btn)`
-  width: auto;
-  min-width: 78px;
-  gap: 7px;
-  padding: 0 9px;
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  white-space: nowrap;
-
-  &[aria-checked='true'] > ${SwitchTrack} {
-    background: rgba(255, 255, 255, 0.82);
-  }
-
-  &[aria-checked='true'] > ${SwitchTrack}::after {
-    transform: translateX(10px);
-    background: #24272c;
-  }
-`
-
-/** 画中画开启态:沿用原生 selected 高亮,颜色对齐小窗边框 */
-const PipBtn = styled(Btn)`
-  &.selected {
-    color: #6fb7ff;
-    border-bottom-color: #6fb7ff;
   }
 `
 
@@ -177,7 +196,7 @@ function ToolbarBtn({
   children: React.ReactNode
 } & React.ComponentProps<typeof Btn>) {
   return (
-    <Btn {...props}>
+    <Btn aria-label={tip} {...props}>
       {children}
       <span className="tip">
         {tip}
@@ -243,6 +262,7 @@ export function TopToolbar({
   onTogglePip,
   pipDisabled = false,
   libraryDisabled = false,
+  headerActions,
 }: {
   /** 变换模式组的当前模式,与 G/R/S 快捷键、对象右键菜单同源 */
   gizmoMode: GizmoMode
@@ -265,6 +285,7 @@ export function TopToolbar({
   pipDisabled?: boolean
   /** 放置中/拖拽中禁用添加入口,避免再开一次放置流程 */
   libraryDisabled?: boolean
+  headerActions?: React.ReactNode
 }) {
   const exportButtonRef = useRef<HTMLButtonElement>(null)
   const t = useT()
@@ -278,138 +299,145 @@ export function TopToolbar({
   if (mangaEnabled) lastMangaModeRef.current = renderMode
 
   return (
-    <Positioning data-paper={mangaEnabled ? '' : undefined}>
-      <ToolbarSwitchSelectContainer>
-        {GIZMO_MODES.map(({mode, tipKey, hintKey, Icon}) => (
-          <ToolbarBtn
-            key={mode}
-            className={gizmoMode === mode ? 'selected' : undefined}
-            onClick={() => onSelectGizmoMode(mode)}
-            tip={t(tipKey)}
-            hint={t(hintKey)}
-          >
-            <Icon size={16} />
-          </ToolbarBtn>
-        ))}
-      </ToolbarSwitchSelectContainer>
-      <ToolbarSwitchSelectContainer>
-        <ToolbarBtn
-          disabled={libraryDisabled}
-          onClick={onToggleModelLibrary}
-          tip={t('pg.toolbar.addModel')}
-          hint={
-            libraryDisabled
-              ? t('pg.toolbar.placing')
-              : t('pg.toolbar.addModel.hint')
-          }
-        >
-          <Cube size={16} />
-        </ToolbarBtn>
-        <ToolbarBtn
-          disabled={libraryDisabled}
-          onClick={onTogglePathLibrary}
-          tip={t('pg.toolbar.addPath')}
-          hint={
-            libraryDisabled
-              ? t('pg.toolbar.placing')
-              : t('pg.toolbar.addPath.hint')
-          }
-        >
-          <Path size={16} />
-        </ToolbarBtn>
-        <ToolbarBtn
-          onClick={onAddCamera}
-          tip={t('pg.toolbar.addCamera')}
-          hint={t('pg.toolbar.addCamera.hint')}
-        >
-          <Camera size={16} />
-        </ToolbarBtn>
-        <ToolbarBtn
-          onClick={onAddAnchor}
-          tip={t('pg.toolbar.addAnchor')}
-          hint={t('pg.toolbar.addAnchor.hint')}
-        >
-          <Crosshair size={16} />
-        </ToolbarBtn>
-      </ToolbarSwitchSelectContainer>
-      <ToolbarSwitchSelectContainer
-        role="group"
-        aria-label={t('pg.toolbar.render')}
-      >
-        <ToolbarBtn
-          as={MangaModeBtn}
-          role="switch"
-          aria-label={t('pg.toolbar.render.manga')}
-          aria-checked={mangaEnabled}
-          className={mangaEnabled ? 'selected' : undefined}
-          onClick={() =>
-            onSelectRenderMode(
-              mangaEnabled ? 'original' : lastMangaModeRef.current,
-            )
-          }
-          tip={t('pg.toolbar.render.manga')}
-          hint={t('pg.toolbar.render.manga.hint')}
-        >
-          <span>{t('pg.toolbar.render.manga.label')}</span>
-          <SwitchTrack aria-hidden />
-        </ToolbarBtn>
-        {mangaEnabled &&
-          MANGA_MODES.map(({mode, label, Icon}) => (
+    <Positioning>
+      <ActionBar role="toolbar" aria-label={t('pg.toolbar.actions')}>
+        <ActionTray role="group" aria-label={t('pg.toolbar.editing')}>
+          <ActionGroup>
+            {GIZMO_MODES.map(({mode, tipKey, hintKey, Icon}) => (
+              <ToolbarBtn
+                key={mode}
+                className={gizmoMode === mode ? 'selected' : undefined}
+                aria-pressed={gizmoMode === mode}
+                onClick={() => onSelectGizmoMode(mode)}
+                tip={t(tipKey)}
+                hint={t(hintKey)}
+              >
+                <Icon size={18} />
+              </ToolbarBtn>
+            ))}
+          </ActionGroup>
+          <ActionGroup>
             <ToolbarBtn
-              key={mode}
-              className={renderMode === mode ? 'selected' : undefined}
-              aria-label={t(label)}
-              aria-pressed={renderMode === mode}
-              onClick={() => onSelectRenderMode(mode)}
-              tip={t(label)}
+              disabled={libraryDisabled}
+              onClick={onToggleModelLibrary}
+              tip={t('pg.toolbar.addModel')}
+              hint={
+                libraryDisabled
+                  ? t('pg.toolbar.placing')
+                  : t('pg.toolbar.addModel.hint')
+              }
             >
-              <Icon size={16} />
+              <Cube size={18} />
             </ToolbarBtn>
-          ))}
-      </ToolbarSwitchSelectContainer>
-      <ToolbarSwitchSelectContainer>
-        <ToolbarBtn
-          as={PipBtn}
-          onClick={onTogglePip}
-          disabled={pipDisabled}
-          className={pipVisible && !pipDisabled ? 'selected' : undefined}
-          tip={t('pg.toolbar.pip')}
-          hint={
-            pipDisabled
-              ? t('pg.toolbar.pip.disabled')
-              : pipVisible
-                ? t('pg.toolbar.pip.hide')
-                : t('pg.toolbar.pip.show')
-          }
-        >
-          <PictureInPicture size={16} />
-        </ToolbarBtn>
-        <ToolbarBtn
-          ref={exportButtonRef}
-          disabled={exportDisabled && !exporting}
-          className={exporting ? 'danger' : undefined}
-          onClick={() => {
-            if (exporting) {
-              onStopExport()
-              return
-            }
-            const rect = exportButtonRef.current?.getBoundingClientRect()
-            openExportMenu(
-              rect ? {clientX: rect.left, clientY: rect.bottom + 4} : undefined,
-            )
-          }}
-          tip={exporting ? t('pg.toolbar.stopExport') : t('pg.toolbar.export')}
-          hint={
-            exporting
-              ? t('pg.toolbar.export.esc')
-              : exportDisabled
-                ? t('pg.toolbar.pip.disabled')
-                : t('pg.toolbar.export.hint')
-          }
-        >
-          {exporting ? <Stop size={16} /> : <Export size={16} />}
-        </ToolbarBtn>
-      </ToolbarSwitchSelectContainer>
+            <ToolbarBtn
+              disabled={libraryDisabled}
+              onClick={onTogglePathLibrary}
+              tip={t('pg.toolbar.addPath')}
+              hint={
+                libraryDisabled
+                  ? t('pg.toolbar.placing')
+                  : t('pg.toolbar.addPath.hint')
+              }
+            >
+              <Path size={18} />
+            </ToolbarBtn>
+            <ToolbarBtn
+              onClick={onAddCamera}
+              tip={t('pg.toolbar.addCamera')}
+              hint={t('pg.toolbar.addCamera.hint')}
+            >
+              <Camera size={18} />
+            </ToolbarBtn>
+            <ToolbarBtn
+              onClick={onAddAnchor}
+              tip={t('pg.toolbar.addAnchor')}
+              hint={t('pg.toolbar.addAnchor.hint')}
+            >
+              <Crosshair size={18} />
+            </ToolbarBtn>
+          </ActionGroup>
+          <ActionGroup role="group" aria-label={t('pg.toolbar.render')}>
+            <ToolbarBtn
+              role="switch"
+              aria-label={t('pg.toolbar.render.manga')}
+              aria-checked={mangaEnabled}
+              className={mangaEnabled ? 'selected' : undefined}
+              onClick={() =>
+                onSelectRenderMode(
+                  mangaEnabled ? 'original' : lastMangaModeRef.current,
+                )
+              }
+              tip={t('pg.toolbar.render.manga')}
+              hint={t('pg.toolbar.render.manga.hint')}
+            >
+              <BookOpenText size={18} aria-hidden />
+            </ToolbarBtn>
+            {mangaEnabled &&
+              MANGA_MODES.map(({mode, label, Icon}) => (
+                <ToolbarBtn
+                  key={mode}
+                  className={renderMode === mode ? 'selected' : undefined}
+                  aria-label={t(label)}
+                  aria-pressed={renderMode === mode}
+                  onClick={() => onSelectRenderMode(mode)}
+                  tip={t(label)}
+                >
+                  <Icon size={18} />
+                </ToolbarBtn>
+              ))}
+          </ActionGroup>
+        </ActionTray>
+        <ActionTray role="group" aria-label={t('pg.toolbar.output')}>
+          <ActionGroup>
+            <ToolbarBtn
+              onClick={onTogglePip}
+              disabled={pipDisabled}
+              aria-pressed={pipVisible && !pipDisabled}
+              className={pipVisible && !pipDisabled ? 'selected' : undefined}
+              tip={t('pg.toolbar.pip')}
+              hint={
+                pipDisabled
+                  ? t('pg.toolbar.pip.disabled')
+                  : pipVisible
+                    ? t('pg.toolbar.pip.hide')
+                    : t('pg.toolbar.pip.show')
+              }
+            >
+              <PictureInPicture size={18} />
+            </ToolbarBtn>
+            <ToolbarBtn
+              ref={exportButtonRef}
+              disabled={exportDisabled && !exporting}
+              className={exporting ? 'danger' : undefined}
+              onClick={() => {
+                if (exporting) {
+                  onStopExport()
+                  return
+                }
+                const rect = exportButtonRef.current?.getBoundingClientRect()
+                openExportMenu(
+                  rect
+                    ? {clientX: rect.left, clientY: rect.bottom + 4}
+                    : undefined,
+                )
+              }}
+              tip={
+                exporting ? t('pg.toolbar.stopExport') : t('pg.toolbar.export')
+              }
+              hint={
+                exporting
+                  ? t('pg.toolbar.export.esc')
+                  : exportDisabled
+                    ? t('pg.toolbar.pip.disabled')
+                    : t('pg.toolbar.export.hint')
+              }
+            >
+              {exporting ? <Stop size={18} /> : <Export size={18} />}
+            </ToolbarBtn>
+          </ActionGroup>
+          {headerActions && <ActionGroup>{headerActions}</ActionGroup>}
+        </ActionTray>
+      </ActionBar>
       {exportMenuNode}
     </Positioning>
   )

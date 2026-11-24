@@ -14,6 +14,8 @@ import {useVal} from '@dreamerbird/react'
 import {usePropLabel} from '@dreamerbird/studio/i18n'
 import useChordial from '@dreamerbird/studio/uiComponents/chordial/useChodrial'
 import type {$FixMe} from '@dreamerbird/core/types/public'
+import type SheetObject from '@dreamerbird/core/sheetObjects/SheetObject'
+import {PropertyKeyframeField} from '@dreamerbird/studio/propEditors/PropertyKeyframeButton'
 
 const Container = styled.div<{
   $isHighlighted: PropHighlighted
@@ -55,14 +57,19 @@ const PropNameContainer = styled.div<{
   $isHighlighted: PropHighlighted
 }>`
   text-align: left;
-  flex: 1 0;
+  flex: 1;
+  min-width: 0;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
   display: flex;
   align-items: center;
   user-select: none;
   cursor: default;
+
+  > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 
   ${propNameTextCSS};
   &:hover {
@@ -71,8 +78,7 @@ const PropNameContainer = styled.div<{
 `
 
 const ControlsContainer = styled.div`
-  flex-basis: 8px;
-  flex: 0 0;
+  flex: none;
   display: flex;
   align-items: center;
 `
@@ -92,6 +98,7 @@ const InputContainer = styled.div`
 type ISingleRowPropEditorProps<T> = {
   propConfig: propTypes.PropTypeConfig
   pointerToProp: Pointer<T>
+  obj: SheetObject
   editingTools: ReturnType<typeof useEditingToolsForSimplePropInDetailsPanel>
   isPropHighlightedD: Prism<PropHighlighted>
 }
@@ -99,6 +106,7 @@ type ISingleRowPropEditorProps<T> = {
 export function SingleRowPropEditor<T>({
   propConfig,
   pointerToProp,
+  obj,
   editingTools,
   children,
   isPropHighlightedD,
@@ -125,16 +133,32 @@ export function SingleRowPropEditor<T>({
   return (
     <Container $isHighlighted={isHighlighted}>
       <Left>
-        <ControlsContainer>{editingTools.controlIndicators}</ControlsContainer>
+        {propConfig.type !== 'number' && (
+          <ControlsContainer>
+            {editingTools.controlIndicators}
+          </ControlsContainer>
+        )}
         <PropNameContainer
           $isHighlighted={isHighlighted}
           ref={targetRef as $FixMe}
         >
-          {label}
+          <span>{label}</span>
         </PropNameContainer>
       </Left>
 
-      <InputContainer>{children}</InputContainer>
+      <InputContainer>
+        {propConfig.type === 'number' ? (
+          <PropertyKeyframeField
+            object={obj}
+            pointer={pointerToProp as Pointer<number>}
+            label={String(label)}
+          >
+            {children}
+          </PropertyKeyframeField>
+        ) : (
+          children
+        )}
+      </InputContainer>
     </Container>
   )
 }

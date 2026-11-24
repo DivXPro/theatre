@@ -32,9 +32,11 @@ export const en: Messages = {
   'pg.toolbar.addAnchor.hint':
     'Place an empty anchor in front of the current view (aim target / parentable)',
   'pg.toolbar.pip': 'Picture in picture',
+  'pg.toolbar.actions': 'Viewport actions',
+  'pg.toolbar.editing': 'Editing',
+  'pg.toolbar.output': 'Output',
   'pg.toolbar.render': 'Viewport render mode',
   'pg.toolbar.render.manga': 'Manga mode',
-  'pg.toolbar.render.manga.label': 'Manga',
   'pg.toolbar.render.manga.hint':
     'Off restores the original render; on restores the last manga style',
   'pg.toolbar.render.original': 'Original',
@@ -296,9 +298,11 @@ export const zhCN: Messages = {
   'pg.toolbar.addAnchor.hint':
     '在当前视角前方放一个空锚点(可被相机瞄准、可绑父级)',
   'pg.toolbar.pip': '画中画',
+  'pg.toolbar.actions': '视口操作',
+  'pg.toolbar.editing': '编辑',
+  'pg.toolbar.output': '输出',
   'pg.toolbar.render': '视口渲染模式',
   'pg.toolbar.render.manga': '漫画模式',
-  'pg.toolbar.render.manga.label': '漫画',
   'pg.toolbar.render.manga.hint': '关闭回到原始渲染,开启恢复上次的漫画样式',
   'pg.toolbar.render.original': '原始',
   'pg.toolbar.render.line': '线稿',

@@ -9,6 +9,7 @@ import type {
   IProjectConfig,
   StudioPanelVisibility,
 } from '@dreamerbird/core'
+import type {ReactNode} from 'react'
 import type {WritableLibrarySource} from './assetLibrary/source'
 import type {CameraStudioErrorHandler} from './errors'
 import type {CameraFlows} from './hostFlows'
@@ -89,13 +90,15 @@ export interface CameraStudioConfig {
   agent?: CameraStudioAgentConfig
 }
 
-/** CameraScene 的 props 形态(T9 落地组件);对宿主不透明,不解构 */
+/** Props for the viewport and its workspace header. */
 export type CameraSceneProps = {
   project: IProject
   onFlows?: (flows: CameraFlows) => void
   onError?: CameraStudioErrorHandler
   includeDemoModel?: boolean
   viewportRendering?: ViewportRenderingConfig
+  /** Optional host actions alongside the viewport output controls. */
+  headerActions?: ReactNode
 }
 
 export interface CameraStudioHandle {

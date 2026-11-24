@@ -21,7 +21,7 @@ const PanelsRoot: React.FC = () => {
   return (
     <>
       {paneEls}
-      <OutlinePanel />
+      <OutlinePanel sequenceDockTop={sequenceDockTop} />
       <DetailPanel sequenceDockTop={sequenceDockTop} />
       <SequenceEditorPanel onDockTopChange={setSequenceDockTop} />
     </>

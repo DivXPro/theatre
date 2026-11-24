@@ -25,6 +25,11 @@ const Container = styled.div`
     --chevron-down: 1;
     background: rgba(255, 255, 255, 0.08);
   }
+
+  :host([data-camera-workspace]) & {
+    width: 36px;
+    border-radius: 6px 0 0 6px;
+  }
 `
 
 const Logo = styled.img`

@@ -19,6 +19,7 @@ export function mountStudioRoot(
   const root = document.getElementById('theatrejs-studio-root') ?? retainedRoot
   if (!root) return undefined
   retainedRoot = root
+  root.dataset.cameraWorkspace = ''
 
   const target = container ?? document.body
   target.appendChild(root)

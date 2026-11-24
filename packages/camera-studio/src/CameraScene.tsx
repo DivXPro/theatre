@@ -82,7 +82,7 @@ import {
 } from './anchorsRegistry'
 import type {AnchorSeed} from './anchorsRegistry'
 import {PipCameraSelector} from './PipCameraSelector'
-import {usePipBottom} from './pipLayout'
+import {previewWidth, usePreviewLayout} from './pipLayout'
 import {bindUndoShortcuts, isInsideStudioUi} from './undoShortcuts'
 import {AssetLibraryPanel} from './assetLibrary/AssetLibraryPanel'
 import {ModelPickerSlot} from './assetLibrary/ModelPickerSlot'
@@ -836,6 +836,7 @@ export function CameraScene({
   onError,
   includeDemoModel = true,
   viewportRendering,
+  headerActions,
 }: CameraSceneProps) {
   const t = useT()
   const cameraTargetRef = useRef<Mesh>(null!)
@@ -879,19 +880,19 @@ export function CameraScene({
   const isManga = renderMode !== 'original'
   // 画中画开关(顶栏按钮):只管编辑视角右下角的小窗,不影响镜头全屏视角
   const [pipVisible, setPipVisible] = useState(true)
-  // 画中画底部留白:悬在时间轴面板上方,随面板高度/收拢展开自动跟
-  const pipBottom = usePipBottom()
+  const sceneRef = useRef<HTMLDivElement>(null)
+  const {bottom: pipBottom, right: pipRight} = usePreviewLayout(sceneRef)
   // 画中画边框层是 pointerEvents:none,收不到 hover——用窗口 mousemove
   // 按画中画的几何位置(与边框层/ShotCamera 同源)判定光标是否在它上面
   const [pipHovered, setPipHovered] = useState(false)
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
-      const w = window.innerWidth
-      const h = window.innerHeight
-      const pipW = w * 0.28
+      const viewport = sceneRef.current?.getBoundingClientRect()
+      if (!viewport) return
+      const pipW = previewWidth(viewport.width)
       const pipH = (pipW * 9) / 16
-      const left = w - 16 - pipW
-      const top = h - pipBottom - pipH
+      const left = viewport.right - pipRight - pipW
+      const top = viewport.bottom - pipBottom - pipH
       setPipHovered(
         e.clientX >= left &&
           e.clientX <= left + pipW &&
@@ -901,7 +902,7 @@ export function CameraScene({
     }
     window.addEventListener('mousemove', onMove)
     return () => window.removeEventListener('mousemove', onMove)
-  }, [pipBottom])
+  }, [pipBottom, pipRight])
   // 视频导出:进行中的导出句柄由场景导出控制器(agent/runtime/exportRuntime)
   // 同步进来(Esc 取消/相机被删中止/停止按钮共用);导出前的视角由控制器恢复
   const [exporting, setExporting] = useState(false)
@@ -1957,6 +1958,7 @@ export function CameraScene({
   return (
     <SceneI18nRoot>
       <div
+        ref={sceneRef}
         style={{
           height: '100vh',
           position: 'relative',
@@ -1965,6 +1967,7 @@ export function CameraScene({
         <HostFlowsWiring flows={flows} onFlows={onFlows} />
         <TopToolbar
           gizmoMode={gizmoMode}
+          headerActions={headerActions}
           onSelectGizmoMode={setGizmoMode}
           renderMode={renderMode}
           onSelectRenderMode={setRenderMode}
@@ -1987,14 +1990,14 @@ export function CameraScene({
             style={{
               // 画中画边框:与 ShotCamera 渲染的右下角小窗同位置同尺寸
               position: 'absolute',
-              right: 16,
+              right: pipRight,
               bottom: pipBottom,
-              width: '28%',
+              width: 'min(20%, 232px)',
               aspectRatio: '16 / 9',
               border: isManga
                 ? '1px solid rgba(35,38,43,0.35)'
                 : '1px solid rgba(255,255,255,0.14)',
-              borderRadius: 2,
+              borderRadius: 8,
               background: isManga ? 'transparent' : 'rgba(24,24,28,0.4)',
               pointerEvents: 'none',
               zIndex: 5,
@@ -2302,6 +2305,7 @@ export function CameraScene({
                 shotView={shotView}
                 pipVisible={pipVisible}
                 pipBottom={pipBottom}
+                pipRight={pipRight}
                 renderMode={renderMode}
                 mangaOptions={viewportRendering}
                 cameraObjRef={getShotRefs(entry.cameraKey).camera}
