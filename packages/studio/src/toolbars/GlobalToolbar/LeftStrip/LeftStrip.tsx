@@ -2,6 +2,7 @@ import React from 'react'
 import styled from 'styled-components'
 import {useVal} from '@dreamerbird/react'
 import getStudio from '@dreamerbird/studio/getStudio'
+import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
 import AppButton from './AppButton/AppButton'
 import WorkspaceButton from './WorkspaceButton/WorkspaceButton'
 
@@ -45,13 +46,40 @@ const Separator = styled.div`
   }
 `
 
+const HostLogo = styled.div`
+  ${pointerEventsAutoInNormalMode};
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 100%;
+
+  :host([data-camera-workspace]) & {
+    width: 36px;
+  }
+
+  img,
+  svg {
+    max-width: 100%;
+    max-height: 100%;
+  }
+`
+
 const LeftStrip: React.FC<{}> = (props) => {
   // 宿主可经 studio.ui.setLeftStripHidden 隐藏整条(logo + 工作区按钮)
   const hidden = useVal(getStudio().ephemeralAtom.pointer.leftStripHidden)
+  const logo = useVal(getStudio().ephemeralAtom.pointer.toolbarLogo)
   if (hidden === true) return null
   return (
     <Container>
-      <AppButton />
+      {logo == null ? (
+        <AppButton />
+      ) : (
+        <HostLogo className="cs-studio-app-button">
+          {logo as React.ReactNode}
+        </HostLogo>
+      )}
       <Separator />
       <WorkspaceButton />
     </Container>

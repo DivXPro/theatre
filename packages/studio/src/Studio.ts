@@ -13,6 +13,7 @@ import type {
   IWorkspaceButtonConfig,
   PaneClassDefinition,
   InitOpts,
+  StudioLogo,
   StudioPanelVisibility,
 } from '@dreamerbird/core/types/public'
 import TheatreStudio from './TheatreStudio'
@@ -133,6 +134,7 @@ export class Studio {
     // UI config for the global toolbar's workspace button, sanitized from
     // InitOpts.workspaceButton at initialize() time. Undefined = default look.
     workspaceButton?: IWorkspaceButtonConfig
+    toolbarLogo?: StudioLogo
     // LeftStrip(logo + 工作区按钮)显隐槽:ui.setLeftStripHidden 写入,
     // LeftStrip 组件订阅;undefined/false = 显示
     leftStripHidden?: boolean
