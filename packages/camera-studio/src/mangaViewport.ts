@@ -39,7 +39,7 @@ export const mangaViewportDefaults: Required<MangaViewportOptions> = {
   innerWidth: 0.95,
   depthThreshold: 0.003,
   normalThreshold: 0.13,
-  dotSpacing: 2,
+  dotSpacing: 1.6,
   castShadow: false,
 }
 
@@ -150,8 +150,8 @@ function makeDataMaterial(): DataMaterial {
  *
  * 用 Lambert 是因为它原生包含法线/透明裁剪/骨骼变形等顶点链路,又带
  * shadowmap 采样;只把最终输出换掉,材质本身仍按真实光源与 shadow map
- * 计算 getShadowMask()。再叠加"背向主光"的遮挡,网点浓度取两者较暗的
- * 那个:被别的东西挡住(投射阴影)和背光面都铺点,完全受光的亮面不铺点。
+ * 计算 getShadowMask()。遮罩只反映真实的投射阴影,受光面与背光面保持
+ * 纯白,网点只出现在被其他物体遮住的地方。
  */
 function makeShadowMaskMaterial(): ShadowMaskMaterial {
   const material = Object.assign(
@@ -169,19 +169,7 @@ function makeShadowMaskMaterial(): ShadowMaskMaterial {
       .replace(
         '#include <opaque_fragment>',
         /* glsl */ `
-        float facingLight = 1.0;
-        #if NUM_DIR_LIGHTS > 0
-          facingLight = 0.0;
-          for ( int lightIndex = 0; lightIndex < NUM_DIR_LIGHTS; lightIndex ++ ) {
-            vec3 lightDirection = normalize(directionalLights[lightIndex].direction);
-            facingLight = max(
-              facingLight,
-              smoothstep(-0.05, 0.12, dot(normal, lightDirection))
-            );
-          }
-        #endif
-        float lit = min(getShadowMask(), facingLight);
-        gl_FragColor = vec4(vec3(1.0 - lit), 1.0);
+        gl_FragColor = vec4(vec3(1.0 - getShadowMask()), 1.0);
         `,
       )
       .replace('#include <tonemapping_fragment>', '')
@@ -345,15 +333,28 @@ const compositeFragment = /* glsl */ `
     return vec2(depthEdge, crease);
   }
 
+  float hash21(vec2 p) {
+    p = fract(p * vec2(123.34, 456.21));
+    p += dot(p, p + 45.32);
+    return fract(p.x * p.y);
+  }
+
   float screenShadow(float shadow) {
     float amount = clamp(shadow, 0.0, 1.0);
+    if (amount < 0.01) return 0.0;
     vec2 cssPixel = vUv / (texel * texelsPerCssPixel);
     vec2 grid = mat2(0.9, 0.436, -0.436, 0.9) * cssPixel / dotSpacing;
-    float distanceToDot = length(fract(grid) - 0.5);
-    float smoothing = max(0.001, 0.5 * fwidth(distanceToDot));
-    float radius = 0.36 * amount;
-    return step(0.001, amount) *
-      (1.0 - smoothstep(radius - smoothing, radius + smoothing, distanceToDot));
+    vec2 cell = floor(grid);
+    vec2 local = fract(grid) - 0.5;
+    vec2 jitter = vec2(hash21(cell), hash21(cell + 37.0)) - 0.5;
+    float distanceToDot = length(local - jitter * 0.55);
+    float smoothing = max(0.0005, 0.5 * fwidth(distanceToDot));
+    float noise = hash21(cell + 71.0);
+    if (noise > 0.3 + 0.7 * amount) return 0.0;
+    float radius = 0.26 * sqrt(amount) * (0.7 + 0.6 * noise);
+    return (
+      1.0 - smoothstep(radius - smoothing, radius + smoothing, distanceToDot)
+    );
   }
 
   void main() {
@@ -594,7 +595,7 @@ export function createMangaViewport() {
       (options?.castShadow ?? mangaViewportDefaults.castShadow)
     uniforms.castShadow.value = castShadow
     uniforms.dotSpacing.value = Math.max(
-      2,
+      1.2,
       options?.dotSpacing ?? mangaViewportDefaults.dotSpacing,
     )
     uniforms.inverseProjection.value.copy(camera.projectionMatrixInverse)
