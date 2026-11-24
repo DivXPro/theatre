@@ -221,8 +221,16 @@ function InitialLoadProbe({
   return <>{children}</>
 }
 
-function Model({url, selectLocked}: {url: string; selectLocked?: boolean}) {
-  const {nodes} = useGLTF(url) as any
+function Model({
+  url,
+  selectLocked,
+  dracoDecoderPath,
+}: {
+  url: string
+  selectLocked?: boolean
+  dracoDecoderPath?: string
+}) {
+  const {nodes} = useGLTF(url, dracoDecoderPath) as any
   const thingyObjRef = useRef<ISheetObject<any> | undefined>(undefined)
   // 登记为放置落点表面:放置 FBX 时射线检测只打这里和已放置的模型
   const surfaceRef = useRef<Object3D>(null!)
@@ -845,6 +853,7 @@ export function CameraScene({
   onFlows,
   onError,
   includeDemoModel = true,
+  demoDracoDecoderPath,
   viewportRendering,
   headerActions,
   onCloseScene,
@@ -2418,7 +2427,11 @@ export function CameraScene({
             {includeDemoModel && (
               <Suspense fallback={null}>
                 <InitialLoadProbe gateKey={SCENE_MODEL_GATE_KEY}>
-                  <Model url={sceneGLB} selectLocked={!!placing} />
+                  <Model
+                    url={sceneGLB}
+                    selectLocked={!!placing}
+                    dracoDecoderPath={demoDracoDecoderPath}
+                  />
                 </InitialLoadProbe>
               </Suspense>
             )}

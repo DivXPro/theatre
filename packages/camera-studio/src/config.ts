@@ -116,6 +116,8 @@ export type CameraSceneProps = {
   onFlows?: (flows: CameraFlows) => void
   onError?: CameraStudioErrorHandler
   includeDemoModel?: boolean
+  /** Optional local Draco decoder directory for the built-in demo model. */
+  demoDracoDecoderPath?: string
   viewportRendering?: ViewportRenderingConfig
   onSaveExport?: CameraStudioSaveExport
   onCloseScene?: () => void

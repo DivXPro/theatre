@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Camera Studio 桌面示例</title>
+  </head>
+  <body style="margin: 0; background: #171717; color: #eee; color-scheme: dark">
+    <div id="editor"></div>
+    <main id="home" style="padding: 24px; font: 14px system-ui">
+      <button id="open" type="button">打开本地场景</button>
+    </main>
+    <p
+      id="error"
+      role="alert"
+      style="
+        position: fixed;
+        left: 24px;
+        bottom: 24px;
+        z-index: 110;
+        background: #301b1b;
+        padding: 8px;
+      "
+      hidden
+    ></p>
+    <script type="module" src="/src/desktop.ts"></script>
+  </body>
+</html>

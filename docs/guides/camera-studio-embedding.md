@@ -150,6 +150,40 @@ function SceneEditor({scene, host, locale}) {
 - **导出。** `onSaveExport` 收到 `kind`、`blob`、`fileName`、`mimeType` 和渲染元数据。图片是当前镜头在播放头位置的 PNG。视频使用编码器实际生成的 MP4 或 WebM，并携带帧率和时长。回调可返回 Promise，失败经 `onError` 报告。省略回调时，图片直接下载，视频仍提供浏览器保存选项。
 - **语言。** `ui.locale` 设置初始语言。场景挂载后，调用 `setCameraStudioLocale('zh-CN')` 或 `setCameraStudioLocale('en')` 即时更新视口和 Studio 面板，同时保留浏览器中的用户语言偏好。
 
+### 单机桌面接入
+
+在桌面 WebView 的渲染进程中调用 `mountCameraStudioDesktop`。宿主用自己的
+IPC 传递打开场景、退出和语言切换指令，并处理持久化。编辑器只使用页内 JS API，
+HTTP 和 WebSocket 可由宿主按需提供。
+
+```ts
+import {mountCameraStudioDesktop} from '@dreamerbird/camera-studio'
+
+const editor = mountCameraStudioDesktop(container, {
+  saveScene: (scene) => ipc.saveScene(scene),
+  saveExport: (output) => ipc.saveExport(output),
+  sceneClosed: (scene) => ipc.sceneClosed(scene),
+})
+
+await editor.openScene(await ipc.loadScene())
+editor.setLocale('en')
+await editor.closeScene()
+```
+
+- **加载。** `openScene({projectId, initialState})` 等待编辑器就绪。省略 `initialState` 可建空白场景。打开另一场景前先等待 `closeScene()` 完成。`editor.api` 提供页内命令接口，宿主可经自己的 IPC 包装需要的命令。
+- **保存和退出。** `saveScene({projectId, state})` 接收编辑提交。关闭时先等待保存和会话清理，再向宿主调用 `sceneClosed({projectId})`。应用退出前调用 `dispose()`。保存失败时场景保留，可重试。
+- **图片和视频。** 工具栏导出会调用 `saveExport({projectId, kind, fileName, mimeType, data})`。`data` 是 `ArrayBuffer`，适合传给本机主进程。若宿主通过 `editor.api.exports` 发起导出，可从 `editor.api.jobs.get()` 读取成品，再调用 `editor.saveExport({kind, ...result})` 走同一保存通道。
+- **语言。** `setLocale('zh-CN')` 或 `setLocale('en')` 在当前场景即时生效，后续打开的场景也会沿用该语言。
+
+仓库中的 Electron 示例通过 preload 暴露专用 IPC 方法。渲染器、资产和 `/draco/` 解码器由本机 `app://` 协议载入。主进程把场景快照保存到应用数据目录下的 `camera-studio-desktop/scene.json`，导出则由系统保存对话框选择位置。 [Electron IPC 文档](https://www.electronjs.org/docs/latest/tutorial/ipc) · [Electron 本地协议文档](https://www.electronjs.org/docs/latest/api/protocol)
+
+```bash
+pnpm --filter camera-host-demo build
+pnpm dlx --allow-build=electron electron@41 ./examples/camera-host-demo/desktop/main.cjs
+```
+
+启动后自动打开本地场景。可从系统菜单关闭或重新打开场景、切换语言，也可使用编辑器工具栏导出图片和视频。
+
 ### 自定义工作台主题
 
 `ui.theme` 接受颜色、字体和圆角等 CSS 值。每个字段都可选，缺省时显示原有深色界面。

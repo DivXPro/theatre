@@ -17,6 +17,14 @@ export default defineConfig(({mode}) => {
       resolve(homedir(), '.camera-host-demo', 'scene.json'),
   )
   return {
+    build: {
+      rollupOptions: {
+        input: {
+          web: resolve(__dirname, 'index.html'),
+          desktop: resolve(__dirname, 'desktop.html'),
+        },
+      },
+    },
     plugins: [
       react(),
       env.VITE_CAMERA_STUDIO_STATE_URL === sceneStatePath && {

@@ -320,7 +320,7 @@ export type CamerasApi = {
 };
 
 // @public
-export function CameraScene({ project, onFlows, onError, includeDemoModel, viewportRendering, headerActions, onCloseScene, onSaveExport, }: CameraSceneProps): React_2.JSX.Element;
+export function CameraScene({ project, onFlows, onError, includeDemoModel, demoDracoDecoderPath, viewportRendering, headerActions, onCloseScene, onSaveExport, }: CameraSceneProps): React_2.JSX.Element;
 
 // @public
 export type CameraSceneProps = {
@@ -328,6 +328,7 @@ export type CameraSceneProps = {
     onFlows?: (flows: CameraFlows) => void;
     onError?: CameraStudioErrorHandler;
     includeDemoModel?: boolean;
+    demoDracoDecoderPath?: string;
     viewportRendering?: ViewportRenderingConfig;
     onSaveExport?: CameraStudioSaveExport;
     onCloseScene?: () => void;
@@ -425,6 +426,46 @@ export interface CameraStudioConfig {
         projectName?: string;
     };
 }
+
+// @public (undocumented)
+export type CameraStudioDesktop = {
+    readonly api: CameraStudioApi | undefined;
+    openScene(scene: CameraStudioDesktopScene): Promise<void>;
+    closeScene(): Promise<void>;
+    setLocale(locale: string): void;
+    saveExport(output: CameraStudioExport): Promise<void>;
+    dispose(): Promise<void>;
+};
+
+// @public
+export type CameraStudioDesktopExport = {
+    projectId: string;
+    kind: 'image' | 'video';
+    fileName: string;
+    mimeType: string;
+    data: ArrayBuffer;
+};
+
+// @public
+export type CameraStudioDesktopHost = {
+    saveScene(scene: {
+        projectId: string;
+        state: unknown;
+    }): void | Promise<void>;
+    saveExport(output: CameraStudioDesktopExport): void | Promise<void>;
+    sceneClosed(scene: {
+        projectId: string;
+    }): void | Promise<void>;
+};
+
+// @public (undocumented)
+export type CameraStudioDesktopOptions = Pick<CameraStudioConfig, 'assets' | 'storage' | 'scene' | 'ui' | 'onError' | 'flows'>;
+
+// @public
+export type CameraStudioDesktopScene = {
+    projectId: string;
+    initialState?: unknown;
+};
 
 // @public
 export type CameraStudioError = {
@@ -943,6 +984,9 @@ export type ModelsApi = {
         revision: number;
     }>;
 };
+
+// @public
+export function mountCameraStudioDesktop(container: HTMLElement, host: CameraStudioDesktopHost, options?: CameraStudioDesktopOptions): CameraStudioDesktop;
 
 // @public (undocumented)
 export type ObjectAnimationChannel = 'position' | 'quaternion' | 'scale';

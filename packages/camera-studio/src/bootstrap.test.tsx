@@ -24,7 +24,11 @@
  * beforeEach 里动态 import,与被测模块共享同一模块注册表。
  */
 import {IDBFactory} from 'fake-indexeddb'
-import type {CameraStudioConfig, CameraStudioHandle} from './config'
+import type {
+  CameraSceneProps,
+  CameraStudioConfig,
+  CameraStudioHandle,
+} from './config'
 import type {WritableLibrarySource} from './assetLibrary/source'
 
 // React 19 act 的环境开关(testing-library 会自动置,手写 harness 自己置)
@@ -70,7 +74,7 @@ const getStudioSyncSpy = jest.fn(() => undefined)
 // bootstrap 静态引入 agent/api 会拉起整条命令图(PlacementManager/
 // CameraPath/videoExport…),与本文件的极简 core 替身不兼容;会话接线
 // (activate/dispose 调用序)在这里用桩断言,真门面行为由 api.test.tsx 覆盖
-const fakeApiObject = {fakeApi: true}
+const fakeApiObject = {fakeApi: true, ready: Promise.resolve()}
 const activateApiSpy = jest.fn()
 const disposeApiSpy = jest.fn()
 const getApiSpy = jest.fn(() => fakeApiObject)
@@ -159,6 +163,14 @@ jest.doMock('./gesturePropsEditor', () => ({
   __esModule: true,
   GesturePropEditorLeft: () => null,
   GesturePropEditorRight: () => null,
+}))
+
+let desktopSceneProps: CameraSceneProps | undefined
+jest.doMock('./CameraScene', () => ({
+  CameraScene: (props: CameraSceneProps) => {
+    desktopSceneProps = props
+    return null
+  },
 }))
 
 let React: typeof import('react')
@@ -988,4 +1000,118 @@ test('closeScene keeps the editor open when saving fails and a retry can close i
   expect(onStateChange).toHaveBeenCalledTimes(2)
   expect(onSceneClosed).toHaveBeenCalledTimes(1)
   await h.unmount()
+})
+
+test('the desktop host receives snapshot saves, binary exports and the close event', async () => {
+  const {mountCameraStudioDesktop} = await import('./desktop')
+  const {getLanguage} = await import('@dreamerbird/studio/i18n')
+  const el = document.createElement('div')
+  const events: string[] = []
+  const saveScene = jest.fn(() => {
+    events.push('save')
+  })
+  const saveExport = jest.fn()
+  const sceneClosed = jest.fn(() => {
+    events.push('close')
+  })
+  const desktop = mountCameraStudioDesktop(
+    el,
+    {saveScene, saveExport, sceneClosed},
+    {storage: false},
+  )
+
+  let opening!: Promise<void>
+  await React.act(async () => {
+    desktop.setLocale('zh-CN')
+    opening = desktop.openScene({
+      projectId: 'Desktop scene',
+      initialState: {revision: 1},
+    })
+  })
+  await opening
+  expect(getProjectSpy).toHaveBeenCalledWith('Desktop scene', {
+    state: {revision: 1},
+  })
+  expect(desktop.api).toBe(fakeApiObject)
+  expect(getLanguage()).toBe('zh-CN')
+  expect(createBridgeClientSpy).not.toHaveBeenCalled()
+
+  const bytes = new Uint8Array([12, 34, 56]).buffer
+  const blob = {arrayBuffer: async () => bytes, size: bytes.byteLength} as Blob
+  const common = {
+    blob,
+    size: bytes.byteLength,
+    width: 160,
+    height: 90,
+    renderMode: 'styled' as const,
+  }
+  await desktopSceneProps!.onSaveExport!({
+    kind: 'image',
+    fileName: 'frame.png',
+    mimeType: 'image/png',
+    timeMs: 0,
+    ...common,
+  })
+  await desktop.saveExport({
+    kind: 'video',
+    fileName: 'clip.webm',
+    mimeType: 'video/webm',
+    fps: 30,
+    durationMs: 1000,
+    codec: 'vp8',
+    encoding: 'mediarecorder',
+    range: {startMs: 0, endMs: 1000},
+    ...common,
+  })
+  expect(saveExport.mock.calls).toEqual([
+    [
+      {
+        projectId: 'Desktop scene',
+        kind: 'image',
+        fileName: 'frame.png',
+        mimeType: 'image/png',
+        data: bytes,
+      },
+    ],
+    [
+      {
+        projectId: 'Desktop scene',
+        kind: 'video',
+        fileName: 'clip.webm',
+        mimeType: 'video/webm',
+        data: bytes,
+      },
+    ],
+  ])
+
+  subscribeToProjectStateSpy.mock.calls[0][1]({revision: 2})
+  let closing!: Promise<void>
+  await React.act(async () => {
+    closing = desktop.closeScene()
+  })
+  await closing
+  expect(events).toEqual(['save', 'close'])
+  expect(saveScene).toHaveBeenCalledWith({
+    projectId: 'Desktop scene',
+    state: {revision: 2},
+  })
+  expect(sceneClosed).toHaveBeenCalledWith({projectId: 'Desktop scene'})
+  expect(desktop.api).toBeUndefined()
+
+  await React.act(async () => {
+    desktop.setLocale('en')
+    opening = desktop.openScene({
+      projectId: 'Desktop scene',
+      initialState: {revision: 3},
+    })
+  })
+  await opening
+  expect(getLanguage()).toBe('en')
+  expect(getProjectSpy).toHaveBeenLastCalledWith('Desktop scene', {
+    state: {revision: 3},
+  })
+  await React.act(async () => {
+    closing = desktop.dispose()
+  })
+  await closing
 })

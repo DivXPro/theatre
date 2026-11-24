@@ -5,6 +5,14 @@ export {setCameraStudioLocale} from './i18n'
 export {CameraScene} from './CameraScene'
 export {CAMERA_STUDIO_VERSION} from './version'
 export {useCameraStudio} from './useCameraStudio'
+export {mountCameraStudioDesktop} from './desktop'
+export type {
+  CameraStudioDesktop,
+  CameraStudioDesktopExport,
+  CameraStudioDesktopHost,
+  CameraStudioDesktopOptions,
+  CameraStudioDesktopScene,
+} from './desktop'
 export {
   HttpPatchAdapter,
   HttpSnapshotAdapter,
