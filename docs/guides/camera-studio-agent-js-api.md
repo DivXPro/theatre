@@ -297,20 +297,24 @@ Schema 子集,供客户端校验与工具发现。未激活时抛 `API_NOT_READY
 | `STORAGE_ERROR` / `NETWORK_ERROR` | 资产库存储/网络失败(可重试)  |
 | `INTERNAL_ERROR`    | 未归一的内部错误                             |
 
-## 13. 命名空间总览(71 条命令)
+## 13. 命名空间总览
 
-与设计规格 §9 一一对应;带 ✅ 细节锚点的条目见上文对应小节。
+`api.describe()` 返回当前会话的完整命令清单、参数与错误码。
 
 | 命名空间      | 方法                                                                                          | 语义 |
 | ------------- | --------------------------------------------------------------------------------------------- | ---- |
 | `scene`       | `getSnapshot`                                                                                  | 项目 revision、带类型对象清单、求值属性、挂载状态(§3) |
 | `selection`   | `get` / `selectObject` / `clear`                                                               | Theatre 对象选择;清空时同时清理会话选择 |
 | `objects`     | `list` / `get` / `update` / `delete`                                                           | 读取、静态属性更新(§4)、按类型完整删除 |
-| `models`      | `create`                                                                                       | 从模型资产创建到指定位置,等挂载完成(§6) |
-| `assets`      | `list` / `get` / `importModel` / `rename` / `delete`                                           | 资产库管理;不可 undo(§7);导入是任务(§8) |
+| `models`      | `create` / `replace` / `retry`                                                                                       | 从模型资产创建到指定位置,等挂载完成(§6) |
+| `primitives` | `create` | 创建几何体 |
+| `materials` | `list` / `update` | 查询和修改实例材质 |
+| `assets`      | `list` / `get` / `importModel` / `importModels` / `rename` / `delete`                                           | 资产库管理;不可 undo(§7);导入是任务(§8) |
 | `poses`       | `apply` / `applyCustom` / `clear` / `saveCurrent` / `setGesture`                               | 库姿势、自定义骨骼姿势、清除、保存、左右手势 |
-| `poses.session` | `start` / `commit` / `cancel`                                                                | 需要已挂载 Rig 的 IK 姿势会话 |
+| `poses.session` | `start` / `listIkPoints` / `setIkTarget` / `commit` / `cancel`                                                                | 需要已挂载 Rig 的 IK 姿势会话 |
 | `animations`  | `apply` / `clear` / `getStatus`                                                                | 设置/清除动画资产,独立查询资源加载状态 |
+| `animationStrips` | `list` / `createTrack` / `removeTrack` / `insert` / `updateTiming` / `moveToTrack` / `remove` | 骨骼和对象动画轨道与片段 |
+| `characterPaths` | `get` / `bind` / `unbind` | 角色路径绑定与当前进度 |
 | `cameras`     | `create` / `setActive` / `setAimTarget` / `bindPath` / `unbindPath`                            | 相机创建、活动镜头、瞄准目标、路径绑定 |
 | `anchors`     | `create` / `setParent` / `clearParent`                                                         | 锚点创建、父级/骨骼绑定及坐标换算 |
 | `paths`       | `listPresets` / `createPreset` / `addPoint` / `updatePoint` / `deletePoint` / `setPointTiming` / `sample` | 路径预设、控制点、手柄、自动/固定 u、运行时采样 |
@@ -318,8 +322,66 @@ Schema 子集,供客户端校验与工具发现。未激活时抛 `API_NOT_READY
 | `sequence`    | `getState` / `play` / `pause` / `seek` / `setLength`                                           | 播放、暂停、定位(可选网格吸附)、时长 |
 | `keyframes`   | `list` / `set` / `move` / `delete`                                                             | 显式关键帧(§4) |
 | `history`     | `undo` / `redo`                                                                                | 只管 Theatre 项目历史(§7) |
-| `view`        | `getState` / `setShotView` / `setPipVisible` / `orbit` / `pan` / `dolly` / `reset`             | 活动镜头视图、PIP、导演视角 |
+| `view`        | `getState` / `getRendering` / `setRendering` / `setShotView` / `setPipVisible` / `orbit` / `pan` / `dolly` / `reset`             | 活动镜头视图、PIP、导演视角 |
 | `ui`          | `hide` / `restore` / `setLeftStripHidden` / `openPanel` / `closePanel` / `setGizmoMode`        | Studio 与 CameraScene UI 操作 |
 | `project`     | `exportState`                                                                                  | 导出 Theatre 项目存档(不含资产与会话,§7) |
-| `exports`     | `startVideo`                                                                                   | 从指定或活动相机导出视频,返回任务 ID(§8) |
+| `exports`     | `captureStill` / `startVideo`                                                                                   | 从指定或活动相机导出 PNG 或视频，返回任务 ID(§8) |
 | `jobs`        | `get` / `cancel`                                                                               | 查询或取消长任务(§8) |
+
+## 14. 动画条
+
+```ts
+const {trackId} = await api.animationStrips.createTrack({objectId, kind: 'bone'})
+const {stripId} = await api.animationStrips.insert({
+  objectId, trackId, assetId, startMs: 500, sourceInMs: 100, sourceOutMs: 600,
+})
+await api.animationStrips.updateTiming({
+  objectId, stripId, startMs: 800, sourceInMs: 120, sourceOutMs: 450, repeat: 2,
+})
+const {tracks} = await api.animationStrips.list({objectId})
+```
+
+时间单位是毫秒。`bone` 轨道使用同骨架族的动画资产。`object` 轨道用 `objectChannels` 指定 `position`、`quaternion` 或 `scale` 通道。片段的范围和重叠沿用时间轴规则。`moveToTrack` 保留片段时间并要求轨道类型一致。`removeTrack` 同时移除轨道内的片段。写命令接受可选的 `expectedRevision`。
+
+## 15. 角色路径绑定
+
+```ts
+await api.characterPaths.bind({objectId, pathId, orient: true})
+await api.keyframes.set({
+  objectId, propPath: ['characterPathProgress'], at: 1.5, value: 40,
+})
+const binding = await api.characterPaths.get({objectId})
+await api.characterPaths.unbind({objectId})
+```
+
+`objectId` 和 `pathId` 是场景快照中的带类型 ID。`orient` 默认开启，角色会沿曲线切向转身。绑定时初始化进度轨道。关键帧时间 `at` 用秒，进度值用百分比（0–100）。解除绑定保留进度关键帧。查询的 `status` 为 `unbound`、`missing` 或 `active`。
+
+## 16. Fullbody IK
+
+```ts
+await api.poses.session.start({objectId})
+const {points} = await api.poses.session.listIkPoints()
+const hand = points.find((point) => point.pointId === 'armL')
+if (hand) {
+  await api.poses.session.setIkTarget({
+    pointId: hand.pointId,
+    position: {...hand.position, y: hand.position.y + 0.1},
+  })
+  await api.poses.session.commit()
+} else {
+  await api.poses.session.cancel()
+}
+```
+
+先发现当前模型的控制点。位置和四元数使用世界空间。`setIkTarget` 接受 `position`、`quaternion` 或两者，返回求解后的实际控制点。仅在 `canRotate` 为 true 时传入四元数。`commit` 提交当前会话的姿势，`cancel` 放弃预览。旧式 Rig 不具备 Fullbody 控制点。
+
+## 17. 漫画视口
+
+```ts
+await api.view.setRendering({
+  mode: 'line', castShadow: true, shadingPreset: 'medium', characterNamesVisible: true,
+})
+const rendering = await api.view.getRendering()
+```
+
+`mode` 支持 `original` 和 `line`。网点预设支持 `off`、`light`、`medium`、`dark`、`heavy` 和 `layered`。`setRendering` 可局部更新字段，返回完整视口设置。这些设置属于当前浏览器视口会话，独立于项目存档和导出渲染选项。角色名显示在导演视角。

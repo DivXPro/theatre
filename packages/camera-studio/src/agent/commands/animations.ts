@@ -124,7 +124,7 @@ function resolveMountedModel(runtime: AgentRuntime, objectId: string) {
  * handler 未绑定 SCENE_UNAVAILABLE;实例未挂载 INVALID_STATE;
  * 静态骨架(null)由调用方拒绝。
  */
-async function resolveModelRig(
+export async function resolveModelRig(
   runtime: AgentRuntime,
   objectId: string,
 ): Promise<string | null> {

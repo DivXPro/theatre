@@ -72,6 +72,7 @@ export function sourceTimeAt(strip: AnimationStrip, sceneMs: number): number {
 }
 
 export class AnimationStripOverlapError extends Error {}
+export class AnimationStripRangeError extends Error {}
 export const objectAnimationChannels = [
   'position',
   'quaternion',
@@ -315,7 +316,7 @@ function validateStrip(
     before(assetDurationMs, strip.sourceOutMs) ||
     before(sequenceLengthMs, stripEndMs(strip))
   ) {
-    throw new Error('Invalid animation strip range')
+    throw new AnimationStripRangeError('Invalid animation strip range')
   }
   const conflict = findConflict(tracks, track, strip)
   if (conflict) {

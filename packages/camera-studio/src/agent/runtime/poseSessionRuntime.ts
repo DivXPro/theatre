@@ -13,9 +13,14 @@
  */
 import {AgentApiError} from '../errors'
 import {onPoseSessionChange} from '../../poseMode/poseSession'
+import type {createFullbodyControls} from '../../poseMode/fullbodyControls'
 
 /** PoseModeRig 登记的会话句柄 */
 export type PoseSessionRigHandlers = {
+  fullbody?: Pick<
+    ReturnType<typeof createFullbodyControls>,
+    'listIkPoints' | 'setIkTarget'
+  >
   /** 提交:脏检查 → 捕获实时骨骼写姿势帧(可撤销)→ 清会话 */
   commit: () => void
   /** 取消:不写回直接清会话(姿势应用 effect 把当前值补刷回骨骼) */

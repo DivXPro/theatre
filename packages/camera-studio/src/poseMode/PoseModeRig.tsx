@@ -244,6 +244,10 @@ export function PoseModeRig({
     // 同一提交路径;cancel 不写回,会话清除后姿势应用 effect 把当前值
     // 补刷回骨骼(poseModeActive 翻转触发,见 PlacementManager)
     const unregisterSessionRig = registerPoseSessionRig(placementKey, {
+      get fullbody() {
+        const controls = ctlRef.current
+        return controls && 'setIkTarget' in controls ? controls : undefined
+      },
       commit: commitSession,
       cancel: cancelSession,
     })

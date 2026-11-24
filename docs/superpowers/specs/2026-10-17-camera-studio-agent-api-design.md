@@ -247,6 +247,15 @@ pending | running | succeeded | failed | cancelled
 
 ## 9. 操作覆盖
 
+动画条使用 `animationStrips.list/createTrack/removeTrack/insert/updateTiming/moveToTrack/remove`。写入沿用时间轴的轨道、范围和重叠校验，支持项目 revision 与单步撤销。
+
+`characterPaths.get/bind/unbind` 接受带类型的模型 ID，绑定时另传路径 ID 与可选朝向开关。沿用界面的路径冲突校验与进度轨道初始化。
+
+`poses.session.listIkPoints/setIkTarget` 操作当前 Fullbody IK 会话。坐标和四元数使用世界空间。编辑先预览，再用已有的 `commit` 保存或 `cancel` 放弃。
+
+`view.getRendering/setRendering` 读写漫画模式、投影阴影、网点预设和角色名标签。状态属于当前视口会话。
+
+
 | 命名空间 | 方法 | 语义 |
 |---|---|---|
 | `scene` | `getSnapshot` | 返回项目 revision、带类型对象清单、当前求值属性、挂载与资源状态；无副作用 |

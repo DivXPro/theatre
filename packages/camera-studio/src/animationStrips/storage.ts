@@ -107,7 +107,7 @@ export function insertAnimationStrip(
   assetId: string,
   durationMs: number,
   timing: AnimationStripTiming,
-): void {
+): string {
   const document = readDocument(object)
   if (
     !document.tracks.some(
@@ -116,7 +116,7 @@ export function insertAnimationStrip(
   ) {
     throw new Error('Animation track is unavailable')
   }
-  saveStrip(
+  return saveStrip(
     object,
     {kind: 'tracks', document},
     trackId,
@@ -131,7 +131,7 @@ export function insertObjectAnimationStrip(
   trackId: string,
   timing: AnimationStripTiming,
   objectChannels: ObjectAnimationChannel[],
-): void {
+): string {
   const document = readDocument(object)
   if (
     !document.tracks.some(
@@ -141,7 +141,7 @@ export function insertObjectAnimationStrip(
     throw new Error('Animation track is unavailable')
   }
   const durationMs = timing.sourceOutMs
-  saveStrip(
+  return saveStrip(
     object,
     {kind: 'tracks', document},
     trackId,
@@ -163,7 +163,7 @@ function saveStrip(
   durationMs: number,
   timing: AnimationStripTiming,
   extra?: Pick<AnimationStrip, 'objectChannels' | 'sourceDurationMs'>,
-): void {
+): string {
   const strip = {
     id: createId(),
     assetId,
@@ -180,6 +180,7 @@ function saveStrip(
       val(object.sheet.sequence.pointer.length) * 1000,
     ),
   )
+  return strip.id
 }
 
 export function previewAnimationStripEdit(

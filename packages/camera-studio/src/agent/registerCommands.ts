@@ -1,6 +1,6 @@
 /**
  * 全量 Agent 命令注册(2026-10-19,Task 15):按 Task 4–14 落地顺序
- * 注册全部 20 个命令组(spec §9 命令面,75 条命令),供生产会话与
+ * 注册 spec §9 的全部命令组,供生产会话与
  * 契约测试共用同一个注册入口。
  *
  * 重复命令兜底:registry.register 本身按名拒重(INVALID_STATE),注册
@@ -28,14 +28,18 @@ import {registerAssetCommands} from './commands/assets'
 import {registerJobCommands} from './commands/jobs'
 // Task 9:姿势/手势 + 动画
 import {registerPoseCommands} from './commands/poses'
+import {registerPoseIkCommands} from './commands/poseIk'
 import {registerAnimationCommands} from './commands/animations'
+import {registerAnimationStripCommands} from './commands/animationStrips'
 // Task 10:相机 + 锚点
 import {registerCameraCommands} from './commands/cameras'
 import {registerAnchorCommands} from './commands/anchors'
 // Task 11:路径预设/控制点/编辑会话
 import {registerPathCommands} from './commands/paths'
+import {registerCharacterPathCommands} from './commands/characterPaths'
 // Task 12:视图 + UI + 项目导出
 import {registerViewCommands} from './commands/view'
+import {registerViewRenderingCommands} from './commands/viewRendering'
 import {registerUiCommands} from './commands/ui'
 import {registerProjectCommands} from './commands/project'
 // Task 13:视频导出任务
@@ -68,14 +72,18 @@ export function registerAllAgentCommands(
   registerJobCommands(registry, runtime)
   // Task 9
   registerPoseCommands(registry, runtime)
+  registerPoseIkCommands(registry, runtime)
   registerAnimationCommands(registry, runtime)
+  registerAnimationStripCommands(registry, runtime)
   // Task 10
   registerCameraCommands(registry, runtime)
   registerAnchorCommands(registry, runtime)
   // Task 11
   registerPathCommands(registry, runtime)
+  registerCharacterPathCommands(registry, runtime)
   // Task 12
   registerViewCommands(registry, runtime)
+  registerViewRenderingCommands(registry, runtime)
   registerUiCommands(registry, runtime)
   registerProjectCommands(registry, runtime)
   // Task 13

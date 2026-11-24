@@ -224,3 +224,19 @@ node .claude/skills/camera-studio-agent/scripts/scene-api.mjs call objects.updat
 ```
 
 The bridge deduplicates by requestId: the retry returns the original result instead of applying the write twice. Never generate a fresh requestId for a retry — that is a new write. If the first attempt got a definitive domain answer (a non-`retryable` error), do not retry at all; handle the error per [errors.md](errors.md).
+
+## 7. Animation strips
+
+Use `animationStrips.createTrack` with the model ID and `kind: "bone"` or `"object"`. For `animationStrips.insert`, use the returned track ID and a same-rig animation `assetId` on a bone track. On an object track, supply an `objectChannels` array of transform channels instead. Send `startMs`, `sourceInMs`, `sourceOutMs`, and optional `repeat`. Resolve strip IDs and verify effects with `animationStrips.list`. Use `updateTiming` for trim or scene-time moves and `moveToTrack` for moves between tracks of the same kind. Removing a track removes its strips.
+
+## 8. Character paths
+
+Find the typed model and path IDs in the scene snapshot. Call `characterPaths.bind` with `{objectId, pathId, orient: true}` and verify `characterPaths.get` reports `active`. Use `keyframes.set` on `["characterPathProgress"]` with time in seconds and a value from 0 to 100. Use `characterPaths.unbind` to detach while retaining the progress keyframes.
+
+## 9. Fullbody IK
+
+Call `poses.session.start` with the model ID, then `poses.session.listIkPoints` with `{}`. Use a returned `pointId` and supply a world-space `position`, a `quaternion` for points with `canRotate: true`, or both. Read the solved point returned by `poses.session.setIkTarget`. Call `poses.session.commit` to save the pose or `poses.session.cancel` to discard the preview.
+
+## 10. Manga viewport
+
+Call `view.setRendering` with any settings to change, for example `{"mode":"line","castShadow":true,"shadingPreset":"medium","characterNamesVisible":true}`. Verify the complete state with `view.getRendering`. Use `mode: "original"` to restore standard rendering. These are viewport session settings. Use `exports.captureStill` or `exports.startVideo` for a separate export with its own parameters.

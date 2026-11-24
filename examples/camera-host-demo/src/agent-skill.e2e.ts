@@ -50,7 +50,8 @@ function runSkill(args: string[]): Promise<{stdout: string; stderr: string}> {
   return new Promise((resolve, reject) => {
     execFile(
       process.execPath,
-      [SKILL_SCRIPT, ...args],
+      // Node 的运行时警告也走 stderr，测试保留这里的 JSON 错误信封。
+      ['--no-warnings', SKILL_SCRIPT, ...args],
       {
         cwd: REPO_ROOT,
         env: {

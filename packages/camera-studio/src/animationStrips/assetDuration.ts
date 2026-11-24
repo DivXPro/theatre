@@ -18,26 +18,33 @@ export function resolveAnimationDuration(
   if (cached) return cached
 
   const library = getLibrary()
-  const promise = (async () => {
-    const url = await library.getBlobUrl(entry.blobId)
-    const gltf = await createGLTFLoader().loadAsync(url)
-    const duration = gltf.animations[0]?.duration
-    if (
-      !(
-        typeof duration === 'number' &&
-        Number.isFinite(duration) &&
-        duration > 0
-      )
-    ) {
-      throw new Error('Animation asset contains no usable duration')
-    }
+  const promise = readAnimationDuration(entry, library).then((duration) => {
     durations.set(entry.id, duration)
     void library.putEntry({...entry, duration}).catch(() => {})
     return duration
-  })()
+  })
   durations.set(entry.id, promise)
   void promise.catch(() => {
     if (durations.get(entry.id) === promise) durations.delete(entry.id)
   })
   return promise
+}
+
+export async function readAnimationDuration(
+  entry: AnimationEntry,
+  library: Pick<ReturnType<typeof getLibrary>, 'getBlobUrl'>,
+): Promise<number> {
+  if (Number.isFinite(entry.duration) && entry.duration > 0)
+    return entry.duration
+  const url = await library.getBlobUrl(entry.blobId)
+  const gltf = await createGLTFLoader().loadAsync(url)
+  const duration = gltf.animations[0]?.duration
+  if (
+    typeof duration !== 'number' ||
+    !Number.isFinite(duration) ||
+    duration <= 0
+  ) {
+    throw new Error('Animation asset contains no usable duration')
+  }
+  return duration
 }

@@ -83,6 +83,173 @@ node .claude/skills/camera-studio-agent/scripts/scene-api.mjs schema \
 
 `API_DISPOSED`, `INVALID_ARGUMENT`, `INVALID_ID_KIND`, `OBJECT_NOT_FOUND`, `INVALID_STATE`, `REVISION_CONFLICT`, `SCENE_UNAVAILABLE`
 
+## `animationStrips.createTrack`
+
+- Kind: `mutation`
+- State: `project`
+- Undoable: `single-step`
+- Completion: `committed`
+- Expected revision: yes
+
+### Input
+
+```json
+{"type":"object","properties":{"objectId":{"type":"string"},"expectedRevision":{"type":"number"},"kind":{"type":"string","enum":["bone","object"]}},"required":["objectId","kind"],"additionalProperties":false}
+```
+
+### Output
+
+```json
+{"type":"object","properties":{"revision":{"type":"number"},"trackId":{"type":"string"}},"required":["revision","trackId"]}
+```
+
+### Errors
+
+`API_DISPOSED`, `API_NOT_READY`, `INVALID_ARGUMENT`, `INVALID_ID_KIND`, `INVALID_STATE`, `OBJECT_NOT_FOUND`, `ASSET_NOT_FOUND`, `REVISION_CONFLICT`, `SCENE_UNAVAILABLE`, `RESOURCE_LOAD_FAILED`
+
+## `animationStrips.insert`
+
+- Kind: `mutation`
+- State: `project`
+- Undoable: `single-step`
+- Completion: `committed`
+- Expected revision: yes
+
+### Input
+
+```json
+{"type":"object","properties":{"objectId":{"type":"string"},"expectedRevision":{"type":"number"},"trackId":{"type":"string"},"assetId":{"type":"string"},"objectChannels":{"type":"array","items":{"type":"string","enum":["position","quaternion","scale"]}},"startMs":{"type":"number","description":"场景时间，毫秒"},"sourceInMs":{"type":"number","description":"素材入点，毫秒"},"sourceOutMs":{"type":"number","description":"素材出点，毫秒"},"repeat":{"type":"number","description":"正整数，默认为 1"}},"required":["objectId","trackId","startMs","sourceInMs","sourceOutMs"],"additionalProperties":false}
+```
+
+### Output
+
+```json
+{"type":"object","properties":{"revision":{"type":"number"},"stripId":{"type":"string"}},"required":["revision","stripId"]}
+```
+
+### Errors
+
+`API_DISPOSED`, `API_NOT_READY`, `INVALID_ARGUMENT`, `INVALID_ID_KIND`, `INVALID_STATE`, `OBJECT_NOT_FOUND`, `ASSET_NOT_FOUND`, `REVISION_CONFLICT`, `SCENE_UNAVAILABLE`, `RESOURCE_LOAD_FAILED`
+
+## `animationStrips.list`
+
+- Kind: `query`
+- State: `project`
+- Undoable: `none`
+- Expected revision: no
+
+### Input
+
+```json
+{"type":"object","properties":{"objectId":{"type":"string"}},"required":["objectId"]}
+```
+
+### Output
+
+```json
+{"type":"object","required":["tracks"],"properties":{"tracks":{"type":"array","items":{"type":"object","required":["id","strips"],"properties":{"id":{"type":"string"},"kind":{"type":"string","enum":["bone","object"]},"strips":{"type":"array","items":{"type":"object","required":["id","assetId","startMs","sourceInMs","sourceOutMs"],"properties":{"id":{"type":"string"},"assetId":{"type":"string"},"startMs":{"type":"number","description":"场景时间，毫秒"},"sourceInMs":{"type":"number","description":"素材入点，毫秒"},"sourceOutMs":{"type":"number","description":"素材出点，毫秒"},"repeat":{"type":"number","description":"正整数，默认为 1"},"objectChannels":{"type":"array","items":{"type":"string","enum":["position","quaternion","scale"]}},"sourceDurationMs":{"type":"number"},"actionId":{"type":"string"}}}}}}}}}
+```
+
+### Errors
+
+`API_DISPOSED`, `API_NOT_READY`, `INVALID_ARGUMENT`, `INVALID_ID_KIND`, `INVALID_STATE`, `OBJECT_NOT_FOUND`, `ASSET_NOT_FOUND`, `REVISION_CONFLICT`, `SCENE_UNAVAILABLE`, `RESOURCE_LOAD_FAILED`
+
+## `animationStrips.moveToTrack`
+
+- Kind: `mutation`
+- State: `project`
+- Undoable: `single-step`
+- Completion: `committed`
+- Expected revision: yes
+
+### Input
+
+```json
+{"type":"object","properties":{"objectId":{"type":"string"},"expectedRevision":{"type":"number"},"stripId":{"type":"string"},"trackId":{"type":"string"}},"required":["objectId","stripId","trackId"],"additionalProperties":false}
+```
+
+### Output
+
+```json
+{"type":"object","properties":{"revision":{"type":"number"}},"required":["revision"]}
+```
+
+### Errors
+
+`API_DISPOSED`, `API_NOT_READY`, `INVALID_ARGUMENT`, `INVALID_ID_KIND`, `INVALID_STATE`, `OBJECT_NOT_FOUND`, `ASSET_NOT_FOUND`, `REVISION_CONFLICT`, `SCENE_UNAVAILABLE`, `RESOURCE_LOAD_FAILED`
+
+## `animationStrips.remove`
+
+- Kind: `mutation`
+- State: `project`
+- Undoable: `single-step`
+- Completion: `committed`
+- Expected revision: yes
+
+### Input
+
+```json
+{"type":"object","properties":{"objectId":{"type":"string"},"expectedRevision":{"type":"number"},"stripId":{"type":"string"}},"required":["objectId","stripId"],"additionalProperties":false}
+```
+
+### Output
+
+```json
+{"type":"object","properties":{"revision":{"type":"number"}},"required":["revision"]}
+```
+
+### Errors
+
+`API_DISPOSED`, `API_NOT_READY`, `INVALID_ARGUMENT`, `INVALID_ID_KIND`, `INVALID_STATE`, `OBJECT_NOT_FOUND`, `ASSET_NOT_FOUND`, `REVISION_CONFLICT`, `SCENE_UNAVAILABLE`, `RESOURCE_LOAD_FAILED`
+
+## `animationStrips.removeTrack`
+
+- Kind: `mutation`
+- State: `project`
+- Undoable: `single-step`
+- Completion: `committed`
+- Expected revision: yes
+
+### Input
+
+```json
+{"type":"object","properties":{"objectId":{"type":"string"},"expectedRevision":{"type":"number"},"trackId":{"type":"string"}},"required":["objectId","trackId"],"additionalProperties":false}
+```
+
+### Output
+
+```json
+{"type":"object","properties":{"revision":{"type":"number"}},"required":["revision"]}
+```
+
+### Errors
+
+`API_DISPOSED`, `API_NOT_READY`, `INVALID_ARGUMENT`, `INVALID_ID_KIND`, `INVALID_STATE`, `OBJECT_NOT_FOUND`, `ASSET_NOT_FOUND`, `REVISION_CONFLICT`, `SCENE_UNAVAILABLE`, `RESOURCE_LOAD_FAILED`
+
+## `animationStrips.updateTiming`
+
+- Kind: `mutation`
+- State: `project`
+- Undoable: `single-step`
+- Completion: `committed`
+- Expected revision: yes
+
+### Input
+
+```json
+{"type":"object","properties":{"objectId":{"type":"string"},"expectedRevision":{"type":"number"},"stripId":{"type":"string"},"startMs":{"type":"number","description":"场景时间，毫秒"},"sourceInMs":{"type":"number","description":"素材入点，毫秒"},"sourceOutMs":{"type":"number","description":"素材出点，毫秒"},"repeat":{"type":"number","description":"正整数，默认为 1"}},"required":["objectId","stripId","startMs","sourceInMs","sourceOutMs"],"additionalProperties":false}
+```
+
+### Output
+
+```json
+{"type":"object","properties":{"revision":{"type":"number"}},"required":["revision"]}
+```
+
+### Errors
+
+`API_DISPOSED`, `API_NOT_READY`, `INVALID_ARGUMENT`, `INVALID_ID_KIND`, `INVALID_STATE`, `OBJECT_NOT_FOUND`, `ASSET_NOT_FOUND`, `REVISION_CONFLICT`, `SCENE_UNAVAILABLE`, `RESOURCE_LOAD_FAILED`
+
 ## `animations.apply`
 
 - Kind: `mutation`
@@ -224,6 +391,36 @@ node .claude/skills/camera-studio-agent/scripts/scene-api.mjs schema \
 
 ```json
 {"type":"object","properties":{"id":{"type":"string"},"kind":{"enum":["model"]},"name":{"type":"string"},"rig":{"type":"string"},"blobId":{"type":"string"},"contentHash":{"type":"string"},"thumbnailId":{"type":"string"},"boneCount":{"type":"number"},"vertexCount":{"type":"number"},"createdAt":{"type":"number"}},"required":["id","kind","name","rig","blobId","contentHash","boneCount","vertexCount","createdAt"]}
+```
+
+### Errors
+
+`API_DISPOSED`, `INVALID_ARGUMENT`, `INVALID_STATE`, `STORAGE_ERROR`, `NETWORK_ERROR`, `PARTIAL_FAILURE`, `INTERNAL_ERROR`
+
+## `assets.importModels`
+
+- Kind: `job`
+- State: `asset`
+- Undoable: `none`
+- Completion: `loaded`
+- Expected revision: no
+
+### Input
+
+```json
+{"type":"object","properties":{"files":{"type":"array","items":{"type":"object","description":"HTTP:经 POST /v1/files 上传后的引用;JS:直接传 hydrated File","properties":{"fileId":{"type":"string","description":"桥接上传返回的文件 id"},"fileName":{"type":"string"},"mimeType":{"type":"string"}},"required":["fileId"],"additionalProperties":false}}},"required":["files"],"additionalProperties":false}
+```
+
+### Output
+
+```json
+{"type":"object","properties":{"jobId":{"type":"string"}},"required":["jobId"]}
+```
+
+### Job result
+
+```json
+{"type":"array","items":{"type":"object","properties":{"id":{"type":"string"},"kind":{"enum":["model"]},"name":{"type":"string"},"rig":{"type":"string"},"blobId":{"type":"string"},"contentHash":{"type":"string"},"thumbnailId":{"type":"string"},"boneCount":{"type":"number"},"vertexCount":{"type":"number"},"createdAt":{"type":"number"}},"required":["id","kind","name","rig","blobId","contentHash","boneCount","vertexCount","createdAt"]}}
 ```
 
 ### Errors
@@ -395,6 +592,108 @@ node .claude/skills/camera-studio-agent/scripts/scene-api.mjs schema \
 
 `API_DISPOSED`, `INVALID_ARGUMENT`, `INVALID_ID_KIND`, `OBJECT_NOT_FOUND`, `INVALID_STATE`, `REVISION_CONFLICT`, `SCENE_UNAVAILABLE`
 
+## `characterPaths.bind`
+
+- Kind: `mutation`
+- State: `project`
+- Undoable: `single-step`
+- Completion: `committed`
+- Expected revision: yes
+
+### Input
+
+```json
+{"type":"object","properties":{"objectId":{"type":"string","description":"带 model: 前缀的角色 ID"},"expectedRevision":{"type":"number"},"pathId":{"type":"string","description":"带 path: 前缀的路径对象 ID"},"orient":{"type":"boolean","description":"是否沿曲线切向转身，默认为 true"}},"required":["objectId","pathId"],"additionalProperties":false}
+```
+
+### Output
+
+```json
+{"type":"object","properties":{"revision":{"type":"number"}},"required":["revision"]}
+```
+
+### Errors
+
+`API_DISPOSED`, `API_NOT_READY`, `INVALID_ARGUMENT`, `INVALID_ID_KIND`, `OBJECT_NOT_FOUND`, `INVALID_STATE`, `REVISION_CONFLICT`
+
+## `characterPaths.get`
+
+- Kind: `query`
+- State: `project`
+- Undoable: `none`
+- Expected revision: no
+
+### Input
+
+```json
+{"type":"object","properties":{"objectId":{"type":"string","description":"带 model: 前缀的角色 ID"}},"required":["objectId"]}
+```
+
+### Output
+
+```json
+{"type":"object","properties":{"status":{"type":"string","enum":["unbound","missing","active"]},"pathId":{"type":"string","description":"带 path: 前缀的路径对象 ID"},"orient":{"type":"boolean"},"progress":{"type":"number","description":"当前时间轴求值的路径进度（0–100）"}},"required":["status","orient","progress"]}
+```
+
+### Errors
+
+`API_DISPOSED`, `API_NOT_READY`, `INVALID_ARGUMENT`, `INVALID_ID_KIND`, `OBJECT_NOT_FOUND`, `INVALID_STATE`, `REVISION_CONFLICT`
+
+## `characterPaths.unbind`
+
+- Kind: `mutation`
+- State: `project`
+- Undoable: `single-step`
+- Completion: `committed`
+- Expected revision: yes
+
+### Input
+
+```json
+{"type":"object","properties":{"objectId":{"type":"string","description":"带 model: 前缀的角色 ID"},"expectedRevision":{"type":"number"}},"required":["objectId"],"additionalProperties":false}
+```
+
+### Output
+
+```json
+{"type":"object","properties":{"revision":{"type":"number"}},"required":["revision"]}
+```
+
+### Errors
+
+`API_DISPOSED`, `API_NOT_READY`, `INVALID_ARGUMENT`, `INVALID_ID_KIND`, `OBJECT_NOT_FOUND`, `INVALID_STATE`, `REVISION_CONFLICT`
+
+## `exports.captureStill`
+
+- Kind: `job`
+- State: `session`
+- Undoable: `none`
+- Completion: `loaded`
+- Cancelable: yes
+- Expected revision: no
+
+### Input
+
+```json
+{"type":"object","properties":{"cameraId":{"type":"string","description":"相机对象 ID(camera:<key>);缺省 = 当前活动相机"},"renderMode":{"type":"string","enum":["styled","clay"],"description":"styled 保持工程材质;clay 使用临时白模材质覆盖"},"output":{"type":"object","properties":{"width":{"type":"number"},"height":{"type":"number"}},"required":["width","height"],"additionalProperties":false,"description":"精确输出像素尺寸"},"aspectRatio":{"type":"string","enum":["16:9","9:16","1:1","4:3","3:4"],"description":"output 未提供时的便捷画幅"},"clayColor":{"type":"string","description":"白模颜色,缺省 #D8D8D8"},"background":{"type":"string","enum":["scene","neutral","transparent"],"description":"transparent 仅 captureStill 支持"},"timeMs":{"type":"number","description":"毫秒;缺省当前播放头,自动 clamp 到 sequence 范围"}},"additionalProperties":false}
+```
+
+### Output
+
+```json
+{"type":"object","properties":{"jobId":{"type":"string"}},"required":["jobId"]}
+```
+
+### Job result
+
+```json
+{"type":"object","description":"HTTP:导出文件描述(经 GET /v1/files/:id 下载);JS 结果为 StillExportResult/VideoExportResult(blob 不序列化)","properties":{"fileId":{"type":"string","description":"桥接临时文件 id"},"fileName":{"type":"string"},"mimeType":{"type":"string"},"size":{"type":"number","description":"字节数"},"width":{"type":"number"},"height":{"type":"number"},"renderMode":{"type":"string","enum":["styled","clay"]},"timeMs":{"type":"number"},"fps":{"type":"number"},"durationMs":{"type":"number"},"codec":{"type":"string"},"encoding":{"type":"string","enum":["webcodecs","mediarecorder"]},"range":{"type":"object","properties":{"startMs":{"type":"number"},"endMs":{"type":"number"}},"required":["startMs","endMs"]}},"required":["fileId","fileName","mimeType","size"]}
+```
+
+### Errors
+
+`API_DISPOSED`, `SCENE_UNAVAILABLE`, `INVALID_ARGUMENT`, `INVALID_ID_KIND`, `OBJECT_NOT_FOUND`, `INVALID_STATE`, `CAPABILITY_UNAVAILABLE`, `JOB_CANCELLED`, `INTERNAL_ERROR`
+
 ## `exports.startVideo`
 
 - Kind: `job`
@@ -407,7 +706,7 @@ node .claude/skills/camera-studio-agent/scripts/scene-api.mjs schema \
 ### Input
 
 ```json
-{"type":"object","properties":{"cameraId":{"type":"string","description":"相机对象 ID(camera:<key>);缺省 = 当前活动相机"}},"additionalProperties":false}
+{"type":"object","properties":{"cameraId":{"type":"string","description":"相机对象 ID(camera:<key>);缺省 = 当前活动相机"},"renderMode":{"type":"string","enum":["styled","clay"],"description":"styled 保持工程材质;clay 使用临时白模材质覆盖"},"output":{"type":"object","properties":{"width":{"type":"number"},"height":{"type":"number"}},"required":["width","height"],"additionalProperties":false,"description":"精确输出像素尺寸"},"aspectRatio":{"type":"string","enum":["16:9","9:16","1:1","4:3","3:4"],"description":"output 未提供时的便捷画幅"},"clayColor":{"type":"string","description":"白模颜色,缺省 #D8D8D8"},"background":{"type":"string","enum":["scene","neutral","transparent"],"description":"transparent 仅 captureStill 支持"},"range":{"type":"object","properties":{"startMs":{"type":"number"},"endMs":{"type":"number"}},"required":["startMs","endMs"],"additionalProperties":false},"fps":{"type":"number","description":"1..60,缺省 30"}},"additionalProperties":false}
 ```
 
 ### Output
@@ -419,7 +718,7 @@ node .claude/skills/camera-studio-agent/scripts/scene-api.mjs schema \
 ### Job result
 
 ```json
-{"type":"object","description":"HTTP:导出文件描述(经 GET /v1/files/:id 下载);JS 结果为 VideoExportResult(blob/fileName/mimeType/size)","properties":{"fileId":{"type":"string","description":"桥接临时文件 id"},"fileName":{"type":"string"},"mimeType":{"type":"string"},"size":{"type":"number","description":"字节数"}},"required":["fileId","fileName","mimeType","size"]}
+{"type":"object","description":"HTTP:导出文件描述(经 GET /v1/files/:id 下载);JS 结果为 StillExportResult/VideoExportResult(blob 不序列化)","properties":{"fileId":{"type":"string","description":"桥接临时文件 id"},"fileName":{"type":"string"},"mimeType":{"type":"string"},"size":{"type":"number","description":"字节数"},"width":{"type":"number"},"height":{"type":"number"},"renderMode":{"type":"string","enum":["styled","clay"]},"timeMs":{"type":"number"},"fps":{"type":"number"},"durationMs":{"type":"number"},"codec":{"type":"string"},"encoding":{"type":"string","enum":["webcodecs","mediarecorder"]},"range":{"type":"object","properties":{"startMs":{"type":"number"},"endMs":{"type":"number"}},"required":["startMs","endMs"]}},"required":["fileId","fileName","mimeType","size"]}
 ```
 
 ### Errors
@@ -615,6 +914,53 @@ node .claude/skills/camera-studio-agent/scripts/scene-api.mjs schema \
 
 `API_DISPOSED`, `INVALID_ARGUMENT`, `INVALID_ID_KIND`, `OBJECT_NOT_FOUND`, `INVALID_STATE`, `REVISION_CONFLICT`, `SCENE_UNAVAILABLE`
 
+## `materials.list`
+
+- Kind: `query`
+- State: `project`
+- Undoable: `none`
+- Expected revision: no
+
+### Input
+
+```json
+{"type":"object","properties":{"objectId":{"type":"string"}},"required":["objectId"],"additionalProperties":false}
+```
+
+### Output
+
+```json
+{"type":"array","items":{"type":"object","properties":{"slotId":{"type":"string"},"slotKey":{"type":"string"},"meshName":{"type":"string"},"materialName":{"type":"string"},"values":{"type":"object","properties":{"color":{"type":"string","description":"#RRGGBB"},"metalness":{"type":"number","description":"0..1"},"roughness":{"type":"number","description":"0..1"},"emissive":{"type":"string","description":"#RRGGBB"},"opacity":{"type":"number","description":"0..1"},"mapBlobId":{"type":"string","description":"贴图 blob ID;空字符串恢复原图"},"normalMapBlobId":{"type":"string"},"roughnessMapBlobId":{"type":"string"},"metalnessMapBlobId":{"type":"string"},"emissiveMapBlobId":{"type":"string"}},"additionalProperties":false,"required":["color","metalness","roughness","emissive","opacity","mapBlobId","normalMapBlobId","roughnessMapBlobId","metalnessMapBlobId","emissiveMapBlobId"]}},"required":["slotId","slotKey","meshName","materialName","values"]}}
+```
+
+### Errors
+
+`API_DISPOSED`, `INVALID_ARGUMENT`, `INVALID_ID_KIND`, `OBJECT_NOT_FOUND`, `INVALID_STATE`, `SCENE_UNAVAILABLE`
+
+## `materials.update`
+
+- Kind: `mutation`
+- State: `project`
+- Undoable: `single-step`
+- Completion: `committed`
+- Expected revision: yes
+
+### Input
+
+```json
+{"type":"object","properties":{"objectId":{"type":"string"},"slotId":{"type":"string"},"values":{"type":"object","properties":{"color":{"type":"string","description":"#RRGGBB"},"metalness":{"type":"number","description":"0..1"},"roughness":{"type":"number","description":"0..1"},"emissive":{"type":"string","description":"#RRGGBB"},"opacity":{"type":"number","description":"0..1"},"mapBlobId":{"type":"string","description":"贴图 blob ID;空字符串恢复原图"},"normalMapBlobId":{"type":"string"},"roughnessMapBlobId":{"type":"string"},"metalnessMapBlobId":{"type":"string"},"emissiveMapBlobId":{"type":"string"}},"additionalProperties":false},"expectedRevision":{"type":"number"}},"required":["objectId","slotId","values"],"additionalProperties":false}
+```
+
+### Output
+
+```json
+{"type":"object","properties":{"revision":{"type":"number"}},"required":["revision"]}
+```
+
+### Errors
+
+`API_DISPOSED`, `INVALID_ARGUMENT`, `INVALID_ID_KIND`, `OBJECT_NOT_FOUND`, `INVALID_STATE`, `REVISION_CONFLICT`, `SCENE_UNAVAILABLE`
+
 ## `models.create`
 
 - Kind: `mutation`
@@ -638,6 +984,54 @@ node .claude/skills/camera-studio-agent/scripts/scene-api.mjs schema \
 ### Errors
 
 `API_DISPOSED`, `INVALID_ARGUMENT`, `ASSET_NOT_FOUND`, `REVISION_CONFLICT`, `SCENE_UNAVAILABLE`, `RESOURCE_LOAD_FAILED`, `INTERNAL_ERROR`
+
+## `models.replace`
+
+- Kind: `mutation`
+- State: `project`
+- Undoable: `single-step`
+- Completion: `committed`
+- Expected revision: yes
+
+### Input
+
+```json
+{"type":"object","properties":{"objectId":{"type":"string"},"expectedRevision":{"type":"number"},"assetId":{"type":"string"}},"required":["objectId","assetId"],"additionalProperties":false}
+```
+
+### Output
+
+```json
+{"type":"object","properties":{"revision":{"type":"number"}},"required":["revision"]}
+```
+
+### Errors
+
+`API_DISPOSED`, `INVALID_ARGUMENT`, `ASSET_NOT_FOUND`, `OBJECT_NOT_FOUND`, `REVISION_CONFLICT`, `SCENE_UNAVAILABLE`
+
+## `models.retry`
+
+- Kind: `mutation`
+- State: `project`
+- Undoable: `single-step`
+- Completion: `committed`
+- Expected revision: yes
+
+### Input
+
+```json
+{"type":"object","properties":{"objectId":{"type":"string"},"expectedRevision":{"type":"number"}},"required":["objectId"],"additionalProperties":false}
+```
+
+### Output
+
+```json
+{"type":"object","properties":{"revision":{"type":"number"}},"required":["revision"]}
+```
+
+### Errors
+
+`API_DISPOSED`, `INVALID_ARGUMENT`, `OBJECT_NOT_FOUND`, `REVISION_CONFLICT`, `SCENE_UNAVAILABLE`
 
 ## `objects.delete`
 
@@ -1111,6 +1505,52 @@ node .claude/skills/camera-studio-agent/scripts/scene-api.mjs schema \
 
 `API_DISPOSED`, `INVALID_ARGUMENT`, `INVALID_STATE`
 
+## `poses.session.listIkPoints`
+
+- Kind: `query`
+- State: `session`
+- Undoable: `none`
+- Expected revision: no
+
+### Input
+
+```json
+{"type":"object","additionalProperties":false}
+```
+
+### Output
+
+```json
+{"type":"object","properties":{"objectId":{"type":"string"},"points":{"type":"array","items":{"type":"object","properties":{"pointId":{"type":"string"},"position":{"type":"object","properties":{"x":{"type":"number"},"y":{"type":"number"},"z":{"type":"number"}},"required":["x","y","z"]},"quaternion":{"type":"object","properties":{"x":{"type":"number"},"y":{"type":"number"},"z":{"type":"number"},"w":{"type":"number"}},"required":["x","y","z","w"]},"canRotate":{"type":"boolean"}},"required":["pointId","position","quaternion","canRotate"]}}},"required":["objectId","points"]}
+```
+
+### Errors
+
+`API_DISPOSED`, `API_NOT_READY`, `INVALID_ARGUMENT`, `INVALID_STATE`
+
+## `poses.session.setIkTarget`
+
+- Kind: `mutation`
+- State: `session`
+- Undoable: `none`
+- Expected revision: no
+
+### Input
+
+```json
+{"type":"object","properties":{"pointId":{"type":"string"},"position":{"type":"object","properties":{"x":{"type":"number"},"y":{"type":"number"},"z":{"type":"number"}},"required":["x","y","z"]},"quaternion":{"type":"object","properties":{"x":{"type":"number"},"y":{"type":"number"},"z":{"type":"number"},"w":{"type":"number"}},"required":["x","y","z","w"]}},"required":["pointId"],"additionalProperties":false,"description":"至少指定世界坐标 position 或世界旋转 quaternion 之一"}
+```
+
+### Output
+
+```json
+{"type":"object","properties":{"objectId":{"type":"string"},"point":{"type":"object","properties":{"pointId":{"type":"string"},"position":{"type":"object","properties":{"x":{"type":"number"},"y":{"type":"number"},"z":{"type":"number"}},"required":["x","y","z"]},"quaternion":{"type":"object","properties":{"x":{"type":"number"},"y":{"type":"number"},"z":{"type":"number"},"w":{"type":"number"}},"required":["x","y","z","w"]},"canRotate":{"type":"boolean"}},"required":["pointId","position","quaternion","canRotate"]}},"required":["objectId","point"]}
+```
+
+### Errors
+
+`API_DISPOSED`, `API_NOT_READY`, `INVALID_ARGUMENT`, `INVALID_STATE`
+
 ## `poses.session.start`
 
 - Kind: `mutation`
@@ -1158,6 +1598,30 @@ node .claude/skills/camera-studio-agent/scripts/scene-api.mjs schema \
 ### Errors
 
 `API_DISPOSED`, `INVALID_ARGUMENT`, `INVALID_ID_KIND`, `OBJECT_NOT_FOUND`, `INVALID_STATE`, `ASSET_NOT_FOUND`, `REVISION_CONFLICT`, `SCENE_UNAVAILABLE`
+
+## `primitives.create`
+
+- Kind: `mutation`
+- State: `project`
+- Undoable: `single-step`
+- Completion: `mounted`
+- Expected revision: yes
+
+### Input
+
+```json
+{"type":"object","properties":{"kind":{"type":"string","enum":["plane","box","sphere","cylinder"],"description":"米制基础几何体类型"},"position":{"type":"object","properties":{"x":{"type":"number"},"y":{"type":"number"},"z":{"type":"number"}},"required":["x","y","z"],"additionalProperties":false,"description":"创建位置(世界坐标)"},"expectedRevision":{"type":"number","description":"乐观并发:读取场景时的 revision"}},"required":["kind","position"],"additionalProperties":false}
+```
+
+### Output
+
+```json
+{"type":"object","properties":{"objectId":{"type":"string","description":"带类型场景对象 ID,model:<key>"},"revision":{"type":"number"}},"required":["objectId","revision"]}
+```
+
+### Errors
+
+`API_DISPOSED`, `INVALID_ARGUMENT`, `REVISION_CONFLICT`, `SCENE_UNAVAILABLE`, `RESOURCE_LOAD_FAILED`, `INTERNAL_ERROR`
 
 ## `project.exportState`
 
@@ -1551,6 +2015,29 @@ node .claude/skills/camera-studio-agent/scripts/scene-api.mjs schema \
 
 `API_DISPOSED`, `INVALID_ARGUMENT`, `API_NOT_READY`
 
+## `view.getRendering`
+
+- Kind: `query`
+- State: `session`
+- Undoable: `none`
+- Expected revision: no
+
+### Input
+
+```json
+{"type":"object","additionalProperties":false}
+```
+
+### Output
+
+```json
+{"type":"object","properties":{"mode":{"type":"string","enum":["original","line"]},"castShadow":{"type":"boolean"},"shadingPreset":{"type":"string","enum":["off","light","medium","dark","heavy","layered"]},"characterNamesVisible":{"type":"boolean"}},"required":["mode","castShadow","shadingPreset","characterNamesVisible"]}
+```
+
+### Errors
+
+`API_DISPOSED`, `API_NOT_READY`, `INVALID_ARGUMENT`, `SCENE_UNAVAILABLE`
+
 ## `view.getState`
 
 - Kind: `query`
@@ -1665,6 +2152,29 @@ node .claude/skills/camera-studio-agent/scripts/scene-api.mjs schema \
 ### Errors
 
 `API_DISPOSED`, `INVALID_ARGUMENT`, `SCENE_UNAVAILABLE`
+
+## `view.setRendering`
+
+- Kind: `mutation`
+- State: `session`
+- Undoable: `none`
+- Expected revision: no
+
+### Input
+
+```json
+{"type":"object","properties":{"mode":{"type":"string","enum":["original","line"]},"castShadow":{"type":"boolean"},"shadingPreset":{"type":"string","enum":["off","light","medium","dark","heavy","layered"]},"characterNamesVisible":{"type":"boolean"}},"additionalProperties":false}
+```
+
+### Output
+
+```json
+{"type":"object","properties":{"mode":{"type":"string","enum":["original","line"]},"castShadow":{"type":"boolean"},"shadingPreset":{"type":"string","enum":["off","light","medium","dark","heavy","layered"]},"characterNamesVisible":{"type":"boolean"}},"required":["mode","castShadow","shadingPreset","characterNamesVisible"]}
+```
+
+### Errors
+
+`API_DISPOSED`, `API_NOT_READY`, `INVALID_ARGUMENT`, `SCENE_UNAVAILABLE`
 
 ## `view.setShotView`
 

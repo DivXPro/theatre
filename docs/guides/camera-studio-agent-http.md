@@ -372,3 +372,17 @@ node .claude/skills/camera-studio-agent/scripts/scene-api.mjs schema
 SKILL 的端到端验收(真实浏览器 + 真实桥接,全程经该 CLI 驱动)是
 `examples/camera-host-demo/src/agent-skill.e2e.ts`(`pnpm --filter camera-host-demo
 test:e2e --grep "agent skill"`)。
+
+## 13. 编辑动画条、角色路径、Fullbody IK 和漫画视口
+
+这些命令经 `POST /v1/commands` 执行。请求使用 `{requestId, name, args}`，完整参数由 `GET /v1/schema` 返回。
+
+| 工作流 | HTTP 命令和参数 |
+| --- | --- |
+| 动画条 | 用 `animationStrips.createTrack` 创建 `bone` 或 `object` 轨道。将结果中的 `trackId` 传给 `animationStrips.insert`，并提供动画 `assetId` 或对象 `objectChannels`。用 `animationStrips.list` 核对，或用 `updateTiming`、`moveToTrack`、`remove` 和 `removeTrack` 继续编辑。 |
+| 角色沿路径移动 | 用 `characterPaths.bind` 传入 `objectId`、`pathId` 和可选的 `orient`。用 `keyframes.set` 编辑 `["characterPathProgress"]`，数值为 0–100。用 `characterPaths.get` 回读，用 `characterPaths.unbind` 解除绑定。 |
+| Fullbody IK 编辑 | 用 `poses.session.start` 传入模型 `objectId`，再用 `poses.session.listIkPoints` 发现控制点 ID。用 `poses.session.setIkTarget` 提交 `pointId` 及世界空间 `position` 和/或 `quaternion`，最后调用 `commit` 保存或 `cancel` 放弃。 |
+| 漫画视口 | `view.setRendering` 可局部更新 `mode`、`castShadow`、`shadingPreset`、`characterNamesVisible`。`view.getRendering` 返回完整状态。 |
+| 静帧导出 | `exports.captureStill` 接受可选的 `cameraId`、`timeMs`、尺寸和渲染参数。收到任务 ID 后轮询 `GET /v1/jobs/:id`，成功后用 `GET /v1/files/:id` 下载 PNG。 |
+
+动画条和角色路径绑定修改可用 `expectedRevision` 防止覆盖并发编辑。IK 预览和漫画视口设置是会话状态，Agent 可在写入后直接回读。参数语义和 JS 示例见 [Agent JS API 指南](camera-studio-agent-js-api.md#14-动画条)。

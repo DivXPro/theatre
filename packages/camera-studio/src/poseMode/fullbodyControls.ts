@@ -29,6 +29,30 @@ type Point = {
   rotationEnabled: boolean
 }
 
+export type IkPoint = {
+  pointId: string
+  position: {x: number; y: number; z: number}
+  quaternion: {x: number; y: number; z: number; w: number}
+  canRotate: boolean
+}
+
+export type IkTarget = {
+  pointId: string
+  position?: IkPoint['position']
+  quaternion?: IkPoint['quaternion']
+}
+
+function describePoint({spec, effector}: Point): IkPoint {
+  const {x, y, z} = effector.getWorldPosition(new Vector3())
+  const rotation = effector.getWorldQuaternion(new Quaternion())
+  return {
+    pointId: spec.id,
+    position: {x, y, z},
+    quaternion: {x: rotation.x, y: rotation.y, z: rotation.z, w: rotation.w},
+    canRotate: spec.rotation,
+  }
+}
+
 export function createFullbodyControls({
   rig,
   scene,
@@ -279,6 +303,29 @@ export function createFullbodyControls({
   }
 
   return {
+    listIkPoints: () => points.map(describePoint),
+    setIkTarget({
+      pointId,
+      position,
+      quaternion,
+    }: IkTarget): IkPoint | undefined {
+      const point = points.find(({spec}) => spec.id === pointId)
+      if (!point || points.some(({target}) => target.isDragging))
+        return undefined
+      if (position) {
+        point.target.position.copy(position)
+        point.positionEnabled = true
+      }
+      if (quaternion) {
+        const {x, y, z, w} = quaternion
+        point.target.quaternion.set(x, y, z, w)
+        point.rotationEnabled = true
+      }
+      recordEdit(point)
+      // 立即运行与拖动相同的求解步数，下一条 HTTP 命令可直接提交。
+      while (remainingFrames > 0) update()
+      return describePoint(point)
+    },
     targets: points.map(({target}) => target),
     getSelected: () => selected?.spec.id ?? null,
     getSelectionModes: () => ({

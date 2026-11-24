@@ -35,6 +35,10 @@ import type {MaterialsApi} from './commands/materials'
 import type {AssetsApi} from './commands/assets'
 import type {PosesApi, PosesSessionApi} from './commands/poses'
 import type {AnimationsApi} from './commands/animations'
+import type {AnimationStripsApi} from './commands/animationStrips'
+import type {CharacterPathsApi} from './commands/characterPaths'
+import type {PoseIkApi} from './commands/poseIk'
+import type {ViewRenderingApi} from './commands/viewRendering'
 import type {CamerasApi} from './commands/cameras'
 import type {AnchorsApi} from './commands/anchors'
 import type {PathsApi, PathsSessionApi} from './commands/paths'
@@ -65,15 +69,17 @@ export type CameraStudioApi = {
   readonly primitives: PrimitivesApi
   readonly materials: MaterialsApi
   readonly assets: AssetsApi
-  readonly poses: PosesApi & {readonly session: PosesSessionApi}
+  readonly poses: PosesApi & {readonly session: PosesSessionApi & PoseIkApi}
   readonly animations: AnimationsApi
+  readonly animationStrips: AnimationStripsApi
+  readonly characterPaths: CharacterPathsApi
   readonly cameras: CamerasApi
   readonly anchors: AnchorsApi
   readonly paths: PathsApi & {readonly session: PathsSessionApi}
   readonly sequence: SequenceApi
   readonly keyframes: KeyframesApi
   readonly history: HistoryApi
-  readonly view: ViewApi
+  readonly view: ViewApi & ViewRenderingApi
   readonly ui: UiApi
   readonly project: ProjectApi
   readonly exports: ExportsApi
@@ -297,12 +303,28 @@ export function createCameraStudioApi(
         start: (args) => invoke('poses.session.start', args),
         commit: () => invoke('poses.session.commit', undefined),
         cancel: () => invoke('poses.session.cancel', undefined),
+        listIkPoints: () => invoke('poses.session.listIkPoints', undefined),
+        setIkTarget: (args) => invoke('poses.session.setIkTarget', args),
       },
     },
     animations: {
       apply: (args) => invoke('animations.apply', args),
       clear: (args) => invoke('animations.clear', args),
       getStatus: (args) => invoke('animations.getStatus', args),
+    },
+    animationStrips: {
+      list: (args) => invoke('animationStrips.list', args),
+      createTrack: (args) => invoke('animationStrips.createTrack', args),
+      removeTrack: (args) => invoke('animationStrips.removeTrack', args),
+      insert: (args) => invoke('animationStrips.insert', args),
+      updateTiming: (args) => invoke('animationStrips.updateTiming', args),
+      moveToTrack: (args) => invoke('animationStrips.moveToTrack', args),
+      remove: (args) => invoke('animationStrips.remove', args),
+    },
+    characterPaths: {
+      get: (args) => invoke('characterPaths.get', args),
+      bind: (args) => invoke('characterPaths.bind', args),
+      unbind: (args) => invoke('characterPaths.unbind', args),
     },
     cameras: {
       create: (args) => invoke('cameras.create', args),
@@ -349,6 +371,8 @@ export function createCameraStudioApi(
     },
     view: {
       getState: () => invoke('view.getState', undefined),
+      getRendering: () => invoke('view.getRendering', undefined),
+      setRendering: (args) => invoke('view.setRendering', args),
       setShotView: (args) => invoke('view.setShotView', args),
       setPipVisible: (args) => invoke('view.setPipVisible', args),
       orbit: (args) => invoke('view.orbit', args),

@@ -109,6 +109,92 @@ export type AnimationStatusDto = {
     error?: AgentErrorDto;
 };
 
+// @public (undocumented)
+export type AnimationStrip = {
+    id: string;
+    assetId: string;
+    startMs: number;
+    sourceInMs: number;
+    sourceOutMs: number;
+    repeat?: number;
+    objectChannels?: ObjectAnimationChannel[];
+    sourceDurationMs?: number;
+    actionId?: string;
+};
+
+// @public (undocumented)
+export type AnimationStripsApi = {
+    list(args: {
+        objectId: string;
+    }): Promise<{
+        tracks: AnimationTrack[];
+    }>;
+    createTrack(args: {
+        objectId: string;
+        kind: AnimationTrackKind;
+        expectedRevision?: number;
+    }): Promise<{
+        revision: number;
+        trackId: string;
+    }>;
+    removeTrack(args: {
+        objectId: string;
+        trackId: string;
+        expectedRevision?: number;
+    }): Promise<{
+        revision: number;
+    }>;
+    insert(args: AnimationStripTiming & {
+        objectId: string;
+        trackId: string;
+        expectedRevision?: number;
+    } & ({
+        assetId: string;
+        objectChannels?: never;
+    } | {
+        assetId?: never;
+        objectChannels: ObjectAnimationChannel[];
+    })): Promise<{
+        revision: number;
+        stripId: string;
+    }>;
+    updateTiming(args: AnimationStripTiming & {
+        objectId: string;
+        stripId: string;
+        expectedRevision?: number;
+    }): Promise<{
+        revision: number;
+    }>;
+    moveToTrack(args: {
+        objectId: string;
+        stripId: string;
+        trackId: string;
+        expectedRevision?: number;
+    }): Promise<{
+        revision: number;
+    }>;
+    remove(args: {
+        objectId: string;
+        stripId: string;
+        expectedRevision?: number;
+    }): Promise<{
+        revision: number;
+    }>;
+};
+
+// @public (undocumented)
+export type AnimationStripTiming = Pick<AnimationStrip, 'startMs' | 'sourceInMs' | 'sourceOutMs' | 'repeat'>;
+
+// @public (undocumented)
+export type AnimationTrack = {
+    id: string;
+    kind?: AnimationTrackKind;
+    strips: AnimationStrip[];
+};
+
+// @public (undocumented)
+export type AnimationTrackKind = 'bone' | 'object';
+
 // @public
 export function applyPose(root: Object3D, bones: PoseEntry['bones']): {
     applied: number;
@@ -274,9 +360,11 @@ export type CameraStudioApi = {
     readonly materials: MaterialsApi;
     readonly assets: AssetsApi;
     readonly poses: PosesApi & {
-        readonly session: PosesSessionApi;
+        readonly session: PosesSessionApi & PoseIkApi;
     };
     readonly animations: AnimationsApi;
+    readonly animationStrips: AnimationStripsApi;
+    readonly characterPaths: CharacterPathsApi;
     readonly cameras: CamerasApi;
     readonly anchors: AnchorsApi;
     readonly paths: PathsApi & {
@@ -285,7 +373,7 @@ export type CameraStudioApi = {
     readonly sequence: SequenceApi;
     readonly keyframes: KeyframesApi;
     readonly history: HistoryApi;
-    readonly view: ViewApi;
+    readonly view: ViewApi & ViewRenderingApi;
     readonly ui: UiApi;
     readonly project: ProjectApi;
     readonly exports: ExportsApi;
@@ -417,6 +505,35 @@ export const captureBindPose: typeof capturePose;
 // @public
 export function capturePose(root: Object3D): PoseEntry['bones'];
 
+// @public (undocumented)
+export type CharacterPathsApi = {
+    get(args: {
+        objectId: string;
+    }): Promise<CharacterPathState>;
+    bind(args: {
+        objectId: string;
+        pathId: string;
+        orient?: boolean;
+        expectedRevision?: number;
+    }): Promise<{
+        revision: number;
+    }>;
+    unbind(args: {
+        objectId: string;
+        expectedRevision?: number;
+    }): Promise<{
+        revision: number;
+    }>;
+};
+
+// @public (undocumented)
+export type CharacterPathState = {
+    status: 'unbound' | 'missing' | 'active';
+    pathId?: SceneObjectId;
+    orient: boolean;
+    progress: number;
+};
+
 // @public
 export type CommandContext = {
     requestId: string;
@@ -540,6 +657,30 @@ export class HttpSnapshotAdapter implements SceneSyncAdapter {
         revision: string;
     }>;
 }
+
+// @public (undocumented)
+export type IkPoint = {
+    pointId: string;
+    position: {
+        x: number;
+        y: number;
+        z: number;
+    };
+    quaternion: {
+        x: number;
+        y: number;
+        z: number;
+        w: number;
+    };
+    canRotate: boolean;
+};
+
+// @public (undocumented)
+export type IkTarget = {
+    pointId: string;
+    position?: IkPoint['position'];
+    quaternion?: IkPoint['quaternion'];
+};
 
 // Warning: (ae-forgotten-export) The symbol "ImportDeps" needs to be exported by the entry point index.d.ts
 //
@@ -803,6 +944,9 @@ export type ModelsApi = {
     }>;
 };
 
+// @public (undocumented)
+export type ObjectAnimationChannel = 'position' | 'quaternion' | 'scale';
+
 // @public
 export type ObjectsApi = {
     list(): Promise<SceneObjectSummary[]>;
@@ -931,6 +1075,18 @@ export type PoseEntry = {
 export type PoseFrameMode = {
     mode: 'edit' | 'new';
     position: number;
+};
+
+// @public (undocumented)
+export type PoseIkApi = {
+    listIkPoints(): Promise<{
+        objectId: SceneObjectId;
+        points: IkPoint[];
+    }>;
+    setIkTarget(args: IkTarget): Promise<{
+        objectId: SceneObjectId;
+        point: IkPoint;
+    }>;
 };
 
 // @public
@@ -1282,6 +1438,20 @@ export type ViewportRenderingConfig = MangaViewportOptions & {
 
 // @public (undocumented)
 export type ViewportRenderMode = 'original' | 'line';
+
+// @public (undocumented)
+export type ViewRenderingApi = {
+    getRendering(): Promise<ViewRenderingState>;
+    setRendering(args: Partial<ViewRenderingState>): Promise<ViewRenderingState>;
+};
+
+// @public (undocumented)
+export type ViewRenderingState = {
+    mode: ViewportRenderMode;
+    castShadow: boolean;
+    shadingPreset: MangaShadingPreset;
+    characterNamesVisible: boolean;
+};
 
 // @public
 export type ViewState = {

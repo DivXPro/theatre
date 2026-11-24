@@ -277,6 +277,86 @@ const FACADE_COMMANDS: ReadonlyArray<{
   args?: unknown
 }> = [
   {path: 'scene.getSnapshot', command: 'scene.getSnapshot'},
+  {
+    path: 'animationStrips.list',
+    command: 'animationStrips.list',
+    args: {objectId: 'model:M'},
+  },
+  {
+    path: 'animationStrips.createTrack',
+    command: 'animationStrips.createTrack',
+    args: {objectId: 'model:M', kind: 'bone'},
+  },
+  {
+    path: 'animationStrips.removeTrack',
+    command: 'animationStrips.removeTrack',
+    args: {objectId: 'model:M', trackId: 'track'},
+  },
+  {
+    path: 'animationStrips.insert',
+    command: 'animationStrips.insert',
+    args: {
+      objectId: 'model:M',
+      trackId: 'track',
+      assetId: 'clip',
+      startMs: 100,
+      sourceInMs: 0,
+      sourceOutMs: 500,
+    },
+  },
+  {
+    path: 'animationStrips.updateTiming',
+    command: 'animationStrips.updateTiming',
+    args: {
+      objectId: 'model:M',
+      stripId: 'strip',
+      startMs: 200,
+      sourceInMs: 10,
+      sourceOutMs: 400,
+    },
+  },
+  {
+    path: 'animationStrips.moveToTrack',
+    command: 'animationStrips.moveToTrack',
+    args: {objectId: 'model:M', stripId: 'strip', trackId: 'track'},
+  },
+  {
+    path: 'animationStrips.remove',
+    command: 'animationStrips.remove',
+    args: {objectId: 'model:M', stripId: 'strip'},
+  },
+  {
+    path: 'characterPaths.get',
+    command: 'characterPaths.get',
+    args: {objectId: 'model:M'},
+  },
+  {
+    path: 'characterPaths.bind',
+    command: 'characterPaths.bind',
+    args: {objectId: 'model:M', pathId: 'path:P', orient: true},
+  },
+  {
+    path: 'characterPaths.unbind',
+    command: 'characterPaths.unbind',
+    args: {objectId: 'model:M'},
+  },
+  {path: 'poses.session.listIkPoints', command: 'poses.session.listIkPoints'},
+  {
+    path: 'poses.session.setIkTarget',
+    command: 'poses.session.setIkTarget',
+    args: {pointId: 'armL', position: {x: 0, y: 1, z: 2}},
+  },
+  {path: 'view.getRendering', command: 'view.getRendering'},
+  {
+    path: 'view.setRendering',
+    command: 'view.setRendering',
+    args: {
+      mode: 'line',
+      castShadow: true,
+      shadingPreset: 'medium',
+      characterNamesVisible: true,
+    },
+  },
   {path: 'selection.get', command: 'selection.get'},
   {
     path: 'selection.selectObject',

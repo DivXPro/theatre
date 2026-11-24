@@ -150,16 +150,28 @@ export class WebCodecsH264Writer {
         args.fps,
       )
       encoder.configure(config)
-      // 预检 canvas → VideoFrame:部分平台有 VideoEncoder 但不接受
-      // OffscreenCanvas 作为帧源,提前失败才能显式降级而不是录到一半崩。
+      // isConfigSupported 和 configure 都可能先成功，硬件初始化失败
+      // 要等首帧才异步上报。实际试编一帧后再决定是否走 WebCodecs。
       const probe = new VideoFrame(writer.canvas as CanvasImageSource, {
         timestamp: 0,
+        duration: Math.round(1_000_000 / args.fps),
       })
-      probe.close()
+      try {
+        encoder.encode(probe, {keyFrame: true})
+      } finally {
+        probe.close()
+      }
+      await waitForEncoding(writer.flushEncoder(), 'WebCodecs 等待探测帧超时')
+      if (!writer.description || !writer.samples.length) {
+        writer.abort()
+        return null
+      }
+      // 保留编码配置，正式视频从自己的首帧开始。
+      writer.samples.length = 0
       return writer
     } catch {
       try {
-        encoder?.close()
+        if (encoder && encoder.state !== 'closed') encoder.close()
       } catch {
         // 已关闭/配置失败
       }
@@ -198,17 +210,25 @@ export class WebCodecsH264Writer {
     }
   }
 
+  private async flushEncoder(): Promise<void> {
+    try {
+      await this.encoder.flush()
+    } catch (error) {
+      throw this.encoderError ?? error
+    }
+    if (this.encoderError) throw this.encoderError
+  }
+
   async finish(): Promise<VideoEncodingResult> {
     if (this.closed) {
       throw new AgentApiError('INVALID_STATE', 'WebCodecs 编码器已关闭')
     }
     this.closed = true
     try {
-      await this.encoder.flush()
+      await this.flushEncoder()
     } finally {
-      this.encoder.close()
+      if (this.encoder.state !== 'closed') this.encoder.close()
     }
-    if (this.encoderError) throw this.encoderError
     if (!this.description) {
       throw new AgentApiError(
         'INTERNAL_ERROR',
@@ -249,7 +269,7 @@ function codecFromMime(mimeType: string): string {
   return mimeType
 }
 
-async function waitForRecorder(
+async function waitForEncoding(
   event: Promise<void>,
   timeoutMessage: string,
 ): Promise<void> {
@@ -366,7 +386,7 @@ export class MediaRecorderVideoWriter {
     this.track.requestFrame?.()
     drawPixels(this.canvas, pixels, width, height)
     if (start) {
-      await waitForRecorder(
+      await waitForEncoding(
         Promise.race([
           start,
           this.stopPromise.then(() => {
@@ -389,7 +409,7 @@ export class MediaRecorderVideoWriter {
   async finish(): Promise<VideoEncodingResult> {
     try {
       if (this.recorder.state !== 'inactive') this.recorder.stop()
-      await waitForRecorder(this.stopPromise, 'MediaRecorder 等待视频完成超时')
+      await waitForEncoding(this.stopPromise, 'MediaRecorder 等待视频完成超时')
     } finally {
       this.track.stop()
     }

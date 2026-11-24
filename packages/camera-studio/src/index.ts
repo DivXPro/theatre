@@ -97,6 +97,24 @@ export type {SequenceApi, SequenceState} from './agent/commands/sequence'
 export type {KeyframesApi, KeyframeInfo} from './agent/commands/keyframes'
 export type {HistoryApi} from './agent/commands/history'
 export type {ViewApi, ViewState} from './agent/commands/view'
+export type {AnimationStripsApi} from './agent/commands/animationStrips'
+export type {
+  AnimationTrack,
+  AnimationTrackKind,
+  AnimationStrip,
+  AnimationStripTiming,
+  ObjectAnimationChannel,
+} from './animationStrips/model'
+export type {
+  CharacterPathsApi,
+  CharacterPathState,
+} from './agent/commands/characterPaths'
+export type {PoseIkApi} from './agent/commands/poseIk'
+export type {IkPoint, IkTarget} from './poseMode/fullbodyControls'
+export type {
+  ViewRenderingApi,
+  ViewRenderingState,
+} from './agent/commands/viewRendering'
 export type {UiApi, UiPanelKind} from './agent/commands/ui'
 export type {ProjectApi} from './agent/commands/project'
 export type {ExportsApi} from './agent/commands/exports'

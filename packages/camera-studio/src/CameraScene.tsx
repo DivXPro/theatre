@@ -80,7 +80,6 @@ import {
 import {TopToolbar} from './TopToolbar'
 import {MangaViewportFrame} from './MangaViewportFrame'
 import {mangaViewportDefaults} from './mangaViewport'
-import type {ViewportRenderMode} from './mangaViewport'
 import {Anchors} from './Anchors'
 import {collectAnchorChildResets, setAimOptionsSheet} from './aimTargets'
 import {
@@ -139,6 +138,7 @@ import {AgentApiError} from './agent/errors'
 import {getSceneSheetObject} from './agent/runtime/objectRuntime'
 import type {SceneObjectKind} from './agent/types'
 import {bindCameraStudioSceneHandlers} from './agent/api'
+import type {ViewRenderingState} from './agent/commands/viewRendering'
 import type {AgentSceneRuntimeHandlers} from './agent/runtime'
 import {registerDirectorView} from './agent/runtime/directorView'
 import type {DirectorViewController} from './agent/runtime/directorView'
@@ -888,15 +888,26 @@ export function CameraScene({
   }
   // true = 全屏镜头视角(导演视角让位,轨道控制器/导航块停用)
   const [shotView, setShotView] = useState(false)
-  const [renderMode, setRenderMode] = useState<ViewportRenderMode>(
-    viewportRendering?.initialMode ?? 'original',
-  )
-  const [mangaShadows, setMangaShadows] = useState(
-    viewportRendering?.castShadow ?? false,
-  )
-  const [mangaShadingPreset, setMangaShadingPreset] = useState(
-    viewportRendering?.shadingPreset ?? mangaViewportDefaults.shadingPreset,
-  )
+  const [rendering, setRendering] = useState<ViewRenderingState>(() => ({
+    mode: viewportRendering?.initialMode ?? 'original',
+    castShadow: viewportRendering?.castShadow ?? false,
+    shadingPreset:
+      viewportRendering?.shadingPreset ?? mangaViewportDefaults.shadingPreset,
+    characterNamesVisible: false,
+  }))
+  const renderingRef = useRef(rendering)
+  const updateRendering = useCallback((patch: Partial<ViewRenderingState>) => {
+    const next = {...renderingRef.current, ...patch}
+    renderingRef.current = next
+    setRendering(next)
+    return next
+  }, [])
+  const {
+    mode: renderMode,
+    castShadow: mangaShadows,
+    shadingPreset: mangaShadingPreset,
+    characterNamesVisible,
+  } = rendering
   const mangaOptions = useMemo(
     () => ({
       ...viewportRendering,
@@ -906,7 +917,6 @@ export function CameraScene({
     [viewportRendering, mangaShadows, mangaShadingPreset],
   )
   const isManga = renderMode !== 'original'
-  const [characterNamesVisible, setCharacterNamesVisible] = useState(false)
   // 画中画开关(顶栏按钮):只管编辑视角右下角的小窗,不影响镜头全屏视角
   const [pipVisible, setPipVisible] = useState(true)
   const sceneRef = useRef<HTMLDivElement>(null)
@@ -1948,6 +1958,8 @@ export function CameraScene({
         editingPath: editingPathRef.current,
         gizmoMode: deps().gizmoMode,
       }),
+      getRendering: () => ({...renderingRef.current}),
+      setRendering: (patch) => ({...updateRendering(patch)}),
       setShotView: ({on}) => setShotView(on),
       setPipVisible: ({visible}) => setPipVisible(visible),
       startPathEditing: ({pathKey}) => deps().enterPathEdit(pathKey),
@@ -1970,7 +1982,7 @@ export function CameraScene({
     }
     return bindCameraStudioSceneHandlers(handlers)
     // sheet 随 project 固定(组件实例不换 project);deps 全部走 ref
-  }, [sheet])
+  }, [sheet, updateRendering])
 
   useEffect(() => {
     setPlacingSnapshot(placing)
@@ -2021,14 +2033,21 @@ export function CameraScene({
           headerActions={headerActions}
           onSelectGizmoMode={setGizmoMode}
           renderMode={renderMode}
-          onSelectRenderMode={setRenderMode}
+          onSelectRenderMode={(mode) => updateRendering({mode})}
           mangaShadows={mangaShadows}
-          onToggleMangaShadows={() => setMangaShadows((value) => !value)}
+          onToggleMangaShadows={() =>
+            updateRendering({castShadow: !renderingRef.current.castShadow})
+          }
           mangaShadingPreset={mangaShadingPreset}
-          onSelectMangaShadingPreset={setMangaShadingPreset}
+          onSelectMangaShadingPreset={(shadingPreset) =>
+            updateRendering({shadingPreset})
+          }
           characterNamesVisible={characterNamesVisible}
           onToggleCharacterNames={() =>
-            setCharacterNamesVisible((visible) => !visible)
+            updateRendering({
+              characterNamesVisible:
+                !renderingRef.current.characterNamesVisible,
+            })
           }
           onToggleModelLibrary={handleToggleModel}
           onTogglePathLibrary={handleTogglePath}

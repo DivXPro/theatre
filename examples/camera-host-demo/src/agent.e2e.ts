@@ -13,7 +13,7 @@
  */
 import {expect, test} from '@playwright/test'
 import type {Page} from '@playwright/test'
-import {readFile} from 'fs/promises'
+import {mkdir, readFile, writeFile} from 'fs/promises'
 import path from 'path'
 
 const BRIDGE_HTTP = process.env.CAMERA_STUDIO_E2E_BRIDGE_HTTP
@@ -240,7 +240,7 @@ async function bootScene(page: Page): Promise<void> {
 test.describe('agent http bridge e2e', () => {
   test.describe.configure({mode: 'serial'})
 
-  test('agent api: 纯 HTTP 完整场景工作流', async ({page}) => {
+  test('agent api: 纯 HTTP 完整场景工作流', async ({page}, testInfo) => {
     await bootScene(page)
 
     // ── 鉴权:无凭据一律 401 ─────────────────────────────
@@ -255,6 +255,10 @@ test.describe('agent http bridge e2e', () => {
 
     const schema = await apiGet('/v1/schema')
     expect(schema.status).toBe(200)
+    const schemaFile = testInfo.outputPath('agent-schema.json')
+    await mkdir(path.dirname(schemaFile), {recursive: true})
+    await writeFile(schemaFile, JSON.stringify(schema.body, null, 2))
+
     const commandNames = schema.body.result.commands.map(
       (command: {name: string}) => command.name,
     )
@@ -479,6 +483,160 @@ test.describe('agent http bridge e2e', () => {
     ).result
     expect(animClearedProps.props.animation ?? '').toBe('')
 
+    await test.step('edit animation tracks and clips through HTTP', async () => {
+      const objectId = modelId
+      await mustCommand('sequence.setLength', {length: 4})
+      const listed = async () =>
+        (await mustCommand('animationStrips.list', {objectId})).result.tracks
+      expect(await listed()).toEqual([])
+      const first = (
+        await mustCommand('animationStrips.createTrack', {
+          objectId,
+          kind: 'bone',
+        })
+      ).result
+      const second = (
+        await mustCommand('animationStrips.createTrack', {
+          objectId,
+          kind: 'bone',
+        })
+      ).result
+      const timing = {startMs: 100, sourceInMs: 0, sourceOutMs: 300}
+      const clip = (
+        await mustCommand('animationStrips.insert', {
+          objectId,
+          trackId: first.trackId,
+          assetId: clipEntry!.id,
+          ...timing,
+          expectedRevision: second.revision,
+        })
+      ).result
+      const stale = await callCommand('animationStrips.remove', {
+        objectId,
+        stripId: clip.stripId,
+        expectedRevision: second.revision,
+      })
+      expect(stale.body.error.code).toBe('REVISION_CONFLICT')
+      const overlap = await callCommand('animationStrips.insert', {
+        objectId,
+        trackId: second.trackId,
+        assetId: clipEntry!.id,
+        ...timing,
+      })
+      expect(overlap.body.error.code).toBe('INVALID_STATE')
+      await mustCommand('animationStrips.updateTiming', {
+        objectId,
+        stripId: clip.stripId,
+        startMs: 400,
+        sourceInMs: 20,
+        sourceOutMs: 150,
+        repeat: 2,
+      })
+      await mustCommand('animationStrips.moveToTrack', {
+        objectId,
+        stripId: clip.stripId,
+        trackId: second.trackId,
+      })
+      expect(await listed()).toEqual([
+        {id: first.trackId, kind: 'bone', strips: []},
+        {
+          id: second.trackId,
+          kind: 'bone',
+          strips: [
+            expect.objectContaining({
+              id: clip.stripId,
+              startMs: 400,
+              sourceInMs: 20,
+              sourceOutMs: 150,
+              repeat: 2,
+            }),
+          ],
+        },
+      ])
+      await mustCommand('history.undo', {})
+      expect((await listed())[0].strips[0].id).toBe(clip.stripId)
+      await mustCommand('history.redo', {})
+      await mustCommand('animationStrips.remove', {
+        objectId,
+        stripId: clip.stripId,
+      })
+      await mustCommand('animationStrips.removeTrack', {
+        objectId,
+        trackId: first.trackId,
+      })
+      await mustCommand('animationStrips.removeTrack', {
+        objectId,
+        trackId: second.trackId,
+      })
+
+      const {trackId} = (
+        await mustCommand('animationStrips.createTrack', {
+          objectId,
+          kind: 'object',
+        })
+      ).result
+      const objectStrip = (
+        await mustCommand('animationStrips.insert', {
+          objectId,
+          trackId,
+          objectChannels: ['position'],
+          ...timing,
+        })
+      ).result
+      expect((await listed())[0].strips[0]).toMatchObject({
+        id: objectStrip.stripId,
+        objectChannels: ['position'],
+      })
+      await mustCommand('animationStrips.removeTrack', {objectId, trackId})
+      expect(await listed()).toEqual([])
+    })
+
+    await test.step('discover, preview, cancel and commit Fullbody IK through HTTP', async () => {
+      const objectId = modelId
+      const getObject = async () =>
+        (await mustCommand('objects.get', {objectId})).result
+      const before = (await getObject()).props.pose ?? ''
+      const outside = await callCommand('poses.session.listIkPoints', {})
+      expect(outside.body.error.code).toBe('INVALID_STATE')
+      const editHand = async () => {
+        await mustCommand('poses.session.start', {objectId})
+        const state = (await mustCommand('poses.session.listIkPoints', {}))
+          .result
+        expect(state.objectId).toBe(objectId)
+        const hand = state.points.find(
+          (point: {pointId: string}) => point.pointId === 'armL',
+        )
+        expect(hand).toBeTruthy()
+        const invalid = await callCommand('poses.session.setIkTarget', {
+          pointId: hand.pointId,
+          quaternion: {x: 0, y: 0, z: 0, w: 0},
+        })
+        expect(invalid.body.error.code).toBe('INVALID_ARGUMENT')
+        const response = await mustCommand('poses.session.setIkTarget', {
+          pointId: hand.pointId,
+          position: {...hand.position, y: hand.position.y + 0.15},
+        })
+        expect(response.result.point.position.y).toBeGreaterThan(
+          hand.position.y + 0.01,
+        )
+        expect((await getObject()).props.pose ?? '').toBe(before)
+      }
+      await editHand()
+      await mustCommand('poses.session.cancel', {})
+      expect((await getObject()).props.pose ?? '').toBe(before)
+      await editHand()
+      await mustCommand('poses.session.commit', {})
+      const poseFrames = (
+        await mustCommand('keyframes.list', {objectId, propPath: ['pose']})
+      ).result
+      expect(poseFrames).toHaveLength(1)
+      expect(JSON.parse(poseFrames[0].value)).toMatchObject({
+        kind: 'custom',
+        bones: expect.any(Object),
+      })
+      await mustCommand('poses.clear', {objectId})
+    })
+
     // ── 7. sequence.setLength / keyframes.set / sequence.seek ──
     await mustCommand('sequence.setLength', {length: 4})
     await mustCommand('keyframes.set', {
@@ -522,6 +680,68 @@ test.describe('agent http bridge e2e', () => {
       await mustCommand('objects.get', {objectId: camera.objectId})
     ).result
     expect(bound.props.pathKey).toBe(pathResult.pathId.slice('path:'.length))
+
+    await test.step('bind and animate character path progress through HTTP', async () => {
+      const objectId = modelId
+      const pathId = pathResult.pathId
+      const getBinding = async () =>
+        (await mustCommand('characterPaths.get', {objectId})).result
+      expect((await getBinding()).status).toBe('unbound')
+      await mustCommand('characterPaths.bind', {
+        objectId,
+        pathId,
+        orient: false,
+      })
+      expect(await getBinding()).toMatchObject({
+        pathId,
+        status: 'active',
+        orient: false,
+      })
+      await mustCommand('keyframes.set', {
+        objectId,
+        propPath: ['characterPathProgress'],
+        at: 1,
+        value: 35,
+      })
+      expect((await getBinding()).progress).toBe(35)
+      await mustCommand('characterPaths.unbind', {objectId})
+      expect((await getBinding()).status).toBe('unbound')
+      await mustCommand('history.undo', {})
+      expect(await getBinding()).toMatchObject({
+        pathId,
+        status: 'active',
+        progress: 35,
+      })
+      await mustCommand('characterPaths.unbind', {objectId})
+    })
+
+    await test.step('change manga viewport settings through HTTP', async () => {
+      const before = (await mustCommand('view.getRendering', {})).result
+      const changed = {
+        mode: 'line',
+        castShadow: true,
+        shadingPreset: 'dark',
+        characterNamesVisible: true,
+      }
+      expect((await mustCommand('view.setRendering', changed)).result).toEqual(
+        changed,
+      )
+      expect((await mustCommand('view.getRendering', {})).result).toEqual(
+        changed,
+      )
+      const invalid = await callCommand('view.setRendering', {
+        shadingPreset: 'invalid',
+        mode: 'original',
+      })
+      expect(invalid.body.error.code).toBe('INVALID_ARGUMENT')
+      expect((await mustCommand('view.getRendering', {})).result).toEqual(
+        changed,
+      )
+      expect(
+        (await mustCommand('view.setRendering', {castShadow: false})).result,
+      ).toEqual({...changed, castShadow: false})
+      await mustCommand('view.setRendering', before)
+    })
 
     // ── 9. project.exportState ──────────────────────────
     const exported = (await mustCommand('project.exportState', {})).result
@@ -595,7 +815,10 @@ test.describe('agent http bridge e2e', () => {
       cameraId,
     })
     const exportFinal = await waitJob(exportJobId, 120_000)
-    expect(exportFinal.state).toBe('succeeded')
+    expect(
+      exportFinal.state,
+      JSON.stringify(exportFinal.error ?? exportFinal),
+    ).toBe('succeeded')
     const file = exportFinal.result
     expect(typeof file.fileId).toBe('string')
     expect(
