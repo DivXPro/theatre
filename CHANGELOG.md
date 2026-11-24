@@ -1,5 +1,12 @@
 # Theatre.js changelog
 
+## 1.2.0
+
+- 新增 Camera Studio 单机桌面接入入口 `mountCameraStudioDesktop()` 和 Electron 示例。宿主可通过内部 JS API 和 IPC 加载场景、处理关闭通知、保存图片和视频、切换语言。接入步骤见 [单机桌面接入指南](docs/guides/camera-studio-embedding.md#单机桌面接入)。
+- 嵌入式宿主可自定义工作台主题和 Studio 工具栏标识。Camera Studio 新增漫画渲染模式、网点阴影预设和视口人物名称开关。
+- 时间轴新增角色动画片段与运镜路径相关操作。Agent API 新增动画片段、角色路径绑定、Fullbody IK 目标和视口渲染设置命令。
+- 改进视频导出，支持 H.264 与 MediaRecorder 回退路径。
+
 ## 1.1.0
 
 - Camera Studio 宿主可用 `HttpPatchAdapter` 从服务器加载场景，并通过 HTTP JSON Patch 保存增量。示例接口支持 ETag 版本校验、幂等提交和 WebSocket 版本通知。
