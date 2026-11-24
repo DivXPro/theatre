@@ -48,6 +48,21 @@ test('mountStudioRoot restores the default viewport mounting', () => {
   expect(root.style.zIndex).toBe('100')
 })
 
+test('installs the same compiled styles in the page and the Studio shadow root', () => {
+  const root = createStudioRoot()
+  const shadow = root.attachShadow({mode: 'open'})
+  const selector = 'style[data-camera-studio-styles]'
+  mountStudioRoot()
+  mountStudioRoot()
+
+  expect(shadow.querySelectorAll(selector)).toHaveLength(1)
+  const css = shadow.querySelector(selector)?.textContent
+  expect(css).toContain('.cs-studio-outline')
+  expect(css).toContain('.cs-toolbar-button')
+  expect(css).not.toContain('@apply')
+  expect(document.head.querySelector(selector)?.textContent).toBe(css)
+})
+
 test('mountStudioRoot is a no-op before Studio creates its root', () => {
   expect(mountStudioRoot(document.createElement('main'))).toBeUndefined()
 })

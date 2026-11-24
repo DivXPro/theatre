@@ -1,0 +1,185 @@
+/* Camera Studio strip-row */
+.cs-strip-row-header {
+  @apply flex items-center;
+  gap: 2px;
+  @apply min-w-0 h-full w-full;
+  color: var(--cs-theme-secondary-text, var(--theatre-text-secondary, #ccc));
+  font-size: 11px;
+
+  > span {
+    @apply flex-1 min-w-0 min-w-0 overflow-hidden;
+    color: var(--cs-theme-secondary-text, var(--theatre-text-secondary, #ccc));
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 28px;
+    @apply whitespace-nowrap text-ellipsis;
+    text-shadow: none;
+    @apply block;
+  }
+}
+
+.cs-strip-row-object-actions {
+  @apply flex items-center justify-end flex-none;
+  gap: 2px;
+  @apply h-full;
+  padding-right: 24px;
+}
+
+.cs-strip-row-add-track-menu {
+  @apply fixed grid;
+  min-width: 148px;
+  padding: 4px;
+  background: #25272e;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--cs-theme-radius, 5px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  @apply pointer-events-auto;
+}
+
+.cs-strip-row-add-track-menu-item {
+  @apply flex items-center;
+  min-height: 24px;
+  @apply m-0;
+  padding: 0 8px;
+  color: var(--cs-theme-secondary-text, var(--theatre-text-secondary, #ccc));
+  @apply bg-transparent;
+  border: 0;
+  border-radius: var(--cs-theme-radius, 3px);
+  outline: none;
+  font: inherit;
+  font-size: 11px;
+  text-align: left;
+  @apply whitespace-nowrap cursor-pointer;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--cs-theme-text, var(--theatre-text-primary, #fff));
+    background: rgba(255, 255, 255, 0.075);
+  }
+}
+
+.cs-strip-row-header-status {
+  @apply min-w-0 overflow-hidden;
+  color: var(--cs-theme-muted-text, var(--theatre-text-muted, #888));
+  font-size: 10px;
+  @apply whitespace-nowrap text-ellipsis;
+}
+
+.cs-strip-row-track-name {
+  @apply min-w-0;
+  @apply overflow-hidden;
+  color: var(--cs-theme-secondary-text, var(--theatre-text-secondary, #ccc));
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 28px;
+  @apply whitespace-nowrap text-ellipsis;
+  text-shadow: none;
+  @apply flex-1 block;
+}
+
+.cs-strip-remove-track {
+  &:hover:not(:disabled) {
+    color: #e7a0a0;
+    background: rgba(220, 90, 90, 0.12);
+    border-color: rgba(220, 90, 90, 0.18);
+  }
+}
+
+.cs-strip-row-track {
+  @apply relative h-full;
+}
+
+.cs-strip-row-snap-guide {
+  @apply absolute;
+  inset-block: 0;
+  z-index: 2;
+  width: 1px;
+  background: #f3cc66;
+  box-shadow: 0 0 4px #f3cc66;
+  @apply pointer-events-none;
+
+  &::before,
+  &::after {
+    content: '';
+    @apply absolute;
+    left: -4px;
+    width: 9px;
+    height: 2px;
+    background: #f3cc66;
+  }
+
+  &::before {
+    top: 0;
+  }
+
+  &::after {
+    bottom: 0;
+  }
+}
+
+.cs-strip-row-span {
+  @apply absolute;
+  top: 50%;
+  height: 24px;
+  transform: translateY(-50%);
+  cursor: grab;
+  color: var(
+    --cs-strip-text,
+    var(--cs-theme-text, var(--theatre-text-primary, #fff))
+  );
+  background: var(--cs-strip-background, rgba(111, 183, 255, 0.14));
+  border: 1px solid var(--cs-strip-border, rgba(111, 183, 255, 0.5));
+  border-radius: var(--cs-theme-radius, 4px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  @apply box-border;
+  outline-offset: 3px;
+
+  &:hover {
+    background: var(--cs-strip-hover, rgba(111, 183, 255, 0.22));
+  }
+
+  &:focus-visible {
+    outline: 2px solid currentColor;
+  }
+}
+
+.cs-strip-row-label {
+  @apply absolute;
+  inset: 0 4px;
+  @apply flex justify-center items-center overflow-hidden pointer-events-none whitespace-nowrap;
+  font-size: 10px;
+  @apply text-ellipsis;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65);
+}
+
+.cs-strip-row-error-badge {
+  @apply absolute;
+  top: -5px;
+  right: -5px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  color: #1b1b1b;
+  background: #ff7a7a;
+  @apply flex items-center justify-center;
+  font-size: 9px;
+  font-weight: 700;
+  @apply pointer-events-none;
+}
+
+.cs-strip-row-span[aria-pressed='true'] {
+  --cs-strip-text: var(--cs-theme-accent, #f3cc66);
+  --cs-strip-background: var(
+    --cs-theme-selected-background,
+    rgba(243, 204, 102, 0.14)
+  );
+  --cs-strip-border: var(--cs-theme-selected-border, #f3cc66);
+  --cs-strip-hover: var(--cs-theme-hover-background, rgba(243, 204, 102, 0.2));
+}
+
+.cs-strip-row-span[data-error] {
+  --cs-strip-text: #ff9c92;
+  --cs-strip-background: rgba(255, 122, 122, 0.16);
+  --cs-strip-border: #ff7a7a;
+  --cs-strip-hover: rgba(255, 122, 122, 0.22);
+}

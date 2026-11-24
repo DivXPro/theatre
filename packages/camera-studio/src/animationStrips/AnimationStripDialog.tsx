@@ -1,60 +1,12 @@
 import {useT} from '@dreamerbird/studio/i18n'
 import React, {useEffect, useRef, useState} from 'react'
-import styled from 'styled-components'
 import {useLibraryEntries} from '../assetLibrary/library'
 import {resolveAnimationDuration} from './assetDuration'
-import {
-  AnimationStripPropertiesPanel,
-  animationStripErrorMessage,
-} from './AnimationStripProperties'
+import {animationStripErrorMessage} from './AnimationStripProperties'
 import {insertAnimationStrip, insertObjectAnimationStrip} from './storage'
 import {objectAnimationChannels} from './model'
 import type {AnimationTrackKind, ObjectAnimationChannel} from './model'
 import type {AnimationTracksObject} from './storage'
-
-const Dialog = styled(AnimationStripPropertiesPanel).attrs({as: 'dialog'})`
-  position: fixed;
-  inset: 0;
-  margin: auto;
-  width: min(380px, calc(100vw - 24px));
-  max-height: calc(100vh - 24px);
-  overflow: auto;
-  font-size: 13px;
-
-  &::backdrop {
-    background: rgb(0 0 0 / 55%);
-  }
-
-  &[data-modeless] {
-    inset: auto 12px 34vh auto;
-    margin: 0;
-    max-height: calc(66vh - 12px);
-  }
-
-  fieldset {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px 12px;
-    margin: 0;
-    padding: 6px 8px;
-    border: 1px solid var(--theatre-panel-border, #555);
-
-    label {
-      display: flex;
-      align-items: center;
-    }
-  }
-
-  select {
-    width: 100%;
-    color: inherit;
-    background: var(--theatre-input-bg, #1d2024);
-    border: 1px solid var(--theatre-panel-border, #555);
-    border-radius: 4px;
-    padding: 4px 6px;
-    font: inherit;
-  }
-`
 
 export function AnimationStripDialog({
   label,
@@ -80,7 +32,8 @@ export function AnimationStripDialog({
     }
   }, [modal])
   return (
-    <Dialog
+    <dialog
+      className="cs-strip-properties cs-strip-dialog"
       ref={ref}
       aria-label={label}
       open={modal ? undefined : true}
@@ -107,7 +60,7 @@ export function AnimationStripDialog({
       }}
     >
       {children}
-    </Dialog>
+    </dialog>
   )
 }
 

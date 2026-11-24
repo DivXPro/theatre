@@ -1,6 +1,5 @@
 import {useT} from '@dreamerbird/studio/i18n'
 import React, {useEffect, useState, useSyncExternalStore} from 'react'
-import styled from 'styled-components'
 import {Euler, Quaternion} from 'three'
 import {
   channelId,
@@ -16,215 +15,6 @@ import {
   type ActionEditorScope,
   type ActionEditorSession,
 } from './session'
-
-const Panels = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  & > :first-child {
-    flex: 3 1 320px;
-  }
-  & > :nth-child(2) {
-    flex: 1 1 260px;
-  }
-`
-
-const Panel = styled.section`
-  display: grid;
-  gap: 10px;
-  min-width: 0;
-  padding: 12px;
-  background: var(--theatre-panel-bg-99, #24262a);
-  color: var(--theatre-panel-text, #e6e8ed);
-  font-size: 12px;
-  box-sizing: border-box;
-  align-content: start;
-
-  h2,
-  p {
-    margin: 0;
-  }
-  h2 {
-    font-size: 13px;
-    overflow-wrap: anywhere;
-  }
-  > header,
-  footer,
-  .ae-controls {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  > header,
-  footer {
-    justify-content: space-between;
-  }
-  label {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-  }
-  input,
-  select,
-  button {
-    box-sizing: border-box;
-    border: 1px solid #565b65;
-    border-radius: 4px;
-    background: #31343b;
-    color: inherit;
-    font: inherit;
-    padding: 4px 6px;
-  }
-  button {
-    cursor: pointer;
-  }
-  button[disabled] {
-    opacity: 0.5;
-    cursor: default;
-  }
-  :is(input, select, button):focus-visible {
-    outline: 2px solid #9cc1ff;
-    outline-offset: 2px;
-  }
-  input[type='number'] {
-    width: 7em;
-  }
-  input[type='range'] {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    margin: 0;
-    opacity: 0;
-    cursor: ew-resize;
-  }
-  .ae-lane:focus-within {
-    outline: 2px solid #9cc1ff;
-  }
-  .ae-track {
-    display: grid;
-    grid-template-columns: minmax(78px, 10em) minmax(0, 1fr);
-    align-items: center;
-    gap: 8px;
-    min-height: 24px;
-  }
-  .ae-track-name {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .ae-lane {
-    position: relative;
-    height: 24px;
-    margin-inline: 10px;
-    background: #30333a;
-    border-radius: 3px;
-  }
-  .ae-ruler {
-    background: transparent;
-    border-bottom: 1px solid #565b65;
-  }
-  .ae-tick {
-    position: absolute;
-    top: 2px;
-    left: var(--ae-time);
-    transform: translateX(-50%);
-    font-variant-numeric: tabular-nums;
-    color: #b5bdcd;
-    pointer-events: none;
-  }
-  .ae-tick:first-child {
-    transform: none;
-  }
-  .ae-tick:nth-child(5) {
-    transform: translateX(-100%);
-  }
-  .ae-clip-window {
-    position: absolute;
-    inset-block: 0;
-    background: #9cc1ff16;
-    pointer-events: none;
-  }
-  .ae-playhead,
-  .ae-key {
-    position: absolute;
-    left: var(--ae-time);
-  }
-  .ae-playhead {
-    inset-block: 0;
-    width: 1px;
-    background: #9cc1ff;
-    pointer-events: none;
-  }
-  .ae-key {
-    top: 50%;
-    width: 16px;
-    height: 20px;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    transform: translate(-50%, -50%);
-  }
-  .ae-key[aria-pressed='true'] {
-    color: #9cc1ff;
-    z-index: 1;
-  }
-  .ae-lane .ae-playhead {
-    z-index: 2;
-  }
-  .ae-group {
-    display: grid;
-    gap: 6px;
-    margin: 0;
-    min-width: 0;
-    border: 1px solid #565b65;
-    border-radius: 4px;
-    padding: 6px;
-  }
-  .ae-group legend {
-    padding-inline: 4px;
-  }
-  .ae-vector {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 4px;
-  }
-  .ae-vector label {
-    display: grid;
-    min-width: 0;
-  }
-  .ae-vector input {
-    width: 100%;
-    min-width: 0;
-  }
-  .ae-apply {
-    border-color: #82b0fe;
-    background: #4267a4;
-  }
-  .ae-pose-tools {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-  [role='alert'] {
-    color: #ffbaa7;
-  }
-`
-
-const InspectorPanel = styled(Panel)`
-  > footer {
-    position: sticky;
-    bottom: 0;
-    margin: 0 -12px -12px;
-    padding: 8px 12px;
-    background: var(--theatre-panel-bg-99, #24262a);
-    border-top: 1px solid #565b65;
-  }
-  select {
-    min-width: 0;
-    max-width: 100%;
-  }
-`
 
 export type ActionEditorProps = {
   session: ActionEditorSession
@@ -312,7 +102,10 @@ export function ActionEditorTimeline({
     }
   }
   return (
-    <Panel className={className} aria-label={t('pg.actionEditor.timeline')}>
+    <section
+      className={['cs-action-panel', className].filter(Boolean).join(' ')}
+      aria-label={t('pg.actionEditor.timeline')}
+    >
       <header>
         <h2>
           {t('pg.actionEditor.title')}
@@ -481,7 +274,7 @@ export function ActionEditorTimeline({
           </div>
         )
       })}
-    </Panel>
+    </section>
   )
 }
 
@@ -704,7 +497,7 @@ export function ActionEditorInspector({
 
   if (viewportControls) {
     return (
-      <InspectorPanel
+      <section
         className={className}
         aria-label={t('pg.actionEditor.title')}
         onKeyDown={(event) => {
@@ -727,12 +520,12 @@ export function ActionEditorInspector({
             {t('pg.actionEditor.recordCurrentPose')}
           </button>
         </footer>
-      </InspectorPanel>
+      </section>
     )
   }
 
   return (
-    <InspectorPanel
+    <section
       className={className}
       aria-label={t('pg.actionEditor.title')}
       onKeyDown={(event) => {
@@ -959,7 +752,7 @@ export function ActionEditorInspector({
           </button>
         </footer>
       )}
-    </InspectorPanel>
+    </section>
   )
 }
 
@@ -969,7 +762,7 @@ export function ActionEditor({
   onRequestBoneGizmo,
 }: ActionEditorProps) {
   return (
-    <Panels className={className}>
+    <div className={['cs-action-panels', className].filter(Boolean).join(' ')}>
       <ActionEditorTimeline
         session={session}
         poseEditing={Boolean(onRequestBoneGizmo)}
@@ -978,6 +771,6 @@ export function ActionEditor({
         session={session}
         onRequestBoneGizmo={onRequestBoneGizmo}
       />
-    </Panels>
+    </div>
   )
 }

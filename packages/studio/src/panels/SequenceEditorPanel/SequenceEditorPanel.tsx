@@ -1,5 +1,5 @@
-import {outlineSelection} from '@dreamerbird/studio/selectors'
-import {usePrism} from '@dreamerbird/react'
+import {outlineSelection, timelineSheet} from '@dreamerbird/studio/selectors'
+import {usePrism, useVal} from '@dreamerbird/react'
 import {valToAtom} from '@dreamerbird/utils/valToAtom'
 import {prism, val} from '@dreamerbird/dataverse'
 import React, {useEffect, useLayoutEffect, useState} from 'react'
@@ -20,12 +20,10 @@ import TransportBar, {transportBarHeight} from './TransportBar'
 import PropertyKeyframeLane, {propertyLaneHeight} from './PropertyKeyframeLane'
 import type SheetObject from '@dreamerbird/core/sheetObjects/SheetObject'
 import type Sheet from '@dreamerbird/core/sheets/Sheet'
-import {uniq} from 'lodash-es'
 import GraphEditorToggle from './GraphEditorToggle'
 import {panelZIndexes} from '@dreamerbird/studio/panels/BasePanel/common'
 import {usePresenceListenersOnRootElement} from '@dreamerbird/studio/uiComponents/usePresence'
 import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
-import getStudio from '@dreamerbird/studio/getStudio'
 import type {UIPanelId} from '@dreamerbird/core/types/private'
 import {__private} from '@dreamerbird/core'
 import {
@@ -34,7 +32,7 @@ import {
   getSequenceEditorView,
   onRevealAdditionalSequenceRows,
 } from './additionalRows'
-const {isSheet, isSheetObject} = __private.instanceTypes
+const {isSheetObject} = __private.instanceTypes
 
 const Container = styled(PanelWrapper)`
   z-index: ${panelZIndexes.sequenceEditorPanel};
@@ -135,30 +133,6 @@ const defaultPosition: PanelPosition = {
 
 const minDims = {width: 800, height: 200}
 
-/** 时间轴要显示的 sheet:大纲选中项能定位到唯一 sheet 就用它,否则回退到
- *  项目的第一个 sheet——面板始终显示,不随选中状态消失 */
-function useSelectedSheet(): Sheet | undefined {
-  return usePrism(() => {
-    const selectedSheets = uniq(
-      outlineSelection
-        .getValue()
-        .filter((s): s is SheetObject | Sheet => isSheet(s) || isSheetObject(s))
-        .map((s) => (isSheetObject(s) ? s.sheet : s)),
-    )
-    const selectedTemplates = uniq(selectedSheets.map((s) => s.template))
-    if (selectedTemplates.length === 1) return selectedSheets[0]
-
-    const projects = val(getStudio().projectsP)
-    const project = projects[Object.keys(projects)[0]]
-    if (!project) return undefined
-    const templates = val(project.sheetTemplatesP)
-    const template = templates[Object.keys(templates)[0]]
-    if (!template) return undefined
-    const instances = val(template.instancesP)
-    return instances[Object.keys(instances)[0]]
-  }, [])
-}
-
 /** 场景里是否已有任何关键帧轨道(与时间轴树的口径一致:不含 hideFromOutline
  *  的纯数据对象)——一条都没有时,时间轴默认收拢成一行工具条 */
 function useHasAnyTracks(sheet: Sheet | undefined): boolean {
@@ -194,7 +168,7 @@ const SequenceEditorPanel: React.FC<{
     () => onRevealAdditionalSequenceRows(() => setCollapsedOverride(false)),
     [],
   )
-  const sheet = useSelectedSheet()
+  const sheet = useVal(timelineSheet)
   const hasAnyTracks = useHasAnyTracks(sheet)
   const hasFocusedObject = usePrism(
     () =>

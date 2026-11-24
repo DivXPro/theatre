@@ -114,26 +114,15 @@ export const CharacterPathBindingForm = React.forwardRef<
           close()
         }
       }}
-      style={{
-        ...style,
-        display: 'grid',
-        gap: 8,
-        width: 252,
-        padding: 12,
-        background: 'var(--theatre-bg-panel, #25252a)',
-        color: 'var(--theatre-text-primary, #f1f1f1)',
-        border: '1px solid #555',
-        borderRadius: 6,
-        pointerEvents: 'all',
-        zIndex: 10000,
-      }}
+      className="cs-character-path-popup"
+      style={style}
     >
       {evaluation.status === 'missing' && <div>{text.missing}</div>}
       {evaluation.status === 'active' && (
         <div>{orient ? text.positionAndRotation : text.position}</div>
       )}
       {choices.length > 0 ? (
-        <label style={{display: 'grid', gap: 4}}>
+        <label className="cs-character-path-field">
           {text.path}
           <select
             autoFocus
@@ -214,7 +203,7 @@ function CharacterPathRow({
         ? text.repair
         : text.bind
   return (
-    <div style={{display: 'flex', alignItems: 'center', width: '100%'}}>
+    <div className="cs-character-path-control">
       <button
         type="button"
         aria-label={evaluation.status === 'active' ? text.settings : caption}
@@ -225,20 +214,7 @@ function CharacterPathRow({
             : caption
         }
         onClick={(event) => popover.toggle(event, event.currentTarget)}
-        style={{
-          flex: '1 1 auto',
-          minWidth: 0,
-          color: 'inherit',
-          background: 'transparent',
-          border: '1px solid #555',
-          borderRadius: 3,
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          fontSize: 10,
-          cursor: 'pointer',
-          padding: '2px 4px',
-        }}
+        className="cs-character-path-trigger"
       >
         {caption}
       </button>

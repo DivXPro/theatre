@@ -6,7 +6,9 @@ import {useVal} from '@dreamerbird/react'
 import ExtensionPaneWrapper from '@dreamerbird/studio/panels/BasePanel/ExtensionPaneWrapper'
 import SequenceEditorPanel from '@dreamerbird/studio/panels/SequenceEditorPanel/SequenceEditorPanel'
 
-const PanelsRoot: React.FC = () => {
+const PanelsRoot: React.FC<{outlineCollapsed?: boolean}> = ({
+  outlineCollapsed,
+}) => {
   const [sequenceDockTop, setSequenceDockTop] = useState<number>()
   const panes = useVal(getStudio().paneManager.allPanesD)
   const paneEls = Object.entries(panes).map(([instanceId, paneInstance]) => {
@@ -21,7 +23,10 @@ const PanelsRoot: React.FC = () => {
   return (
     <>
       {paneEls}
-      <OutlinePanel sequenceDockTop={sequenceDockTop} />
+      <OutlinePanel
+        sequenceDockTop={sequenceDockTop}
+        collapsed={outlineCollapsed}
+      />
       <DetailPanel sequenceDockTop={sequenceDockTop} />
       <SequenceEditorPanel onDockTopChange={setSequenceDockTop} />
     </>

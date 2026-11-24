@@ -2,7 +2,6 @@ import React from 'react'
 import {Html} from '@react-three/drei'
 import {suggestBoneMap} from '@dreamerbird/threeik'
 import {Vector3, type Object3D} from 'three'
-import styled from 'styled-components'
 import {collectBoneNames} from './assetLibrary/rig'
 import {normalizeBoneName} from './boneAnchors'
 
@@ -22,24 +21,6 @@ export function findCharacterNameAnchor(instance: Object3D) {
   const neck = neckName ? instance.getObjectByName(neckName) : undefined
   return {head, crown, neck}
 }
-
-const Name = styled.span`
-  display: block;
-  max-width: 200px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font:
-    600 12px / 1.25 system-ui,
-    sans-serif;
-  color: #fff;
-  text-shadow: 0 1px 3px rgb(0 0 0 / 65%);
-
-  &[data-character-name='manga'] {
-    color: #202020;
-    text-shadow: none;
-  }
-`
 
 const headPosition = new Vector3()
 const neckPosition = new Vector3()
@@ -84,7 +65,9 @@ export function CharacterNameLabel({
         transform: `translate(-50%, calc(-100% - ${posing ? 34 : 7}px))`,
       }}
     >
-      <Name data-character-name={appearance}>{name}</Name>
+      <span className="cs-character-name" data-character-name={appearance}>
+        {name}
+      </span>
     </Html>
   )
 }

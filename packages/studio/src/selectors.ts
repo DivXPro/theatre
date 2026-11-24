@@ -92,3 +92,25 @@ export function getSelectedSequence(): undefined | Sequence {
 
   return sheet.getSequence()
 }
+
+/** 时间轴要显示的 sheet:大纲选中项能定位到唯一 sheet 就用它,否则回退到
+ *  项目的第一个 sheet——面板始终显示,不随选中状态消失 */
+export const timelineSheet = prism<Sheet | undefined>(() => {
+  const selectedSheets = uniq(
+    outlineSelection
+      .getValue()
+      .filter((s): s is SheetObject | Sheet => isSheet(s) || isSheetObject(s))
+      .map((s) => (isSheetObject(s) ? s.sheet : s)),
+  )
+  const selectedTemplates = uniq(selectedSheets.map((s) => s.template))
+  if (selectedTemplates.length === 1) return selectedSheets[0]
+
+  const projects = val(getStudio().projectsP)
+  const project = projects[Object.keys(projects)[0]]
+  if (!project) return undefined
+  const templates = val(project.sheetTemplatesP)
+  const template = templates[Object.keys(templates)[0]]
+  if (!template) return undefined
+  const instances = val(template.instancesP)
+  return instances[Object.keys(instances)[0]]
+})

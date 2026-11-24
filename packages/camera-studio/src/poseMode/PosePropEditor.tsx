@@ -24,7 +24,6 @@
  */
 import React, {useContext, useEffect, useMemo, useState} from 'react'
 import {createPortal} from 'react-dom'
-import styled from 'styled-components'
 import {val} from '@dreamerbird/core'
 import {privateAPI} from '@dreamerbird/core/privateAPIs'
 import {usePrism} from '@dreamerbird/react'
@@ -77,7 +76,6 @@ const PosePropEditor: React.FC<EditorProps> = ({editingTools, value, obj}) => {
   // 内置姿势由 StaticCatalogSource 目录提供(2026-10-10 去播种),无需触发
   const [pickerOpen, setPickerOpen] = useState(false)
   // 值区域 hover 态:对齐 BasicStringInput(静态透明无边框,hover 出底出边)
-  const [valueHovered, setValueHovered] = useState(false)
   // 停靠框打开期间持父弹框锁:本编辑器也会渲染在时间轴帧弹框里,帧弹框
   // 有「挪远/点外部自动关」;停靠框 portal 到 body 不在其 DOM 内,不持锁
   // 的话鼠标一移向停靠框帧弹框就先关,本组件连同停靠框一起被卸载——
@@ -157,28 +155,7 @@ const PosePropEditor: React.FC<EditorProps> = ({editingTools, value, obj}) => {
         data-testid="PosePropValue"
         title={poseDisplayText({poseJson, libEntries: poseEntries, nameOf, t})}
         onClick={() => setPickerOpen(true)}
-        onMouseEnter={() => setValueHovered(true)}
-        onMouseLeave={() => setValueHovered(false)}
-        style={{
-          width: '100%',
-          boxSizing: 'border-box',
-          // 高度对齐 BasicStringInput 的 calc(100% - 4px):不显式撑高,
-          // hover 出底边时会比相邻原生输入框矮一截
-          height: 'calc(100% - 4px)',
-          display: 'flex',
-          alignItems: 'center',
-          padding: '1px 6px',
-          borderRadius: 2,
-          border: `1px solid ${valueHovered ? '#00000059' : 'transparent'}`,
-          background: valueHovered ? '#10101042' : 'transparent',
-          color: 'rgba(255, 255, 255, 0.9)',
-          fontSize: 11,
-          cursor: 'pointer',
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          userSelect: 'none',
-        }}
+        className="cs-pose-value"
       >
         {poseDisplayText({poseJson, libEntries: poseEntries, nameOf, t})}
       </div>
@@ -198,45 +175,6 @@ const PosePropEditor: React.FC<EditorProps> = ({editingTools, value, obj}) => {
 }
 
 export default PosePropEditor
-
-const PoseRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  min-width: 0;
-  width: 100%;
-  height: 100%;
-`
-
-const PoseStatus = styled.span`
-  min-width: 0;
-  color: var(--theatre-text-secondary, #b8b8b8);
-  font-size: 10px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-`
-
-const PoseRowButton = styled.button`
-  flex: 0 0 auto;
-  padding: 2px 4px;
-  border: 1px solid transparent;
-  border-radius: 3px;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  font-size: 11px;
-  cursor: pointer;
-  &:hover:not(:disabled),
-  &:focus-visible {
-    background: #ffffff14;
-    border-color: #ffffff26;
-  }
-  &:disabled {
-    opacity: 0.45;
-    cursor: default;
-  }
-`
 
 function usePoseEditorPlacement(object?: ISheetObject<any>) {
   const placement = object && getPlacementInstanceForObject(object)
@@ -280,23 +218,35 @@ export function DefaultPosePropEditor(props: EditorProps): React.ReactElement {
   }, [object, editing])
   if (editing) {
     return (
-      <PoseRow>
-        <PoseRowButton type="button" onClick={requestPoseSave}>
+      <div className="cs-pose-pose-row">
+        <button
+          className="cs-pose-pose-row-button"
+          type="button"
+          onClick={requestPoseSave}
+        >
           {t('pg.pose.saveDefault')}
-        </PoseRowButton>
-        <PoseRowButton type="button" onClick={requestPoseCancel}>
+        </button>
+        <button
+          className="cs-pose-pose-row-button"
+          type="button"
+          onClick={requestPoseCancel}
+        >
           {t('pg.pose.cancelEdit')}
-        </PoseRowButton>
+        </button>
         {driven && (
-          <PoseStatus role="status" title={t('pg.pose.animationDriven')}>
+          <span
+            className="cs-pose-pose-status"
+            role="status"
+            title={t('pg.pose.animationDriven')}
+          >
             {t('pg.pose.animationDriven')}
-          </PoseStatus>
+          </span>
         )}
-      </PoseRow>
+      </div>
     )
   }
   return (
-    <PoseRow>
+    <div className="cs-pose-pose-row">
       <PosePropEditor
         {...props}
         value={value}
@@ -308,7 +258,8 @@ export function DefaultPosePropEditor(props: EditorProps): React.ReactElement {
           },
         }}
       />
-      <PoseRowButton
+      <button
+        className="cs-pose-pose-row-button"
         type="button"
         disabled={!placement.supported}
         onClick={() => {
@@ -316,8 +267,8 @@ export function DefaultPosePropEditor(props: EditorProps): React.ReactElement {
         }}
       >
         {t('pg.pose.editDefault')}
-      </PoseRowButton>
-    </PoseRow>
+      </button>
+    </div>
   )
 }
 
@@ -372,18 +323,27 @@ function ScenePoseRow({
       ? status
       : `${status} · ${t('pg.pose.sceneOverridesAnimation')}`
   return (
-    <PoseRow>
+    <div className="cs-pose-pose-row">
       {editing ? (
         <>
-          <PoseRowButton type="button" onClick={requestPoseSave}>
+          <button
+            className="cs-pose-pose-row-button"
+            type="button"
+            onClick={requestPoseSave}
+          >
             {t('pg.pose.saveScene')}
-          </PoseRowButton>
-          <PoseRowButton type="button" onClick={requestPoseCancel}>
+          </button>
+          <button
+            className="cs-pose-pose-row-button"
+            type="button"
+            onClick={requestPoseCancel}
+          >
             {t('pg.pose.cancelEdit')}
-          </PoseRowButton>
+          </button>
         </>
       ) : (
-        <PoseRowButton
+        <button
+          className="cs-pose-pose-row-button"
           type="button"
           data-testid="ScenePoseDiamond"
           disabled={!placement.supported}
@@ -395,12 +355,17 @@ function ScenePoseRow({
           }}
         >
           {isKey ? '◆' : '◇'}
-        </PoseRowButton>
+        </button>
       )}
-      <PoseStatus data-coverage={coverage} title={title} aria-label={title}>
+      <span
+        className="cs-pose-pose-status"
+        data-coverage={coverage}
+        title={title}
+        aria-label={title}
+      >
         {label && `${label} · `}
         {status}
-      </PoseStatus>
-    </PoseRow>
+      </span>
+    </div>
   )
 }

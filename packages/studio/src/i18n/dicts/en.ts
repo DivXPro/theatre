@@ -23,6 +23,8 @@ export const en: Messages = {
   'menu.language': 'Language',
   'detailPanel.propsRoot': 'Props',
   'workspace.objects': 'Scene objects',
+  'workspace.outline.collapse': 'Collapse scene objects',
+  'workspace.outline.expand': 'Expand scene objects',
   'workspace.timeline': 'Timeline',
   'workspace.goToEnd': 'Go to end',
   'workspace.transform': 'Transform',

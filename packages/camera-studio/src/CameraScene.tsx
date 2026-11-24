@@ -1,3 +1,4 @@
+import {installCameraStyles} from './styles/theme'
 import {editable as e, SheetProvider, PerspectiveCamera} from '@dreamerbird/r3f'
 import {
   Grid,
@@ -889,6 +890,10 @@ export function CameraScene({
   // 画中画开关(顶栏按钮):只管编辑视角右下角的小窗,不影响镜头全屏视角
   const [pipVisible, setPipVisible] = useState(true)
   const sceneRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const head = sceneRef.current?.ownerDocument.head
+    if (head) installCameraStyles(head)
+  }, [])
   const {bottom: pipBottom, right: pipRight} = usePreviewLayout(sceneRef)
   // 画中画边框层是 pointerEvents:none,收不到 hover——用窗口 mousemove
   // 按画中画的几何位置(与边框层/ShotCamera 同源)判定光标是否在它上面
@@ -1965,13 +1970,7 @@ export function CameraScene({
 
   return (
     <SceneI18nRoot>
-      <div
-        ref={sceneRef}
-        style={{
-          height: '100vh',
-          position: 'relative',
-        }}
-      >
+      <div ref={sceneRef} className="cs-editor">
         <HostFlowsWiring flows={flows} onFlows={onFlows} />
         <TopToolbar
           gizmoMode={gizmoMode}
@@ -2001,21 +2000,9 @@ export function CameraScene({
         />
         {!shotView && activeCamera && pipVisible && (
           <div
-            style={{
-              // 画中画边框:与 ShotCamera 渲染的右下角小窗同位置同尺寸
-              position: 'absolute',
-              right: pipRight,
-              bottom: pipBottom,
-              width: 'min(20%, 232px)',
-              aspectRatio: '16 / 9',
-              border: isManga
-                ? '1px solid rgba(35,38,43,0.35)'
-                : '1px solid rgba(255,255,255,0.14)',
-              borderRadius: 8,
-              background: isManga ? 'transparent' : 'rgba(24,24,28,0.4)',
-              pointerEvents: 'none',
-              zIndex: 5,
-            }}
+            className="cs-preview-frame"
+            data-manga={isManga ? '' : undefined}
+            style={{right: pipRight, bottom: pipBottom}}
           >
             {/* 左上角:相机选择器(hover 到画中画才显示,点选 = 设为活动相机) */}
             <PipCameraSelector
@@ -2027,23 +2014,7 @@ export function CameraScene({
           </div>
         )}
         {(modelPlacement || presetDrag) && (
-          <div
-            role="status"
-            style={{
-              position: 'absolute',
-              bottom: 24,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              zIndex: 10,
-              padding: '6px 12px',
-              borderRadius: 6,
-              background: 'rgba(24,24,28,0.9)',
-              border: '1px solid rgba(255,255,255,0.15)',
-              color: '#eee',
-              fontSize: 12,
-              pointerEvents: 'none',
-            }}
-          >
+          <div role="status" className="cs-placement-status">
             {modelPlacement?.point
               ? t('pg.placement.loading', {name: modelPlacement.label})
               : modelPlacement?.mode === 'click'
@@ -2052,24 +2023,7 @@ export function CameraScene({
           </div>
         )}
         {shotView && (
-          <div
-            style={{
-              position: 'absolute',
-              top: 48,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              padding: '4px 10px',
-              borderRadius: 6,
-              background: 'rgba(0,0,0,0.55)',
-              color: 'rgba(255,255,255,0.85)',
-              fontSize: 12,
-              pointerEvents: 'none',
-              userSelect: 'none',
-              zIndex: 10,
-            }}
-          >
-            镜头视角 · Esc 返回导演视角
-          </div>
+          <div className="cs-shot-view-status">镜头视角 · Esc 返回导演视角</div>
         )}
         {frameOpen.model && (
           <ModelPickerSlot
@@ -2441,30 +2395,11 @@ export function CameraScene({
         {!coverGone && (
           <div
             aria-hidden
-            style={{
-              position: 'absolute',
-              inset: 0,
-              zIndex: getUiConfig().zIndexBase + 100,
-              background: '#454545',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              opacity: firstScreenReady ? 0 : 1,
-              transition: 'opacity 0.3s ease',
-              pointerEvents: firstScreenReady ? 'none' : 'auto',
-            }}
+            className="cs-first-screen"
+            data-ready={firstScreenReady ? '' : undefined}
+            style={{zIndex: getUiConfig().zIndexBase + 100}}
           >
-            <style>{`@keyframes cameraStudioFirstScreenSpin{to{transform:rotate(360deg)}}`}</style>
-            <div
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: '50%',
-                border: '3px solid rgba(255,255,255,0.25)',
-                borderTopColor: '#ffffff',
-                animation: 'cameraStudioFirstScreenSpin 0.8s linear infinite',
-              }}
-            />
+            <div className="cs-first-screen-spinner" />
           </div>
         )}
       </div>

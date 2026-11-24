@@ -1,3 +1,4 @@
+import {installCameraStyles} from './styles/theme'
 let retainedRoot: HTMLElement | undefined
 
 /** 纯 Node/SSR 没有 DOM:挂载流程应直接跳过,而不是轮询等待。 */
@@ -20,6 +21,8 @@ export function mountStudioRoot(
   if (!root) return undefined
   retainedRoot = root
   root.dataset.cameraWorkspace = ''
+  installCameraStyles(root.ownerDocument.head)
+  if (root.shadowRoot) installCameraStyles(root.shadowRoot)
 
   const target = container ?? document.body
   target.appendChild(root)

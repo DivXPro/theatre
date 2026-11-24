@@ -1,0 +1,45 @@
+/* Camera Studio strip-dialog */
+.cs-strip-properties.cs-strip-dialog {
+  @apply fixed;
+  inset: 0;
+  margin: auto;
+  width: min(380px, calc(100vw - 24px));
+  max-height: calc(100vh - 24px);
+  @apply overflow-auto;
+  font-size: 13px;
+
+  &::backdrop {
+    background: rgb(0 0 0 / 55%);
+  }
+
+  &[data-modeless] {
+    inset: auto 12px 34vh auto;
+    @apply m-0;
+    max-height: calc(66vh - 12px);
+  }
+
+  fieldset {
+    @apply flex flex-wrap;
+    gap: 6px 12px;
+    @apply m-0;
+    padding: 6px 8px;
+    border: 1px solid var(--cs-theme-border, var(--theatre-panel-border, #555));
+
+    label {
+      @apply flex items-center;
+    }
+  }
+
+  select {
+    @apply w-full;
+    color: inherit;
+    background: var(
+      --cs-theme-input-background,
+      var(--theatre-input-bg, #1d2024)
+    );
+    border: 1px solid var(--cs-theme-border, var(--theatre-panel-border, #555));
+    border-radius: var(--cs-theme-radius, 4px);
+    padding: 4px 6px;
+    font: inherit;
+  }
+}

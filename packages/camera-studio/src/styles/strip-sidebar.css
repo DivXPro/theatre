@@ -1,0 +1,103 @@
+/* Camera Studio strip-sidebar */
+.cs-strip-properties.cs-strip-sidebar {
+  @apply w-full p-0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  @apply bg-transparent;
+  font-size: 11px;
+
+  form[data-camera-strip-properties] {
+    @apply grid;
+    gap: 12px;
+    padding: 10px 10px 12px;
+  }
+
+  form[data-camera-strip-properties] header {
+    gap: 6px;
+    @apply items-start;
+  }
+
+  .title {
+    @apply grid min-w-0;
+    gap: 2px;
+  }
+
+  .eyebrow,
+  .track {
+    color: #919191;
+    font-size: 10px;
+    line-height: 1.2;
+  }
+
+  .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .track {
+    @apply overflow-hidden text-ellipsis whitespace-nowrap;
+  }
+
+  .close {
+    @apply flex-none;
+    width: 22px;
+    height: 22px;
+    @apply p-0;
+    color: #919191;
+    @apply bg-transparent;
+    border: 0;
+  }
+
+  .hint {
+    color: #919191;
+    font-size: 10px;
+    line-height: 1.35;
+  }
+
+  fieldset {
+    @apply grid;
+    gap: 6px;
+    @apply m-0 p-0;
+    border: 0;
+  }
+
+  legend {
+    margin-bottom: 3px;
+    @apply p-0;
+    color: #b8b8b8;
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  label {
+    @apply grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.65fr);
+    @apply items-center;
+    gap: 8px;
+    overflow-wrap: anywhere;
+  }
+
+  input,
+  select {
+    @apply box-border w-full min-w-0;
+  }
+
+  footer {
+    gap: 6px;
+    @apply flex-wrap;
+    padding-top: 8px;
+    border-top: 1px solid
+      var(--cs-theme-border, var(--theatre-panel-border, #555));
+  }
+
+  footer output {
+    @apply flex-1;
+    color: #919191;
+  }
+
+  footer button {
+    @apply whitespace-nowrap;
+  }
+}

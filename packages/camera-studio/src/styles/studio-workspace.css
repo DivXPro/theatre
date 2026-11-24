@@ -1,0 +1,165 @@
+:host([data-camera-workspace]) {
+  --theatre-panel-bg: var(--cs-theme-surface, #151617);
+  --theatre-panel-bg-95: var(--cs-theme-surface, #151617);
+  --theatre-panel-bg-80: var(--cs-theme-surface, #151617);
+  --theatre-panel-bg-65: var(--cs-theme-raised-surface, #191b1c);
+  --theatre-panel-bg-99: var(--cs-theme-recessed-surface, #111213);
+  --theatre-panel-border: var(--cs-theme-border, #303334);
+  --theatre-text-primary: var(--cs-theme-text, #e5e6e7);
+  --theatre-text-secondary: var(--cs-theme-secondary-text, #b4b8ba);
+  --theatre-text-muted: var(--cs-theme-muted-text, #989da1);
+  --theatre-head-title: var(--cs-theme-text, #e5e6e7);
+  --theatre-accent: var(--cs-theme-accent, #b7e0d0);
+  --theatre-font-size: var(--cs-theme-font-size, 12px);
+  --theatre-font-family: var(
+    --cs-theme-font-family,
+    -apple-system,
+    BlinkMacSystemFont,
+    Segoe WPC,
+    Segoe Editor,
+    HelveticaNeue-Light,
+    Ubuntu,
+    Droid Sans,
+    sans-serif
+  );
+  --theatre-panel-radius: var(--cs-theme-radius, 11px);
+  --theatre-input-bg: var(--cs-theme-input-background, #202224);
+  --theatre-selected-bg: var(--cs-theme-selected-background, #202c27);
+  --theatre-selected-border: var(--cs-theme-selected-border, #3b5148);
+}
+
+:host([data-camera-workspace]) .cs-studio-outline {
+  --outliner-top: var(--theatre-camera-panel-top);
+  left: var(--theatre-camera-panel-inset);
+  width: var(--theatre-camera-sidebar-width);
+  padding: 0;
+  overflow: hidden;
+  flex-direction: column;
+  box-shadow:
+    0 1px 1px var(--theatre-shadow-color),
+    0 2px 6px rgba(0, 0, 0, 0.15);
+
+  &:hover {
+    display: flex;
+  }
+}
+
+:host([data-camera-workspace]) .cs-studio-outline-content {
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior-y: contain;
+  padding-inline: 5px;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+:host([data-camera-workspace]) .cs-studio-outline-title {
+  display: block;
+}
+
+:host([data-camera-workspace]) .cs-studio-inspector {
+  right: var(--theatre-camera-panel-inset);
+  --inspector-top: var(--theatre-camera-panel-top);
+  width: min(
+    var(--theatre-camera-inspector-width),
+    calc(
+      100% - var(--theatre-camera-sidebar-width) - 3 *
+        var(--theatre-camera-panel-inset)
+    )
+  );
+}
+
+:host([data-camera-workspace]) .cs-studio-global-toolbar {
+  top: calc(var(--theatre-camera-panel-top) + 1px);
+  height: var(--theatre-camera-project-row-height);
+  align-items: center;
+  z-index: 2;
+}
+
+:host([data-camera-workspace]) .cs-studio-outline-controls {
+  box-sizing: border-box;
+  width: calc(var(--theatre-camera-sidebar-width) - 2px);
+  height: 100%;
+  margin-left: calc(var(--theatre-camera-panel-inset) + 1px);
+  padding-inline-end: 6px;
+  align-items: center;
+  gap: 4px;
+  border-bottom: 1px solid var(--theatre-panel-border);
+
+  &[data-cs-outline-collapsed] {
+    border-bottom: 0;
+  }
+}
+
+:host([data-camera-workspace]) .cs-studio-outline-toggle {
+  display: grid;
+}
+
+:host([data-camera-workspace]) .cs-studio-left-strip {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  box-sizing: border-box;
+  margin-left: 0;
+  padding-inline-start: 6px;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+:host([data-camera-workspace]) .cs-studio-left-separator {
+  flex: none;
+  height: 16px;
+  background: var(--theatre-panel-border);
+}
+
+:host([data-camera-workspace]) .cs-studio-workspace-nav {
+  display: none;
+}
+
+:host([data-camera-workspace]) .cs-studio-app-button {
+  width: 36px;
+}
+
+:host([data-camera-workspace]) .cs-studio-outline[data-cs-outline-visible] {
+  @apply flex;
+}
+:host([data-camera-workspace]) .cs-studio-outline-title {
+  @apply flex-none overflow-hidden text-ellipsis whitespace-nowrap font-semibold;
+  height: var(--theatre-camera-project-row-height);
+  padding-inline: 10px 38px;
+  color: var(--theatre-text-primary);
+  line-height: var(--theatre-camera-project-row-height);
+
+  &[data-cs-outline-logo] {
+    padding-inline-start: 51px;
+  }
+}
+:host([data-camera-workspace]) .cs-studio-outline-toggle {
+  @apply grid flex-none h-7 w-7 place-items-center cursor-pointer bg-transparent;
+  margin-inline-start: auto;
+  border: 0;
+  border-radius: var(--cs-theme-radius, 6px);
+  color: var(--theatre-text-muted);
+
+  &:hover {
+    background: var(--cs-theme-hover-background, #25292a);
+    color: var(--theatre-text-primary);
+  }
+
+  &:focus-visible {
+    outline: 1px solid var(--theatre-accent);
+  }
+
+  &[aria-expanded='true'] svg {
+    transform: rotate(180deg);
+  }
+}
+:host([data-camera-workspace]) .cs-studio-app-button {
+  @apply flex-none;
+  border-radius: var(--cs-theme-radius, 6px) 0 0 var(--cs-theme-radius, 6px);
+}

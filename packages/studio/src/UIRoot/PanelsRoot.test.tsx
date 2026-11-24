@@ -46,6 +46,7 @@ jest.doMock('@dreamerbird/core', () => ({
 jest.doMock('@dreamerbird/studio/selectors', () => ({
   __esModule: true,
   outlineSelection: {getValue: () => [fakeObject]},
+  timelineSheet: new Atom(fakeObject.sheet).prism,
 }))
 jest.doMock('@dreamerbird/studio/uiComponents/useHotspot', () => ({
   __esModule: true,
@@ -100,9 +101,9 @@ function renderPanels() {
   const root = ReactDOM.createRoot(container)
   return {
     container,
-    async mount() {
+    async mount(outlineCollapsed = false) {
       await act(async () => {
-        root.render(<PanelsRoot />)
+        root.render(<PanelsRoot outlineCollapsed={outlineCollapsed} />)
       })
     },
     async unmount() {
@@ -114,6 +115,25 @@ function renderPanels() {
   }
 }
 
+test('the folded outline shows the scene name and hides the object list until expanded', async () => {
+  const panels = renderPanels()
+  try {
+    await panels.mount(true)
+    const outline = panels.container.querySelector(
+      '[aria-label="Scene objects"]',
+    )!
+    const list = outline.querySelector('#theatre-outline-content')!
+    expect(outline.firstElementChild?.textContent).toBe('Scene')
+    expect(list.hasAttribute('hidden')).toBe(true)
+
+    await panels.mount()
+    expect(outline.firstElementChild?.textContent).toBe('Scene')
+    expect(list.hasAttribute('hidden')).toBe(false)
+    expect(list.textContent).toContain('outline-content')
+  } finally {
+    await panels.unmount()
+  }
+})
 function expectTimelineAndOutline(container: HTMLElement): void {
   expect(container.textContent).toContain('timeline-content')
   expect(container.textContent).toContain('outline-content')

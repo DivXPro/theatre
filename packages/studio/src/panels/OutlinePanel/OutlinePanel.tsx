@@ -8,10 +8,15 @@ import useHotspot from '@dreamerbird/studio/uiComponents/useHotspot'
 import {Atom, prism, val} from '@dreamerbird/dataverse'
 import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
 import {useT} from '@dreamerbird/studio/i18n'
+import {timelineSheet} from '@dreamerbird/studio/selectors'
 
 const headerHeight = `44px`
+export const outlineContentId = 'theatre-outline-content'
 
-const Container = styled.div<{$pin: boolean; $dockTop?: number}>`
+const Container = styled.div<{
+  $pin: boolean
+  $dockTop?: number
+}>`
   ${pointerEventsAutoInNormalMode};
   background-color: var(--theatre-panel-bg-95);
   border: 1px solid var(--theatre-panel-border);
@@ -50,38 +55,19 @@ const Container = styled.div<{$pin: boolean; $dockTop?: number}>`
   @media (max-width: 859px) {
     --outliner-top: 94px;
   }
-
-  :host([data-camera-workspace]) & {
-    --outliner-top: var(--theatre-camera-panel-top);
-    left: var(--theatre-camera-panel-inset);
-    width: var(--theatre-camera-sidebar-width);
-    height: var(--outliner-available-height);
-    padding: var(--theatre-camera-project-row-height) 0 0;
-    overflow: hidden;
-    box-shadow:
-      0 1px 1px var(--theatre-shadow-color),
-      0 2px 6px rgba(0, 0, 0, 0.15);
-  }
 `
 
 const Content = styled.div`
-  :host([data-camera-workspace]) & {
-    height: 100%;
-    overflow: auto;
-    padding-inline: 5px;
-    scrollbar-width: none;
-
-    &::-webkit-scrollbar {
-      display: none;
-    }
-  }
-
   // Create a small buffer on the bottom to aid selecting the bottom item in a long, scrolling list
   &::after {
     content: '';
     display: block;
     height: 20px;
   }
+`
+
+const SceneName = styled.div`
+  display: none;
 `
 
 const Header = styled.div`
@@ -99,14 +85,18 @@ const Header = styled.div`
   border-bottom: 1px solid var(--theatre-panel-border);
 `
 
-const OutlinePanel: React.FC<{sequenceDockTop?: number}> = ({
-  sequenceDockTop,
-}) => {
+const OutlinePanel: React.FC<{
+  sequenceDockTop?: number
+  collapsed?: boolean
+}> = ({sequenceDockTop, collapsed = false}) => {
   const t = useT()
   const pin = useVal(getStudio().atomP.ahistoric.pinOutline) ?? true
   const show = useVal(shouldShowOutlineD)
   const active = useHotspot('left')
   const hidden = useVal(getStudio().ephemeralAtom.pointer.hiddenPanels.outline)
+  const logoHidden = useVal(getStudio().ephemeralAtom.pointer.leftStripHidden)
+  const sceneName =
+    useVal(timelineSheet)?.address.sheetId ?? t('workspace.objects')
 
   useLayoutEffect(() => {
     isOutlinePanelHotspotActiveB.set(active)
@@ -124,6 +114,8 @@ const OutlinePanel: React.FC<{sequenceDockTop?: number}> = ({
 
   return (
     <Container
+      className="cs-studio-outline"
+      data-cs-outline-visible={pin || show ? '' : undefined}
       role="region"
       aria-label={t('workspace.objects')}
       $pin={pin || show}
@@ -135,7 +127,18 @@ const OutlinePanel: React.FC<{sequenceDockTop?: number}> = ({
         isOutlinePanelHoveredB.set(false)
       }}
     >
-      <Content>
+      <SceneName
+        className="cs-studio-outline-title"
+        data-cs-outline-logo={logoHidden ? undefined : ''}
+        title={sceneName}
+      >
+        {sceneName}
+      </SceneName>
+      <Content
+        className="cs-studio-outline-content"
+        id={outlineContentId}
+        hidden={collapsed}
+      >
         <Header>{t('workspace.objects')}</Header>
         <ProjectsList />
       </Content>

@@ -1,0 +1,49 @@
+/* Camera Studio pose */
+.cs-pose-pose-row {
+  @apply flex items-center;
+  gap: 4px;
+  @apply min-w-0 w-full h-full;
+}
+
+.cs-pose-pose-status {
+  @apply min-w-0;
+  color: var(--cs-theme-secondary-text, var(--theatre-text-secondary, #b8b8b8));
+  font-size: 10px;
+  @apply overflow-hidden text-ellipsis whitespace-nowrap;
+}
+
+.cs-pose-pose-row-button {
+  @apply flex-none;
+  padding: 2px 4px;
+  border: 1px solid transparent;
+  border-radius: var(--cs-theme-radius, 3px);
+  @apply bg-transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 11px;
+  @apply cursor-pointer;
+  &:hover:not(:disabled),
+  &:focus-visible {
+    background: #ffffff14;
+    border-color: #ffffff26;
+  }
+  &:disabled {
+    opacity: 0.45;
+    @apply cursor-default;
+  }
+}
+
+.cs-pose-value {
+  @apply flex items-center w-full box-border cursor-pointer whitespace-nowrap overflow-hidden text-ellipsis select-none;
+  height: calc(100% - 4px);
+  padding: 1px 6px;
+  border: 1px solid transparent;
+  border-radius: var(--cs-theme-radius, 2px);
+  background: transparent;
+  color: var(--cs-theme-text, rgba(255, 255, 255, 0.9));
+  font-size: var(--cs-theme-font-size, 11px);
+}
+.cs-pose-value:hover {
+  border-color: var(--cs-theme-border, #00000059);
+  background: var(--cs-theme-hover-background, #10101042);
+}
