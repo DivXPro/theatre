@@ -12,6 +12,7 @@ import React from 'react'
 import {act} from 'react'
 import ReactDOM from 'react-dom/client'
 import type {GizmoMode} from './PlacementManager'
+import type {MangaShadingPreset} from './mangaShading'
 import type {ViewportRenderMode} from './mangaViewport'
 // 模块加载即把 pg.* 词条注入 i18n 单例;tips 断言依赖英文词典
 import './i18n'
@@ -37,6 +38,8 @@ function renderToolbar(overrides: {
   onSelectRenderMode?: (mode: ViewportRenderMode) => void
   mangaShadows?: boolean
   onToggleMangaShadows?: () => void
+  mangaShadingPreset?: MangaShadingPreset
+  onSelectMangaShadingPreset?: (preset: MangaShadingPreset) => void
   characterNamesVisible?: boolean
   onToggleCharacterNames?: () => void
   headerActions?: React.ReactNode
@@ -63,6 +66,8 @@ function renderToolbar(overrides: {
       onSelectRenderMode: next.onSelectRenderMode ?? (() => {}),
       mangaShadows: next.mangaShadows ?? false,
       onToggleMangaShadows: next.onToggleMangaShadows ?? (() => {}),
+      mangaShadingPreset: next.mangaShadingPreset ?? 'off',
+      onSelectMangaShadingPreset: next.onSelectMangaShadingPreset ?? (() => {}),
       characterNamesVisible: next.characterNamesVisible ?? false,
       onToggleCharacterNames: next.onToggleCharacterNames ?? (() => {}),
       headerActions: next.headerActions,
@@ -157,6 +162,7 @@ it('switches directly from the original render to line art', () => {
   )!
   expect(toggle.getAttribute('aria-checked')).toBe('false')
   expect(el.querySelector('button[aria-label="Cast shadow"]')).toBeNull()
+  expect(el.querySelector('select[aria-label="Halftone shading"]')).toBeNull()
   act(() => toggle.click())
   expect(onSelectRenderMode).toHaveBeenLastCalledWith('line')
   unmount()
@@ -200,6 +206,46 @@ it('toggles cast shadows inside manga mode and can turn the mode off', () => {
   act(() => toggle.click())
   expect(onSelectRenderMode).toHaveBeenLastCalledWith('original')
   unmount()
+})
+
+it('selects a halftone preset independently of cast shadows', () => {
+  const onSelectMangaShadingPreset = jest.fn()
+  const onToggleMangaShadows = jest.fn()
+  const props = {
+    renderMode: 'line' as const,
+    onSelectMangaShadingPreset,
+    onToggleMangaShadows,
+  }
+  const {el, rerender, unmount} = renderToolbar(props)
+
+  try {
+    const shading = el.querySelector<HTMLSelectElement>(
+      'select[aria-label="Halftone shading"]',
+    )
+    expect(shading).not.toBeNull()
+    expect(Array.from(shading!.options, (option) => option.value)).toEqual([
+      'off',
+      'light',
+      'medium',
+      'dark',
+      'heavy',
+      'layered',
+    ])
+    expect(shading!.value).toBe('off')
+    act(() => {
+      shading!.value = 'layered'
+      shading!.dispatchEvent(new Event('change', {bubbles: true}))
+    })
+    expect(onSelectMangaShadingPreset).toHaveBeenCalledWith('layered')
+    expect(onToggleMangaShadows).not.toHaveBeenCalled()
+    rerender({...props, mangaShadingPreset: 'layered', mangaShadows: true})
+    expect(shading!.value).toBe('layered')
+    expect(modeButton(el, 'Cast shadow').getAttribute('aria-checked')).toBe(
+      'true',
+    )
+  } finally {
+    unmount()
+  }
 })
 
 describe('变换模式组', () => {

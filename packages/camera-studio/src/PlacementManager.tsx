@@ -1357,7 +1357,9 @@ function PlacedModelCore({
   }, [])
   const instance = useMemo(() => {
     const cloned = SkeletonUtils.clone(group) as Group
-    cloneModelMaterials(cloned)
+    cloneModelMaterials(cloned, {
+      whiteManga: resolveControlSpec(cloned) !== null,
+    })
     return cloned
   }, [group])
   const materialSlots = useMemo(

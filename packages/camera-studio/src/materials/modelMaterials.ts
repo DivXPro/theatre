@@ -74,11 +74,15 @@ function materialValues(material: Material): MaterialValues {
   }
 }
 
-export function cloneModelMaterials(root: Object3D): void {
+export function cloneModelMaterials(
+  root: Object3D,
+  {whiteManga = false}: {whiteManga?: boolean} = {},
+): void {
   root.traverse((object) => {
     if (!(object instanceof Mesh)) return
     const clone = (material: Material) => {
       const cloned = material.clone()
+      if (whiteManga) cloned.userData.mangaShading ??= false
       rememberOriginal(cloned)
       return cloned
     }

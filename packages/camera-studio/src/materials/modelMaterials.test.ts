@@ -71,6 +71,18 @@ test('SkeletonUtils.clone instances receive isolated materials and scalar update
   expect(secondMaterial.color.getHexString()).toBe('ffffff')
 })
 
+test('white manga materials preserve source assets and explicit material settings', () => {
+  const {root, a, b} = modelWithTwoMeshes()
+  b.material.userData.mangaShading = true
+  const instance = SkeletonUtils.clone(root)
+  cloneModelMaterials(instance, {whiteManga: true})
+
+  const clonedMeshes = instance.children as Array<typeof a>
+  expect(clonedMeshes[0].material.userData.mangaShading).toBe(false)
+  expect(a.material.userData.mangaShading).toBeUndefined()
+  expect(clonedMeshes[1].material.userData.mangaShading).toBe(true)
+})
+
 test('Theatre material configs are cached and hidden from the property panel', () => {
   const {root} = modelWithTwoMeshes()
   const slots = collectMaterialSlots(root)

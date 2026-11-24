@@ -33,6 +33,8 @@ import {useT} from '@dreamerbird/studio/i18n'
 import {buildExportMenuItems} from './menuModel'
 import type {ExportSink} from './videoExport/sinks'
 import type {GizmoMode} from './PlacementManager'
+import {mangaShadingPresets} from './mangaShading'
+import type {MangaShadingPreset} from './mangaShading'
 import type {ViewportRenderMode} from './mangaViewport'
 
 function ToolbarBtn({
@@ -105,6 +107,8 @@ export function TopToolbar({
   onSelectRenderMode,
   mangaShadows,
   onToggleMangaShadows,
+  mangaShadingPreset,
+  onSelectMangaShadingPreset,
   characterNamesVisible,
   onToggleCharacterNames,
   onToggleModelLibrary,
@@ -130,6 +134,8 @@ export function TopToolbar({
   /** 漫画模式下是否用网点材质绘制真实投射阴影 */
   mangaShadows: boolean
   onToggleMangaShadows: () => void
+  mangaShadingPreset: MangaShadingPreset
+  onSelectMangaShadingPreset: (preset: MangaShadingPreset) => void
   characterNamesVisible: boolean
   onToggleCharacterNames: () => void
   onToggleModelLibrary: () => void
@@ -158,6 +164,7 @@ export function TopToolbar({
   )
   const [exportMenuNode, openExportMenu] = useMenu({items: exportMenuItems})
   const mangaEnabled = renderMode !== 'original'
+  const shadingLabel = t('pg.toolbar.render.shading')
   const characterNamesLabel = t('pg.toolbar.characterNames')
 
   return (
@@ -245,16 +252,39 @@ export function TopToolbar({
               <BookOpenText size={18} aria-hidden />
             </ToolbarBtn>
             {mangaEnabled && (
-              <ToolbarBtn
-                role="switch"
-                aria-checked={mangaShadows}
-                className={mangaShadows ? 'selected' : undefined}
-                onClick={onToggleMangaShadows}
-                tip={t('pg.toolbar.render.shadow')}
-                hint={t('pg.toolbar.render.shadow.hint')}
-              >
-                <DotsNine size={18} />
-              </ToolbarBtn>
+              <>
+                <ToolbarBtn
+                  role="switch"
+                  aria-checked={mangaShadows}
+                  className={mangaShadows ? 'selected' : undefined}
+                  onClick={onToggleMangaShadows}
+                  tip={t('pg.toolbar.render.shadow')}
+                  hint={t('pg.toolbar.render.shadow.hint')}
+                >
+                  <DotsNine size={18} />
+                </ToolbarBtn>
+                <label className="cs-shading-label">
+                  {shadingLabel}
+                  <select
+                    className="cs-shading-select"
+                    aria-label={shadingLabel}
+                    value={mangaShadingPreset}
+                    data-active={mangaShadingPreset !== 'off'}
+                    onKeyDown={(event) => event.stopPropagation()}
+                    onChange={(event) =>
+                      onSelectMangaShadingPreset(
+                        event.currentTarget.value as MangaShadingPreset,
+                      )
+                    }
+                  >
+                    {Object.keys(mangaShadingPresets).map((preset) => (
+                      <option key={preset} value={preset}>
+                        {t(`pg.toolbar.render.shading.${preset}`)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </>
             )}
             <ToolbarBtn
               role="switch"

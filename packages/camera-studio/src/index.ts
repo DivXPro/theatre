@@ -29,6 +29,7 @@ export type {
   CameraStudioAgentBridgeConfig,
 } from './config'
 export type {ViewportRenderMode} from './mangaViewport'
+export type {MangaShadingPreset} from './mangaShading'
 export type {CameraStudioTheme} from './styles/theme'
 // flows.onFlows 回调句柄类型(指南 §2 config 表已点名)及其签名用到的类型
 export type {CameraFlows, Vec3} from './hostFlows'

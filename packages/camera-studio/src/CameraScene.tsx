@@ -72,6 +72,7 @@ import {
 } from './menuModel'
 import {TopToolbar} from './TopToolbar'
 import {MangaViewportFrame} from './MangaViewportFrame'
+import {mangaViewportDefaults} from './mangaViewport'
 import type {ViewportRenderMode} from './mangaViewport'
 import {Anchors} from './Anchors'
 import {collectAnchorChildResets, setAimOptionsSheet} from './aimTargets'
@@ -881,9 +882,16 @@ export function CameraScene({
   const [mangaShadows, setMangaShadows] = useState(
     viewportRendering?.castShadow ?? false,
   )
+  const [mangaShadingPreset, setMangaShadingPreset] = useState(
+    viewportRendering?.shadingPreset ?? mangaViewportDefaults.shadingPreset,
+  )
   const mangaOptions = useMemo(
-    () => ({...viewportRendering, castShadow: mangaShadows}),
-    [viewportRendering, mangaShadows],
+    () => ({
+      ...viewportRendering,
+      castShadow: mangaShadows,
+      shadingPreset: mangaShadingPreset,
+    }),
+    [viewportRendering, mangaShadows, mangaShadingPreset],
   )
   const isManga = renderMode !== 'original'
   const [characterNamesVisible, setCharacterNamesVisible] = useState(false)
@@ -1980,6 +1988,8 @@ export function CameraScene({
           onSelectRenderMode={setRenderMode}
           mangaShadows={mangaShadows}
           onToggleMangaShadows={() => setMangaShadows((value) => !value)}
+          mangaShadingPreset={mangaShadingPreset}
+          onSelectMangaShadingPreset={setMangaShadingPreset}
           characterNamesVisible={characterNamesVisible}
           onToggleCharacterNames={() =>
             setCharacterNamesVisible((visible) => !visible)
