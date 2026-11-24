@@ -9,16 +9,9 @@
  * 姿势/动作绑定具体物体,入口在右键模型的菜单里;物体的属性设置在各自
  * 面板(见 docs/superpowers/specs/2026-09-12-asset-library-split-design.md)。
  *
- * 外观 = studio 原生工具条:连体容器(ToolbarSwitchSelectContainer)+
- * 图标按钮(ToolbarIconButton),图标+hover tooltip。chordial 挂在 studio
- * 的 shadow DOM 里(这里用不了),tooltip 是自实现的,样式照抄 BasicTooltip。
- * 图标全部来自 @phosphor-icons/react(studio 图标包本来就是 phosphor
- * 手移植,这里直接用库,风格天然一致)。
- * --theatre-* 令牌定义在 studio 的 :host(shadow DOM),主文档不可见,
- * 一律带同值兜底——令牌将来全局化时自动接管。
+ * 图标使用 Phosphor，样式见 styles/chrome.css。
  */
 import React, {useCallback, useRef} from 'react'
-import styled from 'styled-components'
 import {
   ArrowClockwise,
   ArrowsOut,
@@ -35,11 +28,6 @@ import {
   PictureInPicture,
   Stop,
 } from '@phosphor-icons/react'
-import ToolbarIconButton from '@dreamerbird/studio/uiComponents/toolbar/ToolbarIconButton'
-import {
-  cameraWorkspaceLayout,
-  compactCameraWorkspace,
-} from '@dreamerbird/studio/panels/cameraWorkspaceLayout'
 import useMenu from '@dreamerbird/studio/uiComponents/simpleContextMenu/useMenu'
 import {useT} from '@dreamerbird/studio/i18n'
 import {buildExportMenuItems} from './menuModel'
@@ -47,146 +35,11 @@ import type {ExportSink} from './videoExport/sinks'
 import type {GizmoMode} from './PlacementManager'
 import type {ViewportRenderMode} from './mangaViewport'
 
-// ---------------------------------------------------------------------------
-
-const Positioning = styled.div`
-  ${cameraWorkspaceLayout};
-  position: absolute;
-  top: var(--theatre-camera-panel-inset);
-  inset-inline: calc(
-      var(--theatre-camera-sidebar-width) + var(--theatre-camera-panel-inset) +
-        8px
-    )
-    calc(
-      var(--theatre-camera-inspector-width) + var(--theatre-camera-panel-inset) +
-        8px
-    );
-  z-index: 10;
-  display: flex;
-  justify-content: center;
-  pointer-events: none;
-
-  @media ${compactCameraWorkspace} {
-    inset-inline: var(--theatre-camera-panel-inset);
-  }
-`
-
-const ActionBar = styled.div`
-  --theatre-panel-bg-80: #151617;
-  --theatre-panel-bg-95: #151617;
-  --theatre-text-primary: #e5e6e7;
-  --theatre-accent: #b7e0d0;
-  display: flex;
-  gap: 8px;
-  max-width: 100%;
-  pointer-events: auto;
-
-  @media (max-width: 640px) {
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-`
-
-const ActionTray = styled.div`
-  display: flex;
-  flex: none;
-  align-items: center;
-  padding: var(--theatre-camera-tool-tray-padding);
-  border: 1px solid #303334;
-  border-radius: 9px;
-  background: var(--theatre-panel-bg-95);
-  box-shadow: 0 2px 8px rgb(0 0 0 / 24%);
-`
-
-const ActionGroup = styled.div`
-  display: flex;
-  flex: none;
-  align-items: center;
-  gap: 4px;
-
-  & + & {
-    margin-left: 4px;
-    padding-left: 4px;
-    border-left: 1px solid #303334;
-  }
-`
-
-/** 原生 ToolbarIconButton + 本页需要的两个变体:禁用置灰、导出中转红 */
-const Btn = styled(ToolbarIconButton)`
-  && {
-    flex: none;
-    box-sizing: border-box;
-    width: var(--theatre-camera-tool-size);
-    height: var(--theatre-camera-tool-size);
-    padding: 0;
-    border: 1px solid transparent;
-    border-radius: 6px;
-    color: #c1c5c7;
-    background: transparent;
-  }
-  &&:hover:not(:disabled) {
-    background: #25292a;
-  }
-  &&.selected {
-    color: var(--theatre-accent);
-    border-color: #3b5148;
-    background: #202c27;
-  }
-  &&:focus-visible {
-    outline: 1px solid var(--theatre-accent);
-  }
-  &:disabled {
-    opacity: 0.45;
-    cursor: default;
-    &:hover {
-      background: var(--theatre-panel-bg-80, rgba(40, 43, 47, 0.8));
-    }
-  }
-  &.danger {
-    color: #ff7a7a;
-  }
-
-  /* tooltip:样式照抄 studio BasicTooltip;按钮 relative,气泡钉在正下方 */
-  & > .tip {
-    position: absolute;
-    top: calc(100% + 8px);
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 10000;
-    padding: 6px 8px;
-    border-radius: 4px;
-    box-shadow: rgb(0 0 0 / 25%) 0px 2px 4px;
-    backdrop-filter: blur(8px) saturate(300%) contrast(65%) brightness(55%);
-    background-color: rgb(45 46 66 / 50%);
-    border: 0.5px solid rgb(86 100 110 / 46%);
-    color: var(--theatre-text-primary, #ffffff);
-    font-size: 11px;
-    font-weight: 400;
-    line-height: 1.5;
-    white-space: nowrap;
-    text-align: left;
-    pointer-events: none;
-    opacity: 0;
-    visibility: hidden;
-    transition:
-      opacity 0.15s ease 0.25s,
-      visibility 0.15s ease 0.25s;
-    .hint {
-      display: block;
-      color: var(--theatre-text-secondary, #cccccc);
-    }
-  }
-  &:hover > .tip,
-  &:focus-visible > .tip {
-    opacity: 1;
-    visibility: visible;
-  }
-`
-
 function ToolbarBtn({
   tip,
   hint,
   children,
+  className,
   ...props
 }: {
   /** tooltip 第一行:动作名 */
@@ -194,15 +47,22 @@ function ToolbarBtn({
   /** tooltip 第二行:补充说明/禁用原因(可空) */
   hint?: string
   children: React.ReactNode
-} & React.ComponentProps<typeof Btn>) {
+} & React.ComponentProps<'button'>) {
   return (
-    <Btn aria-label={tip} {...props}>
+    <button
+      type="button"
+      aria-label={tip}
+      className={['cs-toolbar-button cs-tooltip-trigger', className]
+        .filter(Boolean)
+        .join(' ')}
+      {...props}
+    >
       {children}
       <span className="tip">
         {tip}
         {hint ? <span className="hint">{hint}</span> : null}
       </span>
-    </Btn>
+    </button>
   )
 }
 
@@ -301,10 +161,18 @@ export function TopToolbar({
   const characterNamesLabel = t('pg.toolbar.characterNames')
 
   return (
-    <Positioning>
-      <ActionBar role="toolbar" aria-label={t('pg.toolbar.actions')}>
-        <ActionTray role="group" aria-label={t('pg.toolbar.editing')}>
-          <ActionGroup>
+    <div className="cs-toolbar-position">
+      <div
+        className="cs-toolbar-bar"
+        role="toolbar"
+        aria-label={t('pg.toolbar.actions')}
+      >
+        <div
+          className="cs-toolbar-tray"
+          role="group"
+          aria-label={t('pg.toolbar.editing')}
+        >
+          <div className="cs-toolbar-group">
             {GIZMO_MODES.map(({mode, tipKey, hintKey, Icon}) => (
               <ToolbarBtn
                 key={mode}
@@ -317,8 +185,8 @@ export function TopToolbar({
                 <Icon size={18} />
               </ToolbarBtn>
             ))}
-          </ActionGroup>
-          <ActionGroup>
+          </div>
+          <div className="cs-toolbar-group">
             <ToolbarBtn
               disabled={libraryDisabled}
               onClick={onToggleModelLibrary}
@@ -357,8 +225,12 @@ export function TopToolbar({
             >
               <Crosshair size={18} />
             </ToolbarBtn>
-          </ActionGroup>
-          <ActionGroup role="group" aria-label={t('pg.toolbar.render')}>
+          </div>
+          <div
+            className="cs-toolbar-group"
+            role="group"
+            aria-label={t('pg.toolbar.render')}
+          >
             <ToolbarBtn
               role="switch"
               aria-label={t('pg.toolbar.render.manga')}
@@ -393,10 +265,14 @@ export function TopToolbar({
             >
               <IdentificationBadge size={18} />
             </ToolbarBtn>
-          </ActionGroup>
-        </ActionTray>
-        <ActionTray role="group" aria-label={t('pg.toolbar.output')}>
-          <ActionGroup>
+          </div>
+        </div>
+        <div
+          className="cs-toolbar-tray"
+          role="group"
+          aria-label={t('pg.toolbar.output')}
+        >
+          <div className="cs-toolbar-group">
             <ToolbarBtn
               onClick={onTogglePip}
               disabled={pipDisabled}
@@ -442,11 +318,13 @@ export function TopToolbar({
             >
               {exporting ? <Stop size={18} /> : <Export size={18} />}
             </ToolbarBtn>
-          </ActionGroup>
-          {headerActions && <ActionGroup>{headerActions}</ActionGroup>}
-        </ActionTray>
-      </ActionBar>
+          </div>
+          {headerActions && (
+            <div className="cs-toolbar-group">{headerActions}</div>
+          )}
+        </div>
+      </div>
       {exportMenuNode}
-    </Positioning>
+    </div>
   )
 }

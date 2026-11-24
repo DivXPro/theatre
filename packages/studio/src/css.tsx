@@ -6,7 +6,6 @@ import ReactDOM from 'react-dom'
 import type {$IntentionalAny} from '@dreamerbird/core/types/public'
 import {PortalContext} from 'reakit'
 import useRefAndState from './utils/useRefAndState'
-import {cameraWorkspaceLayout} from './panels/cameraWorkspaceLayout'
 
 /**
  * This CSS string is used to correctly set pointer-events on an element
@@ -191,21 +190,7 @@ const GlobalStyle =
           }
         }
 
-        :host([data-camera-workspace]) {
-          ${cameraWorkspaceLayout};
-          --theatre-panel-bg: #151617;
-          --theatre-panel-bg-95: #151617;
-          --theatre-panel-bg-80: #151617;
-          --theatre-panel-bg-65: #191b1c;
-          --theatre-panel-bg-99: #111213;
-          --theatre-panel-border: #303334;
-          --theatre-text-primary: #e5e6e7;
-          --theatre-text-secondary: #b4b8ba;
-          --theatre-text-muted: #989da1;
-          --theatre-head-title: #e5e6e7;
-          --theatre-accent: #b7e0d0;
-          --theatre-font-size: 12px;
-        }
+
 
         * {
           padding: 0;

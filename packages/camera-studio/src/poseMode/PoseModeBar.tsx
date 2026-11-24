@@ -10,7 +10,6 @@
  * 退出手势(快捷键/双击空白)在 App 与 PoseModeRig。
  */
 import React, {useEffect, useMemo, useRef, useState} from 'react'
-import styled from 'styled-components'
 import {Html} from '@react-three/drei'
 import {useFrame} from '@react-three/fiber'
 import {ArrowClockwise, ArrowsOutCardinal} from '@phosphor-icons/react'
@@ -34,44 +33,6 @@ const HEAD_OFFSET = 0.6
 
 /** 每帧复用的临时向量(避免逐帧分配) */
 const tmpVec = new Vector3()
-
-/** 原生 ToolbarIconButton + tooltip(样式照抄 TopToolbar 的 Btn,保持观感一致) */
-const ModeBtn = styled(ToolbarIconButton)`
-  /* tooltip:按钮 relative,气泡钉在正下方 */
-  & > .tip {
-    position: absolute;
-    top: calc(100% + 8px);
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 10000;
-    padding: 6px 8px;
-    border-radius: 4px;
-    box-shadow: rgb(0 0 0 / 25%) 0px 2px 4px;
-    backdrop-filter: blur(8px) saturate(300%) contrast(65%) brightness(55%);
-    background-color: rgb(45 46 66 / 50%);
-    border: 0.5px solid rgb(86 100 110 / 46%);
-    color: var(--theatre-text-primary, #ffffff);
-    font-size: 11px;
-    font-weight: 400;
-    line-height: 1.5;
-    white-space: nowrap;
-    text-align: left;
-    pointer-events: none;
-    opacity: 0;
-    visibility: hidden;
-    transition:
-      opacity 0.15s ease 0.25s,
-      visibility 0.15s ease 0.25s;
-    .hint {
-      display: block;
-      color: var(--theatre-text-secondary, #cccccc);
-    }
-  }
-  &:hover > .tip {
-    opacity: 1;
-    visibility: visible;
-  }
-`
 
 const MODES = [
   {
@@ -141,9 +102,13 @@ export function PoseModeBar({
         {/* 不再外包盒子:裸分段控件(与顶栏 W/G/R/S 组同款观感) */}
         <ToolbarSwitchSelectContainer>
           {MODES.map(({mode: m, icon: Icon, labelKey, hintKey}) => (
-            <ModeBtn
+            <ToolbarIconButton
               key={m}
-              className={mode === m ? 'selected' : ''}
+              className={
+                mode === m
+                  ? 'cs-tooltip-trigger selected'
+                  : 'cs-tooltip-trigger'
+              }
               disabled={!selModes[m]}
               onClick={() => setPoseManipulatorMode(m)}
             >
@@ -152,7 +117,7 @@ export function PoseModeBar({
                 {translate(labelKey)}
                 <span className="hint">{translate(hintKey)}</span>
               </span>
-            </ModeBtn>
+            </ToolbarIconButton>
           ))}
         </ToolbarSwitchSelectContainer>
       </Html>

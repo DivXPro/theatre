@@ -9,9 +9,7 @@
  * 不进本框。选项带 thumbUrl 时整框切两列网格卡(2026-10-05 起手势条目
  * 挂 QBX 预览图),全无图时维持单列名称行。
  *
- * 样式全部 inline:本组件经 createPortal 从 shadow DOM 里的属性编辑器
- * 挂到 document.body,React 树上的 styled-components 上下文可能指向
- * shadow 根,样式表不可靠(与姿势弹框同款约束)。
+ * 本组件经 portal 渲染在普通 DOM，使用 Camera Studio 预编译样式。
  *
  * Esc 分层:容器自己的 onKeyDown 关框并 stopPropagation——焦点在框内时
  * Esc 只关框,不触发姿势模式退出/其他全局 Esc 语义;焦点在框外时 Esc
@@ -63,66 +61,19 @@ export function PosePickerFrame({
           onClose()
         }
       }}
-      style={{
-        position: 'fixed',
-        top: 0,
-        bottom: 0,
-        left: 0,
-        width: 260,
-        // studio 大纲面板的层级是 100,框体必须盖过它;基准可配(ui.zIndexBase)
-        zIndex: getUiConfig().zIndexBase,
-        display: 'flex',
-        flexDirection: 'column',
-        background: 'var(--theatre-panel-bg, #282b2f)',
-        borderRight: '1px solid var(--theatre-panel-border, #1f1f1f)',
-        color: 'var(--theatre-text-primary, #ffffff)',
-        fontSize: 11,
-        fontFamily:
-          'var(--theatre-font-family, -apple-system, BlinkMacSystemFont, Segoe WPC, Segoe Editor, HelveticaNeue-Light, Ubuntu, Droid Sans, sans-serif)',
-        outline: 'none',
-        userSelect: 'none',
-      }}
+      className="cs-asset-panel cs-pose-picker"
+      style={{zIndex: getUiConfig().zIndexBase}}
     >
-      {/* 头部:照抄 studio 面板 TitleBar 配色(#25272b + 黑色细分隔线) */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 4,
-          padding: '4px 6px 4px 12px',
-          backgroundColor: '#25272b',
-          borderBottom: '1px solid rgb(0 0 0 / 13%)',
-        }}
-      >
-        <span
-          style={{
-            fontSize: 11,
-            fontWeight: 600,
-            color: 'var(--theatre-head-title, #bbbbbb)',
-          }}
-        >
+      <div className="cs-asset-head">
+        <span className="cs-asset-head-title">
           {title ?? t('pg.pose.selectorTitle')}
         </span>
-        <div style={{flex: 1}} />
+        <div className="cs-asset-head-spacer" />
         <button
           type="button"
+          className="cs-pose-picker-close"
           aria-label={t('pg.pose.selectorClose')}
           onClick={onClose}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: 24,
-            height: 24,
-            padding: 0,
-            border: 'none',
-            borderRadius: 2,
-            background: 'transparent',
-            color: 'var(--theatre-text-secondary, #cccccc)',
-            cursor: 'pointer',
-            fontSize: 13,
-            lineHeight: 1,
-          }}
         >
           ✕
         </button>
@@ -131,138 +82,35 @@ export function PosePickerFrame({
           两列用 flex-wrap 不用 grid:grid 自动行高对卡片内容(图位方块)
           的测量在 Chromium 里会塌成文字行高、卡片互相叠压,显式高度也
           救不回;flex 行高按内容撑开,正常(2026-10-05 三轮实测) */}
-      <div
-        style={{
-          flex: 1,
-          overflowY: 'auto',
-          padding: 12,
-          ...(hasThumbs
-            ? {
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: 8,
-                alignContent: 'flex-start',
-              }
-            : {display: 'flex', flexDirection: 'column', gap: 8}),
-        }}
-      >
+      <div className="cs-pose-options" data-thumbs={hasThumbs ? '' : undefined}>
         {options.map((opt) => {
           const isCurrent = opt.key === current
-          const border = `1px solid ${
-            isCurrent
-              ? 'rgba(125, 193, 200, 0.45)'
-              : 'var(--theatre-panel-border, #1f1f1f)'
-          }`
-          if (hasThumbs) {
-            return (
-              <div
-                key={opt.key}
-                data-pose-option={opt.key}
-                title={opt.disabled ? opt.hint?.trim() : undefined}
-                onClick={() => {
-                  if (opt.disabled) return
-                  onPick(opt.key)
-                }}
-                style={{
-                  // 两列:50% 减半个 gap;boxSizing 让边框不挤出换行
-                  width: 'calc(50% - 4px)',
-                  boxSizing: 'border-box',
-                  borderRadius: 3,
-                  background: isCurrent
-                    ? 'rgba(125, 193, 200, 0.18)'
-                    : 'rgba(0, 0, 0, 0.18)',
-                  border,
-                  cursor: opt.disabled ? 'default' : 'pointer',
-                  opacity: opt.disabled ? 0.5 : 1,
-                  overflow: 'hidden',
-                }}
-              >
-                {/* 图位:无图(未加载完/无手势项)留深色占位,保持网格整齐。
-                    高度写死 112(列宽 114 减双边框):grid 自动行高对百分比
-                    padding/aspect-ratio 都算循环依赖,行会塌成文字高、卡片
-                    互相叠压(2026-10-05 两轮实测),框体宽度本就固定 260 */}
-                <div
-                  style={{
-                    position: 'relative',
-                    width: '100%',
-                    height: 112,
-                    background: 'rgba(0, 0, 0, 0.25)',
-                  }}
-                >
-                  {opt.thumbUrl && (
-                    <img
-                      src={opt.thumbUrl}
-                      alt=""
-                      draggable={false}
-                      style={{
-                        position: 'absolute',
-                        inset: 0,
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        display: 'block',
-                      }}
-                    />
-                  )}
-                </div>
-                <div
-                  style={{
-                    padding: '4px 6px',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    textAlign: 'center',
-                  }}
-                >
-                  {opt.label}
-                  {opt.hint && (
-                    <span style={{color: 'var(--theatre-text-muted, #888888)'}}>
-                      {opt.hint.trim()}
-                    </span>
-                  )}
-                </div>
-              </div>
-            )
-          }
           return (
             <div
               key={opt.key}
+              className="cs-pose-option"
               data-pose-option={opt.key}
+              data-current={isCurrent ? '' : undefined}
+              data-disabled={opt.disabled ? '' : undefined}
               title={opt.disabled ? opt.hint?.trim() : undefined}
               onClick={() => {
                 if (opt.disabled) return
                 onPick(opt.key)
               }}
-              style={{
-                padding: '10px 12px',
-                borderRadius: 3,
-                background: isCurrent
-                  ? 'rgba(125, 193, 200, 0.18)'
-                  : 'rgba(0, 0, 0, 0.18)',
-                border,
-                cursor: opt.disabled ? 'default' : 'pointer',
-                opacity: opt.disabled ? 0.5 : 1,
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                gap: 8,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-              }}
             >
-              <span style={{overflow: 'hidden', textOverflow: 'ellipsis'}}>
-                {opt.label}
-              </span>
-              {opt.hint && (
-                <span
-                  style={{
-                    color: 'var(--theatre-text-muted, #888888)',
-                    flexShrink: 0,
-                  }}
-                >
-                  {opt.hint.trim()}
-                </span>
+              {hasThumbs && (
+                <div className="cs-pose-option-thumb">
+                  {opt.thumbUrl && (
+                    <img src={opt.thumbUrl} alt="" draggable={false} />
+                  )}
+                </div>
               )}
+              <div className="cs-pose-option-label">
+                <span>{opt.label}</span>
+                {opt.hint && (
+                  <span className="cs-pose-option-hint">{opt.hint.trim()}</span>
+                )}
+              </div>
             </div>
           )
         })}

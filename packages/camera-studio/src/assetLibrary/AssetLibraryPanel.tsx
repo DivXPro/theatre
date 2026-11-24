@@ -8,7 +8,6 @@
  * 自动接管(同 TopToolbar 的策略)。
  */
 import React, {useCallback, useEffect, useRef, useState} from 'react'
-import styled from 'styled-components'
 import DetailPanelButton from '@dreamerbird/studio/uiComponents/DetailPanelButton'
 import {useI18n} from '@dreamerbird/studio/i18n'
 import {CanvasContextMenu} from '../contextMenu'
@@ -59,298 +58,14 @@ const DRAG_THRESHOLD_PX = 4
 // 样式(theatre 原生色系,var() 全部带同值兜底)
 
 /** 面板骨架:对齐 studio BasePanel 的底色/文字/字体 */
-const Panel = styled.div`
-  position: fixed;
-  top: 0;
-  bottom: 0;
-  width: 260px;
-  /* studio 大纲面板的层级是 100,面板必须盖过它;基准可配(ui.zIndexBase)。
-     函数插值:渲染期现读,setUiConfig(boot 时)之后挂的首帧即生效 */
-  z-index: ${() => getUiConfig().zIndexBase};
-  display: flex;
-  flex-direction: column;
-  background: var(--theatre-panel-bg, #282b2f);
-  border-right: 1px solid var(--theatre-panel-border, #1f1f1f);
-  color: var(--theatre-text-primary, #ffffff);
-  font-size: var(--theatre-font-size, 11px);
-  font-family: var(
-    --theatre-font-family,
-    -apple-system,
-    BlinkMacSystemFont,
-    Segoe WPC,
-    Segoe Editor,
-    HelveticaNeue-Light,
-    Ubuntu,
-    Droid Sans,
-    sans-serif
-  );
-`
-
 /** 头部:照抄 studio 面板 TitleBar 的配色(#25272b + 黑色细分隔线) */
-const Head = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 6px 4px 12px;
-  background-color: #25272b;
-  border-bottom: 1px solid rgb(0 0 0 / 13%);
-`
-
-const HeadTitle = styled.span`
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--theatre-head-title, #bbbbbb);
-`
-
-const HeadSpacer = styled.div`
-  flex: 1;
-`
-
 /** 头部小图标按钮:透明底,hover 用原生工具条按钮的 hover 色 */
-const HeadButton = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  border: none;
-  border-radius: 2px;
-  background: transparent;
-  color: var(--theatre-text-secondary, #cccccc);
-  cursor: pointer;
-  &:hover {
-    background: rgba(59, 63, 69, 0.8);
-    color: var(--theatre-text-primary, #ffffff);
-  }
-  &:disabled {
-    opacity: 0.45;
-    cursor: default;
-    &:hover {
-      background: transparent;
-      color: var(--theatre-text-secondary, #cccccc);
-    }
-  }
-`
-
 /** filterRig 提示条:弱化处理,用文字弱化色 */
-const HintBar = styled.div`
-  padding: 8px 12px;
-  font-size: 11px;
-  color: var(--theatre-text-muted, #888888);
-  background: rgba(0, 0, 0, 0.15);
-  border-bottom: 1px solid var(--theatre-panel-border, #1f1f1f);
-`
-
 /** 姿势框体顶部工具行(抽帧存姿势) */
-const ToolRow = styled.div`
-  display: flex;
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--theatre-panel-border, #1f1f1f);
-  /* DetailPanelButton 是 block + flex-grow,这里给它一行 */
-  & > * {
-    flex: 1;
-  }
-`
-
 /** 姿势状态行(spec §6.2):来源 + 帧数居左,打帧/清除靠右 */
-const StatusRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 8px;
-  border-bottom: 1px solid var(--theatre-panel-border, #1f1f1f);
-  font-size: 11px;
-  color: var(--theatre-text-secondary, #cccccc);
-`
-
-const StatusText = styled.span`
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-`
-
-const Grid = styled.div`
-  flex: 1;
-  overflow-y: auto;
-  padding: 12px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  align-content: start;
-`
-
-const AnimationFilters = styled.div`
-  display: grid;
-  gap: 6px;
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--theatre-panel-border, #1f1f1f);
-
-  input,
-  select {
-    box-sizing: border-box;
-    min-width: 0;
-    width: 100%;
-    height: 26px;
-    padding: 0 6px;
-    border: 1px solid var(--theatre-panel-border, #1f1f1f);
-    border-radius: 3px;
-    background: var(--theatre-panel-bg, #282b2f);
-    color: inherit;
-    font: inherit;
-    color-scheme: dark;
-  }
-
-  input::placeholder {
-    color: var(--theatre-text-secondary, #cccccc);
-  }
-`
-
-const PackHeading = styled.h3`
-  grid-column: 1 / -1;
-  margin: 6px 0 0;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--theatre-text-secondary, #cccccc);
-`
-
-const PackToggle = styled.button`
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  width: 100%;
-  padding: 4px 0;
-  border: 0;
-  background: none;
-  color: inherit;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-
-  &::before {
-    content: '';
-    width: 0;
-    height: 0;
-    border: 4px solid transparent;
-    border-right-width: 0;
-    border-left-color: currentColor;
-  }
-
-  &[aria-expanded='true']::before {
-    transform: rotate(90deg);
-  }
-`
-
 /** 卡片:面板色系,hover 用原生工具条按钮的 hover 色 */
-const Card = styled.div`
-  position: relative;
-  height: 96px;
-  border-radius: 3px;
-  background: rgba(0, 0, 0, 0.18);
-  border: 1px solid var(--theatre-panel-border, #1f1f1f);
-  overflow: hidden;
-  cursor: pointer;
-  user-select: none;
-  &:hover {
-    background: rgba(59, 63, 69, 0.8);
-  }
-  &[data-placement-active='true'] {
-    border-color: #80c8ff;
-  }
-  &[data-disabled='true'] {
-    cursor: default;
-    opacity: 0.5;
-    &:hover {
-      background: rgba(0, 0, 0, 0.18);
-    }
-  }
-`
-
-const Thumb = styled.div`
-  width: 100%;
-  height: 64px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  background: rgba(0, 0, 0, 0.25);
-`
-
-const Label = styled.div`
-  position: absolute;
-  bottom: 6px;
-  left: 6px;
-  right: 6px;
-  font-size: 11px;
-  color: var(--theatre-text-primary, #ffffff);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-`
-
-const Tag = styled.div`
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  padding: 2px 6px;
-  border-radius: 2px;
-  font-size: 10px;
-  color: var(--theatre-text-secondary, #cccccc);
-  background: rgba(0, 0, 0, 0.45);
-  max-width: 60%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-`
-
 /** 导入确认弹层:面板色系,盖在框体之上 */
-const Overlay = styled.div`
-  position: absolute;
-  inset: 0;
-  z-index: 20;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 16px;
-  background: var(--theatre-panel-bg-99, rgba(40, 43, 47, 0.99));
-`
-
-const OverlayTitle = styled.div`
-  font-size: 12px;
-  font-weight: 600;
-  margin-bottom: 10px;
-`
-
-const MutedText = styled.div`
-  font-size: 11px;
-  color: var(--theatre-text-muted, #888888);
-`
-
-const SimilarCard = styled.div`
-  padding: 8px 10px;
-  margin-bottom: 6px;
-  border-radius: 3px;
-  border: 1px solid var(--theatre-panel-border, #1f1f1f);
-  background: rgba(0, 0, 0, 0.18);
-  font-size: 11px;
-`
-
 /** 取消按钮:DetailPanelButton 的透明变体(teal 底让给主按钮) */
-const GhostButton = styled(DetailPanelButton)`
-  flex-grow: 0;
-  background: transparent;
-  border-color: var(--theatre-panel-border, #1f1f1f);
-  &:hover {
-    background: rgba(59, 63, 69, 0.8);
-    border-color: var(--theatre-panel-border, #1f1f1f);
-  }
-`
-
-const ConfirmButton = styled(DetailPanelButton)`
-  flex-grow: 0;
-`
-
 /** 头部图标:导入(箭头出托盘向上)/ 关闭。16×16、currentColor */
 const ImportIcon = () => (
   <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
@@ -599,7 +314,8 @@ export function AssetLibraryPanel({
   const renderModelCard = (entry: ModelEntry) => {
     const url = thumbUrl(entry)
     return (
-      <Card
+      <div
+        className="cs-asset-card"
         key={entry.id}
         data-placement-active={activeModelId === entry.id}
         data-disabled={disabled}
@@ -619,10 +335,12 @@ export function AssetLibraryPanel({
             style={{width: '100%', height: 64, objectFit: 'cover'}}
           />
         ) : (
-          <Thumb>📦</Thumb>
+          <div className="cs-asset-thumb">📦</div>
         )}
-        <Label title={entry.name}>{entry.name}</Label>
-      </Card>
+        <div className="cs-asset-label" title={entry.name}>
+          {entry.name}
+        </div>
+      </div>
     )
   }
 
@@ -645,7 +363,8 @@ export function AssetLibraryPanel({
     const rigMismatch = filterRig ? entry.rig !== filterRig : false
     const cardDisabled = disabled || applyDisabled || !onApply || rigMismatch
     return (
-      <Card
+      <div
+        className="cs-asset-card"
         key={entry.id}
         data-disabled={cardDisabled}
         onClick={cardDisabled ? undefined : () => onApply!(entry)}
@@ -654,20 +373,23 @@ export function AssetLibraryPanel({
           setMenu({x: ev.clientX, y: ev.clientY, id: entry.id})
         }}
       >
-        <Thumb>{icon}</Thumb>
+        <div className="cs-asset-thumb">{icon}</div>
         {/* 纯查看器模式隐藏改名入口(与导入/删除同套 canWrite 判别,
             终审 M-6):标签仍是纯展示,点击不再弹 prompt */}
-        <Tag
+        <div
+          className="cs-asset-tag"
           style={getLibrary().canWrite ? {cursor: 'pointer'} : undefined}
           title={t('pg.lib.rigTitle', {rig: entry.rig})}
           onClick={getLibrary().canWrite ? renameRig(entry.rig) : undefined}
         >
           {rigLabel(entry.rig)}
           {rigMismatch && t('pg.lib.rigMismatch')}
-        </Tag>
-        <Label title={entry.name}>{label}</Label>
+        </div>
+        <div className="cs-asset-label" title={entry.name}>
+          {label}
+        </div>
         {extra}
-      </Card>
+      </div>
     )
   }
 
@@ -702,17 +424,20 @@ export function AssetLibraryPanel({
 
   // 预设卡片:内置不可删改,无右键菜单、无骨架标签;动画缩略图即运镜轨迹
   const renderPresetCard = (preset: PathPreset) => (
-    <Card
+    <div
+      className="cs-asset-card"
       key={preset.id}
       onPointerDown={presetGesture(preset)}
       onDragStart={(ev) => ev.preventDefault()}
       title={t('pg.lib.pathCardTitle')}
     >
-      <Thumb style={{fontSize: 0}}>
+      <div className="cs-asset-thumb" style={{fontSize: 0}}>
         <PathPresetThumb preset={preset} />
-      </Thumb>
-      <Label>{presetDisplayName(preset, language)}</Label>
-    </Card>
+      </div>
+      <div className="cs-asset-label">
+        {presetDisplayName(preset, language)}
+      </div>
+    </div>
   )
 
   const modelGroups = new Map<ReturnType<typeof modelGroupOf>, ModelEntry[]>()
@@ -757,24 +482,32 @@ export function AssetLibraryPanel({
   const visiblePoses = sortBySelectedRig(poses)
 
   return (
-    <Panel style={{left: KIND_OFFSET[kind]}}>
+    <div
+      className="cs-asset-panel"
+      style={{left: KIND_OFFSET[kind], zIndex: getUiConfig().zIndexBase}}
+    >
       {/* 头部:类型标题 + 导入(路径框体没有;纯查看器模式隐藏)+ 关闭 */}
-      <Head>
-        <HeadTitle>{t(KIND_TITLE_KEYS[kind])}</HeadTitle>
-        <HeadSpacer />
+      <div className="cs-asset-head">
+        <span className="cs-asset-head-title">{t(KIND_TITLE_KEYS[kind])}</span>
+        <div className="cs-asset-head-spacer" />
         {kind !== 'path' && getLibrary().canWrite && (
-          <HeadButton
+          <button
+            className="cs-asset-head-button"
             disabled={busy}
             onClick={() => fileRef.current?.click()}
             title={t('pg.lib.import')}
           >
             <ImportIcon />
-          </HeadButton>
+          </button>
         )}
-        <HeadButton onClick={onClose} title={t('pg.lib.close')}>
+        <button
+          className="cs-asset-head-button"
+          onClick={onClose}
+          title={t('pg.lib.close')}
+        >
           <CloseIcon />
-        </HeadButton>
-      </Head>
+        </button>
+      </div>
 
       <input
         ref={fileRef}
@@ -789,11 +522,11 @@ export function AssetLibraryPanel({
 
       {/* filterRig 提示条:姿势/动作共用 */}
       {(kind === 'animation' || kind === 'pose') && filterRig && (
-        <HintBar>{t('pg.lib.filterHint')}</HintBar>
+        <div className="cs-asset-hint-bar">{t('pg.lib.filterHint')}</div>
       )}
 
       {kind === 'animation' && (
-        <AnimationFilters>
+        <div className="cs-asset-animation-filters">
           <input
             type="search"
             aria-label={t('pg.lib.animationSearch')}
@@ -816,12 +549,12 @@ export function AssetLibraryPanel({
               ))}
             </select>
           )}
-        </AnimationFilters>
+        </div>
       )}
 
       {/* 姿势框体顶部工具行:抽帧存姿势(纯查看器模式隐藏) */}
       {kind === 'pose' && getLibrary().canWrite && (
-        <ToolRow>
+        <div className="cs-asset-tool-row">
           <DetailPanelButton
             disabled={!canSavePose}
             onClick={() => void onSavePose?.()}
@@ -829,32 +562,38 @@ export function AssetLibraryPanel({
           >
             {t('pg.lib.savePose')}
           </DetailPanelButton>
-        </ToolRow>
+        </div>
       )}
 
       {/* 姿势状态行(spec §6.2):来源 + 帧数 + 打帧/清除姿势 */}
       {kind === 'pose' && poseStatus !== undefined && (
-        <StatusRow>
-          <StatusText>
+        <div className="cs-asset-status-row">
+          <span className="cs-asset-status-text">
             {poseStatus}
             {typeof poseKeyframeCount === 'number' &&
               ` · ${poseKeyframeCount} ${t('pg.pose.keyframesUnit')}`}
-          </StatusText>
+          </span>
           {onWritePoseKeyframe && (
-            <GhostButton onClick={onWritePoseKeyframe}>
+            <DetailPanelButton
+              className="cs-asset-overlay-action cs-asset-ghost-button"
+              onClick={onWritePoseKeyframe}
+            >
               {t('pg.pose.addKeyframe')}
-            </GhostButton>
+            </DetailPanelButton>
           )}
           {onClearPose && (
-            <GhostButton onClick={onClearPose}>
+            <DetailPanelButton
+              className="cs-asset-overlay-action cs-asset-ghost-button"
+              onClick={onClearPose}
+            >
               {t('pg.pose.clear')}
-            </GhostButton>
+            </DetailPanelButton>
           )}
-        </StatusRow>
+        </div>
       )}
 
       {/* 卡片网格 */}
-      <Grid>
+      <div className="cs-asset-grid">
         {kind === 'model'
           ? modelGroupOrder.map((group) => {
               const entries = modelGroups.get(group)
@@ -862,8 +601,9 @@ export function AssetLibraryPanel({
               const expanded = !collapsedModelGroups[group]
               return (
                 <React.Fragment key={group}>
-                  <PackHeading>
-                    <PackToggle
+                  <h3 className="cs-asset-pack-heading">
+                    <button
+                      className="cs-asset-pack-toggle"
                       type="button"
                       aria-expanded={expanded}
                       onClick={() =>
@@ -874,8 +614,8 @@ export function AssetLibraryPanel({
                       }
                     >
                       {t(`pg.lib.modelGroup.${group}`)}
-                    </PackToggle>
-                  </PackHeading>
+                    </button>
+                  </h3>
                   {expanded && entries.map(renderModelCard)}
                 </React.Fragment>
               )
@@ -892,11 +632,12 @@ export function AssetLibraryPanel({
                   return (
                     <React.Fragment key={pack}>
                       {!selectedPack && (
-                        <PackHeading>
+                        <h3 className="cs-asset-pack-heading">
                           {query ? (
                             label
                           ) : (
-                            <PackToggle
+                            <button
+                              className="cs-asset-pack-toggle"
                               type="button"
                               aria-expanded={expanded}
                               onClick={() =>
@@ -909,28 +650,29 @@ export function AssetLibraryPanel({
                               }
                             >
                               {label}
-                            </PackToggle>
+                            </button>
                           )}
-                        </PackHeading>
+                        </h3>
                       )}
                       {expanded && entries.map(renderAnimationCard)}
                     </React.Fragment>
                   )
                 })}
         {kind === 'animation' && query && animationGroups.size === 0 && (
-          <PackHeading as="p" role="status">
+          <p className="cs-asset-pack-heading" role="status">
             {t('pg.lib.animationNoResults')}
-          </PackHeading>
+          </p>
         )}
-      </Grid>
+      </div>
 
       {/* 确认清单弹层 */}
       {plan && (
-        <Overlay>
-          <OverlayTitle>{plan.summary}</OverlayTitle>
+        <div className="cs-asset-overlay">
+          <div className="cs-asset-overlay-title">{plan.summary}</div>
 
           {plan.items.some((i) => i.type === 'skip') && (
-            <MutedText
+            <div
+              className="cs-asset-muted-text"
               style={{
                 maxHeight: 120,
                 overflowY: 'auto',
@@ -947,16 +689,19 @@ export function AssetLibraryPanel({
                     {i.name}: {i.reason}
                   </div>
                 ))}
-            </MutedText>
+            </div>
           )}
 
           {plan.similar.length > 0 && (
             <div style={{marginBottom: 12}}>
-              <MutedText style={{marginBottom: 6}}>
+              <div className="cs-asset-muted-text" style={{marginBottom: 6}}>
                 {t('pg.lib.similar.title')}
-              </MutedText>
+              </div>
               {plan.similar.map((s, idx) => (
-                <SimilarCard key={`${s.index}-${s.existingName}`}>
+                <div
+                  className="cs-asset-similar-card"
+                  key={`${s.index}-${s.existingName}`}
+                >
                   <div
                     style={{
                       marginBottom: 4,
@@ -1000,20 +745,28 @@ export function AssetLibraryPanel({
                     />
                     {t('pg.lib.similar.keep')}
                   </label>
-                </SimilarCard>
+                </div>
               ))}
             </div>
           )}
 
           <div style={{display: 'flex', gap: 10, justifyContent: 'flex-end'}}>
-            <GhostButton disabled={busy} onClick={() => setPlan(null)}>
+            <DetailPanelButton
+              className="cs-asset-overlay-action cs-asset-ghost-button"
+              disabled={busy}
+              onClick={() => setPlan(null)}
+            >
               {t('pg.lib.cancel')}
-            </GhostButton>
-            <ConfirmButton disabled={busy} onClick={() => void confirmImport()}>
+            </DetailPanelButton>
+            <DetailPanelButton
+              className="cs-asset-overlay-action cs-asset-confirm-button"
+              disabled={busy}
+              onClick={() => void confirmImport()}
+            >
               {t('pg.lib.confirm')}
-            </ConfirmButton>
+            </DetailPanelButton>
           </div>
-        </Overlay>
+        </div>
       )}
 
       {/* 卡片右键菜单:studio 原生 ContextMenu(点外/Esc 关闭由它处理)。
@@ -1042,6 +795,6 @@ export function AssetLibraryPanel({
           ]}
         />
       )}
-    </Panel>
+    </div>
   )
 }

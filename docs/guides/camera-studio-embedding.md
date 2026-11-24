@@ -109,11 +109,44 @@ export function CameraPage() {
 | `sync`                  | `{serverUrl?: string} \| false`                          | `false`         | 协作端点(见 §6)                                                                                     |
 | `ui.portalContainer`    | `HTMLElement`                                            | `document.body` | 模块停靠框的 portal 挂载点                                                                          |
 | `ui.zIndexBase`         | `number`                                                 | `1000`          | 模块停靠框 z-index 基准(见 §7 层级地图)                                                             |
+| `ui.theme`             | `CameraStudioTheme`                                      | 内置深色主题    | 初始化时覆盖 UI 主题变量，未传的字段沿用内置样式                                                    |
 | `ui.locale`             | `string`                                                 | 不生效          | 仅当宿主**未**包 I18nProvider 时应用,一次性 setLanguage(见 §7)                                      |
 | `ui.hideLeftStrip`      | `boolean`                                                | `false`         | 隐藏 studio 左上角带 logo 的整条 LeftStrip(应用 logo + 工作区按钮);boot 级一次性应用,换值需整页刷新 |
 | `flows.onFlows`         | `(flows: CameraFlows) => void`                           | 不传            | 接管「添加模型/添加路径/添加相机」入口,拿到模块的 flows 句柄                                        |
 | `agent.exposeGlobal`    | `boolean`                                                | `false`         | 场景 ready 后把 Agent JS API 门面挂到 `window.__cameraStudioApi`,dispose 时删除(见 §9)              |
 | `agent.bridge`          | `{url, token, httpUrl}`                                  | 不传            | 连接本机 Agent HTTP 桥接(`url` 是 WS 命令通道,`httpUrl` 走文件传输);缺省不连桥接(见 §9)             |
+
+### 自定义工作台主题
+
+`ui.theme` 接受颜色、字体和圆角等 CSS 值。每个字段都可选，缺省时显示原有深色界面。
+
+```tsx
+const {ready, sceneProps} = useCameraStudio({
+  ui: {
+    theme: {
+      surface: '#202633',
+      raisedSurface: '#2a3444',
+      recessedSurface: '#171d28',
+      border: '#495a74',
+      text: '#f0f4ff',
+      accent: '#85e5cf',
+      fontFamily: 'Inter, system-ui, sans-serif',
+      radius: '10px',
+    },
+  },
+})
+
+return ready ? <CameraScene {...sceneProps} /> : null
+```
+
+工具栏、Studio 面板和浮层共享这些主题值。`CameraStudioTheme` 类型由
+`@dreamerbird/camera-studio` 导出。传 CSS 变量也是有效的，例如
+`accent: 'var(--brand-accent)'`，宿主可在页面根元素更新该变量来切换配色。
+`ui.theme` 本身与其他 `ui` 配置一样，在初始化时读取。
+
+Tailwind 样式随模块预编译发布，宿主无需额外安装 Tailwind 或导入样式。
+修改模块内的样式源文件后，在仓库内运行
+`pnpm --filter @dreamerbird/camera-studio build:styles` 更新编译结果。
 
 ### 错误提示:onError 交给宿主组件
 

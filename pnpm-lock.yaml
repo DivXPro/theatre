@@ -586,9 +586,6 @@ importers:
       draco3dgltf:
         specifier: ^1.5.7
         version: 1.5.7
-      styled-components:
-        specifier: ^6.5.3
-        version: 6.5.3(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       three-stdlib:
         specifier: ^2.36.1
         version: 2.36.1(three@0.185.1)
@@ -617,12 +614,18 @@ importers:
       fake-indexeddb:
         specifier: ^5
         version: 5.0.2
+      postcss:
+        specifier: 8.4.31
+        version: 8.4.31
       react:
         specifier: ^19.2.0
         version: 19.2.8
       react-dom:
         specifier: ^19.2.0
         version: 19.2.8(react@19.2.8)
+      tailwindcss:
+        specifier: 3.3.3
+        version: 3.3.3
       three:
         specifier: ^0.185.1
         version: 0.185.1

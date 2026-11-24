@@ -1,0 +1,42 @@
+/* Camera Studio character */
+.cs-character-name {
+  @apply block;
+  max-width: 200px;
+  @apply overflow-hidden text-ellipsis whitespace-nowrap;
+  font:
+    600 12px / 1.25 system-ui,
+    sans-serif;
+  color: #fff;
+  text-shadow: 0 1px 3px rgb(0 0 0 / 65%);
+
+  &[data-character-name='manga'] {
+    color: #202020;
+    text-shadow: none;
+  }
+}
+
+.cs-character-path-popup {
+  @apply grid gap-2 p-3;
+  width: 252px;
+  background: var(--cs-theme-raised-surface, var(--theatre-bg-panel, #25252a));
+  color: var(--cs-theme-text, var(--theatre-text-primary, #f1f1f1));
+  border: 1px solid var(--cs-theme-border, #555);
+  border-radius: var(--cs-theme-radius, 6px);
+  pointer-events: all;
+  z-index: 10000;
+}
+.cs-character-path-field {
+  @apply grid gap-1;
+}
+.cs-character-path-control {
+  @apply flex items-center w-full;
+}
+.cs-character-path-trigger {
+  @apply min-w-0 bg-transparent whitespace-nowrap overflow-hidden text-ellipsis cursor-pointer;
+  flex: 1 1 auto;
+  color: inherit;
+  border: 1px solid var(--cs-theme-border, #555);
+  border-radius: var(--cs-theme-radius, 3px);
+  font-size: var(--cs-theme-font-size, 10px);
+  padding: 2px 4px;
+}

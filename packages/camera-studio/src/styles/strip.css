@@ -1,0 +1,75 @@
+/* Camera Studio strip */
+.cs-strip-properties {
+  #pointer-root & {
+    @apply pointer-events-none;
+  }
+  #pointer-root.normal & {
+    @apply pointer-events-auto;
+  }
+  z-index: 10000;
+  width: min(272px, calc(100vw - 16px));
+  @apply box-border;
+  padding: 12px;
+  color: var(--cs-theme-text, var(--theatre-text-primary, #fff));
+  background: var(--cs-theme-surface, var(--theatre-panel-bg, #282b2f));
+  border: 1px solid var(--cs-theme-border, var(--theatre-panel-border, #555));
+  border-radius: var(--cs-theme-radius, 6px);
+  box-shadow: 0 6px 24px rgb(0 0 0 / 35%);
+  font-size: 11px;
+  @apply cursor-default;
+
+  header,
+  footer {
+    @apply flex justify-between items-center;
+    gap: 8px;
+  }
+
+  header strong {
+    @apply overflow-hidden text-ellipsis whitespace-nowrap;
+  }
+
+  section {
+    @apply grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin: 10px 0;
+  }
+
+  label {
+    @apply grid;
+    gap: 4px;
+  }
+
+  input,
+  select,
+  button {
+    color: inherit;
+    background: var(
+      --cs-theme-input-background,
+      var(--theatre-input-bg, #1d2024)
+    );
+    border: 1px solid var(--cs-theme-border, var(--theatre-panel-border, #555));
+    border-radius: var(--cs-theme-radius, 4px);
+    font: inherit;
+    padding: 4px 6px;
+  }
+
+  input {
+    @apply min-w-0;
+    font-variant-numeric: tabular-nums;
+  }
+
+  button {
+    @apply cursor-pointer;
+  }
+
+  button:disabled {
+    @apply cursor-default;
+    opacity: 0.5;
+  }
+
+  [role='alert'] {
+    color: #ff9c92;
+    margin: 8px 0;
+  }
+}

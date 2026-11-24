@@ -28,8 +28,9 @@
     "LICENSE.fullbody-pose-maker"
   ],
   "scripts": {
-    "build:ts": "tsc -b tsconfig.json",
-    "build:api": "tsc -b tsconfig.json && api-extractor run --local --config devEnv/api-extractor.json",
+    "build:styles": "node devEnv/buildStyles.cjs",
+    "build:ts": "pnpm build:styles && tsc -b tsconfig.json",
+    "build:api": "pnpm build:styles && tsc -b tsconfig.json && api-extractor run --local --config devEnv/api-extractor.json",
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "peerDependencies": {
@@ -51,7 +52,6 @@
     "@phosphor-icons/react": "^2.1.10",
     "@react-three/drei": "^10.7.8",
     "draco3dgltf": "^1.5.7",
-    "styled-components": "^6.5.3",
     "three-stdlib": "^2.36.1"
   },
   "devDependencies": {
@@ -63,8 +63,10 @@
     "@types/react-dom": "^19.2.5",
     "@types/three": "0.185.4",
     "fake-indexeddb": "^5",
+    "postcss": "8.4.31",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "tailwindcss": "3.3.3",
     "three": "^0.185.1",
     "typescript": "5.6.3"
   }

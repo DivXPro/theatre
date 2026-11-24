@@ -1,12 +1,8 @@
 import {val} from '@dreamerbird/dataverse'
 import {useT} from '@dreamerbird/studio/i18n'
 import React from 'react'
-import styled from 'styled-components'
 import {useAnimationEntriesById} from '../assetLibrary/library'
-import {
-  AnimationStripProperties,
-  AnimationStripPropertiesPanel,
-} from './AnimationStripProperties'
+import {AnimationStripProperties} from './AnimationStripProperties'
 import {findAnimationStrip, objectChannelsFor} from './model'
 import type {
   AnimationStrip,
@@ -27,115 +23,6 @@ const channelLabels: Record<ObjectAnimationChannel, string> = {
   quaternion: 'pg.strips.channelQuaternion',
   scale: 'pg.strips.channelScale',
 }
-
-const Sidebar = styled(AnimationStripPropertiesPanel)`
-  width: 100%;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
-  background: transparent;
-  font-size: 11px;
-
-  form[data-camera-strip-properties] {
-    display: grid;
-    gap: 12px;
-    padding: 10px 10px 12px;
-  }
-
-  form[data-camera-strip-properties] header {
-    gap: 6px;
-    align-items: flex-start;
-  }
-
-  .title {
-    display: grid;
-    min-width: 0;
-    gap: 2px;
-  }
-
-  .eyebrow,
-  .track {
-    color: #919191;
-    font-size: 10px;
-    line-height: 1.2;
-  }
-
-  .eyebrow {
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-
-  .track {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .close {
-    flex: 0 0 auto;
-    width: 22px;
-    height: 22px;
-    padding: 0;
-    color: #919191;
-    background: transparent;
-    border: 0;
-  }
-
-  .hint {
-    color: #919191;
-    font-size: 10px;
-    line-height: 1.35;
-  }
-
-  fieldset {
-    display: grid;
-    gap: 6px;
-    margin: 0;
-    padding: 0;
-    border: 0;
-  }
-
-  legend {
-    margin-bottom: 3px;
-    padding: 0;
-    color: #b8b8b8;
-    font-size: 10px;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-  }
-
-  label {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.65fr);
-    align-items: center;
-    gap: 8px;
-    overflow-wrap: anywhere;
-  }
-
-  input,
-  select {
-    box-sizing: border-box;
-    width: 100%;
-    min-width: 0;
-  }
-
-  footer {
-    gap: 6px;
-    flex-wrap: wrap;
-    padding-top: 8px;
-    border-top: 1px solid var(--theatre-panel-border, #555);
-  }
-
-  footer output {
-    flex: 1;
-    color: #919191;
-  }
-
-  footer button {
-    white-space: nowrap;
-  }
-`
 
 function trackNameFor(
   tracks: readonly AnimationTrack[],
@@ -216,7 +103,7 @@ function AnimationStripSidebar({
       : strip.sourceDurationMs ?? strip.sourceOutMs
 
   return (
-    <Sidebar>
+    <div className="cs-strip-properties cs-strip-sidebar">
       <AnimationStripProperties
         key={`${strip.id}:${strip.startMs}:${strip.sourceInMs}:${
           strip.sourceOutMs
@@ -237,6 +124,6 @@ function AnimationStripSidebar({
           )
         }
       />
-    </Sidebar>
+    </div>
   )
 }

@@ -1,82 +1,9 @@
-import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
 import {useT} from '@dreamerbird/studio/i18n'
 import React, {useState} from 'react'
-import styled from 'styled-components'
 import {AnimationStripOverlapError, stripEndMs} from './model'
 import type {AnimationStrip} from './model'
 import {commitAnimationStripTiming, moveAnimationStripToTrack} from './storage'
 import type {AnimationTracksObject} from './storage'
-
-export const AnimationStripPropertiesPanel = styled.div`
-  ${pointerEventsAutoInNormalMode};
-  z-index: 10000;
-  width: min(272px, calc(100vw - 16px));
-  box-sizing: border-box;
-  padding: 12px;
-  color: var(--theatre-text-primary, #fff);
-  background: var(--theatre-panel-bg, #282b2f);
-  border: 1px solid var(--theatre-panel-border, #555);
-  border-radius: 6px;
-  box-shadow: 0 6px 24px rgb(0 0 0 / 35%);
-  font-size: 11px;
-  cursor: default;
-
-  header,
-  footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px;
-  }
-
-  header strong {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  section {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-    margin: 10px 0;
-  }
-
-  label {
-    display: grid;
-    gap: 4px;
-  }
-
-  input,
-  select,
-  button {
-    color: inherit;
-    background: var(--theatre-input-bg, #1d2024);
-    border: 1px solid var(--theatre-panel-border, #555);
-    border-radius: 4px;
-    font: inherit;
-    padding: 4px 6px;
-  }
-
-  input {
-    min-width: 0;
-    font-variant-numeric: tabular-nums;
-  }
-
-  button {
-    cursor: pointer;
-  }
-
-  button:disabled {
-    cursor: default;
-    opacity: 0.5;
-  }
-
-  [role='alert'] {
-    color: #ff9c92;
-    margin: 8px 0;
-  }
-`
 
 const clipFields = [
   ['start', 'pg.strips.timelineStart'],

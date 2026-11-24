@@ -3,17 +3,13 @@ import {val} from '@dreamerbird/dataverse'
 import type {Pointer} from '@dreamerbird/dataverse'
 import {useT} from '@dreamerbird/studio/i18n'
 import type {SequenceEditorPanelLayout} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/layout'
-import {
-  sequenceRowLabelCSS,
-  SequenceRowIconButton,
-} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/Left/AnyCompositeRow'
+import {SequenceRowIconButton} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/Left/AnyCompositeRow'
 import useDrag from '@dreamerbird/studio/uiComponents/useDrag'
 import useContextMenu from '@dreamerbird/studio/uiComponents/simpleContextMenu/useContextMenu'
 import useRefAndState from '@dreamerbird/studio/utils/useRefAndState'
 import React, {useContext, useEffect, useRef, useState} from 'react'
 import {createPortal} from 'react-dom'
 import {PortalContext} from 'reakit'
-import styled from 'styled-components'
 import {useAnimationEntriesById} from '../assetLibrary/library'
 import {getUiConfig} from '../uiConfig'
 import {animationStripErrorMessage} from './AnimationStripProperties'
@@ -41,101 +37,6 @@ import {
   selectAnimationStrip,
 } from './stripSelection'
 import {getStudioSync} from '@dreamerbird/core'
-
-const Header = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  min-width: 0;
-  height: 100%;
-  width: 100%;
-  color: var(--theatre-text-secondary);
-  font-size: 11px;
-
-  > span {
-    flex: 1;
-    min-width: 0;
-    ${sequenceRowLabelCSS};
-    display: block;
-  }
-`
-
-const ObjectActions = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  flex: 0 0 auto;
-  gap: 2px;
-  height: 100%;
-  padding-right: 24px;
-`
-
-const AddTrackMenu = styled.div<{$top: number; $left: number}>`
-  position: fixed;
-  top: ${({$top}) => $top}px;
-  left: ${({$left}) => $left}px;
-  z-index: ${() => getUiConfig().zIndexBase + 1000};
-  display: grid;
-  min-width: 148px;
-  padding: 4px;
-  background: #25272e;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 5px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
-  pointer-events: auto;
-`
-
-const AddTrackMenuItem = styled.button`
-  display: flex;
-  align-items: center;
-  min-height: 24px;
-  margin: 0;
-  padding: 0 8px;
-  color: var(--theatre-text-secondary);
-  background: transparent;
-  border: 0;
-  border-radius: 3px;
-  outline: none;
-  font: inherit;
-  font-size: 11px;
-  text-align: left;
-  white-space: nowrap;
-  cursor: pointer;
-
-  &:hover,
-  &:focus-visible {
-    color: var(--theatre-text-primary);
-    background: rgba(255, 255, 255, 0.075);
-  }
-`
-
-const HeaderStatus = styled.span`
-  min-width: 0;
-  overflow: hidden;
-  color: var(--theatre-text-muted);
-  font-size: 10px;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-`
-
-const TrackName = styled.span`
-  ${sequenceRowLabelCSS};
-  flex: 1;
-  display: block;
-`
-
-const RemoveTrackButton = styled(SequenceRowIconButton)`
-  &:hover:not(:disabled) {
-    color: #e7a0a0;
-    background: rgba(220, 90, 90, 0.12);
-    border-color: rgba(220, 90, 90, 0.18);
-  }
-`
-
-const Track = styled.div`
-  position: relative;
-  height: 100%;
-`
 
 const PlusIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -166,105 +67,6 @@ function timelineLeft(leftPadding: number, positionMs: number) {
     positionMs / 1000
   }px)`
 }
-
-const SnapGuide = styled.div`
-  position: absolute;
-  inset-block: 0;
-  z-index: 2;
-  width: 1px;
-  background: #f3cc66;
-  box-shadow: 0 0 4px #f3cc66;
-  pointer-events: none;
-
-  &::before,
-  &::after {
-    content: '';
-    position: absolute;
-    left: -4px;
-    width: 9px;
-    height: 2px;
-    background: #f3cc66;
-  }
-
-  &::before {
-    top: 0;
-  }
-
-  &::after {
-    bottom: 0;
-  }
-`
-
-const Span = styled.div<{$error: boolean; $selected: boolean}>`
-  position: absolute;
-  top: 50%;
-  height: 24px;
-  transform: translateY(-50%);
-  cursor: grab;
-  color: ${({$error, $selected}) =>
-    $error
-      ? '#ff9c92'
-      : $selected
-        ? '#f3cc66'
-        : 'var(--theatre-text-primary, #fff)'};
-  background: ${({$error, $selected}) =>
-    $error
-      ? 'rgba(255, 122, 122, 0.16)'
-      : $selected
-        ? 'rgba(243, 204, 102, 0.14)'
-        : 'rgba(111, 183, 255, 0.14)'};
-  border: 1px solid
-    ${({$error, $selected}) =>
-      $error ? '#ff7a7a' : $selected ? '#f3cc66' : 'rgba(111, 183, 255, 0.5)'};
-  border-radius: 4px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
-  box-sizing: border-box;
-  outline-offset: 3px;
-
-  &:hover {
-    background: ${({$error, $selected}) =>
-      $error
-        ? 'rgba(255, 122, 122, 0.22)'
-        : $selected
-          ? 'rgba(243, 204, 102, 0.2)'
-          : 'rgba(111, 183, 255, 0.22)'};
-  }
-
-  &:focus-visible {
-    outline: 2px solid currentColor;
-  }
-`
-
-const Label = styled.div`
-  position: absolute;
-  inset: 0 4px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: hidden;
-  pointer-events: none;
-  white-space: nowrap;
-  font-size: 10px;
-  text-overflow: ellipsis;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65);
-`
-
-const ErrorBadge = styled.span`
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  color: #1b1b1b;
-  background: #ff7a7a;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 9px;
-  font-weight: 700;
-  pointer-events: none;
-`
 
 function AddAnimationTrackControl({
   object,
@@ -384,10 +186,14 @@ function AddAnimationTrackControl({
       </SequenceRowIconButton>
       {open &&
         createPortal(
-          <AddTrackMenu
+          <div
+            className="cs-strip-row-add-track-menu"
             ref={menuRef}
-            $top={position.top}
-            $left={position.left}
+            style={{
+              top: position.top,
+              left: position.left,
+              zIndex: getUiConfig().zIndexBase + 1000,
+            }}
             role="menu"
             aria-label={t('pg.strips.addTrack')}
             onClick={(event) => event.stopPropagation()}
@@ -395,22 +201,24 @@ function AddAnimationTrackControl({
             onKeyDown={moveMenuFocus}
           >
             {canAddBone && (
-              <AddTrackMenuItem
+              <button
+                className="cs-strip-row-add-track-menu-item"
                 type="button"
                 role="menuitem"
                 onClick={() => addTrack('bone')}
               >
                 {t('pg.strips.addBoneTrack')}
-              </AddTrackMenuItem>
+              </button>
             )}
-            <AddTrackMenuItem
+            <button
+              className="cs-strip-row-add-track-menu-item"
               type="button"
               role="menuitem"
               onClick={() => addTrack('object')}
             >
               {t('pg.strips.addObjectTrack')}
-            </AddTrackMenuItem>
-          </AddTrackMenu>,
+            </button>
+          </div>,
           portalLayer ?? getUiConfig().portalContainer ?? document.body,
         )}
     </>
@@ -425,12 +233,13 @@ export function AnimationStripObjectActions({
   canAddBone: boolean
 }) {
   return (
-    <ObjectActions
+    <div
+      className="cs-strip-row-object-actions"
       onClick={(event) => event.stopPropagation()}
       onDoubleClick={(event) => event.stopPropagation()}
     >
       <AddAnimationTrackControl object={object} canAddBone={canAddBone} />
-    </ObjectActions>
+    </div>
   )
 }
 
@@ -448,14 +257,18 @@ export function AnimationStripToolbar({
   const unreadable = state.kind === 'invalid'
   const message = status || (unreadable ? t('pg.strips.unreadable') : '')
   return (
-    <Header>
+    <div className="cs-strip-row-header">
       {legacyControl}
       {message && (
-        <HeaderStatus role="status" title={message}>
+        <span
+          className="cs-strip-row-header-status"
+          role="status"
+          title={message}
+        >
           {message}
-        </HeaderStatus>
+        </span>
       )}
-    </Header>
+    </div>
   )
 }
 
@@ -494,8 +307,10 @@ export function AnimationStripHeader({
       : undefined
   if (!trackName) return null
   return (
-    <Header>
-      <TrackName title={trackName}>{trackName}</TrackName>
+    <div className="cs-strip-row-header">
+      <span className="cs-strip-row-track-name" title={trackName}>
+        {trackName}
+      </span>
       <SequenceRowIconButton
         type="button"
         aria-label={t('pg.strips.addClip')}
@@ -504,14 +319,15 @@ export function AnimationStripHeader({
       >
         <PlusIcon />
       </SequenceRowIconButton>
-      <RemoveTrackButton
+      <SequenceRowIconButton
+        className="cs-strip-remove-track"
         type="button"
         aria-label={t('pg.strips.removeTrack')}
         title={t('pg.strips.removeTrack')}
         onClick={() => removeAnimationTrack(object, trackId)}
       >
         <CloseIcon />
-      </RemoveTrackButton>
+      </SequenceRowIconButton>
       {adding && (
         <AddAnimationStripDialog
           object={object}
@@ -522,7 +338,7 @@ export function AnimationStripHeader({
           onClose={() => setAdding(false)}
         />
       )}
-    </Header>
+    </div>
   )
 }
 
@@ -559,7 +375,8 @@ export function AnimationStripTrack({
   }, [selected, selectedExists])
   if (!track) return null
   return (
-    <Track
+    <div
+      className="cs-strip-row-track"
       onClick={(event) => {
         if (event.target === event.currentTarget) clearAnimationStripSelection()
       }}
@@ -599,7 +416,7 @@ export function AnimationStripTrack({
           />
         )
       })}
-    </Track>
+    </div>
   )
 }
 
@@ -769,10 +586,10 @@ function Strip({
   ).toFixed(2)}s)${hint ? ` · ${hint}` : ''}`
   return (
     <>
-      <Span
+      <div
+        className="cs-strip-row-span"
         ref={nodeRef}
-        $error={error}
-        $selected={selected}
+        data-error={error ? '' : undefined}
         role="button"
         aria-pressed={selected}
         title={title}
@@ -812,11 +629,12 @@ function Strip({
           }
         }}
       >
-        <Label>{label}</Label>
-        {error && <ErrorBadge>!</ErrorBadge>}
-      </Span>
+        <div className="cs-strip-row-label">{label}</div>
+        {error && <span className="cs-strip-row-error-badge">!</span>}
+      </div>
       {draft?.snapMs != null && (
-        <SnapGuide
+        <div
+          className="cs-strip-row-snap-guide"
           aria-hidden="true"
           data-snap-guide=""
           style={{left: timelineLeft(leftPadding, draft.snapMs)}}

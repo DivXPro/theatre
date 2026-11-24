@@ -4,6 +4,7 @@
  * CameraFlows 类型取自 ./hostFlows(定义所在);简报草样写 './App',
  * 但 App.tsx 只默认导出组件、不转出口该类型,从定义处引入才编译得过。
  */
+import type {CameraStudioTheme} from './styles/theme'
 import type {
   IProject,
   IProjectConfig,
@@ -79,6 +80,8 @@ export interface CameraStudioConfig {
     portalContainer?: HTMLElement
     zIndexBase?: number
     locale?: string
+    /** Optional UI token overrides. Applied when Camera Studio initializes. */
+    theme?: CameraStudioTheme
     /** 隐藏 studio 左上角带 logo 的整条 LeftStrip(应用 logo + 工作区按钮) */
     hideLeftStrip?: boolean
     panels?: StudioPanelVisibility

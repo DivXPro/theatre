@@ -20,6 +20,8 @@ export const zhCN: Messages = {
   'menu.language': '语言',
   'detailPanel.propsRoot': '属性',
   'workspace.objects': '场景对象',
+  'workspace.outline.collapse': '收起场景对象',
+  'workspace.outline.expand': '展开场景对象',
   'workspace.timeline': '时间轴',
   'workspace.goToEnd': '跳到结尾',
   'workspace.transform': '对象变换',

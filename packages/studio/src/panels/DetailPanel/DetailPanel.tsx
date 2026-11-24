@@ -67,18 +67,6 @@ const Container = styled.div<{$pin: boolean; $dockTop?: number}>`
     width: min(294px, calc(100% - 24px));
   }
 
-  :host([data-camera-workspace]) & {
-    right: var(--theatre-camera-panel-inset);
-    --inspector-top: var(--theatre-camera-panel-top);
-    width: min(
-      var(--theatre-camera-inspector-width),
-      calc(
-        100% - var(--theatre-camera-sidebar-width) - 3 *
-          var(--theatre-camera-panel-inset)
-      )
-    );
-  }
-
   @supports not (backdrop-filter: blur()) {
     background: var(--theatre-panel-bg-95);
   }
@@ -175,6 +163,7 @@ const DetailPanel: React.FC<{sequenceDockTop?: number}> = ({
       const shownName = objectDisplayNameOf(namesByAddress, address)
       return (
         <Container
+          className="cs-studio-inspector"
           data-testid="DetailPanel-Object"
           $pin={showDetailsPanel}
           $dockTop={sequenceDockTop}

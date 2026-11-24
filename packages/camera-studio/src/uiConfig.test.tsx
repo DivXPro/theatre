@@ -42,6 +42,28 @@ describe('getUiConfig 缺省与合并', () => {
       locale: 'zh-CN',
     })
   })
+
+  it('sets only the provided theme overrides and clears them on reset', () => {
+    setUiConfig({
+      theme: {surface: '#283440', accent: '#ffbd75', radius: '14px'},
+    })
+    const root = document.documentElement
+    const value = (name: string) =>
+      getComputedStyle(root).getPropertyValue(name).trim()
+    expect(value('--cs-theme-surface')).toBe('#283440')
+    expect(value('--cs-theme-radius')).toBe('14px')
+    expect(value('--cs-theme-text')).toBe('')
+
+    setUiConfig({theme: {accent: '#5eaba7'}})
+    expect(value('--cs-theme-surface')).toBe('')
+    expect(value('--cs-theme-accent')).toBe('#5eaba7')
+
+    setUiConfig({})
+    expect(value('--cs-theme-accent')).toBe('')
+    expect(
+      document.head.querySelectorAll('style[data-camera-studio-styles]'),
+    ).toHaveLength(1)
+  })
 })
 
 /** 渲染真实 PosePropEditor 并点值区域,返回宿主容器与卸载器 */

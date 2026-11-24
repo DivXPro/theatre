@@ -43,7 +43,6 @@ export function GesturePropEditor({
   const poseEntries = useLibraryEntries('pose') as PoseEntry[]
   // 内置手势由 StaticCatalogSource 目录提供(2026-10-10 去播种),无需触发
   const [pickerOpen, setPickerOpen] = useState(false)
-  const [valueHovered, setValueHovered] = useState(false)
   // 停靠框打开期间持父弹框锁(时间轴帧弹框嵌套场景,同 PosePropEditor)
   const parentPopoverLock = useContext(PopoverAutoCloseLock)
   useEffect(() => {
@@ -117,26 +116,7 @@ export function GesturePropEditor({
         }
         title={display}
         onClick={() => setPickerOpen(true)}
-        onMouseEnter={() => setValueHovered(true)}
-        onMouseLeave={() => setValueHovered(false)}
-        style={{
-          width: '100%',
-          boxSizing: 'border-box',
-          height: 'calc(100% - 4px)',
-          display: 'flex',
-          alignItems: 'center',
-          padding: '1px 6px',
-          borderRadius: 2,
-          border: `1px solid ${valueHovered ? '#00000059' : 'transparent'}`,
-          background: valueHovered ? '#10101042' : 'transparent',
-          color: 'rgba(255, 255, 255, 0.9)',
-          fontSize: 11,
-          cursor: 'pointer',
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          userSelect: 'none',
-        }}
+        className="cs-pose-value"
       >
         {display}
       </div>

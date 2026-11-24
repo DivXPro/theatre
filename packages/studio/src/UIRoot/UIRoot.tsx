@@ -1,7 +1,7 @@
 import getStudio from '@dreamerbird/studio/getStudio'
 import {usePrism, useVal} from '@dreamerbird/react'
 import {val} from '@dreamerbird/dataverse'
-import React, {useEffect} from 'react'
+import React, {useEffect, useState} from 'react'
 import styled, {createGlobalStyle} from 'styled-components'
 import PanelsRoot from './PanelsRoot'
 import GlobalToolbar from '@dreamerbird/studio/toolbars/GlobalToolbar/GlobalToolbar'
@@ -52,6 +52,7 @@ export default function UIRoot(props: {
   containerShadow: ShadowRoot & HTMLElement
 }) {
   const studio = getStudio()
+  const [outlineCollapsed, setOutlineCollapsed] = useState(false)
   const [portalLayerRef, portalLayer] = useRefAndState<HTMLDivElement>(
     undefined as $IntentionalAny,
   )
@@ -115,8 +116,13 @@ export default function UIRoot(props: {
                   <StudioRootContext.Provider value={rootElement}>
                     <PortalLayer ref={portalLayerRef} />
                     <ChordialOverlay />
-                    <GlobalToolbar />
-                    <PanelsRoot />
+                    <GlobalToolbar
+                      outlineCollapsed={outlineCollapsed}
+                      onToggleOutline={() =>
+                        setOutlineCollapsed((value) => !value)
+                      }
+                    />
+                    <PanelsRoot outlineCollapsed={outlineCollapsed} />
                     <Notifier />
                   </StudioRootContext.Provider>
                 </Container>
@@ -126,7 +132,7 @@ export default function UIRoot(props: {
         </PortalContext.Provider>
       </ProvideLogger>
     )
-  }, [studio, portalLayerRef, portalLayer, rootElement])
+  }, [studio, portalLayerRef, portalLayer, rootElement, outlineCollapsed])
 
   return inside
 }

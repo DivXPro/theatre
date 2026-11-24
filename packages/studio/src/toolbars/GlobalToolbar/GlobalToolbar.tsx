@@ -15,7 +15,10 @@ import {
 } from './globalToolbarHooks'
 import LeftStrip from './LeftStrip/LeftStrip'
 import RightStrip from './RightStrip/RightStrip'
-import {panelZIndexes} from '@dreamerbird/studio/panels/BasePanel/common'
+import {outlineContentId} from '@dreamerbird/studio/panels/OutlinePanel/OutlinePanel'
+import ChevronDown from '@dreamerbird/studio/uiComponents/icons/ChevronDown'
+import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
+import {useT} from '@dreamerbird/studio/i18n'
 
 const Container = styled.div`
   position: fixed;
@@ -26,13 +29,6 @@ const Container = styled.div`
   display: flex;
   justify-content: space-between;
   pointer-events: none;
-
-  :host([data-camera-workspace]) & {
-    top: calc(var(--theatre-camera-panel-top) + 1px);
-    height: var(--theatre-camera-project-row-height);
-    align-items: center;
-    z-index: ${panelZIndexes.toolbar};
-  }
 `
 
 const NumberOfConflictsIndicator = styled.div`
@@ -57,6 +53,11 @@ const SubContainer = styled.div`
   gap: 8px;
 `
 
+const OutlineToggle = styled.button`
+  ${pointerEventsAutoInNormalMode};
+  display: none;
+`
+
 const HasUpdatesBadge = styled.div<{$type: 'info' | 'warning'}>`
   position: absolute;
   background: ${({$type}) =>
@@ -68,12 +69,25 @@ const HasUpdatesBadge = styled.div<{$type: 'info' | 'warning'}>`
   top: -2px;
 `
 
-const GlobalToolbar: React.FC = () => {
+const GlobalToolbar: React.FC<{
+  outlineCollapsed: boolean
+  onToggleOutline: () => void
+}> = ({outlineCollapsed, onToggleOutline}) => {
+  const t = useT()
   const conflicts = useConflicts()
   const [outlineTriggerTooltip, outlineTriggerRef] =
     useOutlineTriggerTooltip(conflicts)
 
   const outlinePinned = useVal(getStudio().atomP.ahistoric.pinOutline) ?? true
+  const outlineHidden = useVal(
+    getStudio().ephemeralAtom.pointer.hiddenPanels.outline,
+  )
+  const showCollapsedOutline = outlineCollapsed && !outlineHidden
+  const outlineToggleLabel = t(
+    outlineCollapsed
+      ? 'workspace.outline.expand'
+      : 'workspace.outline.collapse',
+  )
   const detailsPinned = useVal(getStudio().atomP.ahistoric.pinDetails) ?? true
   const connectionStatus =
     useVal(getStudio().ephemeralAtom.pointer.connectionStatus) ?? 'connected'
@@ -86,9 +100,25 @@ const GlobalToolbar: React.FC = () => {
     useEmptyNotificationsTooltip()
 
   return (
-    <Container>
-      <SubContainer>
+    <Container className="cs-studio-global-toolbar">
+      <SubContainer
+        className="cs-studio-outline-controls"
+        data-cs-outline-collapsed={showCollapsedOutline ? '' : undefined}
+      >
         <LeftStrip />
+        {!outlineHidden && (
+          <OutlineToggle
+            className="cs-studio-outline-toggle"
+            type="button"
+            aria-controls={outlineContentId}
+            aria-expanded={!outlineCollapsed}
+            aria-label={outlineToggleLabel}
+            title={outlineToggleLabel}
+            onClick={onToggleOutline}
+          >
+            <ChevronDown aria-hidden="true" />
+          </OutlineToggle>
+        )}
       </SubContainer>
       {outlineTriggerTooltip}
       <SubContainer>

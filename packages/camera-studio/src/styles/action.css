@@ -1,0 +1,203 @@
+/* Camera Studio action */
+.cs-action-panels {
+  @apply flex flex-wrap items-start;
+  & > :first-child {
+    flex: 3 1 320px;
+  }
+  & > :nth-child(2) {
+    flex: 1 1 260px;
+  }
+}
+
+.cs-action-panel {
+  @apply grid;
+  gap: 10px;
+  @apply min-w-0;
+  padding: 12px;
+  background: var(
+    --cs-theme-recessed-surface,
+    var(--theatre-panel-bg-99, #24262a)
+  );
+  color: var(--cs-theme-text, var(--theatre-panel-text, #e6e8ed));
+  font-size: 12px;
+  @apply box-border;
+  align-content: start;
+
+  h2,
+  p {
+    @apply m-0;
+  }
+  h2 {
+    font-size: 13px;
+    overflow-wrap: anywhere;
+  }
+  > header,
+  footer,
+  .ae-controls {
+    @apply flex items-center flex-wrap;
+    gap: 8px;
+  }
+  > header,
+  footer {
+    @apply justify-between;
+  }
+  label {
+    @apply inline-flex items-center;
+    gap: 5px;
+  }
+  input,
+  select,
+  button {
+    @apply box-border;
+    border: 1px solid var(--cs-theme-border, #565b65);
+    border-radius: var(--cs-theme-radius, 4px);
+    background: var(--cs-theme-input-background, #31343b);
+    color: inherit;
+    font: inherit;
+    padding: 4px 6px;
+  }
+  button {
+    @apply cursor-pointer;
+  }
+  button[disabled] {
+    opacity: 0.5;
+    @apply cursor-default;
+  }
+  :is(input, select, button):focus-visible {
+    outline: 2px solid var(--cs-theme-accent, #9cc1ff);
+    outline-offset: 2px;
+  }
+  input[type='number'] {
+    width: 7em;
+  }
+  input[type='range'] {
+    @apply absolute;
+    inset: 0;
+    @apply w-full m-0;
+    opacity: 0;
+    cursor: ew-resize;
+  }
+  .ae-lane:focus-within {
+    outline: 2px solid var(--cs-theme-accent, #9cc1ff);
+  }
+  .ae-track {
+    @apply grid;
+    grid-template-columns: minmax(78px, 10em) minmax(0, 1fr);
+    @apply items-center;
+    gap: 8px;
+    min-height: 24px;
+  }
+  .ae-track-name {
+    @apply overflow-hidden text-ellipsis whitespace-nowrap;
+  }
+  .ae-lane {
+    @apply relative;
+    height: 24px;
+    margin-inline: 10px;
+    background: #30333a;
+    border-radius: var(--cs-theme-radius, 3px);
+  }
+  .ae-ruler {
+    @apply bg-transparent;
+    border-bottom: 1px solid var(--cs-theme-border, #565b65);
+  }
+  .ae-tick {
+    @apply absolute;
+    top: 2px;
+    left: var(--ae-time);
+    transform: translateX(-50%);
+    font-variant-numeric: tabular-nums;
+    color: #b5bdcd;
+    @apply pointer-events-none;
+  }
+  .ae-tick:first-child {
+    transform: none;
+  }
+  .ae-tick:nth-child(5) {
+    transform: translateX(-100%);
+  }
+  .ae-clip-window {
+    @apply absolute;
+    inset-block: 0;
+    background: #9cc1ff16;
+    @apply pointer-events-none;
+  }
+  .ae-playhead,
+  .ae-key {
+    @apply absolute;
+    left: var(--ae-time);
+  }
+  .ae-playhead {
+    inset-block: 0;
+    width: 1px;
+    background: var(--cs-theme-accent, #9cc1ff);
+    @apply pointer-events-none;
+  }
+  .ae-key {
+    top: 50%;
+    width: 16px;
+    height: 20px;
+    @apply p-0;
+    border: 0;
+    @apply bg-transparent;
+    transform: translate(-50%, -50%);
+  }
+  .ae-key[aria-pressed='true'] {
+    color: var(--cs-theme-accent, #9cc1ff);
+    z-index: 1;
+  }
+  .ae-lane .ae-playhead {
+    z-index: 2;
+  }
+  .ae-group {
+    @apply grid;
+    gap: 6px;
+    @apply m-0 min-w-0;
+    border: 1px solid var(--cs-theme-border, #565b65);
+    border-radius: var(--cs-theme-radius, 4px);
+    padding: 6px;
+  }
+  .ae-group legend {
+    padding-inline: 4px;
+  }
+  .ae-vector {
+    @apply grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+  }
+  .ae-vector label {
+    @apply grid min-w-0;
+  }
+  .ae-vector input {
+    @apply w-full min-w-0;
+  }
+  .ae-apply {
+    border-color: #82b0fe;
+    background: #4267a4;
+  }
+  .ae-pose-tools {
+    @apply flex flex-wrap;
+    gap: 6px;
+  }
+  [role='alert'] {
+    color: #ffbaa7;
+  }
+}
+
+.cs-action-panel.cs-action-inspector {
+  > footer {
+    @apply sticky;
+    bottom: 0;
+    margin: 0 -12px -12px;
+    padding: 8px 12px;
+    background: var(
+      --cs-theme-recessed-surface,
+      var(--theatre-panel-bg-99, #24262a)
+    );
+    border-top: 1px solid var(--cs-theme-border, #565b65);
+  }
+  select {
+    @apply min-w-0;
+    max-width: 100%;
+  }
+}

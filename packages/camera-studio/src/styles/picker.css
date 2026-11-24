@@ -1,0 +1,57 @@
+.cs-asset-panel.cs-pose-picker {
+  @apply left-0 select-none;
+  outline: none;
+}
+.cs-pose-picker-close {
+  @apply flex items-center justify-center w-6 h-6 p-0 cursor-pointer bg-transparent;
+  border: 0;
+  border-radius: var(--cs-theme-radius, 2px);
+  color: var(--cs-theme-secondary-text, var(--theatre-text-secondary, #ccc));
+  font-size: 13px;
+  line-height: 1;
+}
+.cs-pose-options {
+  @apply flex flex-col flex-1 gap-2 p-3 overflow-y-auto;
+}
+.cs-pose-options[data-thumbs] {
+  @apply flex-row flex-wrap content-start;
+}
+.cs-pose-option {
+  @apply box-border cursor-pointer overflow-hidden;
+  border: 1px solid var(--cs-theme-border, var(--theatre-panel-border, #1f1f1f));
+  border-radius: var(--cs-theme-radius, 3px);
+  background: rgb(0 0 0 / 18%);
+}
+.cs-pose-option[data-current] {
+  border-color: var(--cs-theme-selected-border, rgb(125 193 200 / 45%));
+  background: var(--cs-theme-selected-background, rgb(125 193 200 / 18%));
+}
+.cs-pose-option[data-disabled] {
+  @apply cursor-default opacity-50;
+}
+.cs-pose-option-label {
+  @apply flex items-center justify-between gap-2 overflow-hidden whitespace-nowrap;
+  padding: 10px 12px;
+}
+.cs-pose-option-label > span {
+  @apply overflow-hidden text-ellipsis;
+}
+.cs-pose-option-hint {
+  @apply shrink-0;
+  color: var(--cs-theme-muted-text, var(--theatre-text-muted, #888));
+}
+.cs-pose-options[data-thumbs] .cs-pose-option {
+  width: calc(50% - 4px);
+}
+.cs-pose-options[data-thumbs] .cs-pose-option-label {
+  @apply block text-center text-ellipsis;
+  padding: 4px 6px;
+}
+.cs-pose-option-thumb {
+  @apply relative w-full;
+  height: 112px;
+  background: rgb(0 0 0 / 25%);
+}
+.cs-pose-option-thumb img {
+  @apply absolute inset-0 block w-full h-full object-cover;
+}
