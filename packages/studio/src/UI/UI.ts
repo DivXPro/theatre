@@ -1,5 +1,8 @@
 import type {Studio} from '@dreamerbird/studio/Studio'
-import type {StudioPanelVisibility} from '@dreamerbird/core/types/public'
+import type {
+  StudioLogo,
+  StudioPanelVisibility,
+} from '@dreamerbird/core/types/public'
 import {val} from '@dreamerbird/dataverse'
 
 const NonSSRBitsClass =
@@ -60,6 +63,10 @@ export default class UI {
    */
   setLeftStripHidden(hidden: boolean) {
     this.studio.ephemeralAtom.setByPointer((p) => p.leftStripHidden, hidden)
+  }
+
+  setLogo(logo?: StudioLogo) {
+    this.studio.ephemeralAtom.setByPointer((p) => p.toolbarLogo, logo)
   }
 
   setPanelVisibility(visibility: StudioPanelVisibility) {

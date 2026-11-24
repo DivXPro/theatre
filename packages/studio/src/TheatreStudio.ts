@@ -18,6 +18,7 @@ import type {
   PaneInstance,
   ProjectId,
   SerializablePrimitive,
+  StudioLogo,
   StudioPanelVisibility,
 } from '@dreamerbird/core/types/public'
 import {
@@ -68,6 +69,10 @@ export default class TheatreStudio implements IStudio {
 
     setLeftStripHidden(hidden: boolean) {
       getStudio().ui.setLeftStripHidden(hidden)
+    },
+
+    setLogo(logo?: StudioLogo) {
+      getStudio().ui.setLogo(logo)
     },
 
     setPanelVisibility(visibility: StudioPanelVisibility) {

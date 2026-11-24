@@ -1280,6 +1280,15 @@ export type PaneInstance<ClassName extends string> = {
 
 export type StudioPanelVisibility = {outline?: boolean; details?: boolean}
 
+/** Logo content. Accepts JSX elements created with different React type versions. */
+export type StudioLogo =
+  | ReactNode
+  | {
+      readonly type: unknown
+      readonly props: unknown
+      readonly key: string | null
+    }
+
 export interface IStudioUI {
   /**
    * Temporarily hides the studio
@@ -1299,6 +1308,12 @@ export interface IStudioUI {
    * 宿主嵌入场景可用它去掉左上角的 logo 条;缺省为显示。
    */
   setLeftStripHidden(hidden: boolean): void
+
+  /**
+   * Replaces the toolbar logo and its built-in menu with host-provided content.
+   * Omit the logo to restore the default. This setting is local to the UI.
+   */
+  setLogo(logo?: StudioLogo): void
 
   setPanelVisibility(visibility: StudioPanelVisibility): void
 

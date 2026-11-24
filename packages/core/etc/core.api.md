@@ -314,6 +314,7 @@ export interface IStudioUI {
     renderToolset(toolsetId: string, htmlNode: HTMLElement): () => void;
     restore(): void;
     setLeftStripHidden(hidden: boolean): void;
+    setLogo(logo?: StudioLogo): void;
 }
 
 // @public (undocumented)
@@ -594,6 +595,13 @@ export type ShorthandPropToLonghandProp<P extends UnknownShorthandProp> = P exte
 // @public
 export type StrictRecord<Key extends string, V> = {
     [K in Key]?: V;
+};
+
+// @public
+export type StudioLogo = ReactNode | {
+    readonly type: unknown;
+    readonly props: unknown;
+    readonly key: string | null;
 };
 
 // @public (undocumented)
