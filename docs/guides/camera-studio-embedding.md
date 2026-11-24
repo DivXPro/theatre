@@ -90,7 +90,7 @@ export function CameraPage() {
 ```
 
 `useCameraStudio(config)` 返回
-`{ready, error, sceneProps, api, flushState, hasTemporaryChanges}`;`sceneProps`
+`{ready, error, sceneProps, api, closeScene, flushState, hasTemporaryChanges}`;`sceneProps`
 对宿主 **不透明**(当前 = `{project, onFlows, onError}` 的转发),不要解构它。`api`
 是 Agent JS 命令面门面的模块级单例(首帧即稳定),页内自动化/Agent 场景见§9
 与[专项指南](./camera-studio-agent-js-api.md)。`hasTemporaryChanges()` 可用于判
@@ -103,6 +103,8 @@ export function CameraPage() {
 | `project`               | `string \| IProject`                                     | `'Space'`       | 场景 id 字符串(getProject),或宿主自建的 IProject 实例(传实例时 `state.initialState` 被忽略)         |
 | `state`                 | `{initialState?, onStateChange?, throttleMs?}`           | 不传            | 传了 = **宿主接管场景状态**,同时关掉 theatre 本地持久化(见 §5)                                      |
 | `onError`               | `(error: CameraStudioError) => void`                     | 不传            | 资产库、场景保存和视频导出的错误由宿主展示                                                          |
+| `onSceneClosed`         | `({projectId}) => void \| Promise<void>`                 | 不传            | 启用工具栏退出按钮，场景清理完成后通知宿主                                                          |
+| `onSaveExport`          | `CameraStudioSaveExport`                                | 浏览器保存      | 接收工具栏导出的图片或视频成品                                                                      |
 | `storage`               | `WritableLibrarySource \| {namespace?: string} \| false` | 见 §5           | 宿主资产库接口、浏览器 IndexedDB 命名空间，或 `false` 只用内置目录                                  |
 | `assets.baseUrl`        | `string`                                                 | 包内 `assets/`  | 内置目录文件根(见 §4)                                                                               |
 | `assets.projectStorage` | `{getAssetUrl, createAsset}`                             | 不传            | 项目文件的 URL 和上传接口。传 `IProject` 时由创建方通过 `assets.storage` 配置                       |
@@ -115,6 +117,38 @@ export function CameraPage() {
 | `flows.onFlows`         | `(flows: CameraFlows) => void`                           | 不传            | 接管「添加模型/添加路径/添加相机」入口,拿到模块的 flows 句柄                                        |
 | `agent.exposeGlobal`    | `boolean`                                                | `false`         | 场景 ready 后把 Agent JS API 门面挂到 `window.__cameraStudioApi`,dispose 时删除(见 §9)              |
 | `agent.bridge`          | `{url, token, httpUrl}`                                  | 不传            | 连接本机 Agent HTTP 桥接(`url` 是 WS 命令通道,`httpUrl` 走文件传输);缺省不连桥接(见 §9)             |
+
+### 打开、退出和导出场景
+
+宿主先读取要打开的场景，再挂载编辑器。把场景 ID 传给 `project`，把快照传给
+`state.initialState`，并在 `state.onStateChange` 中保存编辑提交。
+
+```tsx
+import {CameraScene, useCameraStudio} from '@dreamerbird/camera-studio'
+
+function SceneEditor({scene, host, locale}) {
+  const {ready, error, sceneProps} = useCameraStudio({
+    project: scene.id,
+    state: {
+      initialState: scene.snapshot,
+      onStateChange: (snapshot) => host.saveScene(scene.id, snapshot),
+    },
+    ui: {locale},
+    onSceneClosed: ({projectId}) => host.showSceneList(projectId),
+    onSaveExport: ({kind, blob, fileName, mimeType}) =>
+      host.saveExport(scene.id, {kind, blob, fileName, mimeType}),
+    onError: host.showEditorError,
+  })
+
+  if (error) return <p role="alert">{error.message}</p>
+  return ready ? <CameraScene {...sceneProps} /> : null
+}
+
+```
+
+- **退出。** 工具栏和宿主调用 `closeScene()` 走同一保存及关闭流程。保存失败或仍有临时编辑时保留场景。成功后 `ready` 变为 `false`，场景会话清理完成，再调用 `onSceneClosed({projectId})`。切换场景时，等关闭完成后为新的宿主快照挂载新的 `SceneEditor`。若宿主直接卸载编辑器，可以先等待 `flushState()`，卸载后再调用 `resetCameraStudio()` 以载入另一份快照。
+- **导出。** `onSaveExport` 收到 `kind`、`blob`、`fileName`、`mimeType` 和渲染元数据。图片是当前镜头在播放头位置的 PNG。视频使用编码器实际生成的 MP4 或 WebM，并携带帧率和时长。回调可返回 Promise，失败经 `onError` 报告。省略回调时，图片直接下载，视频仍提供浏览器保存选项。
+- **语言。** `ui.locale` 设置初始语言。场景挂载后，调用 `setCameraStudioLocale('zh-CN')` 或 `setCameraStudioLocale('en')` 即时更新视口和 Studio 面板，同时保留浏览器中的用户语言偏好。
 
 ### 自定义工作台主题
 
@@ -688,8 +722,8 @@ process.on('SIGTERM', () => {
 
 - **i18n 嵌套**:宿主树已包 studio 的 `I18nProvider`
   (`@dreamerbird/studio/i18n`)→ 模块检测后原样渲染,**语言以宿主为准**,
-  `ui.locale` 不生效;宿主没包 → 模块自包一层,`ui.locale` 这时生效 (经全局
-  `setLanguage` 应用一次,不是子树级隔离)。模块词条 key 一律 `pg.` 前
+  `ui.locale` 不生效;宿主没包 → 模块自包一层并应用 `ui.locale`。两种方式均可用
+  `setCameraStudioLocale()` 更新共享词典语言。模块词条 key 一律 `pg.` 前
   缀;`registerMessages` 是合并语义,宿主可后注册**覆盖同名 key** 做品牌定制:
 
   ```ts
@@ -697,10 +731,9 @@ process.on('SIGTERM', () => {
   registerMessages('zh-CN', {'pg.toolbar.addModel': '添加角色'})
   ```
 
-- **config 首帧锁定,不热更**:`useCameraStudio` 只在首帧取一次 config (与
-  theatre.init 的一次性语义对齐),后续渲染传新对象不会生效。配置要变需 **整页刷
-  新**:React 重挂(SPA 路由切换)传新 config 不会生效——模块会console.warn 点名差异
-  键并沿用首次 boot 的配置(sceneProps/存储/状态/ sync 全部按首次 boot)。
+- **config 首帧锁定**。`useCameraStudio` 在首帧读取配置。宿主可通过 `closeScene()`
+  关闭宿主管理的场景并释放启动配置，再以新的场景 ID 和快照挂载编辑器。普通卸载后，
+  模块复用首次启动配置。如需更换配置，可在所有消费者卸载后调用 `resetCameraStudio()`。
 
 ## 8. 排错
 

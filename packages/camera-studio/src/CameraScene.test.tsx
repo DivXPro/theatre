@@ -28,6 +28,7 @@ import {
 } from '@dreamerbird/studio/i18n'
 import {getHostFlowsHandle} from './hostFlows'
 import {setUiConfig} from './uiConfig'
+import * as cameraI18n from './i18n'
 import type {CameraSceneProps} from './config'
 ;(globalThis as any).IS_REACT_ACT_ENVIRONMENT = true
 ;(globalThis as any).indexedDB = new IDBFactory()
@@ -76,7 +77,29 @@ jest.doMock('@react-three/fiber', () => ({
 // TopToolbar.test.tsx 覆盖。
 jest.doMock('./TopToolbar', () => ({
   __esModule: true,
-  TopToolbar: () => null,
+  TopToolbar: ({
+    onExportImage,
+    onExportVideo,
+  }: {
+    onExportImage?: () => void
+    onExportVideo?: () => void
+  }) => (
+    <>
+      <button onClick={onExportImage}>Export test image</button>
+      <button onClick={onExportVideo}>Export test video</button>
+    </>
+  ),
+}))
+const captureStill = jest.fn()
+const startVideo = jest.fn()
+jest.doMock('./agent/runtime/exportRuntime', () => ({
+  createSceneExportController: () => ({
+    captureStill,
+    startVideo,
+    notifySceneReady: () => {},
+    dispose: () => {},
+  }),
+  registerSceneExportController: () => () => {},
 }))
 jest.doMock('./scene.glb', () => 'scene.glb')
 jest.doMock('three/examples/jsm/environments/RoomEnvironment.js', () => ({
@@ -287,5 +310,56 @@ test('无宿主 provider 时自包一层并应用 ui.locale', async () => {
   await act(async () => {
     root.unmount()
   })
+  el.remove()
+})
+
+test('宿主可在挂载后切换语言且保留用户语言偏好', async () => {
+  setLanguage('zh-CN')
+  setLanguage('en')
+  const el = document.createElement('div')
+  const root = ReactDOM.createRoot(el)
+  const Label = () => <span>{useI18n().t('pg.toolbar.pip.disabled')}</span>
+  await act(async () =>
+    root.render(
+      <SceneI18nRoot>
+        <Label />
+      </SceneI18nRoot>,
+    ),
+  )
+  expect(el.textContent).toBe('Add a camera first')
+  const stored = {...localStorage}
+  await act(async () => cameraI18n.setCameraStudioLocale('zh-CN'))
+  expect(el.textContent).toBe('先添加相机')
+  expect({...localStorage}).toEqual(stored)
+  await act(async () => root.unmount())
+})
+
+test('图片和视频按钮将同一份成品数据交给宿主保存', async () => {
+  const image = {
+    blob: new Blob(['png']),
+    fileName: 'shot.png',
+    mimeType: 'image/png',
+  }
+  const video = {
+    blob: new Blob(['webm']),
+    fileName: 'shot.webm',
+    mimeType: 'video/webm',
+  }
+  captureStill.mockResolvedValueOnce(image)
+  startVideo.mockResolvedValueOnce(video)
+  const onSaveExport = jest.fn()
+  const {root, el} = await renderScene({
+    project: fakeProject as never,
+    onSaveExport,
+  })
+  const button = (text: string) =>
+    [...el.querySelectorAll('button')].find((el) => el.textContent === text)!
+  await act(async () => button('Export test image').click())
+  await act(async () => button('Export test video').click())
+  expect(onSaveExport.mock.calls).toEqual([
+    [{kind: 'image', ...image}],
+    [{kind: 'video', ...video}],
+  ])
+  await act(async () => root.unmount())
   el.remove()
 })

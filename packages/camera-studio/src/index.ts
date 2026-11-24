@@ -1,6 +1,7 @@
 // 词条注册必须最先执行:模块按 import 顺序求值,CameraScene 依赖链里有模块
 // 加载期就 translate 的调用(ShotCamera 属性标签)
 import './i18n'
+export {setCameraStudioLocale} from './i18n'
 export {CameraScene} from './CameraScene'
 export {CAMERA_STUDIO_VERSION} from './version'
 export {useCameraStudio} from './useCameraStudio'
@@ -23,6 +24,8 @@ export type {
   CameraStudioConfig,
   CameraStudioHandle,
   CameraSceneProps,
+  CameraStudioExport,
+  CameraStudioSaveExport,
   ViewportRenderingConfig,
   CameraStudioAgentConfig,
   // 桥接连接配置(agent.bridge);桥接客户端本身不公开(内部接线)

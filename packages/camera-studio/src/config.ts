@@ -16,6 +16,19 @@ import type {CameraStudioErrorHandler} from './errors'
 import type {CameraFlows} from './hostFlows'
 import type {CameraStudioApi} from './agent/api'
 import type {MangaViewportOptions, ViewportRenderMode} from './mangaViewport'
+import type {
+  StillExportResult,
+  VideoExportResult,
+} from './videoExport/previsTypes'
+
+/** 成品的二进制数据、文件名、实际 MIME 类型与渲染信息。 */
+export type CameraStudioExport =
+  | ({kind: 'image'} & StillExportResult)
+  | ({kind: 'video'} & VideoExportResult)
+
+export type CameraStudioSaveExport = (
+  output: CameraStudioExport,
+) => void | Promise<void>
 
 export type ViewportRenderingConfig = MangaViewportOptions & {
   initialMode?: ViewportRenderMode
@@ -61,6 +74,10 @@ export interface CameraStudioConfig {
   }
   /** 宿主错误提示入口:库存储/启动清理/视频导出错误统一上告;不传保持内置提示行为 */
   onError?: CameraStudioErrorHandler
+  /** 启用退出按钮。场景保存、卸载和清理完成后通知宿主。 */
+  onSceneClosed?: (event: {projectId: string}) => void | Promise<void>
+  /** 接管工具栏的图片和视频保存。回调失败经 onError 通知宿主。 */
+  onSaveExport?: CameraStudioSaveExport
   /** 可写资产库。接管场景状态时默认只读内置目录，可显式配置数据源。 */
   storage?: WritableLibrarySource | {namespace?: string} | false
   assets?: {
@@ -100,6 +117,8 @@ export type CameraSceneProps = {
   onError?: CameraStudioErrorHandler
   includeDemoModel?: boolean
   viewportRendering?: ViewportRenderingConfig
+  onSaveExport?: CameraStudioSaveExport
+  onCloseScene?: () => void
   /** Optional host actions alongside the viewport output controls. */
   headerActions?: ReactNode
 }
@@ -113,6 +132,8 @@ export interface CameraStudioHandle {
    * 同一对象);`api.ready` 在 project+studio+Scene Runtime 就位后兑现
    */
   api: CameraStudioApi
+  /** 保存并关闭已就绪的场景。宿主应仅在 ready 时渲染 CameraScene。 */
+  closeScene(): Promise<void>
   flushState(): Promise<void>
   /**
    * 当前是否有尚未 commit/discard 的临时编辑（例如拖拽中的预览）。

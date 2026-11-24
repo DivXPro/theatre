@@ -12,6 +12,7 @@
 import {
   registerMessages,
   registerFallback,
+  setLanguage,
   translate,
   type InterpolationVars,
   type Messages,
@@ -54,6 +55,11 @@ export const en: Messages = {
   'pg.toolbar.pip.hide': 'Hide the shot preview',
   'pg.toolbar.pip.disabled': 'Add a camera first',
   'pg.toolbar.export': 'Export video',
+  'pg.toolbar.exportImage': 'Export image',
+  'pg.toolbar.exportImage.hint': 'Save the current camera frame as PNG',
+  'pg.toolbar.closeScene': 'Close scene',
+  'pg.toolbar.closeScene.pending':
+    'Finish or cancel the current edit before closing the scene.',
   'pg.toolbar.stopExport': 'Stop & save',
   'pg.toolbar.export.esc': 'Press Esc to cancel',
   'pg.toolbar.export.hint':
@@ -328,6 +334,10 @@ export const zhCN: Messages = {
   'pg.toolbar.pip.hide': '隐藏右下角的镜头画中画',
   'pg.toolbar.pip.disabled': '先添加相机',
   'pg.toolbar.export': '导出视频',
+  'pg.toolbar.exportImage': '导出图片',
+  'pg.toolbar.exportImage.hint': '将当前镜头帧保存为 PNG',
+  'pg.toolbar.closeScene': '退出场景',
+  'pg.toolbar.closeScene.pending': '请先完成或取消当前编辑，再退出场景。',
   'pg.toolbar.stopExport': '停止并保存',
   'pg.toolbar.export.esc': 'Esc 取消',
   'pg.toolbar.export.hint':
@@ -573,6 +583,11 @@ export function registerCameraMessages(): void {
 }
 
 registerCameraMessages()
+
+/** 切换当前页面的 Camera Studio 和 Studio 面板语言，保留浏览器用户偏好。 */
+export function setCameraStudioLocale(locale: string): void {
+  setLanguage(locale, {explicit: true})
+}
 
 /** 测试/宿主定制用:从一部词典构造固定语言的 t(含 `{var}` 插值) */
 export function makeDictT(

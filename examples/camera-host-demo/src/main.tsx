@@ -16,9 +16,12 @@ import {
   CameraScene,
   loadSceneSyncState,
   resetCameraStudio,
+  setCameraStudioLocale,
   type CameraStudioAgentBridgeConfig,
   type CameraStudioError,
+  type CameraStudioExport,
   type SceneSyncAdapter,
+  type SceneSyncSnapshot,
   type SceneSyncState,
 } from '@dreamerbird/camera-studio'
 import {MemorySource} from './memorySource'
@@ -50,16 +53,43 @@ document.body.style.backgroundColor = '#171717'
 // 单页单实例约束下只有一个消费者。
 const memoryStorage = new MemorySource()
 
+function createMemorySceneAdapter(): SceneSyncAdapter {
+  let snapshot: SceneSyncSnapshot | null = null
+  let revision = 0
+  return {
+    async load() {
+      return snapshot
+    },
+    async commit({content}) {
+      snapshot = {content, revision: String(++revision)}
+      return {revision: snapshot.revision}
+    },
+  }
+}
+
 async function loadSceneState(): Promise<{
-  adapter?: SceneSyncAdapter
-  sync?: SceneSyncState
+  adapter: SceneSyncAdapter
+  sync: SceneSyncState
 }> {
   const url = import.meta.env.VITE_CAMERA_STUDIO_STATE_URL
-  if (!url) return {}
-  const adapter = createDemoSceneSyncAdapter(url)
+  const adapter = url
+    ? createDemoSceneSyncAdapter(url)
+    : createMemorySceneAdapter()
   return {
     adapter,
     sync: await loadSceneSyncState(adapter, {throttleMs: 0}),
+  }
+}
+
+function saveExport({blob, fileName}: CameraStudioExport) {
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = fileName
+  try {
+    link.click()
+  } finally {
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000)
   }
 }
 
@@ -152,11 +182,17 @@ function StudioRoute({
   phase,
   controlsRef,
   onReady,
+  onSceneClosed,
+  locale,
+  onLocaleChange,
 }: {
-  sync?: SceneSyncState
+  sync: SceneSyncState
   phase: SyncPhase
   controlsRef: {current: StudioControls | undefined}
   onReady: () => void
+  onSceneClosed: () => void
+  locale: string
+  onLocaleChange: (locale: string) => void
 }) {
   const [notice, setNotice] = useState<CameraStudioError | null>(null)
   const {ready, error, sceneProps, flushState, hasTemporaryChanges} =
@@ -164,9 +200,12 @@ function StudioRoute({
       project: 'Space',
       storage: memoryStorage,
       state: sync,
+      ui: {locale},
       // assets: {baseUrl: 'https://cdn.example.com/camera-assets/'} ← §4 CDN 写法
       sync: false,
       onError: setNotice,
+      onSceneClosed,
+      onSaveExport: saveExport,
       // 桥接配置缺失时是 undefined:浏览器默认不连桥接(spec §4/§10.4)。
       // 桥接模式下同时挂 window.__cameraStudioApi(exposeGlobal):端到端
       // 验收用它扮演「另一个写入者」制造 revision 冲突;不连桥接时不挂
@@ -198,23 +237,15 @@ function StudioRoute({
       <CameraScene
         {...sceneProps}
         headerActions={
-          <a
-            className="camera-host-nav__back"
-            href="#"
-            aria-label="返回首页"
-            title="返回首页"
+          <select
+            className="camera-host-nav__language"
+            aria-label="界面语言 / Language"
+            value={locale}
+            onChange={(event) => onLocaleChange(event.currentTarget.value)}
           >
-            <svg width={18} height={18} viewBox="0 0 16 16" aria-hidden="true">
-              <path
-                d="M6.5 2.5H3.25a.75.75 0 0 0-.75.75v9.5a.75.75 0 0 0 .75.75H6.5M6 8h7.5m-3-3 3 3-3 3"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={1.25}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </a>
+            <option value="zh-CN">中文</option>
+            <option value="en">English</option>
+          </select>
         }
       />
       <span className="camera-host-nav__status" role="status">
@@ -228,20 +259,47 @@ function App({
   adapter,
   initialSync,
 }: {
-  adapter?: SceneSyncAdapter
-  initialSync?: SceneSyncState
+  adapter: SceneSyncAdapter
+  initialSync: SceneSyncState
 }) {
   const [sync, setSync] = useState(initialSync)
   const [generation, setGeneration] = useState(0)
   const [phase, setPhase] = useState<SyncPhase>('idle')
   const [studioReady, setStudioReady] = useState(false)
+  const [sceneClosed, setSceneClosed] = useState(false)
+  const [opening, setOpening] = useState(false)
+  const [openError, setOpenError] = useState<string>()
+  const [locale, setLocale] = useState('zh-CN')
   const [remoteRevision, setRemoteRevision] = useState<string>()
   const controlsRef = useRef<StudioControls | undefined>(undefined)
   const handledRevision = useRef<string | undefined>(undefined)
   const onStudioReady = useCallback(() => setStudioReady(true), [])
+  const onSceneClosed = useCallback(() => {
+    setSceneClosed(true)
+    setStudioReady(false)
+    setPhase('idle')
+  }, [])
+  const onLocaleChange = (next: string) => {
+    setCameraStudioLocale(next)
+    setLocale(next)
+  }
+  const openScene = async () => {
+    setOpening(true)
+    setOpenError(undefined)
+    try {
+      setSync(await loadSceneSyncState(adapter, {throttleMs: 0}))
+      handledRevision.current = remoteRevision
+      setGeneration((value) => value + 1)
+      setSceneClosed(false)
+    } catch (error) {
+      setOpenError(error instanceof Error ? error.message : String(error))
+    } finally {
+      setOpening(false)
+    }
+  }
 
   useEffect(() => {
-    const subscribe = adapter?.subscribe
+    const subscribe = adapter.subscribe
     if (!subscribe) return
     return subscribe(setRemoteRevision)
   }, [adapter])
@@ -249,7 +307,7 @@ function App({
   // 收到远端版本后先 flush 本页的尾部保存，再判断是否有未保存编辑。
   // 空闲页直接进入 reloading；有编辑只提示，绝不覆盖当前场景。
   useEffect(() => {
-    if (!remoteRevision || !sync) return
+    if (!remoteRevision || sceneClosed) return
     if (remoteRevision === handledRevision.current) return
     if (phase === 'reloading') return
     const controls = controlsRef.current
@@ -281,12 +339,12 @@ function App({
     return () => {
       cancelled = true
     }
-  }, [remoteRevision, sync, phase, studioReady])
+  }, [remoteRevision, sceneClosed, sync, phase, studioReady])
 
   // StudioRoute 已因 phase=reloading 卸载，消费者计数归零后再 reset，
   // 然后用新快照重新 boot 一个同 id 项目。
   useEffect(() => {
-    if (phase !== 'reloading' || !adapter) return
+    if (phase !== 'reloading') return
     let cancelled = false
     void (async () => {
       try {
@@ -315,6 +373,17 @@ function App({
     return () => window.clearTimeout(timer)
   }, [phase])
 
+  if (sceneClosed) {
+    return (
+      <main className="camera-host-nav__home">
+        <button type="button" onClick={openScene} disabled={opening}>
+          {opening ? '正在打开…' : '打开场景'}
+        </button>
+        {openError && <p role="alert">{openError}</p>}
+      </main>
+    )
+  }
+
   return (
     <div>
       {phase === 'reloading' ? (
@@ -334,6 +403,9 @@ function App({
           phase={phase}
           controlsRef={controlsRef}
           onReady={onStudioReady}
+          onSceneClosed={onSceneClosed}
+          locale={locale}
+          onLocaleChange={onLocaleChange}
         />
       )}
     </div>

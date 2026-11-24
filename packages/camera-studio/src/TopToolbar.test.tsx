@@ -56,6 +56,7 @@ function renderToolbar(overrides: {
       exportSinks: [],
       exporting: false,
       exportDisabled: false,
+      onExportImage: () => {},
       onPickExportSink: () => {},
       onStopExport: () => {},
       pipVisible: false,
@@ -103,7 +104,7 @@ describe('TopToolbar 分组', () => {
       '[role="toolbar"][aria-label="Viewport actions"]',
     )!
     expect(actions).not.toBeNull()
-    expect(actions.querySelectorAll('button')).toHaveLength(12)
+    expect(actions.querySelectorAll('button')).toHaveLength(13)
     expect(actions.contains(modeButton(el, 'Rotate'))).toBe(true)
     unmount()
   })

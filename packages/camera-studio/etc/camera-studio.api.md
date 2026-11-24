@@ -10,6 +10,7 @@ import type { IProject } from '@dreamerbird/core';
 import type { IProjectConfig } from '@dreamerbird/core';
 import type { Object3D } from 'three';
 import { default as React_2 } from 'react';
+import type { ReactNode } from 'react';
 import type { StudioPanelVisibility } from '@dreamerbird/core';
 
 // @public
@@ -74,6 +75,11 @@ export type AnimationEntry = {
     contentHash: string;
     duration: number;
     createdAt: number;
+    packs?: string[];
+    aliases?: Array<{
+        id: string;
+        name: string;
+    }>;
 };
 
 // @public
@@ -228,7 +234,7 @@ export type CamerasApi = {
 };
 
 // @public
-export function CameraScene({ project, onFlows, onError, includeDemoModel, }: CameraSceneProps): React_2.JSX.Element;
+export function CameraScene({ project, onFlows, onError, includeDemoModel, viewportRendering, headerActions, onCloseScene, onSaveExport, }: CameraSceneProps): React_2.JSX.Element;
 
 // @public
 export type CameraSceneProps = {
@@ -236,6 +242,10 @@ export type CameraSceneProps = {
     onFlows?: (flows: CameraFlows) => void;
     onError?: CameraStudioErrorHandler;
     includeDemoModel?: boolean;
+    viewportRendering?: ViewportRenderingConfig;
+    onSaveExport?: CameraStudioSaveExport;
+    onCloseScene?: () => void;
+    headerActions?: ReactNode;
 };
 
 // @public
@@ -295,10 +305,15 @@ export interface CameraStudioConfig {
         onFlows?: (flows: CameraFlows) => void;
     };
     onError?: CameraStudioErrorHandler;
+    onSaveExport?: CameraStudioSaveExport;
+    onSceneClosed?: (event: {
+        projectId: string;
+    }) => void | Promise<void>;
     project?: string | IProject;
     // (undocumented)
     scene?: {
         includeDemoModel?: boolean;
+        viewportRendering?: ViewportRenderingConfig;
     };
     state?: {
         initialState?: unknown;
@@ -316,6 +331,7 @@ export interface CameraStudioConfig {
         portalContainer?: HTMLElement;
         zIndexBase?: number;
         locale?: string;
+        theme?: CameraStudioTheme;
         hideLeftStrip?: boolean;
         panels?: StudioPanelVisibility;
         projectName?: string;
@@ -336,9 +352,17 @@ export type CameraStudioErrorHandler = (error: CameraStudioError) => void;
 // @public (undocumented)
 export type CameraStudioErrorSource = 'library' | 'export' | 'state';
 
+// @public
+export type CameraStudioExport = ({
+    kind: 'image';
+} & StillExportResult) | ({
+    kind: 'video';
+} & VideoExportResult);
+
 // @public (undocumented)
 export interface CameraStudioHandle {
     api: CameraStudioApi;
+    closeScene(): Promise<void>;
     // (undocumented)
     error: Error | undefined;
     // (undocumented)
@@ -348,6 +372,43 @@ export interface CameraStudioHandle {
     ready: boolean;
     // (undocumented)
     sceneProps: CameraSceneProps;
+}
+
+// @public (undocumented)
+export type CameraStudioSaveExport = (output: CameraStudioExport) => void | Promise<void>;
+
+// @public
+export interface CameraStudioTheme {
+    // (undocumented)
+    accent?: string;
+    // (undocumented)
+    border?: string;
+    // (undocumented)
+    fontFamily?: string;
+    // (undocumented)
+    fontSize?: string;
+    // (undocumented)
+    hoverBackground?: string;
+    // (undocumented)
+    inputBackground?: string;
+    // (undocumented)
+    mutedText?: string;
+    // (undocumented)
+    radius?: string;
+    // (undocumented)
+    raisedSurface?: string;
+    // (undocumented)
+    recessedSurface?: string;
+    // (undocumented)
+    secondaryText?: string;
+    // (undocumented)
+    selectedBackground?: string;
+    // (undocumented)
+    selectedBorder?: string;
+    // (undocumented)
+    surface?: string;
+    // (undocumented)
+    text?: string;
 }
 
 // @public
@@ -649,6 +710,11 @@ export function listBuiltinPoses(): PoseEntry[];
 export function loadSceneSyncState(adapter: SceneSyncAdapter, options?: {
     throttleMs?: number;
 }): Promise<SceneSyncState>;
+
+// Warning: (ae-forgotten-export) The symbol "mangaShadingPresets" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+export type MangaShadingPreset = keyof typeof mangaShadingPresets;
 
 // @public (undocumented)
 export type MaterialsApi = {
@@ -1103,6 +1169,9 @@ export type SequenceState = {
 };
 
 // @public
+export function setCameraStudioLocale(locale: string): void;
+
+// @public
 export type StillExportArgs = ExportRenderArgs & {
     timeMs?: number;
 };
@@ -1203,6 +1272,16 @@ export type ViewApi = {
     }): Promise<void>;
     reset(): Promise<void>;
 };
+
+// Warning: (ae-forgotten-export) The symbol "MangaViewportOptions" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+export type ViewportRenderingConfig = MangaViewportOptions & {
+    initialMode?: ViewportRenderMode;
+};
+
+// @public (undocumented)
+export type ViewportRenderMode = 'original' | 'line';
 
 // @public
 export type ViewState = {

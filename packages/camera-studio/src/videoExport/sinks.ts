@@ -4,6 +4,19 @@
  * 以后接存储 API(分片上传、finish 提交合并)就是再实现一个
  * 同样的接口,导出菜单自动多一项,编码器和导出流程不动。
  */
+export function downloadExportBlob(blob: Blob, fileName: string): void {
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = fileName
+  try {
+    link.click()
+  } finally {
+    // 浏览器需要在点击之后读取 Blob URL。
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
+  }
+}
+
 export interface ExportSinkMeta {
   mimeType: string
   suggestedName: string
@@ -52,13 +65,7 @@ export class BlobDownloadSink implements ExportSink {
     const blob = new Blob(this.chunks as BlobPart[], {
       type: this.meta?.mimeType,
     })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = this.meta?.suggestedName ?? 'video.webm'
-    a.click()
-    //  revoke 得太早有的浏览器还没开始下载,给一拍
-    setTimeout(() => URL.revokeObjectURL(url), 1000)
+    downloadExportBlob(blob, this.meta?.suggestedName ?? 'video.webm')
     this.chunks = []
   }
 

@@ -100,10 +100,12 @@ let activeConsumers = 0
 
 /**
  * 消费者占位/还位(hook 与 StrictMode 双跑对称用;不经 index.ts 公开)。
- * 返回占位后的计数:大于 1 即同页第二实例,调用方应报错且不碰 init。
+ * 已有消费者时返回 false，拒绝的实例无需释放占位。
  */
-export function acquireCameraStudioConsumer(): number {
-  return ++activeConsumers
+export function acquireCameraStudioConsumer(): boolean {
+  if (activeConsumers > 0) return false
+  activeConsumers++
+  return true
 }
 export function releaseCameraStudioConsumer(): number {
   return --activeConsumers
@@ -142,6 +144,7 @@ export function resolveSceneProps(
     project: resolveProject(config),
     onFlows: config.flows?.onFlows,
     onError: config.onError,
+    onSaveExport: config.onSaveExport,
     ...(config.scene?.includeDemoModel === undefined
       ? {}
       : {includeDemoModel: config.scene.includeDemoModel}),

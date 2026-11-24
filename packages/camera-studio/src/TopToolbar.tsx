@@ -23,10 +23,12 @@ import {
   Cursor,
   DotsNine,
   Export,
+  Image,
   IdentificationBadge,
   Path,
   PictureInPicture,
   Stop,
+  SignOut,
 } from '@phosphor-icons/react'
 import useMenu from '@dreamerbird/studio/uiComponents/simpleContextMenu/useMenu'
 import {useT} from '@dreamerbird/studio/i18n'
@@ -118,6 +120,8 @@ export function TopToolbar({
   exportSinks,
   exporting,
   exportDisabled,
+  onExportImage,
+  onExportVideo,
   onPickExportSink,
   onStopExport,
   pipVisible,
@@ -125,6 +129,7 @@ export function TopToolbar({
   pipDisabled = false,
   libraryDisabled = false,
   headerActions,
+  onCloseScene,
 }: {
   /** 变换模式组的当前模式,与 G/R/S 快捷键、对象右键菜单同源 */
   gizmoMode: GizmoMode
@@ -145,6 +150,8 @@ export function TopToolbar({
   exportSinks: readonly ExportSink[]
   exporting: boolean
   exportDisabled: boolean
+  onExportImage: () => void
+  onExportVideo?: () => void
   onPickExportSink: (sink: ExportSink) => void
   onStopExport: () => void
   /** 画中画开关:开时按钮带高亮(和小窗边框同色) */
@@ -155,6 +162,7 @@ export function TopToolbar({
   /** 放置中/拖拽中禁用添加入口,避免再开一次放置流程 */
   libraryDisabled?: boolean
   headerActions?: React.ReactNode
+  onCloseScene?: () => void
 }) {
   const exportButtonRef = useRef<HTMLButtonElement>(null)
   const t = useT()
@@ -320,12 +328,28 @@ export function TopToolbar({
               <PictureInPicture size={18} />
             </ToolbarBtn>
             <ToolbarBtn
+              onClick={onExportImage}
+              disabled={exportDisabled || exporting}
+              tip={t('pg.toolbar.exportImage')}
+              hint={
+                pipDisabled
+                  ? t('pg.toolbar.pip.disabled')
+                  : t('pg.toolbar.exportImage.hint')
+              }
+            >
+              <Image size={18} />
+            </ToolbarBtn>
+            <ToolbarBtn
               ref={exportButtonRef}
               disabled={exportDisabled && !exporting}
               className={exporting ? 'danger' : undefined}
               onClick={() => {
                 if (exporting) {
                   onStopExport()
+                  return
+                }
+                if (onExportVideo) {
+                  onExportVideo()
                   return
                 }
                 const rect = exportButtonRef.current?.getBoundingClientRect()
@@ -341,7 +365,7 @@ export function TopToolbar({
               hint={
                 exporting
                   ? t('pg.toolbar.export.esc')
-                  : exportDisabled
+                  : pipDisabled
                     ? t('pg.toolbar.pip.disabled')
                     : t('pg.toolbar.export.hint')
               }
@@ -349,6 +373,16 @@ export function TopToolbar({
               {exporting ? <Stop size={18} /> : <Export size={18} />}
             </ToolbarBtn>
           </div>
+          {onCloseScene && (
+            <div className="cs-toolbar-group">
+              <ToolbarBtn
+                onClick={onCloseScene}
+                tip={t('pg.toolbar.closeScene')}
+              >
+                <SignOut size={18} />
+              </ToolbarBtn>
+            </div>
+          )}
           {headerActions && (
             <div className="cs-toolbar-group">{headerActions}</div>
           )}

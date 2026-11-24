@@ -23,12 +23,19 @@ import React, {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
 } from 'react'
 import type {MutableRefObject} from 'react'
 import {Canvas, useFrame, useStore, useThree} from '@react-three/fiber'
-import {useT} from '@dreamerbird/studio/i18n'
+import {
+  getLanguage,
+  I18nContext,
+  I18nProvider,
+  onLanguageChange,
+  useT,
+} from '@dreamerbird/studio/i18n'
 import {revealAdditionalSequenceRows} from '@dreamerbird/studio/panels/SequenceEditorPanel/additionalRows'
-import {I18nContext, I18nProvider, setLanguage} from '@dreamerbird/studio/i18n'
+import {setCameraStudioLocale} from './i18n'
 import type {ThreeEvent} from '@react-three/fiber'
 import {useGLTF} from '@react-three/drei'
 import sceneGLB from './scene.glb'
@@ -128,6 +135,7 @@ import type {BoundCameraReset} from './pathRegistry'
 import {resolveBoundPathKey} from './pathBinding'
 import {deletePathDomain} from './agent/pathCommands'
 import {formatSceneObjectId} from './agent/objectIds'
+import {AgentApiError} from './agent/errors'
 import {getSceneSheetObject} from './agent/runtime/objectRuntime'
 import type {SceneObjectKind} from './agent/types'
 import {bindCameraStudioSceneHandlers} from './agent/api'
@@ -137,7 +145,7 @@ import type {DirectorViewController} from './agent/runtime/directorView'
 import {presetPlacement} from './pathPresets'
 import type {PathPreset} from './pathPresets'
 import {PathPresetDropRig} from './PathPresetDropRig'
-import {listSinks} from './videoExport/sinks'
+import {downloadExportBlob, listSinks} from './videoExport/sinks'
 import type {ExportSink} from './videoExport/sinks'
 import type {PrevisExportHandle} from './videoExport/previsExporter'
 import {
@@ -839,7 +847,11 @@ export function CameraScene({
   includeDemoModel = true,
   viewportRendering,
   headerActions,
+  onCloseScene,
+  onSaveExport,
 }: CameraSceneProps) {
+  // CameraScene 本身在下面的 I18nProvider 外，单独订阅以更新直接渲染的文案。
+  useSyncExternalStore(onLanguageChange, getLanguage, getLanguage)
   const t = useT()
   const cameraTargetRef = useRef<Mesh>(null!)
   const cameraObjRef = useRef<ISheetObject<any> | undefined>(undefined)
@@ -1261,32 +1273,56 @@ export function CameraScene({
     [sheet, afterSceneObjectDeleted],
   )
 
-  // 导出目标在运行环境稳定后不再变化,useMemo 避免每次渲染重建数组
-  const exportSinks = useMemo(() => listSinks(), [])
+  const exportSinks = useMemo(
+    () => (onSaveExport ? [] : listSinks()),
+    [onSaveExport],
+  )
+  const [outputBusy, setOutputBusy] = useState(false)
   // 导出错误提示通道:有宿主 onError 走宿主,否则 alert(既有行为)
   const reportExportError = useCallback(
-    (message: string) => {
+    (cause: unknown) => {
+      if (
+        cause instanceof AgentApiError &&
+        (cause.code === 'JOB_CANCELLED' || cause.code === 'API_DISPOSED')
+      )
+        return
+      const message = cause instanceof Error ? cause.message : String(cause)
       if (onError) {
-        onError({source: 'export', code: 'unknown', message})
+        onError({source: 'export', code: 'unknown', message, cause})
       } else {
         window.alert(message)
       }
     },
     [onError],
   )
+  const handleExportImage = useCallback(async () => {
+    setOutputBusy(true)
+    try {
+      const result = await exportController.captureStill()
+      if (onSaveExport) await onSaveExport({kind: 'image', ...result})
+      else downloadExportBlob(result.blob, result.fileName)
+    } catch (error) {
+      reportExportError(error)
+    } finally {
+      setOutputBusy(false)
+    }
+  }, [exportController, onSaveExport, reportExportError])
   const handlePickExportSink = useCallback(
-    (sink: ExportSink) => {
-      // UI 菜单与 Agent 共用同一场景导出流程;前置校验失败(无活动相机/
-      // 已在导出)同步抛,录制中途失败由控制器经 onError 透传(同既有行为)
+    async (sink?: ExportSink) => {
       try {
-        exportController.startVideo({sink, onError: reportExportError}).catch(
-          () => {}, // 出错已通过 onError 提示,这里只吞收尾
-        )
-      } catch (err) {
-        reportExportError(err instanceof Error ? err.message : String(err))
+        const result = await exportController.startVideo({sink})
+        if (!result || !onSaveExport) return
+        setOutputBusy(true)
+        try {
+          await onSaveExport({kind: 'video', ...result})
+        } finally {
+          setOutputBusy(false)
+        }
+      } catch (error) {
+        reportExportError(error)
       }
     },
-    [exportController, reportExportError],
+    [exportController, onSaveExport, reportExportError],
   )
   const handleStopExport = useCallback(
     () => exportHandleRef.current?.finishEarly(),
@@ -1999,10 +2035,13 @@ export function CameraScene({
           onAddCamera={addCamera}
           onAddAnchor={addAnchor}
           exportSinks={exportSinks}
-          exporting={exporting}
+          exporting={exporting && !outputBusy}
+          onExportImage={handleExportImage}
+          onExportVideo={onSaveExport ? handlePickExportSink : undefined}
           onPickExportSink={handlePickExportSink}
           onStopExport={handleStopExport}
-          exportDisabled={!activeCamera}
+          exportDisabled={!activeCamera || outputBusy}
+          onCloseScene={onCloseScene}
           pipVisible={pipVisible}
           onTogglePip={handleTogglePip}
           pipDisabled={!activeCamera}
@@ -2436,7 +2475,7 @@ function SceneI18n({children}: {children: React.ReactNode}) {
   const locale = getUiConfig().locale
   useEffect(() => {
     if (!locale) return
-    setLanguage(locale)
+    setCameraStudioLocale(locale)
   }, [locale])
   return <I18nProvider>{children}</I18nProvider>
 }

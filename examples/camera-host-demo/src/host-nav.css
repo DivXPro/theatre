@@ -19,21 +19,30 @@
   background: #151617;
 }
 
-.camera-host-nav__back {
-  display: inline-grid;
-  place-items: center;
-  width: var(--theatre-camera-tool-size);
+.camera-host-nav__language {
   height: var(--theatre-camera-tool-size);
+  padding-inline: 6px;
+  background: transparent;
+  border: 1px solid transparent;
   border-radius: 6px;
   color: #c1c5c7;
-  text-decoration: none;
+  color-scheme: dark;
 }
 
-.camera-host-nav__back:hover {
+.camera-host-nav__language:hover {
   background: #25292a;
   color: #e5e6e7;
 }
 
-.camera-host-nav__back:focus-visible {
+.camera-host-nav__language:focus-visible {
   outline: 1px solid #b7e0d0;
+}
+
+.camera-host-nav__home {
+  padding: 24px;
+  color: #c1c5c7;
+  font:
+    13px/1.5 system-ui,
+    sans-serif;
+  color-scheme: dark;
 }

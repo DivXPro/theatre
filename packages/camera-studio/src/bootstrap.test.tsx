@@ -919,3 +919,73 @@ test('resetCameraStudio clears retained project/state config across A→B→A re
   expect(getProjectSpy).toHaveBeenCalledWith('SceneB', {state: stateB})
   expect(getProjectSpy).toHaveBeenCalledWith('SceneA', {state: stateA2})
 })
+
+test('closeScene saves pending changes, tears down the session, and notifies once', async () => {
+  let finishSave!: () => void
+  const onStateChange = jest.fn(
+    () => new Promise<void>((resolve) => (finishSave = resolve)),
+  )
+  const onSceneClosed = jest.fn(() => {
+    expect(hideSpy).toHaveBeenCalledTimes(1)
+    expect(h.result.current?.ready).toBe(false)
+  })
+  const h = hookHost({
+    project: 'Host Scene',
+    storage: false,
+    state: {onStateChange, throttleMs: 60_000},
+    onSceneClosed,
+  })
+  await h.mount()
+  subscribeToProjectStateSpy.mock.calls[0][1]({revision: 1})
+
+  const closing = h.result.current!.closeScene()
+  expect(h.result.current!.closeScene()).toBe(closing)
+  await flush()
+  expect(onStateChange).toHaveBeenCalledWith({revision: 1})
+  expect(h.result.current?.ready).toBe(true)
+  expect(onSceneClosed).not.toHaveBeenCalled()
+
+  await React.act(async () => finishSave())
+  await closing
+  expect(onSceneClosed).toHaveBeenCalledTimes(1)
+  expect(onSceneClosed).toHaveBeenCalledWith({projectId: 'Host Scene'})
+
+  const nextState = {revision: 2}
+  const next = hookHost({
+    project: 'Host Scene',
+    state: {initialState: nextState},
+  })
+  await next.mount()
+  expect(next.result.current?.ready).toBe(true)
+  expect(getProjectSpy).toHaveBeenLastCalledWith('Host Scene', {
+    state: nextState,
+  })
+  await next.unmount()
+  await h.unmount()
+})
+
+test('closeScene keeps the editor open when saving fails and a retry can close it', async () => {
+  const error = new Error('storage unavailable')
+  const onStateChange = jest.fn().mockRejectedValueOnce(error)
+  const onSceneClosed = jest.fn()
+  const h = hookHost({
+    state: {onStateChange, throttleMs: 60_000},
+    onSceneClosed,
+    onError: jest.fn(),
+  })
+  await h.mount()
+  subscribeToProjectStateSpy.mock.calls[0][1]({revision: 1})
+
+  await expect(h.result.current!.closeScene()).rejects.toBe(error)
+  expect(h.result.current?.ready).toBe(true)
+  expect(onSceneClosed).not.toHaveBeenCalled()
+
+  let retry!: Promise<void>
+  await React.act(async () => {
+    retry = h.result.current!.closeScene()
+  })
+  await retry
+  expect(onStateChange).toHaveBeenCalledTimes(2)
+  expect(onSceneClosed).toHaveBeenCalledTimes(1)
+  await h.unmount()
+})
