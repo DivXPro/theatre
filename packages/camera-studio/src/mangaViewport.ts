@@ -39,7 +39,7 @@ export const mangaViewportDefaults: Required<MangaViewportOptions> = {
   innerWidth: 0.95,
   depthThreshold: 0.003,
   normalThreshold: 0.13,
-  dotSpacing: 1.6,
+  dotSpacing: 2.8,
   castShadow: false,
 }
 
@@ -333,25 +333,16 @@ const compositeFragment = /* glsl */ `
     return vec2(depthEdge, crease);
   }
 
-  float hash21(vec2 p) {
-    p = fract(p * vec2(123.34, 456.21));
-    p += dot(p, p + 45.32);
-    return fract(p.x * p.y);
-  }
-
   float screenShadow(float shadow) {
     float amount = clamp(shadow, 0.0, 1.0);
     if (amount < 0.01) return 0.0;
     vec2 cssPixel = vUv / (texel * texelsPerCssPixel);
-    vec2 grid = mat2(0.9, 0.436, -0.436, 0.9) * cssPixel / dotSpacing;
-    vec2 cell = floor(grid);
+    vec2 grid = mat2(0.7071, 0.7071, -0.7071, 0.7071) *
+      cssPixel / dotSpacing;
     vec2 local = fract(grid) - 0.5;
-    vec2 jitter = vec2(hash21(cell), hash21(cell + 37.0)) - 0.5;
-    float distanceToDot = length(local - jitter * 0.55);
+    float distanceToDot = length(local);
     float smoothing = max(0.0005, 0.5 * fwidth(distanceToDot));
-    float noise = hash21(cell + 71.0);
-    if (noise > 0.3 + 0.7 * amount) return 0.0;
-    float radius = 0.26 * sqrt(amount) * (0.7 + 0.6 * noise);
+    float radius = 0.26 * sqrt(amount);
     return (
       1.0 - smoothstep(radius - smoothing, radius + smoothing, distanceToDot)
     );
