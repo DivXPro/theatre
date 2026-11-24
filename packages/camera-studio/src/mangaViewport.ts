@@ -39,7 +39,7 @@ export const mangaViewportDefaults: Required<MangaViewportOptions> = {
   innerWidth: 0.95,
   depthThreshold: 0.003,
   normalThreshold: 0.13,
-  dotSpacing: 3.4,
+  dotSpacing: 2.6,
   castShadow: false,
 }
 
