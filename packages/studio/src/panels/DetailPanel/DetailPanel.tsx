@@ -22,19 +22,21 @@ import {Atom, prism, val} from '@dreamerbird/dataverse'
 import useLockSet from '@dreamerbird/studio/uiComponents/useLockSet'
 import {usePresenceListenersOnRootElement} from '@dreamerbird/studio/uiComponents/usePresence'
 import {__private} from '@dreamerbird/core'
+import {useT} from '@dreamerbird/studio/i18n'
 const {isSheetObject} = __private.instanceTypes
 
-const headerHeight = 32
-const panelTop = 50
+const headerHeight = 37
+const panelTop = 52
 
 const Container = styled.div<{$pin: boolean}>`
   ${pointerEventsAutoInNormalMode};
   background-color: var(--theatre-panel-bg-80);
   position: fixed;
-  right: 8px;
-  top: ${panelTop}px;
+  right: 12px;
+  --inspector-top: ${panelTop}px;
+  top: var(--inspector-top);
   // Temporary, see comment about CSS grid in SingleRowPropEditor.
-  width: 280px;
+  width: min(306px, calc(100% - 24px));
   height: fit-content;
   z-index: ${panelZIndexes.propsPanel};
 
@@ -42,12 +44,31 @@ const Container = styled.div<{$pin: boolean}>`
     0 1px 1px var(--theatre-shadow-color),
     0 2px 6px rgba(0, 0, 0, 0.15);
   backdrop-filter: blur(14px);
-  border-radius: 2px;
+  border: 1px solid var(--theatre-panel-border);
+  border-radius: var(--theatre-panel-radius);
+  box-sizing: border-box;
 
   display: ${({$pin}) => ($pin ? 'block' : 'none')};
 
   &:hover {
     display: block;
+  }
+
+  @media (max-width: 859px) {
+    --inspector-top: 94px;
+    width: min(294px, calc(100% - 24px));
+  }
+
+  :host([data-camera-workspace]) & {
+    right: var(--theatre-camera-panel-inset);
+    --inspector-top: var(--theatre-camera-panel-top);
+    width: min(
+      var(--theatre-camera-inspector-width),
+      calc(
+        100% - var(--theatre-camera-sidebar-width) - 3 *
+          var(--theatre-camera-panel-inset)
+      )
+    );
   }
 
   @supports not (backdrop-filter: blur()) {
@@ -57,9 +78,9 @@ const Container = styled.div<{$pin: boolean}>`
 
 const Title = styled.div`
   margin: 0 10px;
-  color: #919191;
+  color: var(--theatre-text-muted);
   font-weight: 500;
-  font-size: 10px;
+  font-size: 11px;
   user-select: none;
   ${pointerEventsAutoInNormalMode};
   white-space: nowrap;
@@ -71,18 +92,35 @@ const Header = styled.div`
   height: ${headerHeight}px;
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--theatre-panel-border);
 `
 
-const Body = styled.div`
+const Heading = styled.span`
+  flex: none;
+  padding-left: 10px;
+  color: var(--theatre-text-primary);
+  font-weight: 600;
+`
+
+const Body = styled.div<{$dockTop?: number}>`
   ${pointerEventsAutoInNormalMode};
   max-height: calc(100vh - 100px);
+  @media (max-width: 1049px) {
+    max-height: ${({$dockTop}) =>
+      $dockTop === undefined
+        ? 'calc(100vh - var(--inspector-top) - 48px)'
+        : `max(0px, calc(${
+            $dockTop - headerHeight - 12
+          }px - var(--inspector-top)))`};
+  }
   overflow-y: scroll;
   &::-webkit-scrollbar {
     display: none;
   }
 
   scrollbar-width: none;
-  padding: 0;
+  padding: 0 6px 7px;
   user-select: none;
 
   /* Set the font-size for input values in the detail panel */
@@ -96,6 +134,7 @@ export const contextMenuShownContext = createContext<
 const DetailPanel: React.FC<{sequenceDockTop?: number}> = ({
   sequenceDockTop,
 }) => {
+  const t = useT()
   const pin = useVal(getStudio().atomP.ahistoric.pinDetails) !== false
   const hidden = useVal(getStudio().ephemeralAtom.pointer.hiddenPanels.details)
 
@@ -119,17 +158,9 @@ const DetailPanel: React.FC<{sequenceDockTop?: number}> = ({
 
   const [containerElt, setContainerElt] = useState<null | HTMLDivElement>(null)
   usePresenceListenersOnRootElement(containerElt)
-  const availableHeight =
-    sequenceDockTop === undefined
-      ? undefined
-      : Math.max(0, sequenceDockTop - panelTop - 8)
 
   return usePrism(() => {
-    if (
-      hidden ||
-      (availableHeight !== undefined && availableHeight < headerHeight)
-    )
-      return null
+    if (hidden) return null
 
     const selection = outlineSelection.getValue()
 
@@ -156,6 +187,7 @@ const DetailPanel: React.FC<{sequenceDockTop?: number}> = ({
           }}
         >
           <Header>
+            <Heading>{t('detailPanel.propsRoot')}</Heading>
             <Title
               title={`${obj.sheet.address.sheetId}: ${obj.sheet.address.sheetInstanceId} > ${shownName}`}
             >
@@ -170,17 +202,7 @@ const DetailPanel: React.FC<{sequenceDockTop?: number}> = ({
               <TitleBar_Piece>{shownName}</TitleBar_Piece>
             </Title>
           </Header>
-          <Body
-            style={
-              availableHeight === undefined
-                ? undefined
-                : {
-                    maxHeight: `min(calc(100vh - 100px), ${
-                      availableHeight - headerHeight
-                    }px)`,
-                  }
-            }
-          >
+          <Body $dockTop={sequenceDockTop}>
             <ObjectDetails objects={[obj]} />
           </Body>
         </Container>
@@ -189,7 +211,7 @@ const DetailPanel: React.FC<{sequenceDockTop?: number}> = ({
     // 无选中物体时不显示面板(项目行选中也不再弹 ProjectDetails 空面板,
     // 2026-10-16 用户定夺:整块去掉,Export to JSON 入口随之移除)
     return null
-  }, [showDetailsPanel, hidden, availableHeight])
+  }, [showDetailsPanel, hidden, sequenceDockTop, t])
 }
 
 export default function DetailPanelWithContext(props: {

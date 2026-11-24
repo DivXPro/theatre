@@ -1,6 +1,5 @@
 import type {VoidFn} from '@dreamerbird/core/types/public'
 import {pointerEventsAutoInNormalMode} from '@dreamerbird/studio/css'
-import {transparentize} from 'polished'
 import React from 'react'
 import styled, {css} from 'styled-components'
 import {PresenceFlag} from '@dreamerbird/studio/uiComponents/usePresence'
@@ -26,54 +25,26 @@ const Container = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 16px;
-  margin: 0 0px 0 2px;
-  position: relative;
-  z-index: 0;
+  margin-left: 2px;
+  border-radius: 5px;
   opacity: 0.7;
-
-  &:after {
-    position: absolute;
-    left: -14px;
-    right: -14px;
-    top: -2px;
-    bottom: -2px;
-    content: ' ';
-    display: none;
-    z-index: -1;
-    background: ${transparentize(0.2, 'black')};
-  }
 
   &:hover {
     opacity: 1;
-    &:after {
-      display: block;
-    }
+    background: var(--theatre-input-bg);
   }
 `
 
 const Button = styled.div`
+  display: grid;
+  place-items: center;
+  flex: 0 0 13px;
+  width: 13px;
+  height: 20px;
   background: none;
-  position: relative;
   border: 0;
-  transition: transform 0.1s ease-out;
-  z-index: 0;
   outline: none;
   cursor: pointer;
-
-  &:after {
-    display: none;
-    ${Container}:hover & {
-      display: block;
-    }
-    position: absolute;
-    left: -4px;
-    right: -4px;
-    top: -4px;
-    bottom: -4px;
-    content: ' ';
-    z-index: -1;
-  }
 `
 
 export const nextPrevCursorsTheme = {
@@ -85,7 +56,6 @@ const CurButton = styled(Button)<{
   $isOn: boolean
   $presence: PresenceFlag | undefined
 }>`
-  z-index: 1;
   ${pointerEventsAutoInNormalMode};
 
   &:hover {
@@ -117,25 +87,6 @@ const PrevOrNextButton = styled(Button)<{
 
   ${(props) =>
     props.$available ? pointerEventsAutoInNormalMode : pointerEventsNone};
-`
-
-const Prev = styled(PrevOrNextButton)<{
-  $available: boolean
-  $flag: PresenceFlag | undefined
-}>`
-  transform: translateX(2px);
-  ${Container}:hover & {
-    transform: translateX(-7px);
-  }
-`
-const Next = styled(PrevOrNextButton)<{
-  $available: boolean
-  $flag: PresenceFlag | undefined
-}>`
-  transform: translateX(-2px);
-  ${Container}:hover & {
-    transform: translateX(7px);
-  }
 `
 
 namespace Icons {
@@ -206,14 +157,14 @@ const NextPrevKeyframeCursors: React.FC<NearbyKeyframesControls> = (props) => {
 
   return (
     <Container>
-      <Prev
+      <PrevOrNextButton
         $available={!!props.prev}
         onClick={props.prev?.jump}
         $flag={prevPresence.flag}
         {...prevPresence.attrs}
       >
         <Icons.Prev />
-      </Prev>
+      </PrevOrNextButton>
       <CurButton
         $isOn={props.cur.type === 'on'}
         onClick={props.cur.toggle}
@@ -222,14 +173,14 @@ const NextPrevKeyframeCursors: React.FC<NearbyKeyframesControls> = (props) => {
       >
         <Icons.Cur />
       </CurButton>
-      <Next
+      <PrevOrNextButton
         $available={!!props.next}
         onClick={props.next?.jump}
         $flag={nextPresence.flag}
         {...nextPresence.attrs}
       >
         <Icons.Next />
-      </Next>
+      </PrevOrNextButton>
     </Container>
   )
 }

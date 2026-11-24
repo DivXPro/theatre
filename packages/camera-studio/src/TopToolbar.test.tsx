@@ -40,6 +40,7 @@ function renderToolbar(overrides: {
   onToggleMangaShadows?: () => void
   characterNamesVisible?: boolean
   onToggleCharacterNames?: () => void
+  headerActions?: React.ReactNode
 }) {
   const el = document.createElement('div')
   document.body.appendChild(el)
@@ -65,6 +66,7 @@ function renderToolbar(overrides: {
       onToggleMangaShadows: next.onToggleMangaShadows ?? (() => {}),
       characterNamesVisible: next.characterNamesVisible ?? false,
       onToggleCharacterNames: next.onToggleCharacterNames ?? (() => {}),
+      headerActions: next.headerActions,
     } as const
     act(() => {
       root.render(<TopToolbar {...props} />)
@@ -81,25 +83,42 @@ function renderToolbar(overrides: {
   }
 }
 
-/** 模式组 = 第一个连体容器;按 tooltip 文字找到对应按钮 */
+/** Locate the transform control by its accessible name. */
 function modeButton(el: HTMLElement, tip: string): HTMLButtonElement {
-  const group = el.querySelector('div')!.children[0] as HTMLElement
-  const btn = [...group.querySelectorAll('button')].find(
-    (b) => b.textContent?.includes(tip),
+  const btn = [...el.querySelectorAll('button')].find(
+    (b) => b.getAttribute('aria-label') === tip,
   )
   if (!btn) throw new Error(`mode button "${tip}" not found`)
   return btn
 }
 
 describe('TopToolbar 分组', () => {
-  it('按钮分四组渲染:变换模式 / 添加 / 渲染模式 / 输出', () => {
+  it('puts transforms, creation, rendering, and export in one toolbar', () => {
     const {el, unmount} = renderToolbar({})
-    const groups = el.querySelector('div')!.children
-    expect(groups.length).toBe(4)
-    expect(groups[0].querySelectorAll('button').length).toBe(4)
-    expect(groups[1].querySelectorAll('button').length).toBe(4)
-    expect(groups[2].querySelectorAll('button').length).toBe(2)
-    expect(groups[3].querySelectorAll('button').length).toBe(2)
+    const actions = el.querySelector(
+      '[role="toolbar"][aria-label="Viewport actions"]',
+    )!
+    expect(actions).not.toBeNull()
+    expect(actions.querySelectorAll('button')).toHaveLength(12)
+    expect(actions.contains(modeButton(el, 'Rotate'))).toBe(true)
+    unmount()
+  })
+
+  it('places host navigation alongside export in the output group', () => {
+    const {el, unmount} = renderToolbar({
+      headerActions: <a href="/projects">Projects</a>,
+    })
+    const toolbar = el.querySelector('[role="toolbar"]')!
+    const editing = toolbar.querySelector(
+      '[role="group"][aria-label="Editing"]',
+    )!
+    const output = toolbar.querySelector('[role="group"][aria-label="Output"]')!
+    expect(editing?.nextElementSibling).toBe(output)
+    expect(editing?.contains(modeButton(el, 'Rotate'))).toBe(true)
+    expect(output?.contains(modeButton(el, 'Export video'))).toBe(true)
+    expect(output?.querySelector('a[href="/projects"]')).toBeInstanceOf(
+      HTMLElement,
+    )
     unmount()
   })
 })

@@ -33,7 +33,7 @@ import usePopover from '@dreamerbird/studio/uiComponents/Popover/usePopover'
 import {generateSequenceMarkerId} from '@dreamerbird/studio/utils/ids'
 
 const Container = styled.div<{$isVisible: boolean}>`
-  --thumbColor: #00e0ff;
+  --thumbColor: var(--theatre-accent);
   position: absolute;
   top: 0;
   left: 0;
@@ -50,7 +50,7 @@ const Rod = styled.div`
   top: 8px;
   width: 0;
   height: calc(100% - 8px);
-  border-left: 1px solid #27e0fd;
+  border-left: 1px solid var(--thumbColor);
   z-index: 10;
   pointer-events: none;
 

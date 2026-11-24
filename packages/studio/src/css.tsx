@@ -6,6 +6,7 @@ import ReactDOM from 'react-dom'
 import type {$IntentionalAny} from '@dreamerbird/core/types/public'
 import {PortalContext} from 'reakit'
 import useRefAndState from './utils/useRefAndState'
+import {cameraWorkspaceLayout} from './panels/cameraWorkspaceLayout'
 
 /**
  * This CSS string is used to correctly set pointer-events on an element
@@ -71,6 +72,10 @@ const GlobalStyle =
           --theatre-shadow-color: rgba(0, 0, 0, 0.25);
           --theatre-font-family: -apple-system, BlinkMacSystemFont, Segoe WPC, Segoe Editor, HelveticaNeue-Light, Ubuntu, Droid Sans, sans-serif;
           --theatre-font-size: 11px;
+          --theatre-panel-radius: 11px;
+          --theatre-input-bg: #202224;
+          --theatre-selected-bg: #202c27;
+          --theatre-selected-border: #3b5148;
           color: var(--theatre-text-primary);
           font: var(--theatre-font-size) var(--theatre-font-family);
 
@@ -184,6 +189,22 @@ const GlobalStyle =
           .text-color-pale {
             color: var(--theatre-text-secondary);
           }
+        }
+
+        :host([data-camera-workspace]) {
+          ${cameraWorkspaceLayout};
+          --theatre-panel-bg: #151617;
+          --theatre-panel-bg-95: #151617;
+          --theatre-panel-bg-80: #151617;
+          --theatre-panel-bg-65: #191b1c;
+          --theatre-panel-bg-99: #111213;
+          --theatre-panel-border: #303334;
+          --theatre-text-primary: #e5e6e7;
+          --theatre-text-secondary: #b4b8ba;
+          --theatre-text-muted: #989da1;
+          --theatre-head-title: #e5e6e7;
+          --theatre-accent: #b7e0d0;
+          --theatre-font-size: 12px;
         }
 
         * {

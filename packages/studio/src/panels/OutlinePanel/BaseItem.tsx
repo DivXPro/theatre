@@ -25,7 +25,7 @@ const Header = styled(BaseHeader)`
   padding-left: 4px;
   padding-right: 8px;
   gap: 4px;
-  height: 21px;
+  height: 26px;
   line-height: 0;
   box-sizing: border-box;
   display: flex;
@@ -34,33 +34,30 @@ const Header = styled(BaseHeader)`
   pointer-events: none;
   white-space: nowrap;
 
-  border-radius: 2px;
-  box-shadow: 0 3px 4px -1px rgba(0, 0, 0, 0.48);
-
-  color: rgba(255, 255, 255, 0.9);
+  border-radius: 6px;
+  color: var(--theatre-text-primary);
   background: var(--theatre-panel-bg-65);
   backdrop-filter: blur(14px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid transparent;
 
   &.descendant-is-selected {
-    background: rgba(29, 53, 59, 0.7);
+    background: var(--theatre-selected-bg);
   }
 
   ${pointerEventsAutoInNormalMode};
   &:not(.not-selectable):not(.selected):hover {
-    background: rgba(59, 63, 69, 0.9);
-
-    border-bottom: 1px solid rgba(255, 255, 255, 0.24);
+    background: var(--theatre-input-bg);
   }
 
   &:not(.not-selectable):not(.selected):active {
-    background: rgba(82, 88, 96, 0.9);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.24);
+    background: var(--theatre-input-bg);
+    border-color: var(--theatre-panel-border);
   }
 
   &.selected {
-    background: rgba(30, 88, 102, 0.7);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--theatre-accent);
+    background: var(--theatre-selected-bg);
+    border-color: var(--theatre-selected-border);
   }
 
   @supports not (backdrop-filter: blur()) {

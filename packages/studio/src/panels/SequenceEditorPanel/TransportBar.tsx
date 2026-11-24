@@ -6,26 +6,36 @@ import type Sheet from '@dreamerbird/core/sheets/Sheet'
 import getStudio from '@dreamerbird/studio/getStudio'
 import ChevronDown from '@dreamerbird/studio/uiComponents/icons/ChevronDown'
 import DoubleChevronLeft from '@dreamerbird/studio/uiComponents/icons/DoubleChevronLeft'
+import DoubleChevronRight from '@dreamerbird/studio/uiComponents/icons/DoubleChevronRight'
 import Play from '@dreamerbird/studio/uiComponents/icons/Play'
 import Pause from '@dreamerbird/studio/uiComponents/icons/Pause'
+import {useT} from '@dreamerbird/studio/i18n'
 
 /** 工具条行高:比原 18px 标题栏高一点,容得下按钮;配色/字号沿用 TitleBar */
-export const transportBarHeight = 26
+export const transportBarHeight = 36
 
 const Bar = styled.div`
   height: ${transportBarHeight}px;
   box-sizing: border-box;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  gap: 2px;
-  padding: 0 8px;
-  color: #adadadb3;
-  border-bottom: 1px solid rgb(0 0 0 / 13%);
-  background-color: #25272b;
-  font-size: 10px;
+  gap: 4px;
+  padding: 0 10px;
+  color: var(--theatre-text-secondary);
+  border-bottom: 1px solid var(--theatre-panel-border);
+  border-radius: var(--theatre-panel-radius) var(--theatre-panel-radius) 0 0;
+  background-color: var(--theatre-panel-bg-95);
+  font-size: 11px;
   font-weight: 500;
   overflow: hidden;
   white-space: nowrap;
+`
+
+const ButtonGroup = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
 `
 
 const TransportButton = styled.button`
@@ -58,9 +68,16 @@ const TransportButton = styled.button`
 `
 
 const TimeReadout = styled.span`
-  margin-left: 6px;
+  justify-self: end;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+`
+
+const Fps = styled.span`
+  margin-left: 8px;
+  padding-left: 8px;
+  border-left: 1px solid var(--theatre-panel-border);
+  color: var(--theatre-text-muted);
 `
 
 /** 总时长(只读态):提示可点 */
@@ -101,10 +118,11 @@ const TransportBar: React.FC<{
   collapsed: boolean
   onToggle: () => void
 }> = ({sheet, collapsed, onToggle}) => {
+  const t = useT()
   const [editingLength, setEditingLength] = useState(false)
   const [draft, setDraft] = useState('')
 
-  const {playing, positionText, lengthText, lengthSec, hasSeq} =
+  const {playing, positionText, lengthText, lengthSec, hasSeq, fps} =
     usePrism(() => {
       const seq = sheet?.getSequence()
       if (!seq)
@@ -114,15 +132,17 @@ const TransportBar: React.FC<{
           lengthText: '',
           lengthSec: 0,
           hasSeq: false,
+          fps: 0,
         }
       const fmt = seq.positionFormatter
       const lengthSec = val(seq.pointer.length)
       return {
         playing: seq.playing,
-        positionText: fmt.formatBasic(val(seq.pointer.position)),
+        positionText: fmt.formatForPlayhead(val(seq.pointer.position)),
         lengthText: fmt.formatBasic(lengthSec),
         lengthSec,
         hasSeq: true,
+        fps: seq.subUnitsPerUnit,
       }
     }, [sheet])
 
@@ -139,6 +159,10 @@ const TransportBar: React.FC<{
   const goToStart = () => {
     const seq = sheet?.getSequence()
     if (seq) seq.position = 0
+  }
+  const goToEnd = () => {
+    const seq = sheet?.getSequence()
+    if (seq) seq.position = seq.length
   }
 
   /** 提交时长编辑;非法/无变化直接还原,不产生事务 */
@@ -159,24 +183,40 @@ const TransportBar: React.FC<{
 
   return (
     <Bar>
-      <TransportButton
-        onClick={onToggle}
-        title={collapsed ? '展开时间轴' : '收拢时间轴'}
-      >
-        <ChevronDown
-          style={collapsed ? {transform: 'rotate(180deg)'} : undefined}
-        />
-      </TransportButton>
-      <TransportButton onClick={goToStart} disabled={!hasSeq} title="回到开头">
-        <DoubleChevronLeft />
-      </TransportButton>
-      <TransportButton
-        onClick={togglePlay}
-        disabled={!hasSeq}
-        title={playing ? '暂停' : '播放'}
-      >
-        {playing ? <Pause /> : <Play />}
-      </TransportButton>
+      <ButtonGroup>
+        <TransportButton
+          onClick={onToggle}
+          title={collapsed ? '展开时间轴' : '收拢时间轴'}
+        >
+          <ChevronDown
+            style={collapsed ? {transform: 'rotate(180deg)'} : undefined}
+          />
+        </TransportButton>
+        <span>{t('workspace.timeline')}</span>
+      </ButtonGroup>
+      <ButtonGroup>
+        <TransportButton
+          onClick={goToStart}
+          disabled={!hasSeq}
+          title="回到开头"
+        >
+          <DoubleChevronLeft />
+        </TransportButton>
+        <TransportButton
+          onClick={togglePlay}
+          disabled={!hasSeq}
+          title={playing ? '暂停' : '播放'}
+        >
+          {playing ? <Pause /> : <Play />}
+        </TransportButton>
+        <TransportButton
+          onClick={goToEnd}
+          disabled={!hasSeq}
+          title={t('workspace.goToEnd')}
+        >
+          <DoubleChevronRight />
+        </TransportButton>
+      </ButtonGroup>
       <TimeReadout>
         {positionText}
         {' / '}
@@ -204,6 +244,7 @@ const TransportBar: React.FC<{
             {lengthText}
           </LengthValue>
         )}
+        {hasSeq && <Fps>{fps} fps</Fps>}
       </TimeReadout>
     </Bar>
   )

@@ -15,6 +15,7 @@ import {
 } from './globalToolbarHooks'
 import LeftStrip from './LeftStrip/LeftStrip'
 import RightStrip from './RightStrip/RightStrip'
+import {panelZIndexes} from '@dreamerbird/studio/panels/BasePanel/common'
 
 const Container = styled.div`
   position: fixed;
@@ -25,6 +26,13 @@ const Container = styled.div`
   display: flex;
   justify-content: space-between;
   pointer-events: none;
+
+  :host([data-camera-workspace]) & {
+    top: calc(var(--theatre-camera-panel-top) + 1px);
+    height: var(--theatre-camera-project-row-height);
+    align-items: center;
+    z-index: ${panelZIndexes.toolbar};
+  }
 `
 
 const NumberOfConflictsIndicator = styled.div`

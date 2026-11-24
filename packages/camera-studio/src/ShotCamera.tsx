@@ -1,3 +1,4 @@
+import {previewWidth} from './pipLayout'
 import {PerspectiveCamera, useCurrentSheet} from '@dreamerbird/r3f'
 import {getStudioSync, types as t, val} from '@dreamerbird/core'
 import type {ISheet, ISheetObject} from '@dreamerbird/core'
@@ -83,8 +84,6 @@ import {
  *   隐藏,取景画面始终干净
  */
 
-const PIP_WIDTH_FRACTION = 0.28
-const PIP_MARGIN_PX = 16
 const FRUSTUM_COLOR = 0x6fb7ff
 /** 视锥示意线的末端距离(示意用,与相机实际 far 无关;0.75 = 早期 3 的四分之一) */
 const FRUSTUM_DISPLAY_LENGTH = 0.75
@@ -327,6 +326,7 @@ export function ShotCamera({
   shotView,
   pipVisible,
   pipBottom,
+  pipRight,
   renderMode,
   mangaOptions,
   cameraObjRef,
@@ -341,6 +341,7 @@ export function ShotCamera({
   pipVisible: boolean
   /** 画中画底部留白(px,DOM 边框层同源):悬在时间轴面板上方 */
   pipBottom: number
+  pipRight: number
   renderMode: ViewportRenderMode
   mangaOptions?: MangaViewportOptions
   cameraObjRef: MutableRefObject<ISheetObject<any> | undefined>
@@ -693,6 +694,7 @@ export function ShotCamera({
           pip={!makeDefault}
           pipVisible={pipVisible}
           pipBottom={pipBottom}
+          pipRight={pipRight}
           renderMode={renderMode}
           mangaOptions={mangaOptions}
         />
@@ -713,6 +715,7 @@ function ShotCameraRenderer({
   pip,
   pipVisible,
   pipBottom,
+  pipRight,
   renderMode,
   mangaOptions,
 }: {
@@ -720,6 +723,7 @@ function ShotCameraRenderer({
   pip: boolean
   pipVisible: boolean
   pipBottom: number
+  pipRight: number
   renderMode: ViewportRenderMode
   mangaOptions?: MangaViewportOptions
 }) {
@@ -731,7 +735,7 @@ function ShotCameraRenderer({
     // 开关切换也要 invalidate:关掉时触发一帧重画,把残留在画面角落的
     // 最后一帧小窗清掉(demand 模式下不会自动重画)
     invalidate()
-  }, [pip, pipVisible, invalidate])
+  }, [pip, pipVisible, pipBottom, pipRight, invalidate])
 
   // 渲染分工(踩过的坑,别改回自己画主视角):
   // drei Hud(GizmoNav 的导航块)的 useFrame 以优先级 1 每帧先全屏画
@@ -769,9 +773,9 @@ function ShotCameraRenderer({
     // 画中画被顶栏开关关掉了:这一帧不叠小窗(镜头全屏视角不受开关管)
     if (!pipVisible) return
 
-    const pipW = Math.round(w * PIP_WIDTH_FRACTION)
+    const pipW = previewWidth(w)
     const pipH = Math.round((pipW * 9) / 16)
-    const x = w - pipW - PIP_MARGIN_PX
+    const x = w - pipW - pipRight
     // gl viewport 原点在左下角;底部留白与 DOM 边框层同源(悬在时间轴上方)
     const y = pipBottom
 

@@ -1,5 +1,5 @@
 import {outlineSelection} from '@dreamerbird/studio/selectors'
-import {usePrism} from '@dreamerbird/react'
+import {usePrism, useVal} from '@dreamerbird/react'
 import {valToAtom} from '@dreamerbird/utils/valToAtom'
 import {prism, val} from '@dreamerbird/dataverse'
 import React, {useEffect, useLayoutEffect, useState} from 'react'
@@ -17,6 +17,7 @@ import type {PanelPosition} from '@dreamerbird/core/types/private'
 import PanelWrapper from '@dreamerbird/studio/panels/BasePanel/PanelWrapper'
 import FrameStampPositionProvider from './FrameStampPositionProvider'
 import TransportBar, {transportBarHeight} from './TransportBar'
+import PropertyKeyframeLane, {propertyLaneHeight} from './PropertyKeyframeLane'
 import type SheetObject from '@dreamerbird/core/sheetObjects/SheetObject'
 import type Sheet from '@dreamerbird/core/sheets/Sheet'
 import {uniq} from 'lodash-es'
@@ -37,7 +38,9 @@ const {isSheet, isSheetObject} = __private.instanceTypes
 
 const Container = styled(PanelWrapper)`
   z-index: ${panelZIndexes.sequenceEditorPanel};
-  box-shadow: 2px 2px 0 rgb(0 0 0 / 11%);
+  border-radius: var(--theatre-panel-radius);
+  background: var(--theatre-panel-bg-95);
+  box-shadow: inset 0 0 0 1px var(--theatre-panel-border);
 `
 
 const LeftBackground = styled.div`
@@ -58,6 +61,8 @@ const ContentBody = styled.div<{$sidebarWidth: number; $offset?: number}>`
   right: 0;
   bottom: 0;
   top: ${({$offset = transportBarHeight}) => $offset}px;
+  border-radius: 0 0 var(--theatre-panel-radius) var(--theatre-panel-radius);
+  overflow: clip;
   display: grid;
   grid-template-columns: minmax(0, 1fr) ${({$sidebarWidth}) => $sidebarWidth}px;
 `
@@ -86,11 +91,13 @@ const TimelineSidebar = styled.aside`
 // 收拢后的停靠条:贴屏幕底边撑满,只剩一行工具条
 const CollapsedDock = styled.div`
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
   z-index: ${panelZIndexes.sequenceEditorPanel};
-  background-color: #25272b;
+  background-color: var(--theatre-panel-bg-95);
+  border-radius: var(--theatre-panel-radius);
+  overflow: clip;
   ${pointerEventsAutoInNormalMode};
 `
 
@@ -189,12 +196,24 @@ const SequenceEditorPanel: React.FC<{
   )
   const sheet = useSelectedSheet()
   const hasAnyTracks = useHasAnyTracks(sheet)
+  const hasFocusedObject = usePrism(
+    () =>
+      outlineSelection
+        .getValue()
+        .some((item) => isSheetObject(item) && item.sheet === sheet),
+    [sheet],
+  )
+  const detailsHidden = useVal(
+    getStudio().ephemeralAtom.pointer.hiddenPanels.details,
+  )
+  const detailsPinned = useVal(getStudio().atomP.ahistoric.pinDetails) !== false
   const editorView = usePrism(
     () =>
       sheet ? getSequenceEditorView(sheet.getSequence().publicApi) : undefined,
     [sheet],
   )
-  const collapsed = !editorView && (collapsedOverride ?? !hasAnyTracks)
+  const collapsed =
+    !editorView && (collapsedOverride ?? (!hasAnyTracks && !hasFocusedObject))
 
   if (collapsed) {
     return (
@@ -214,6 +233,12 @@ const SequenceEditorPanel: React.FC<{
       defaultPosition={defaultPosition}
       minDims={minDims}
       docked="bottom"
+      dockInsets={{
+        left: 12,
+        right: hasFocusedObject && detailsPinned && !detailsHidden ? 330 : 12,
+        bottom: 12,
+      }}
+      defaultDockHeight={210}
     >
       <Content
         sheet={sheet}
@@ -275,12 +300,14 @@ const Content: React.FC<{
     const sidebarWidth = sidebar
       ? Math.min(280, Math.floor(dims.width * 0.45))
       : 0
+    const contentTop =
+      transportBarHeight + (selectedObject ? propertyLaneHeight : 0)
     const panelSize = prism.memo(
       'panelSize',
       (): PanelDims => {
         // 顶部让出工具条一行,其余交给原布局
         const width = dims.width - sidebarWidth
-        const height = dims.height - transportBarHeight
+        const height = dims.height - contentTop
         return {
           width: width,
           height: height,
@@ -289,10 +316,10 @@ const Content: React.FC<{
           heightWithoutBorder: Math.max(0, height - 4),
 
           screenX: dims.left,
-          screenY: dims.top + transportBarHeight,
+          screenY: dims.top + contentTop,
         }
       },
-      [dims, sidebarWidth],
+      [dims, sidebarWidth, contentTop],
     )
 
     const panelSizeP = valToAtom('panelSizeP', panelSize).pointer
@@ -333,7 +360,10 @@ const Content: React.FC<{
         }}
       >
         <TransportBar sheet={sheet} collapsed={false} onToggle={onCollapse} />
-        <ContentBody $sidebarWidth={sidebarWidth}>
+        {selectedObject && (
+          <PropertyKeyframeLane object={selectedObject} layoutP={layoutP} />
+        )}
+        <ContentBody $sidebarWidth={sidebarWidth} $offset={contentTop}>
           <TimelineArea data-sequence-editor-tracks="">
             <LeftBackground
               style={{width: `${val(layoutP.leftDims.width)}px`}}

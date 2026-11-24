@@ -21,15 +21,30 @@ const Container = styled.div<{$clickable: boolean}>`
     --chevron-down: 1;
     background: rgba(255, 255, 255, 0.08);
   }
+
+  :host([data-camera-workspace]) & {
+    gap: 6px;
+    padding-inline: 9px;
+    border-radius: 0 6px 6px 0;
+  }
 `
 
 const Team = styled.span`
   color: rgba(255, 255, 255, 0.38);
+
+  :host([data-camera-workspace]) & {
+    color: var(--theatre-text-muted);
+  }
 `
 const Separator = styled.span`
   color: rgba(255, 255, 255, 0.38);
 `
-const WorkspaceName = styled.span``
+const WorkspaceName = styled.span`
+  :host([data-camera-workspace]) & {
+    color: var(--theatre-text-primary);
+    font-weight: 600;
+  }
+`
 
 const IconContainer = styled.span`
   display: flex;

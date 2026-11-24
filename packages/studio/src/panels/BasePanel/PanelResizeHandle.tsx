@@ -3,7 +3,6 @@ import type {$IntentionalAny} from '@dreamerbird/core/types/public'
 import getStudio from '@dreamerbird/studio/getStudio'
 import type {CommitOrDiscardOrRecapture} from '@dreamerbird/studio/StudioStore/StudioStore'
 import useDrag from '@dreamerbird/studio/uiComponents/useDrag'
-import {lighten} from 'polished'
 import React, {useMemo, useRef} from 'react'
 import styled from 'styled-components'
 import {panelDimsToPanelPosition, usePanel} from './BasePanel'
@@ -29,11 +28,6 @@ const Base = styled.div`
   }
 
   &.isDragging {
-    opacity: 1;
-    /* background-color: ${lighten(0.2, '#478698')}; */
-  }
-
-  &:hover {
     opacity: 1;
   }
 `
