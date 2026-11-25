@@ -26,6 +26,9 @@ function setup() {
     })),
   }
   jest.doMock('@dreamerbird/core', () => ({getStudioSync: () => fakeStudio}))
+  jest.doMock('@dreamerbird/studio/camera-studio', () => ({
+    getStudio: () => undefined,
+  }))
   const mod =
     require('./poseTrack') as $IntentionalAny as typeof import('./poseTrack') & {
       __setPointerRootResolverForTest: (
@@ -51,7 +54,10 @@ function setup() {
   return {calls, setCalls, mod, sheetObject, rootWithTrack}
 }
 
-afterEach(() => jest.dontMock('@dreamerbird/core'))
+afterEach(() => {
+  jest.dontMock('@dreamerbird/core')
+  jest.dontMock('@dreamerbird/studio/camera-studio')
+})
 
 describe('getPoseTrackId', () => {
   test('getPoseTrackId / getPoseKeyframeCount 经根解析器读取', () => {

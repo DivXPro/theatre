@@ -1,13 +1,13 @@
 import {getStudioSync, onChange, val} from '@dreamerbird/core'
 import type {ISheetObject} from '@dreamerbird/core'
-import {privateAPI} from '@dreamerbird/core/privateAPIs'
+import {privateAPI} from '@dreamerbird/core/camera-studio'
 import {useVal} from '@dreamerbird/react'
 import {
   getSequenceEditorView,
   registerAdditionalSequenceRows,
   registerSequenceEditorView,
-} from '@dreamerbird/studio/panels/SequenceEditorPanel/additionalRows'
-import type {AdditionalSequenceRow} from '@dreamerbird/studio/panels/SequenceEditorPanel/additionalRows'
+  type AdditionalSequenceRow,
+} from '@dreamerbird/studio/camera-studio'
 import {translate, useT} from '@dreamerbird/studio/i18n'
 import React, {useEffect, useMemo, useRef, useState} from 'react'
 import type {Group, AnimationClip} from 'three'

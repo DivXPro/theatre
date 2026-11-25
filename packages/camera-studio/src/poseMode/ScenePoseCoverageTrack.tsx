@@ -1,9 +1,9 @@
 import React from 'react'
 import type {ISheetObject} from '@dreamerbird/core'
-import {privateAPI} from '@dreamerbird/core/privateAPIs'
+import {privateAPI} from '@dreamerbird/core/camera-studio'
 import type {Pointer} from '@dreamerbird/dataverse'
 import {usePrism, useVal} from '@dreamerbird/react'
-import type {SequenceEditorPanelLayout} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/layout'
+import type {SequenceEditorPanelLayout} from '@dreamerbird/studio/camera-studio'
 import {getScenePoseCoverageSpans} from './poseFrame'
 import {getPoseKeyframePositions} from './poseTrack'
 

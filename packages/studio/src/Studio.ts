@@ -28,11 +28,16 @@ import type {
   OnDiskState,
   ProjectEphemeralState,
 } from '@dreamerbird/core/types/private/core'
+import type {StudioState} from '@dreamerbird/core/types/private'
 import type {Deferred} from '@dreamerbird/utils/defer'
 import {defer} from '@dreamerbird/utils/defer'
 import {DEFAULT_PERSISTENCE_KEY, sanitizeOpts} from './sanitizeOpts'
 import shallowEqual from 'shallowequal'
-import {registerFallback, registerMessages, setLanguage} from './i18n'
+import {
+  registerFallback,
+  registerMessages,
+  setLanguage,
+} from '@dreamerbird/studio/i18n'
 import {createStore} from './IDBStorage'
 import {getAllPossibleAssetIDs} from '@dreamerbird/studio/utils/assets'
 import {notify} from './notify'
@@ -213,7 +218,7 @@ export class Studio {
 
   private _rafDriver: RafDriverPrivateAPI | undefined
 
-  get atomP() {
+  get atomP(): Pointer<StudioState> {
     return this._store.atomP
   }
 

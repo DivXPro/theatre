@@ -1,7 +1,7 @@
 /*
  * @jest-environment node
  */
-import {types as t, val} from '@dreamerbird/core'
+import {getStudioSync, types as t, val} from '@dreamerbird/core'
 import {globals} from '@dreamerbird/core/globals'
 import {getCoreRafDriver} from '@dreamerbird/core/coreTicker'
 import getStudio from '@dreamerbird/studio/getStudio'
@@ -11,7 +11,8 @@ let bootstrap: typeof import('./bootstrap')
 let renderSpy: jest.SpyInstance
 beforeAll(async () => {
   bootstrap = await import('./bootstrap')
-  renderSpy = jest.spyOn(getStudio().ui, 'render').mockImplementation(() => {})
+  const {default: UI} = await import('@dreamerbird/studio/UI/UI')
+  renderSpy = jest.spyOn(UI.prototype, 'render').mockImplementation(() => {})
 })
 afterAll(() => {
   renderSpy.mockRestore()
@@ -35,15 +36,22 @@ function sceneState(value: number) {
   } as never
 }
 
-test('reset restores a same-named project from its new initialState with real core/studio', async () => {
+test('opens after loading host state and reopens with fresh state in the shared Studio', async () => {
   const projectId = 'camera-studio-reset-real'
+  const initialState = await new Promise<unknown>((resolve) => {
+    setTimeout(() => resolve(sceneState(1)), 500)
+  })
+  expect(getStudio() === undefined).toBe(true)
+
   const first = await bootstrap.initCameraStudio({
     project: projectId,
     storage: false,
-    state: {initialState: sceneState(1), onStateChange: () => {}},
+    state: {initialState, onStateChange: () => {}},
   })
   const firstProject = first.sceneProps.project
   await firstProject.ready
+  const studio = getStudioSync(true)
+  expect(studio).toBe(getStudio().publicApi)
   expect(
     val(
       firstProject.sheet('Scene').object('Only', {value: t.number(0)}).props
@@ -60,6 +68,7 @@ test('reset restores a same-named project from its new initialState with real co
   })
   const secondProject = second.sceneProps.project
   await secondProject.ready
+  expect(getStudioSync(true)).toBe(studio)
   expect(secondProject).not.toBe(firstProject)
   expect(
     val(

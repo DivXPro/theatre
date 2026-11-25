@@ -8,7 +8,7 @@
  * 自动接管(同 TopToolbar 的策略)。
  */
 import React, {useCallback, useEffect, useRef, useState} from 'react'
-import DetailPanelButton from '@dreamerbird/studio/uiComponents/DetailPanelButton'
+import {DetailPanelButton} from '@dreamerbird/studio/camera-studio'
 import {useT} from '@dreamerbird/studio/i18n'
 import {CanvasContextMenu} from '../contextMenu'
 import {countLibraryEntryUsage} from '../PlacementManager'

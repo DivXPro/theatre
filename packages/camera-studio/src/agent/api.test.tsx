@@ -145,7 +145,7 @@ jest.doMock('../TopToolbar', () => ({
   __esModule: true,
   TopToolbar: () => null,
 }))
-jest.doMock('../scene.glb', () => 'scene.glb')
+jest.doMock('../scene.glb?url', () => 'scene.glb')
 jest.doMock('three/examples/jsm/environments/RoomEnvironment.js', () => ({
   RoomEnvironment: class RoomEnvironment {},
 }))

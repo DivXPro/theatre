@@ -2,14 +2,16 @@ import {useVal} from '@dreamerbird/react'
 import {val} from '@dreamerbird/dataverse'
 import type {Pointer} from '@dreamerbird/dataverse'
 import {useT} from '@dreamerbird/studio/i18n'
-import type {SequenceEditorPanelLayout} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/layout'
-import {SequenceRowIconButton} from '@dreamerbird/studio/panels/SequenceEditorPanel/DopeSheet/Left/AnyCompositeRow'
-import useDrag from '@dreamerbird/studio/uiComponents/useDrag'
-import useContextMenu from '@dreamerbird/studio/uiComponents/simpleContextMenu/useContextMenu'
-import useRefAndState from '@dreamerbird/studio/utils/useRefAndState'
+import {
+  type SequenceEditorPanelLayout,
+  SequenceRowIconButton,
+  useDrag,
+  useContextMenu,
+  useRefAndState,
+  PortalContext,
+} from '@dreamerbird/studio/camera-studio'
 import React, {useContext, useEffect, useRef, useState} from 'react'
 import {createPortal} from 'react-dom'
-import {PortalContext} from 'reakit'
 import {useAnimationEntriesById} from '../assetLibrary/library'
 import {getUiConfig} from '../uiConfig'
 import {animationStripErrorMessage} from './AnimationStripProperties'

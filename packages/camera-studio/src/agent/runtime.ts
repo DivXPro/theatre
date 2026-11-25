@@ -5,7 +5,7 @@
  * 自己的 handlers 与 readiness,会话 dispose 使全部代次失效。
  */
 import type {IProject, ISheet, IStudio} from '@dreamerbird/core'
-import {getCoreTicker} from '@dreamerbird/core/coreTicker'
+import {getCoreTicker} from '@dreamerbird/core/camera-studio'
 import {AgentApiError} from './errors'
 import {AgentJobManager} from './jobs'
 import type {Library} from '../assetLibrary/library'

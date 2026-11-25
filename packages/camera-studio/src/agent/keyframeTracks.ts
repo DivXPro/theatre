@@ -23,8 +23,8 @@ import type {
   KeyframeId,
   SequenceTrackId,
   SheetObjectAddress,
-} from '@dreamerbird/core/types/public'
-import getStudio from '@dreamerbird/studio/getStudio'
+} from '@dreamerbird/core/camera-studio'
+import {getStudio} from '@dreamerbird/studio/camera-studio'
 import getDeep from '../getDeep'
 import {AgentApiError} from './errors'
 import {getSimplePropPointer} from './propAccess'

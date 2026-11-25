@@ -15,17 +15,17 @@
 import {__private, getStudioSync} from '@dreamerbird/core'
 import {getPointerParts, val} from '@dreamerbird/dataverse'
 import type {ISheetObject} from '@dreamerbird/core'
-import type {
-  $IntentionalAny,
-  KeyframeId,
-  SequenceTrackId,
-} from '@dreamerbird/core/types/public'
-import type {HistoricPositionalSequence} from '@dreamerbird/core/types/private'
+import {
+  type $IntentionalAny,
+  type KeyframeId,
+  type SequenceTrackId,
+  type HistoricPositionalSequence,
+  encodePathToProp,
+} from '@dreamerbird/core/camera-studio'
 // clearPoseValue 需要 stateEditors 直改 historic(公共 transaction api
 // 不暴露),走内部 Studio 通道——与 agent/keyframeTracks、CameraScene
 // 诊断钩子同路径
-import getStudio from '@dreamerbird/studio/getStudio'
-import {encodePathToProp} from '@dreamerbird/utils/pathToProp'
+import {getStudio} from '@dreamerbird/studio/camera-studio'
 import type {Group} from 'three'
 import {capturePose} from '../assetLibrary/pose'
 import {determinePoseFrameMode} from './poseFrame'

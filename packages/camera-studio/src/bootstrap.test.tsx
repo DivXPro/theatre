@@ -119,13 +119,15 @@ initSpy.mockImplementation(async (opts?: unknown) => {
 jest.doMock('@dreamerbird/studio', () => ({
   __esModule: true,
 }))
-jest.doMock('@dreamerbird/studio/getStudio', () => ({
+jest.doMock('@dreamerbird/studio/camera-studio', () => ({
   __esModule: true,
-  default: () => ({
+  getStudio: () => ({
     _store: {subscribeToProjectState: subscribeToProjectStateSpy},
     transaction: jest.fn(),
     ephemeralAtom: {reduceByPointer: jest.fn()},
   }),
+  registerCustomPropEditor: registerSpy,
+  unregisterCustomPropEditor: unregisterSpy,
 }))
 jest.doMock('@dreamerbird/studio/UI/UINonSSRBits', () => ({
   __esModule: true,
@@ -146,11 +148,6 @@ jest.doMock('@dreamerbird/core/initState', () => ({
 jest.doMock('@dreamerbird/core/privateAPIs', () => ({
   __esModule: true,
   privateAPI: () => ({pointers: {historic: {fakeHistoricPointer: true}}}),
-}))
-jest.doMock('@dreamerbird/studio/propEditors/customPropEditors', () => ({
-  __esModule: true,
-  registerCustomPropEditor: registerSpy,
-  unregisterCustomPropEditor: unregisterSpy,
 }))
 // 编辑器组件替身:注册表认 key 即可,不拉真组件的重依赖链
 jest.doMock('./poseMode/PosePropEditor', () => ({

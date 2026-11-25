@@ -1,13 +1,15 @@
 import {editable as e} from '@dreamerbird/r3f'
 import {getStudioSync, onChange, types as t, val} from '@dreamerbird/core'
 import type {IProject, IScrub, ISheet, ISheetObject} from '@dreamerbird/core'
-import type {ObjectAddressKey} from '@dreamerbird/core/types/public'
-import {privateAPI} from '@dreamerbird/core/privateAPIs'
+import {
+  type ObjectAddressKey,
+  privateAPI,
+} from '@dreamerbird/core/camera-studio'
 import {useVal} from '@dreamerbird/react'
 import {translate} from '@dreamerbird/studio/i18n'
 // 内部 Studio 通道:删除合并事务需要 stateEditors.forgetObject
 // (按地址清持久数据,不要求对象已挂载)——与 keyframeTracks 同先例
-import getStudio from '@dreamerbird/studio/getStudio'
+import {getStudio} from '@dreamerbird/studio/camera-studio'
 import {TransformControls, useFBX} from '@react-three/drei'
 import {useFrame, useThree} from '@react-three/fiber'
 import type {ThreeEvent} from '@react-three/fiber'

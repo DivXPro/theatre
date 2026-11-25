@@ -1,4 +1,4 @@
-import type {SheetObjectAddress} from '@dreamerbird/core/types/public'
+import type {SheetObjectAddress} from '@dreamerbird/core/camera-studio'
 import {Atom} from '@dreamerbird/dataverse'
 import type {AnimationStrip} from './model'
 

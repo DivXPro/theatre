@@ -9,13 +9,18 @@ import {
 import {getStudioSync, onChange, val} from '@dreamerbird/core'
 // 诊断撤销栈用:模块级单例直达私有 Studio(getStudioSync 返回的是 publicApi,
 // 空构造不存 internals,摸不到 _store._saaz——TheatreStudio.ts:121)
-import getStudio from '@dreamerbird/studio/getStudio'
-import {privateAPI} from '@dreamerbird/core/privateAPIs'
+import {
+  getStudio,
+  revealAdditionalSequenceRows,
+  pruneObjectFromOutlineCollections,
+} from '@dreamerbird/studio/camera-studio'
+import {privateAPI} from '@dreamerbird/core/camera-studio'
 import getDeep from './getDeep'
 import {usePrism, useVal} from '@dreamerbird/react'
 import type {IScrub, ISheet, ISheetObject} from '@dreamerbird/core'
 import React, {
   Suspense,
+  use,
   useCallback,
   useContext,
   useEffect,
@@ -34,11 +39,9 @@ import {
   onLanguageChange,
   useT,
 } from '@dreamerbird/studio/i18n'
-import {revealAdditionalSequenceRows} from '@dreamerbird/studio/panels/SequenceEditorPanel/additionalRows'
 import {setCameraStudioLocale} from './i18n'
 import type {ThreeEvent} from '@react-three/fiber'
 import {useGLTF} from '@react-three/drei'
-import sceneGLB from './scene.glb'
 import {addAnimationTrack} from './animationStrips/storage'
 import {parseAnimationTracks} from './animationStrips/model'
 import {registerCharacterPathEditor} from './characterPaths/CharacterPathEditor'
@@ -164,7 +167,6 @@ import {
   cameraOutlineObjectMenu,
   setCameraOutlineMenuCtx,
 } from './outlineObjectMenu'
-import {pruneObjectFromOutlineCollections} from '@dreamerbird/studio/panels/OutlinePanel/outlineOps/stateOps'
 import {
   createHostFlows,
   setDropPointContext,
@@ -221,15 +223,17 @@ function InitialLoadProbe({
   return <>{children}</>
 }
 
+let demoModelUrl: Promise<string> | undefined
+
 function Model({
-  url,
   selectLocked,
   dracoDecoderPath,
 }: {
-  url: string
   selectLocked?: boolean
   dracoDecoderPath?: string
 }) {
+  demoModelUrl ??= import('./demoModelUrl').then((module) => module.default)
+  const url = use(demoModelUrl)
   const {nodes} = useGLTF(url, dracoDecoderPath) as any
   const thingyObjRef = useRef<ISheetObject<any> | undefined>(undefined)
   // 登记为放置落点表面:放置 FBX 时射线检测只打这里和已放置的模型
@@ -2428,7 +2432,6 @@ export function CameraScene({
               <Suspense fallback={null}>
                 <InitialLoadProbe gateKey={SCENE_MODEL_GATE_KEY}>
                   <Model
-                    url={sceneGLB}
                     selectLocked={!!placing}
                     dracoDecoderPath={demoDracoDecoderPath}
                   />

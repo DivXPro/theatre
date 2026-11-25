@@ -42,7 +42,7 @@ import {
   registerMessages,
   setLanguage,
   translate,
-} from './i18n'
+} from '@dreamerbird/studio/i18n'
 const {
   isSheet,
   isProject,

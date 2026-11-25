@@ -1,5 +1,4 @@
 import type {
-  ComponentProps,
   ComponentType,
   ForwardRefRenderFunction,
   PropsWithoutRef,
@@ -20,6 +19,23 @@ import type {ISheetObject, SheetObjectActionsConfig} from '@dreamerbird/core'
 import {notify} from '@dreamerbird/core'
 import {useCurrentRafDriver} from './RafDriverProvider'
 
+export type EditableProps<Props> = Omit<Props, 'visible'> & {
+  theatreKey: string
+  visible?: boolean | 'editor'
+  /** Avoid showing this object in the Studio outline and timeline. */
+  hideFromOutline?: boolean
+  additionalProps?: $FixMe
+  objectActions?: SheetObjectActionsConfig
+  objRef?: $FixMe
+  applyValuesToObject?: boolean
+}
+
+type PropsOf<T> = T extends keyof ThreeElements
+  ? ThreeElements[T]
+  : T extends ComponentType<infer Props>
+    ? Props
+    : never
+
 const createEditable = <Keys extends keyof ThreeElements>(
   config: EditableFactoryConfig,
 ) => {
@@ -30,16 +46,8 @@ const createEditable = <Keys extends keyof ThreeElements>(
     Component: T,
     type: T extends 'primitive' ? null : U,
   ) => {
-    type Props = Omit<ComponentProps<T>, 'visible'> & {
-      theatreKey: string
-      visible?: boolean | 'editor'
-      /** 不进 studio 大纲树/时间轴(透传 core 的 sheet.object 选项) */
-      hideFromOutline?: boolean
-      additionalProps?: $FixMe
-      objectActions?: SheetObjectActionsConfig
-      objRef?: $FixMe
-      applyValuesToObject?: boolean
-    } & (T extends 'primitive'
+    type Props = EditableProps<PropsOf<T>> &
+      (T extends 'primitive'
         ? {
             editableType: U
           }
@@ -264,14 +272,7 @@ Then you can use it in your JSX like any other editable component. Note the make
     primitive: editable('primitive', null),
   } as unknown as {
     [Property in Keys]: React.ForwardRefExoticComponent<
-      Omit<ThreeElements[Property], 'visible'> & {
-        theatreKey: string
-        visible?: boolean | 'editor'
-        hideFromOutline?: boolean
-        additionalProps?: $FixMe
-        objectActions?: SheetObjectActionsConfig
-        objRef?: $FixMe
-        applyValuesToObject?: boolean
+      EditableProps<ThreeElements[Property]> & {
         // not exactly sure how to get the type of the threejs object itself
         ref?: Ref<unknown>
       }

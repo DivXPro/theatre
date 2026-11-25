@@ -4,8 +4,10 @@
  * 这里只把"光标位置 + 菜单项 + 关闭回调"对齐过去。
  */
 import React from 'react'
-import ContextMenu from '@dreamerbird/studio/uiComponents/simpleContextMenu/ContextMenu/ContextMenu'
-import type {ContextMenuItem} from '@dreamerbird/studio/uiComponents/chordial/chordialInternals'
+import {
+  ContextMenu,
+  type ContextMenuItem,
+} from '@dreamerbird/studio/camera-studio'
 
 export function CanvasContextMenu({
   position,

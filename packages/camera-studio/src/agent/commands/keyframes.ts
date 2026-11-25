@@ -13,7 +13,7 @@
  * 默认 false 原样。轨道访问全部经 keyframeTracks 适配层。
  */
 import type {ISheetObject} from '@dreamerbird/core'
-import type {$IntentionalAny} from '@dreamerbird/core/types/public'
+import type {$IntentionalAny} from '@dreamerbird/core/camera-studio'
 import {AgentApiError} from '../errors'
 import {
   deleteKeyframe,

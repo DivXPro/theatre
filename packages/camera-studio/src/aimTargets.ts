@@ -10,7 +10,7 @@ import {Matrix4, Vector3} from 'three'
 import type {Object3D} from 'three'
 import {translate} from '@dreamerbird/studio/i18n'
 import {val} from '@dreamerbird/core'
-import {privateAPI} from '@dreamerbird/core/privateAPIs'
+import {privateAPI} from '@dreamerbird/core/camera-studio'
 import {
   getBoneAnchorObjects,
   makeBoneAnchorId,

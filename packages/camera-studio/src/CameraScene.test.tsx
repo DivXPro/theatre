@@ -101,7 +101,7 @@ jest.doMock('./agent/runtime/exportRuntime', () => ({
   }),
   registerSceneExportController: () => () => {},
 }))
-jest.doMock('./scene.glb', () => 'scene.glb')
+jest.doMock('./scene.glb?url', () => 'scene.glb')
 jest.doMock('three/examples/jsm/environments/RoomEnvironment.js', () => ({
   RoomEnvironment: class RoomEnvironment {},
 }))

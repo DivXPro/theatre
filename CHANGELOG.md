@@ -1,5 +1,10 @@
 # Theatre.js changelog
 
+## 1.4.1
+
+- 修复 Camera Studio 的 npm 接入。Core、Studio 和 R3F 的同版本包共享编辑器运行时，发布包包含 Studio 类型声明、演示模型和 `@dreamerbird/camera-studio/scene-sync` 入口。
+- 宿主可以异步读取场景后再启动 Camera Studio，并在关闭后重新打开场景。
+
 ## 1.4.0
 
 - Studio 和 Camera Studio 新增浅色主题。宿主可通过 `data-theme` 即时切换工具栏、场景树、属性面板、时间轴和浮层。主题切换期间保留场景和编辑状态。[主题接入指南](docs/guides/camera-studio-embedding.md#宿主控制工作台主题)

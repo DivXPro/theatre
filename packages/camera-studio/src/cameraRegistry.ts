@@ -10,10 +10,10 @@
  */
 import {getStudioSync, types as t, val} from '@dreamerbird/core'
 import type {ISheet, ISheetObject} from '@dreamerbird/core'
-import type {ObjectAddressKey} from '@dreamerbird/core/types/public'
+import type {ObjectAddressKey} from '@dreamerbird/core/camera-studio'
 // 内部 Studio 通道:合并事务需要 stateEditors.forgetObject(按地址清持久
 // 数据,不要求对象已挂载)——与 keyframeTracks/poseTrack 同先例
-import getStudio from '@dreamerbird/studio/getStudio'
+import {getStudio} from '@dreamerbird/studio/camera-studio'
 import {useEffect, useMemo, useState} from 'react'
 import type {Object3D} from 'three'
 import {notifyTargetRegistryChange, sheetObjectExists} from './aimTargets'

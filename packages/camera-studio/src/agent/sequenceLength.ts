@@ -12,7 +12,7 @@
  * stateEditors 在生产上是 undefined 而抛错——初版即踩此坑。
  */
 import type {ISheet} from '@dreamerbird/core'
-import getStudio from '@dreamerbird/studio/getStudio'
+import {getStudio} from '@dreamerbird/studio/camera-studio'
 import {AgentApiError} from './errors'
 
 /**

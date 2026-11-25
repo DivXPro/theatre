@@ -1,6 +1,6 @@
 {
   "name": "@dreamerbird/camera-studio",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "license": "Apache-2.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -20,6 +20,10 @@
     "./poses": {
       "types": "./dist/poses.d.ts",
       "default": "./dist/poses.js"
+    },
+    "./scene-sync": {
+      "types": "./dist/sceneSync.d.ts",
+      "default": "./dist/sceneSync.js"
     }
   },
   "files": [
@@ -29,13 +33,13 @@
   ],
   "scripts": {
     "build:styles": "node devEnv/buildStyles.cjs",
-    "build:ts": "pnpm build:styles && tsc -b tsconfig.json",
-    "build:api": "pnpm build:styles && tsc -b tsconfig.json && api-extractor run --local --config devEnv/api-extractor.json",
+    "build:ts": "pnpm build:styles && tsc -b tsconfig.json && node devEnv/buildAssets.cjs",
+    "build:api": "pnpm build:ts && api-extractor run --local --config devEnv/api-extractor.json",
     "clean": "rimraf dist tsconfig.tsbuildinfo"
   },
   "peerDependencies": {
-    "@dreamerbird/core": "*",
-    "@dreamerbird/studio": "*",
+    "@dreamerbird/core": "workspace:*",
+    "@dreamerbird/studio": "workspace:*",
     "@react-three/fiber": "^9.0.0",
     "react": ">=19",
     "react-dom": ">=19",

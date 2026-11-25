@@ -1,6 +1,6 @@
 {
   "name": "@dreamerbird/studio",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "license": "AGPL-3.0-only",
   "description": "Motion design editor for the web",
   "repository": {
@@ -15,6 +15,21 @@
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./camera-studio": {
+      "types": "./dist/camera-studio.d.ts",
+      "default": "./dist/camera-studio.js"
+    },
+    "./i18n": {
+      "types": "./dist/i18n.d.ts",
+      "default": "./dist/i18n.js"
+    },
+    "./package.json": "./package.json"
+  },
   "files": [
     "dist/*"
   ],
@@ -27,10 +42,14 @@
   },
   "sideEffects": true,
   "peerDependencies": {
-    "@dreamerbird/core": "*"
+    "@dreamerbird/core": "workspace:*",
+    "react": ">=18",
+    "react-dom": ">=18"
   },
   "dependencies": {
-    "@dreamerbird/dataverse": "workspace:*"
+    "@dreamerbird/dataverse": "workspace:*",
+    "immer": "9.0.6",
+    "styled-components": "^6.5.3"
   },
   "devDependencies": {
     "@dreamerbird/app": "workspace:*",
@@ -54,7 +73,6 @@
     "fuzzy": "^0.1.3",
     "idb-keyval": "^6.2.0",
     "identity-obj-proxy": "^3.0.0",
-    "immer": "9.0.6",
     "jose": "4.14.4",
     "jszip": "3.10.1",
     "lodash-es": "4.17.21",
@@ -72,9 +90,10 @@
     "react-shadow": "^20.6.0",
     "react-use": "17.2.4",
     "reakit": "1.3.8",
+    "rollup": "^4.9.2",
+    "rollup-plugin-dts": "^6.1.0",
     "sade": "^1.8.1",
     "shallowequal": "1.1.0",
-    "styled-components": "^6.5.3",
     "superjson": "1.13.1",
     "timing-function": "^0.2.3",
     "tsx": "4.7.0",

@@ -30,7 +30,7 @@ import {
   Stop,
   SignOut,
 } from '@phosphor-icons/react'
-import useMenu from '@dreamerbird/studio/uiComponents/simpleContextMenu/useMenu'
+import {useMenu} from '@dreamerbird/studio/camera-studio'
 import {useT} from '@dreamerbird/studio/i18n'
 import {buildExportMenuItems} from './menuModel'
 import type {ExportSink} from './videoExport/sinks'

@@ -18,19 +18,16 @@ import theatre, {
   onChange,
 } from '@dreamerbird/core'
 import type {IProject, IStudioUI, InitOpts} from '@dreamerbird/core'
-// studio 根模块加载即向 core 自注册(new Studio() + setStudio + 挂 window
-// bundle):theatre.init({studio: true}) 要求这步已完成,缺了它 init 报
-// "@dreamerbird/studio has not loaded" 且 studio UI 整体缺失(T10 fix
-// round 1 冒烟实证)。模块求值序天然先于本模块任何语句,放最顶部。
-import '@dreamerbird/studio'
-import {initState} from '@dreamerbird/core/initState'
-import {privateAPI} from '@dreamerbird/core/privateAPIs'
-import projectsSingleton from '@dreamerbird/core/projects/projectsSingleton'
-import getStudioInternal from '@dreamerbird/studio/getStudio'
 import {
+  initState,
+  privateAPI,
+  projectsSingleton,
+} from '@dreamerbird/core/camera-studio'
+import {
+  getStudio as getStudioInternal,
   registerCustomPropEditor,
   unregisterCustomPropEditor,
-} from '@dreamerbird/studio/propEditors/customPropEditors'
+} from '@dreamerbird/studio/camera-studio'
 import type {CameraSceneProps, CameraStudioConfig} from './config'
 import {cameraErrorFromLibrary, cameraErrorFromUnknown} from './errors'
 import {registerCameraMessages} from './i18n'
@@ -306,6 +303,12 @@ async function boot(config: CameraStudioConfig): Promise<BootCtx> {
   // 0. UI 装配可配(T9:portal 容器 / z-index 基准 / 语言):boot 级一次
   // 写入,dispose 不复位——与 R14 boot 级保留语义一致,重挂幂等复用
   setUiConfig(config.ui ?? {})
+
+  // Studio registers itself during import. Submit the host's options first so
+  // loading scene state before mounting cannot trigger its initialization check.
+  await ensureTheatreInit(config)
+  await import('@dreamerbird/studio')
+
   // 左上角 logo 条显隐(boot 级):经 studio.ui 公共口写 ephemeral 槽
   if (config.ui?.hideLeftStrip) {
     withStudioUi((ui) => ui.setLeftStripHidden(true))
@@ -317,8 +320,6 @@ async function boot(config: CameraStudioConfig): Promise<BootCtx> {
   withStudioUi(() => {
     void mountStudioRootWhenReady(config.ui?.portalContainer)
   })
-
-  await ensureTheatreInit(config)
 
   // 1. 数据源:可写源(若有) + 内置目录,聚合进 Library 单例
   const {sources, idbName} = resolveSources(config)

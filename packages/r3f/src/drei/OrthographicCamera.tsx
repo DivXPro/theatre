@@ -7,6 +7,7 @@ import {useFrame, useThree} from '@react-three/fiber'
 import type {ThreeElements} from '@react-three/fiber'
 import {mergeRefs} from 'react-merge-refs'
 import {editable} from '../index'
+import type {EditableProps} from '../main/editable'
 import {Vector3} from 'three'
 import type {MutableRefObject} from 'react'
 import {editorStore} from '../main/store'
@@ -24,7 +25,10 @@ export type OrthographicCameraProps = Omit<
   children?: React.ReactNode
 }
 
-export const OrthographicCamera = editable(
+export const OrthographicCamera: React.ForwardRefExoticComponent<
+  React.PropsWithoutRef<EditableProps<OrthographicCameraProps>> &
+    React.RefAttributes<unknown>
+> = editable(
   React.forwardRef(
     ({makeDefault, lookAt, ...props}: OrthographicCameraProps, ref) => {
       const set = useThree(({set}) => set)

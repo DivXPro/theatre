@@ -228,7 +228,12 @@ export const ProvideStyles: React.FC<{
   children: React.ReactNode
 }> = (props) => {
   return (
-    <StyleSheetManager target={props.target}>
+    // Hosts can detach and reattach Studio's shadow root. Keep rules as text
+    // so the browser can reconstruct the stylesheet when the root reconnects.
+    <StyleSheetManager
+      target={props.target}
+      disableCSSOMInjection={props.target !== undefined}
+    >
       <>
         <GlobalStyle />
         {props.children}

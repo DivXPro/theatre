@@ -13,8 +13,10 @@ import React, {useEffect, useMemo, useRef, useState} from 'react'
 import {Html} from '@react-three/drei'
 import {useFrame} from '@react-three/fiber'
 import {ArrowClockwise, ArrowsOutCardinal} from '@phosphor-icons/react'
-import ToolbarIconButton from '@dreamerbird/studio/uiComponents/toolbar/ToolbarIconButton'
-import ToolbarSwitchSelectContainer from '@dreamerbird/studio/uiComponents/toolbar/ToolbarSwitchSelectContainer'
+import {
+  ToolbarIconButton,
+  ToolbarSwitchSelectContainer,
+} from '@dreamerbird/studio/camera-studio'
 import {onLanguageChange, translate} from '@dreamerbird/studio/i18n'
 import {suggestBoneMap} from '@dreamerbird/threeik'
 import type {Group, Object3D} from 'three'

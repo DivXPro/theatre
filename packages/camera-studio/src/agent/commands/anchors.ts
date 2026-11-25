@@ -22,7 +22,7 @@
  */
 import {val} from '@dreamerbird/core'
 import type {ISheet, ISheetObject} from '@dreamerbird/core'
-import {privateAPI} from '@dreamerbird/core/privateAPIs'
+import {privateAPI} from '@dreamerbird/core/camera-studio'
 import {AgentApiError} from '../errors'
 import type {AgentCommandRegistry} from '../registry'
 import type {AgentRuntime} from '../runtime'

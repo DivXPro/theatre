@@ -18,7 +18,7 @@ import type {CameraFlows} from './hostFlows'
 // three/examples/jsm 是纯 ESM,node_modules 不在 jest transform 范围。
 // jest-esbuild 不提升 jest.mock,故用 doMock 先行登记、再运行时 require
 // CameraScene(与 hostFlows 共享同一模块实例,句柄注册表可观测)。
-jest.doMock('./scene.glb', () => 'scene.glb')
+jest.doMock('./scene.glb?url', () => 'scene.glb')
 jest.doMock('three/examples/jsm/environments/RoomEnvironment.js', () => ({
   RoomEnvironment: class RoomEnvironment {},
 }))

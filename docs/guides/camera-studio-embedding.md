@@ -13,27 +13,24 @@
 ### npm 工程
 
 ```bash
-npm install @dreamerbird/camera-studio
+pnpm add @dreamerbird/camera-studio@1.4.1 @dreamerbird/core@1.4.1 @dreamerbird/studio@1.4.1 @dreamerbird/r3f@1.4.1
 ```
 
-peer 依赖(按包内 peerDependencies 逐字列出,需由宿主提供):
+Theatre 的四个包使用同一个发行版本。Vite 可以直接解析发行包的入口和演示模型。
+宿主还需提供以下 peer 依赖。
 
-| 包                    | 版本要求  | 说明                             |
-| --------------------- | --------- | -------------------------------- |
-| `react`               | `>=19`    |                                  |
-| `react-dom`           | `>=19`    |                                  |
-| `three`               | `>=0.185` |                                  |
-| `@react-three/fiber`  | `^9.0.0`  |                                  |
-| `@dreamerbird/core`   | `*`       | 与 studio 同代发布(1.0 程序范围) |
-| `@dreamerbird/studio` | `*`       | 同上                             |
+| 包                   | 版本要求  |
+| -------------------- | --------- |
+| `react`              | `>=19`    |
+| `react-dom`          | `>=19`    |
+| `three`              | `>=0.185` |
+| `@react-three/fiber` | `^9.0.0`  |
 
 ```bash
-npm install react react-dom three @react-three/fiber
+pnpm add react@19 react-dom@19 'three@>=0.185' @react-three/fiber@9
 ```
 
-其余运行时库(`@react-three/drei`、`styled-components`、`three-stdlib`、
-`@phosphor-icons/react`、`@gltf-transform/*`、`draco3dgltf`、`@dreamerbird/threeik`
-等)已列入包自身 dependencies,随包安装,无需宿主操心。
+其余运行时库随发行包安装。通过 `assets.baseUrl` 配置内置素材地址，Draco 文件仍由宿主提供。
 
 运行时导出的 `CAMERA_STUDIO_VERSION` 与 `package.json` 的 `version` 同源(包内直
 接读package.json),排查版本时不需要核对第二个版本号。
@@ -59,7 +56,7 @@ import {getAliasesFromTsConfigForRollup} from '../../devEnv/getAliasesFromTsConf
 
 export default defineConfig({
   plugins: [react()],
-  assetsInclude: ['**/*.gltf', '**/*.glb', '**/*.fbx'], // 包内有 .glb 静态导入
+  assetsInclude: ['**/*.gltf', '**/*.glb', '**/*.fbx'],
   resolve: {alias: [...getAliasesFromTsConfigForRollup()]},
 })
 ```
@@ -521,8 +518,8 @@ const {applied, missed} = applyPose(myModelRoot, relaxed.bones)
 import {
   HttpPatchAdapter,
   loadSceneSyncState,
-  useCameraStudio,
-} from '@dreamerbird/camera-studio'
+} from '@dreamerbird/camera-studio/scene-sync'
+import {useCameraStudio} from '@dreamerbird/camera-studio'
 
 // 在宿主路由的数据加载阶段为当前项目执行。
 const state = await loadSceneSyncState(new HttpPatchAdapter(sceneUrl), {

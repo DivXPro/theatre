@@ -6,7 +6,7 @@
  * 文案一律经 t() 取(缺省 = 全局单例当前语言):测试注入固定词典的 t
  * 即可断言任何语言;词条见 ./i18n.ts。
  */
-import type {ContextMenuItem} from '@dreamerbird/studio/uiComponents/chordial/chordialInternals'
+import type {ContextMenuItem} from '@dreamerbird/studio/camera-studio'
 import type {TFunction} from '@dreamerbird/studio/i18n'
 import {translate} from '@dreamerbird/studio/i18n'
 import type {GizmoMode} from './PlacementManager'

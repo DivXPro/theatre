@@ -13,7 +13,7 @@
  */
 import {getStudioSync} from '@dreamerbird/core'
 import type {ISheetObject} from '@dreamerbird/core'
-import type {$IntentionalAny} from '@dreamerbird/core/types/public'
+import type {$IntentionalAny} from '@dreamerbird/core/camera-studio'
 import type {Pointer} from '@dreamerbird/dataverse'
 import {getTrackIdForProp} from '../poseMode/poseTrack'
 import {AgentApiError} from './errors'

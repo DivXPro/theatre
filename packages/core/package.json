@@ -1,6 +1,6 @@
 {
   "name": "@dreamerbird/core",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "license": "Apache-2.0",
   "description": "Motion design editor for the web",
   "repository": {
@@ -16,6 +16,17 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "commonjs",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./camera-studio": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
   "files": [
     "dist/*"
   ],

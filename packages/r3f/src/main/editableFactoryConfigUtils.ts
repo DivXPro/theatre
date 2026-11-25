@@ -1,7 +1,6 @@
-import type {UnknownShorthandCompoundProps} from '@dreamerbird/core'
+import type {PropLabel, UnknownShorthandCompoundProps} from '@dreamerbird/core'
 import {notify} from '@dreamerbird/core'
 import {types} from '@dreamerbird/core'
-import type {PropLabel} from '@dreamerbird/core/types/public'
 import type {Object3D} from 'three'
 import type {ThreeElements} from '@react-three/fiber'
 import type {IconID} from '../extension/icons'

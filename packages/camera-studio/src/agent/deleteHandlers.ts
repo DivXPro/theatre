@@ -24,7 +24,7 @@
  */
 import type {ISheet} from '@dreamerbird/core'
 // 内部 Studio 通道(注册表删除函数实际使用的实例;与 keyframeTracks 同先例)
-import getStudio from '@dreamerbird/studio/getStudio'
+import {getStudio} from '@dreamerbird/studio/camera-studio'
 import {deletePlacement} from '../PlacementManager'
 import {collectAnchorChildResets} from '../aimTargets'
 import {removeAnchor} from '../anchorsRegistry'

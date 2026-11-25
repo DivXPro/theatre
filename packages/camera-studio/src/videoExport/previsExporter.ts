@@ -9,7 +9,7 @@
  * 整个任务用一个幂等 restore 包住:成功、异常、jobs.cancel、场景 dispose
  * 都走同一清理路径,不写 undo、不 bump revision。
  */
-import {getCoreTicker} from '@dreamerbird/core/coreTicker'
+import {getCoreTicker} from '@dreamerbird/core/camera-studio'
 import {val} from '@dreamerbird/core'
 import type {ISequence} from '@dreamerbird/core'
 import type {PerspectiveCamera} from 'three'

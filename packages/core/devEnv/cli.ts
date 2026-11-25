@@ -59,7 +59,7 @@ async function bundle(watch: boolean) {
     treeShaking: true,
   }
 
-  esbuildConfig.platform = 'neutral'
+  esbuildConfig.platform = 'node'
   esbuildConfig.mainFields = ['browser', 'module', 'main']
   esbuildConfig.target = ['firefox57', 'chrome58']
   esbuildConfig.conditions = ['browser', 'node']

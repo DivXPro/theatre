@@ -16,9 +16,11 @@
 import React, {useContext, useEffect, useState} from 'react'
 import {createPortal} from 'react-dom'
 import {useI18n} from '@dreamerbird/studio/i18n'
-import {PopoverAutoCloseLock} from '@dreamerbird/studio/uiComponents/Popover/usePopover'
-import type {PropTypeConfig_AllSimples} from '@dreamerbird/core/types/public'
-import type {ISimplePropEditorReactProps} from '@dreamerbird/studio/propEditors/simpleEditors/ISimplePropEditorReactProps'
+import {
+  PopoverAutoCloseLock,
+  type ISimplePropEditorReactProps,
+} from '@dreamerbird/studio/camera-studio'
+import type {PropTypeConfig_AllSimples} from '@dreamerbird/core/camera-studio'
 import type {ISheetObject} from '@dreamerbird/core'
 import {getLibrary, useLibraryEntries} from './assetLibrary/library'
 import {useModelThumbUrl} from './assetLibrary/useModelThumbUrl'

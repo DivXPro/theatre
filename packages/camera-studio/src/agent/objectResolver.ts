@@ -13,7 +13,7 @@
  * (后续写命令对此返回 INVALID_STATE)。
  */
 import {val} from '@dreamerbird/core'
-import {privateAPI} from '@dreamerbird/core/privateAPIs'
+import {privateAPI} from '@dreamerbird/core/camera-studio'
 import type {ISheet, ISheetObject} from '@dreamerbird/core'
 import {ANCHORS_REGISTRY_KEY, parseAnchorKeys} from '../anchorsRegistry'
 import {CAMERAS_REGISTRY_KEY, parseCameraEntries} from '../cameraRegistry'

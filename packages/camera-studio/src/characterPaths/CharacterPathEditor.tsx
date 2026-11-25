@@ -1,15 +1,15 @@
 import React, {useState} from 'react'
 import type {ISheetObject} from '@dreamerbird/core'
-import type {PropTypeConfig_AllSimples} from '@dreamerbird/core/types/public'
+import type {PropTypeConfig_AllSimples} from '@dreamerbird/core/camera-studio'
 import {usePrism, useVal} from '@dreamerbird/react'
 import {useT} from '@dreamerbird/studio/i18n'
 import {
   registerCustomPropEditor,
   unregisterCustomPropEditor,
-} from '@dreamerbird/studio/propEditors/customPropEditors'
-import type {ISimplePropEditorReactProps} from '@dreamerbird/studio/propEditors/simpleEditors/ISimplePropEditorReactProps'
-import usePopover from '@dreamerbird/studio/uiComponents/Popover/usePopover'
-import {revealAdditionalSequenceRows} from '@dreamerbird/studio/panels/SequenceEditorPanel/additionalRows'
+  type ISimplePropEditorReactProps,
+  usePopover,
+  revealAdditionalSequenceRows,
+} from '@dreamerbird/studio/camera-studio'
 import {pathObjectName} from '../CameraPath'
 import type {PathEntry} from '../pathRegistry'
 import {

@@ -5,7 +5,7 @@
  */
 
 export * from './coreExports'
-export * from './types/public'
+export * from './camera-studio'
 import {defer} from '@dreamerbird/utils/defer'
 import CoreBundle from './CoreBundle'
 import {globalVariableNames} from './globals'

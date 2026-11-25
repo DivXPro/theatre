@@ -13,7 +13,7 @@ import type {ISheet, ISheetObject} from '@dreamerbird/core'
 import type {
   OutlineObjectMenuContribution,
   OutlineMenuItem,
-} from '@dreamerbird/core/types/public'
+} from '@dreamerbird/core/camera-studio'
 import type {CameraEntry} from './cameraRegistry'
 import type {PathEntry} from './pathRegistry'
 import type {PlacementEntry} from './PlacementManager'

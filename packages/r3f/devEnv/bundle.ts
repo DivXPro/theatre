@@ -41,7 +41,7 @@ async function createBundles() {
       build(esbuildConfig),
       build({
         ...esbuildConfig,
-        outfile: path.join(__dirname, '../dist/index.esm.js'),
+        outfile: path.join(__dirname, '../dist/index.mjs'),
         format: 'esm',
       }),
     ])
@@ -108,7 +108,7 @@ async function createBundles() {
       build(esbuildConfig),
       build({
         ...esbuildConfig,
-        outfile: path.join(__dirname, '../dist/extension/index.esm.js'),
+        outfile: path.join(__dirname, '../dist/extension/index.mjs'),
         format: 'esm',
       }),
     ])
