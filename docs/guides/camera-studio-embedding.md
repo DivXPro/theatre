@@ -13,7 +13,7 @@
 ### npm 工程
 
 ```bash
-pnpm add @dreamerbird/camera-studio@1.4.1 @dreamerbird/core@1.4.1 @dreamerbird/studio@1.4.1 @dreamerbird/r3f@1.4.1
+pnpm add @dreamerbird/camera-studio@1.4.2 @dreamerbird/core@1.4.2 @dreamerbird/studio@1.4.2 @dreamerbird/r3f@1.4.2
 ```
 
 Theatre 的四个包使用同一个发行版本。Vite 可以直接解析发行包的入口和演示模型。

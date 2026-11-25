@@ -1,5 +1,11 @@
 # Theatre.js changelog
 
+## 1.4.2
+
+- Camera Studio 的视图坐标轴会随属性面板调整位置。画中画默认关闭，可从工具栏开启。
+- 漫画模式的阴影开关和网点预设改由宿主通过 `scene.viewportRendering` 配置，工具栏保留漫画模式切换。
+- 提高浅色主题下时间轴主刻度和次刻度网格线的对比度，暂停时切换主题也会立即更新。
+
 ## 1.4.1
 
 - 修复 Camera Studio 的 npm 接入。Core、Studio 和 R3F 的同版本包共享编辑器运行时，发布包包含 Studio 类型声明、演示模型和 `@dreamerbird/camera-studio/scene-sync` 入口。

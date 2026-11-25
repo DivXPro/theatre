@@ -57,32 +57,6 @@
 .cs-toolbar-button.danger {
   color: var(--theatre-ui-danger, #ff7a7a);
 }
-.cs-shading-label {
-  @apply flex items-center whitespace-nowrap;
-  gap: 5px;
-  padding-inline: 4px 0;
-  color: var(--cs-theme-secondary-text, #c1c5c7);
-  font-size: var(--cs-theme-font-size, 12px);
-}
-.cs-shading-select {
-  @apply cursor-pointer;
-  height: var(--theatre-camera-tool-size);
-  padding-inline: 6px;
-  border: 1px solid var(--cs-theme-border, #303334);
-  border-radius: var(--cs-theme-radius, 6px);
-  background: var(--cs-theme-surface, #151617);
-  color: inherit;
-  color-scheme: var(--cs-color-scheme, dark);
-  font: inherit;
-}
-.cs-shading-select[data-active='true'] {
-  color: var(--cs-theme-accent, #b7e0d0);
-  border-color: var(--cs-theme-selected-border, #3b5148);
-  background: var(--cs-theme-selected-background, #202c27);
-}
-.cs-shading-select:focus-visible {
-  outline: 1px solid var(--cs-theme-accent, #b7e0d0);
-}
 .cs-tooltip-trigger > .tip {
   @apply invisible absolute left-1/2 whitespace-nowrap text-left pointer-events-none opacity-0;
   top: calc(100% + 8px);

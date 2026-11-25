@@ -93,7 +93,7 @@ import {
 } from './anchorsRegistry'
 import type {AnchorSeed} from './anchorsRegistry'
 import {PipCameraSelector} from './PipCameraSelector'
-import {previewWidth, usePreviewLayout} from './pipLayout'
+import {previewWidth, usePreviewLayout, type GizmoLayout} from './pipLayout'
 import {bindUndoShortcuts, isInsideStudioUi} from './undoShortcuts'
 import {AssetLibraryPanel} from './assetLibrary/AssetLibraryPanel'
 import {ModelPickerSlot} from './assetLibrary/ModelPickerSlot'
@@ -635,9 +635,11 @@ function MainOrbitControls({
 function GizmoNav({
   cameraObjRef,
   renderPriority,
+  layout,
 }: {
   cameraObjRef: React.MutableRefObject<ISheetObject<any> | undefined>
   renderPriority: number
+  layout: GizmoLayout | null
 }) {
   const camera = useThree((s) => s.camera)
   const scrubRef = useRef<IScrub | undefined>(undefined)
@@ -683,14 +685,14 @@ function GizmoNav({
     [],
   )
 
+  if (!layout) return null
   return (
-    // 右上角往左让出属性面板的位置,避免轴臂被面板遮住。
     // key=相机:默认相机切换(或热更新后状态老化)时强制 gizmo 重建,
     // 防止它内部缓存了旧相机导致朝向冻结
     <GizmoHelper
       key={camera.uuid}
       alignment="top-right"
-      margin={[340, 70]}
+      margin={[layout.right, layout.top]}
       onUpdate={onUpdate}
       renderPriority={renderPriority}
     >
@@ -931,13 +933,13 @@ export function CameraScene({
   )
   const isManga = renderMode !== 'original'
   // 画中画开关(顶栏按钮):只管编辑视角右下角的小窗,不影响镜头全屏视角
-  const [pipVisible, setPipVisible] = useState(true)
+  const [pipVisible, setPipVisible] = useState(false)
   const sceneRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
     const head = sceneRef.current?.ownerDocument.head
     if (head) installCameraStyles(head)
   }, [])
-  const {bottom: pipBottom, right: pipRight} = usePreviewLayout(sceneRef)
+  const {bottom: pipBottom, right: pipRight, gizmo} = usePreviewLayout(sceneRef)
   // 画中画边框层是 pointerEvents:none,收不到 hover——用窗口 mousemove
   // 按画中画的几何位置(与边框层/ShotCamera 同源)判定光标是否在它上面
   const [pipHovered, setPipHovered] = useState(false)
@@ -2047,14 +2049,6 @@ export function CameraScene({
           onSelectGizmoMode={setGizmoMode}
           renderMode={renderMode}
           onSelectRenderMode={(mode) => updateRendering({mode})}
-          mangaShadows={mangaShadows}
-          onToggleMangaShadows={() =>
-            updateRendering({castShadow: !renderingRef.current.castShadow})
-          }
-          mangaShadingPreset={mangaShadingPreset}
-          onSelectMangaShadingPreset={(shadingPreset) =>
-            updateRendering({shadingPreset})
-          }
           characterNamesVisible={characterNamesVisible}
           onToggleCharacterNames={() =>
             updateRendering({
@@ -2337,6 +2331,7 @@ export function CameraScene({
               <GizmoNav
                 cameraObjRef={cameraObjRef}
                 renderPriority={isManga ? 1.25 : 1}
+                layout={gizmo}
               />
             )}
             <ExitPathEditOnEmptyClick
