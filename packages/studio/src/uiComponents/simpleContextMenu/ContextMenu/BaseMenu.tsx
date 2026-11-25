@@ -17,7 +17,7 @@ const MenuContainer = styled.ul`
   /* background: ${transparentize(0.4, '#000000')};
   backdrop-filter: blur(8px) saturate(300%) contrast(65%) brightness(70%); */
 
-  background: rgb(45 55 66 / 75%);
+  background: var(--theatre-ui-raised, rgb(45 55 66 / 75%));
   backdrop-filter: blur(8px) brightness(70%);
   // 同值兜底:菜单可能被外层应用(如 playground)在自己的 React 树里渲染,
   // portal 落在主文档,studio 的 --theatre-* 令牌(定义在 shadow DOM
@@ -35,7 +35,7 @@ const MenuContainer = styled.ul`
     sans-serif
   );
   font-size: var(--theatre-font-size, 11px);
-  border: 0.5px solid #6262622c;
+  border: 0.5px solid var(--theatre-ui-border, #6262622c);
   box-sizing: border-box;
   box-shadow: ${transparentize(0.75, '#000000')} 0px 4px 20px;
   list-style-type: none;
@@ -50,7 +50,7 @@ const MenuTitle = styled.div`
   padding: 8px 10px 6px;
   position: relative;
 
-  color: #d1d1d1;
+  color: var(--theatre-ui-secondary, #d1d1d1);
   font-size: 10px;
   font-weight: 500;
 
@@ -112,7 +112,7 @@ const BaseMenu: React.FC<{
 const Separator = styled.div`
   height: 1px;
   margin: 2px 8px;
-  background: #6262622c;
+  background: var(--theatre-ui-border, #6262622c);
 `
 
 export default BaseMenu

@@ -16,7 +16,7 @@ const IconContainer = styled.div`
   font-size: 14px;
   display: flex;
   align-items: center;
-  color: #6b7280;
+  color: var(--theatre-ui-secondary, #6b7280);
   pointer-events: none;
 `
 
@@ -25,7 +25,7 @@ const Select = styled.select`
   background-color: transparent;
   box-sizing: border-box;
   border: 1px solid transparent;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--theatre-ui-text, rgba(255, 255, 255, 0.85));
   padding: 1px 6px;
   font: inherit;
   outline: none;
@@ -45,8 +45,8 @@ const Select = styled.select`
 
   &:hover,
   &:focus {
-    background-color: #10101042;
-    border-color: #00000059;
+    background-color: var(--theatre-ui-input, #10101042);
+    border-color: var(--theatre-ui-border, #00000059);
   }
 `
 

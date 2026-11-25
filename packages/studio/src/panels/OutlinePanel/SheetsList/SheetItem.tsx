@@ -11,7 +11,10 @@ const Head = styled.div`
 `
 
 const Container = styled.li<{$isSelected: boolean}>`
-  color: ${(props) => (props.$isSelected ? 'white' : 'hsl(1, 1%, 80%)')};
+  color: ${(props) =>
+    props.$isSelected
+      ? 'var(--theatre-ui-text, white)'
+      : 'var(--theatre-ui-secondary, hsl(1, 1%, 80%))'};
 `
 
 const Body = styled.div``

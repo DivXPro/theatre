@@ -2,7 +2,6 @@ import type {ISequencePositionFormatter} from '@dreamerbird/core/sequences/Seque
 import type {SequenceEditorPanelLayout} from '@dreamerbird/studio/panels/SequenceEditorPanel/layout/layout'
 import type {Pointer} from '@dreamerbird/dataverse'
 import {prism, val} from '@dreamerbird/dataverse'
-import {darken} from 'polished'
 import React, {useLayoutEffect, useRef, useState} from 'react'
 import styled from 'styled-components'
 import createGrid from './createGrid'
@@ -17,11 +16,9 @@ const Container = styled.div`
 `
 
 export const stampsGridTheme = {
-  fullUnitStampColor: `#6a6a6a`,
+  fullUnitStampColor: `var(--theatre-ui-secondary, #6a6a6a)`,
   stampFontSize: '10px',
-  get subUnitStampColor(): string {
-    return darken(0.2, stampsGridTheme.fullUnitStampColor)
-  },
+  subUnitStampColor: 'var(--theatre-ui-muted, #373737)',
 }
 
 const TheStamps = styled.div`

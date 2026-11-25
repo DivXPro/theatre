@@ -111,7 +111,7 @@ export function CameraPage() {
 | `sync`                  | `{serverUrl?: string} \| false`                          | `false`         | 协作端点(见 §6)                                                                                     |
 | `ui.portalContainer`    | `HTMLElement`                                            | `document.body` | 模块停靠框的 portal 挂载点                                                                          |
 | `ui.zIndexBase`         | `number`                                                 | `1000`          | 模块停靠框 z-index 基准(见 §7 层级地图)                                                             |
-| `ui.theme`             | `CameraStudioTheme`                                      | 内置深色主题    | 初始化时覆盖 UI 主题变量，未传的字段沿用内置样式                                                    |
+| `ui.theme`             | `CameraStudioTheme`                                      | 当前内置主题    | 初始化时覆盖 UI 主题变量，未传的字段沿用内置样式                                                    |
 | `ui.locale`             | `string`                                                 | 不生效          | 仅当宿主**未**包 I18nProvider 时应用,一次性 setLanguage(见 §7)                                      |
 | `ui.hideLeftStrip`      | `boolean`                                                | `false`         | 隐藏 studio 左上角带 logo 的整条 LeftStrip(应用 logo + 工作区按钮);boot 级一次性应用,换值需整页刷新 |
 | `flows.onFlows`         | `(flows: CameraFlows) => void`                           | 不传            | 接管「添加模型/添加路径/添加相机」入口,拿到模块的 flows 句柄                                        |
@@ -148,12 +148,12 @@ function SceneEditor({scene, host, locale}) {
 
 - **退出。** 工具栏和宿主调用 `closeScene()` 走同一保存及关闭流程。保存失败或仍有临时编辑时保留场景。成功后 `ready` 变为 `false`，场景会话清理完成，再调用 `onSceneClosed({projectId})`。切换场景时，等关闭完成后为新的宿主快照挂载新的 `SceneEditor`。若宿主直接卸载编辑器，可以先等待 `flushState()`，卸载后再调用 `resetCameraStudio()` 以载入另一份快照。
 - **导出。** `onSaveExport` 收到 `kind`、`blob`、`fileName`、`mimeType` 和渲染元数据。图片是当前镜头在播放头位置的 PNG。视频使用编码器实际生成的 MP4 或 WebM，并携带帧率和时长。回调可返回 Promise，失败经 `onError` 报告。省略回调时，图片直接下载，视频仍提供浏览器保存选项。
-- **语言。** `ui.locale` 设置初始语言。内置简体中文 `zh-CN`、英语 `en`、日语 `ja`、韩语 `ko`、俄语 `ru`、德语 `de`、西班牙语 `es`、巴西葡萄牙语 `pt` 和法语 `fr`。`ja-JP`、`ko-KR`、`pt-BR` 等地区代码会匹配对应的基础语言词典。场景挂载后，调用 `setCameraStudioLocale('ja')` 即时更新视口和 Studio 面板，同时保留浏览器中的用户语言偏好。
+- **语言。** 宿主可通过 `ui.locale` 设置初始语言。内置简体中文 `zh-CN`、英语 `en`、日语 `ja`、韩语 `ko`、俄语 `ru`、德语 `de`、西班牙语 `es`、巴西葡萄牙语 `pt` 和法语 `fr`。`ja-JP`、`ko-KR`、`pt-BR` 等地区代码会匹配对应的基础语言词典。宿主语言变化时，调用 `setCameraStudioLocale('ja')` 即时更新视口和 Studio 面板。
 
 ### 单机桌面接入
 
 在桌面 WebView 的渲染进程中调用 `mountCameraStudioDesktop`。宿主用自己的
-IPC 传递打开场景、退出和语言切换指令，并处理持久化。编辑器只使用页内 JS API，
+IPC 传递场景操作及宿主外观、语言设置，并处理持久化。编辑器只使用页内 JS API，
 HTTP 和 WebSocket 可由宿主按需提供。
 
 ```ts
@@ -182,11 +182,22 @@ pnpm --filter camera-host-demo build
 pnpm dlx --allow-build=electron electron@41 ./examples/camera-host-demo/desktop/main.cjs
 ```
 
-启动后自动打开本地场景。可从系统菜单关闭或重新打开场景、切换语言，也可使用编辑器工具栏导出图片和视频。
+启动后自动打开本地场景。Electron 主进程提供启动语言和系统外观，并在系统外观变化时更新编辑器。桌面菜单提供场景操作，编辑器工具栏提供图片和视频导出。
 
-### 自定义工作台主题
+### 宿主控制工作台主题
 
-`ui.theme` 接受颜色、字体和圆角等 CSS 值。每个字段都可选，缺省时显示原有深色界面。
+宿主在 `ui.portalContainer` 上设置 `data-theme="light"` 即可启用浅色界面。未配置 `ui.portalContainer` 时，在 `document.body` 上设置。场景打开期间，宿主可直接更新该属性：
+
+```ts
+const themeSource = portalContainer ?? document.body
+themeSource.dataset.theme = 'light'
+// 切回深色
+themeSource.dataset.theme = 'dark'
+```
+
+缺失或无效值使用深色主题。工具栏、Studio 面板和浮层同步切换，场景与导出内容保持原有渲染。
+
+`ui.theme` 接受颜色、字体和圆角等 CSS 值。每个字段都可选，并优先于当前内置主题的对应值。
 
 ```tsx
 const {ready, sceneProps} = useCameraStudio({

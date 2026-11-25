@@ -18,7 +18,7 @@ export const Container = styled.button`
   height: 32px;
   outline: none;
 
-  color: #a8a8a9;
+  color: var(--theatre-ui-secondary, #a8a8a9);
 
   background: var(--theatre-panel-bg-80);
   backdrop-filter: blur(14px);
@@ -31,11 +31,11 @@ export const Container = styled.button`
   }
 
   &:hover {
-    background: rgba(59, 63, 69, 0.8);
+    background: var(--theatre-ui-hover, rgba(59, 63, 69, 0.8));
   }
 
   &:active {
-    background: rgba(82, 88, 96, 0.8);
+    background: var(--theatre-ui-selected, rgba(82, 88, 96, 0.8));
   }
 
   &.selected {

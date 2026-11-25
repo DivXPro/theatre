@@ -129,8 +129,8 @@ const Container = styled(animated.div)`
   border-radius: 4px;
   box-shadow: rgb(0 0 0 / 25%) 0px 2px 4px;
   backdrop-filter: blur(8px) saturate(300%) contrast(65%) brightness(55%);
-  background-color: rgb(45 46 66 / 50%);
-  border: 0.5px solid rgb(86 100 110 / 46%);
+  background-color: var(--theatre-ui-raised, rgb(45 46 66 / 50%));
+  border: 0.5px solid var(--theatre-ui-border, rgb(86 100 110 / 46%));
   z-index: 10000;
   padding: 8px 8px;
   font-size: 10px;
@@ -151,9 +151,9 @@ const Title = styled.div`
 `
 
 const IconContainer = styled.div`
-  background: #59595938;
+  background: var(--theatre-ui-raised, #59595938);
   border-radius: 4px;
-  border: 0.5px solid #ffffff1a;
+  border: 0.5px solid var(--theatre-ui-border, #ffffff1a);
   color: var(--theatre-text-primary);
   padding: 4px;
   font-size: 10px;

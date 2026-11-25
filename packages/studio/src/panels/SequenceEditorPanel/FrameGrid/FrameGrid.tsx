@@ -18,6 +18,7 @@ const Container = styled.div`
 const TheCanvas = styled.canvas`
   position: relative;
   left: 0;
+  filter: var(--theatre-ui-grid-filter, none);
 `
 
 /**

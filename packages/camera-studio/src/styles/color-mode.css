@@ -1,0 +1,26 @@
+:root:where([data-camera-studio-color-mode='light']) {
+  --cs-color-scheme: light;
+  --cs-theme-surface: var(--theatre-ui-surface);
+  --cs-theme-raised-surface: var(--theatre-ui-raised);
+  --cs-theme-recessed-surface: var(--theatre-ui-recessed);
+  --cs-theme-input-background: var(--theatre-ui-input);
+  --cs-theme-border: var(--theatre-ui-border);
+  --cs-theme-text: var(--theatre-ui-text);
+  --cs-theme-secondary-text: var(--theatre-ui-secondary);
+  --cs-theme-muted-text: var(--theatre-ui-muted);
+  --cs-theme-accent: var(--theatre-ui-accent);
+  --cs-theme-hover-background: var(--theatre-ui-hover);
+  --cs-theme-selected-background: var(--theatre-ui-selected);
+  --cs-theme-selected-border: var(--theatre-ui-selected-border);
+
+  --cs-color-warning: #8c5b16;
+  --cs-strip-base-background: #e0ebf5;
+  --cs-strip-base-border: #7897b2;
+  --cs-strip-base-hover: #d5e6f4;
+  --cs-strip-danger-hover: color-mix(
+    in srgb,
+    var(--theatre-ui-danger) 14%,
+    var(--theatre-ui-danger-surface)
+  );
+  --cs-strip-label-shadow: none;
+}

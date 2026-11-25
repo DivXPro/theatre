@@ -1,3 +1,12 @@
+body[data-theme='light'] {
+  --camera-host-background: #f8faf9;
+  --camera-host-text: #465750;
+  --camera-host-error-background: #fce8e8;
+  --camera-host-error-border: #d7abab;
+  --camera-host-error-text: #8e2727;
+  --camera-host-color-scheme: light;
+}
+
 .camera-host-nav__status {
   position: absolute;
   top: 64px;
@@ -5,7 +14,7 @@
   z-index: 11;
   width: fit-content;
   margin-inline: auto;
-  color: #b7e0d0;
+  color: var(--cs-theme-accent, #b7e0d0);
   font:
     12px/1.4 system-ui,
     sans-serif;
@@ -14,35 +23,16 @@
 
 .camera-host-nav__status:not(:empty) {
   padding: 5px 8px;
-  border: 1px solid #303334;
+  border: 1px solid var(--cs-theme-border, #303334);
   border-radius: 6px;
-  background: #151617;
-}
-
-.camera-host-nav__language {
-  height: var(--theatre-camera-tool-size);
-  padding-inline: 6px;
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  color: #c1c5c7;
-  color-scheme: dark;
-}
-
-.camera-host-nav__language:hover {
-  background: #25292a;
-  color: #e5e6e7;
-}
-
-.camera-host-nav__language:focus-visible {
-  outline: 1px solid #b7e0d0;
+  background: var(--cs-theme-surface, #151617);
 }
 
 .camera-host-nav__home {
   padding: 24px;
-  color: #c1c5c7;
+  color: var(--camera-host-text, #c1c5c7);
   font:
     13px/1.5 system-ui,
     sans-serif;
-  color-scheme: dark;
+  color-scheme: var(--camera-host-color-scheme, dark);
 }

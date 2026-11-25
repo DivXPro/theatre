@@ -20,7 +20,10 @@ import type {ChordialOpts} from '@dreamerbird/studio/uiComponents/chordial/chord
 import useChordial from '@dreamerbird/studio/uiComponents/chordial/useChodrial'
 
 export const Li = styled.li<{$isSelected: boolean}>`
-  color: ${(props) => (props.$isSelected ? 'white' : 'hsl(1, 1%, 80%)')};
+  color: ${(props) =>
+    props.$isSelected
+      ? 'var(--theatre-ui-text, white)'
+      : 'var(--theatre-ui-secondary, hsl(1, 1%, 80%))'};
 `
 
 const ListContainer = styled.div`

@@ -7,6 +7,7 @@
     "composite": true,
     "types": ["jest", "node"],
     "emitDeclarationOnly": true,
+    "resolveJsonModule": true,
     // paths 在派生 tsconfig 里是全量替换(不合并),@dreamerbird/* 段照抄
     // tsconfig.base.json;react 钉版的原因见 camera-studio/tsconfig.json
     // 的同名注释(pnpm 布局下第三方 d.ts 上爬抓错主版本)。
@@ -59,6 +60,7 @@
     "../core/globals.d.ts",
     "./globals.d.ts",
     "./src/**/*",
+    "./src/lightTheme.json",
     "./devEnv/**/*"
   ],
   "exclude": ["**/node_modules", "**/.*", "**/xeno", "**/dist", "**/.temp"]

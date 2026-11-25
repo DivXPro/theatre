@@ -17,7 +17,7 @@ const Container = styled.div`
   background-image: linear-gradient(to top, #000, rgba(0, 0, 0, 0)),
     linear-gradient(
       to right,
-      var(--theatre-text-primary),
+      var(--theatre-ui-on-accent, var(--theatre-text-primary)),
       rgba(255, 255, 255, 0)
     );
 

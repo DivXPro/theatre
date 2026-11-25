@@ -59,12 +59,12 @@ const CurButton = styled(Button)<{
   ${pointerEventsAutoInNormalMode};
 
   &:hover {
-    color: #e0c917;
+    color: var(--theatre-ui-keyframe-selected, #e0c917);
   }
 
   color: ${(props) =>
     props.$presence === PresenceFlag.Primary
-      ? 'white'
+      ? 'var(--theatre-ui-text, white)'
       : props.$isOn
         ? nextPrevCursorsTheme.onColor
         : nextPrevCursorsTheme.offColor};
@@ -80,7 +80,7 @@ const PrevOrNextButton = styled(Button)<{
 }>`
   color: ${(props) =>
     props.$flag === PresenceFlag.Primary
-      ? 'white'
+      ? 'var(--theatre-ui-text, white)'
       : props.$available
         ? nextPrevCursorsTheme.onColor
         : nextPrevCursorsTheme.offColor};

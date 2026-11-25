@@ -12,7 +12,7 @@ const Container = styled.div`
   width: 16px;
   height: 16px;
   transform: translate(-50%, -50%);
-  background-color: var(--theatre-text-primary);
+  background-color: var(--theatre-ui-on-accent, var(--theatre-text-primary));
   border: 1px solid #ffffff00;
   border-radius: 2px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);

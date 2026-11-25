@@ -54,7 +54,7 @@ const InputLabel = styled.label<{$empty: boolean}>`
   border-radius: 99999px;
   border: 1px solid hwb(220deg 40% 52%);
   &:hover {
-    border-color: hwb(220deg 45% 52%);
+    border-color: var(--theatre-ui-border, hwb(220deg 45% 52%));
   }
 
   ${(props) => (props.$empty ? css`` : css``)}
@@ -80,7 +80,7 @@ const DeleteButton = styled.button`
   justify-content: center;
   outline: none;
   background: transparent;
-  color: #a8a8a9;
+  color: var(--theatre-ui-secondary, #a8a8a9);
 
   border: none;
   height: 100%;

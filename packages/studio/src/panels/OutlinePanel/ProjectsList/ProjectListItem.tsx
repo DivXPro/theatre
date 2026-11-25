@@ -12,9 +12,9 @@ import useChordial from '@dreamerbird/studio/uiComponents/chordial/useChodrial'
 import {projectDisplayNameOf} from '@dreamerbird/studio/panels/OutlinePanel/outlineOps/displayName'
 
 const ConflictNotice = styled.div`
-  color: #ff6363;
+  color: var(--theatre-ui-danger, #ff6363);
   margin-left: 11px;
-  background: #4c282d;
+  background: var(--theatre-ui-danger-surface, #4c282d);
   padding: 2px 8px;
   border-radius: 2px;
   font-size: 10px;

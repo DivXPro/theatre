@@ -5,6 +5,7 @@ import React, {useLayoutEffect, useState} from 'react'
 import ReactDOM from 'react-dom'
 import type {$IntentionalAny} from '@dreamerbird/core/types/public'
 import {PortalContext} from 'reakit'
+import lightTheme from './lightTheme.json'
 import useRefAndState from './utils/useRefAndState'
 
 /**
@@ -50,6 +51,10 @@ export const theme = {
 export const panelUtils = {
   panelBorder: `2px solid var(--theatre-panel-border)`,
 }
+
+const lightThemeVariables = Object.entries(lightTheme)
+  .map(([property, value]) => `${property}: ${value};`)
+  .join('\n')
 
 const GlobalStyle =
   typeof window !== 'undefined'
@@ -190,7 +195,12 @@ const GlobalStyle =
           }
         }
 
-
+        :host([data-theme='light']),
+        #theatrejs-faux-shadow-root[data-theme='light'] {
+          ${lightThemeVariables}
+          color-scheme: light;
+          color: var(--theatre-text-primary);
+        }
 
         * {
           padding: 0;

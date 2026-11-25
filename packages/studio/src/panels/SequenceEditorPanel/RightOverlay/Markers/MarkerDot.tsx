@@ -61,7 +61,7 @@ const MarkerVisualDot = React.memo(() => (
       >
         <path
           d="M12 5H0V7H2.71973L5.96237 10.2426L9.20501 7H12V5Z"
-          fill="#40AAA4"
+          fill="var(--theatre-ui-accent, #40AAA4)"
         />
       </svg>
     }

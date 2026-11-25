@@ -20,7 +20,7 @@
   @apply box-border cursor-pointer overflow-hidden;
   border: 1px solid var(--cs-theme-border, var(--theatre-panel-border, #1f1f1f));
   border-radius: var(--cs-theme-radius, 3px);
-  background: rgb(0 0 0 / 18%);
+  background: var(--cs-theme-raised-surface, rgb(0 0 0 / 18%));
 }
 .cs-pose-option[data-current] {
   border-color: var(--cs-theme-selected-border, rgb(125 193 200 / 45%));
@@ -50,7 +50,7 @@
 .cs-pose-option-thumb {
   @apply relative w-full;
   height: 112px;
-  background: rgb(0 0 0 / 25%);
+  background: var(--cs-theme-recessed-surface, rgb(0 0 0 / 25%));
 }
 .cs-pose-option-thumb img {
   @apply absolute inset-0 block w-full h-full object-cover;

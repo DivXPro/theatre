@@ -17,16 +17,13 @@ import React, {
   useSyncExternalStore,
 } from 'react'
 import ReactDOM from 'react-dom/client'
-import {
-  getLanguage,
-  onLanguageChange,
-  setLanguage,
-} from '@dreamerbird/studio/i18n'
+import {getLanguage, onLanguageChange} from '@dreamerbird/studio/i18n'
 import {
   useCameraStudio,
   CameraScene,
   loadSceneSyncState,
   resetCameraStudio,
+  setCameraStudioLocale,
   type CameraStudioAgentBridgeConfig,
   type CameraStudioError,
   type CameraStudioExport,
@@ -55,9 +52,6 @@ function bridgeConfigFromEnv(): CameraStudioAgentBridgeConfig | undefined {
   return {url, httpUrl, token}
 }
 const agentBridge = bridgeConfigFromEnv()
-
-// 宿主视觉决定:页面底色(库不替宿主页面着色)
-document.body.style.backgroundColor = '#171717'
 
 // 资产和场景状态各自保存，重新打开页面仍可放置同一资产。
 const assetStorage = {namespace: 'camera-host-demo'}
@@ -135,9 +129,9 @@ function HostErrorToast({
         maxWidth: 360,
         padding: '10px 12px',
         borderRadius: 6,
-        background: '#3b2323',
-        border: '1px solid #8a4b4b',
-        color: '#ffd7d7',
+        background: 'var(--camera-host-error-background, #3b2323)',
+        border: '1px solid var(--camera-host-error-border, #8a4b4b)',
+        color: 'var(--camera-host-error-text, #ffd7d7)',
         font: '13px/1.5 system-ui, sans-serif',
         boxShadow: '0 8px 24px rgba(0,0,0,.35)',
       }}
@@ -154,7 +148,7 @@ function HostErrorToast({
           marginLeft: 12,
           border: 0,
           background: 'transparent',
-          color: '#ffd7d7',
+          color: 'inherit',
           cursor: 'pointer',
         }}
       >
@@ -192,7 +186,6 @@ function StudioRoute({
       project: 'Space',
       storage: assetStorage,
       state: sync,
-      ui: {locale},
       // assets: {baseUrl: 'https://cdn.example.com/camera-assets/'} ← §4 CDN 写法
       sync: false,
       onError: setNotice,
@@ -230,23 +223,7 @@ function StudioRoute({
           messages={messages}
         />
       )}
-      <CameraScene
-        {...sceneProps}
-        headerActions={
-          <select
-            className="camera-host-nav__language"
-            aria-label={messages.interfaceLanguage}
-            value={locale}
-            onChange={(event) => setLanguage(event.currentTarget.value)}
-          >
-            {Object.entries(hostMessages).map(([code, {name}]) => (
-              <option key={code} value={code} lang={code}>
-                {name}
-              </option>
-            ))}
-          </select>
-        }
-      />
+      <CameraScene {...sceneProps} />
       <span className="camera-host-nav__status" role="status">
         {phase === 'idle' ? '' : messages[phase]}
       </span>
@@ -390,7 +367,7 @@ function App({
         <div
           style={{
             padding: 24,
-            color: '#9aa0a6',
+            color: 'var(--camera-host-text, #9aa0a6)',
             font: '13px/1.5 system-ui, sans-serif',
           }}
         >
@@ -411,6 +388,8 @@ function App({
   )
 }
 
+// 以宿主页面声明的语言为初值。宿主运行时可调用同一个 API 更新语言。
+setCameraStudioLocale(document.documentElement.lang || 'en')
 const root = ReactDOM.createRoot(document.getElementById('root')!)
 void loadSceneState().then(
   ({adapter, sync}) =>

@@ -13,7 +13,10 @@ const ItemContainer = styled.li<{$enabled: boolean}>`
   align-items: center;
   font-weight: 400;
   position: relative;
-  color: ${(props) => (props.$enabled ? 'white' : '#8f8f8f')};
+  color: ${(props) =>
+    props.$enabled
+      ? 'var(--theatre-ui-text, white)'
+      : 'var(--theatre-ui-muted, #8f8f8f)'};
   cursor: ${(props) => (props.$enabled ? 'default' : 'not-allowed')};
 
   &:after {
@@ -28,7 +31,9 @@ const ItemContainer = styled.li<{$enabled: boolean}>`
 
   &:hover:after {
     background-color: ${(props) =>
-      props.$enabled ? 'rgba(255, 255, 255, 0.075)' : 'initial'};
+      props.$enabled
+        ? 'var(--theatre-ui-hover, rgba(255, 255, 255, 0.075))'
+        : 'initial'};
   }
 `
 

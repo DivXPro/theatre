@@ -7,7 +7,7 @@ import {useT} from '@dreamerbird/studio/i18n'
 const Container = styled.div`
   width: 138px;
   border-radius: 2px;
-  background-color: rgba(42, 45, 50, 0.9);
+  background-color: var(--theatre-ui-raised, rgba(42, 45, 50, 0.9));
   position: absolute;
   display: flex;
   flex-direction: column;
@@ -22,10 +22,10 @@ const Container = styled.div`
   overflow: hidden;
 
   @supports not (backdrop-filter: blur()) {
-    background-color: rgba(42, 45, 50, 0.98);
+    background-color: var(--theatre-ui-raised, rgba(42, 45, 50, 0.98));
   }
 
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--theatre-ui-text, rgba(255, 255, 255, 0.9));
 
   & a {
     // Fix colors of links to not be default
@@ -54,12 +54,12 @@ const Link = styled(Item)`
     content: ' ';
     inset: 3px;
     border-radius: 3px;
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--theatre-ui-border, rgba(255, 255, 255, 0.1));
     opacity: 0;
   }
 
   &.secondary {
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--theatre-ui-secondary, rgba(255, 255, 255, 0.5));
   }
 
   &:hover {
@@ -80,7 +80,7 @@ const VersionContainer = styled(Item)`
   justify-content: flex-start;
   align-items: stretch;
   gap: 8px;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--theatre-ui-secondary, rgba(255, 255, 255, 0.5));
 `
 
 const VersionLabel = styled.div`
@@ -100,7 +100,7 @@ const VersionValue = styled.div`
 const Divider = styled.div`
   height: 1px;
   margin: 0 2px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--theatre-ui-hover, rgba(255, 255, 255, 0.02));
 `
 
 const version: string = env.THEATRE_VERSION ?? '0.4.0'

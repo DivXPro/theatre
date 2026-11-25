@@ -29,8 +29,8 @@
   @apply fixed grid;
   min-width: 148px;
   padding: 4px;
-  background: #25272e;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--cs-theme-raised-surface, #25272e);
+  border: 1px solid var(--cs-theme-border, rgba(255, 255, 255, 0.12));
   border-radius: var(--cs-theme-radius, 5px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
   @apply pointer-events-auto;
@@ -54,7 +54,7 @@
   &:hover,
   &:focus-visible {
     color: var(--cs-theme-text, var(--theatre-text-primary, #fff));
-    background: rgba(255, 255, 255, 0.075);
+    background: var(--cs-theme-hover-background, rgba(255, 255, 255, 0.075));
   }
 }
 
@@ -79,9 +79,9 @@
 
 .cs-strip-remove-track {
   &:hover:not(:disabled) {
-    color: #e7a0a0;
-    background: rgba(220, 90, 90, 0.12);
-    border-color: rgba(220, 90, 90, 0.18);
+    color: var(--theatre-ui-danger, #e7a0a0);
+    background: var(--theatre-ui-danger-surface, rgba(220, 90, 90, 0.12));
+    border-color: var(--theatre-ui-danger, rgba(220, 90, 90, 0.18));
   }
 }
 
@@ -94,8 +94,8 @@
   inset-block: 0;
   z-index: 2;
   width: 1px;
-  background: #f3cc66;
-  box-shadow: 0 0 4px #f3cc66;
+  background: var(--cs-color-warning, #f3cc66);
+  box-shadow: 0 0 4px var(--cs-color-warning, #f3cc66);
   @apply pointer-events-none;
 
   &::before,
@@ -105,7 +105,7 @@
     left: -4px;
     width: 9px;
     height: 2px;
-    background: #f3cc66;
+    background: var(--cs-color-warning, #f3cc66);
   }
 
   &::before {
@@ -127,15 +127,25 @@
     --cs-strip-text,
     var(--cs-theme-text, var(--theatre-text-primary, #fff))
   );
-  background: var(--cs-strip-background, rgba(111, 183, 255, 0.14));
-  border: 1px solid var(--cs-strip-border, rgba(111, 183, 255, 0.5));
+  background: var(
+    --cs-strip-background,
+    var(--cs-strip-base-background, rgba(111, 183, 255, 0.14))
+  );
+  border: 1px solid
+    var(
+      --cs-strip-border,
+      var(--cs-strip-base-border, rgba(111, 183, 255, 0.5))
+    );
   border-radius: var(--cs-theme-radius, 4px);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
   @apply box-border;
   outline-offset: 3px;
 
   &:hover {
-    background: var(--cs-strip-hover, rgba(111, 183, 255, 0.22));
+    background: var(
+      --cs-strip-hover,
+      var(--cs-strip-base-hover, rgba(111, 183, 255, 0.22))
+    );
   }
 
   &:focus-visible {
@@ -149,7 +159,7 @@
   @apply flex justify-center items-center overflow-hidden pointer-events-none whitespace-nowrap;
   font-size: 10px;
   @apply text-ellipsis;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65);
+  text-shadow: var(--cs-strip-label-shadow, 0 1px 2px rgba(0, 0, 0, 0.65));
 }
 
 .cs-strip-row-error-badge {
@@ -159,8 +169,8 @@
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  color: #1b1b1b;
-  background: #ff7a7a;
+  color: var(--theatre-ui-on-accent, #1b1b1b);
+  background: var(--theatre-ui-danger, #ff7a7a);
   @apply flex items-center justify-center;
   font-size: 9px;
   font-weight: 700;
@@ -178,8 +188,11 @@
 }
 
 .cs-strip-row-span[data-error] {
-  --cs-strip-text: #ff9c92;
-  --cs-strip-background: rgba(255, 122, 122, 0.16);
-  --cs-strip-border: #ff7a7a;
-  --cs-strip-hover: rgba(255, 122, 122, 0.22);
+  --cs-strip-text: var(--theatre-ui-danger, #ff9c92);
+  --cs-strip-background: var(
+    --theatre-ui-danger-surface,
+    rgba(255, 122, 122, 0.16)
+  );
+  --cs-strip-border: var(--theatre-ui-danger, #ff7a7a);
+  --cs-strip-hover: var(--cs-strip-danger-hover, rgba(255, 122, 122, 0.22));
 }

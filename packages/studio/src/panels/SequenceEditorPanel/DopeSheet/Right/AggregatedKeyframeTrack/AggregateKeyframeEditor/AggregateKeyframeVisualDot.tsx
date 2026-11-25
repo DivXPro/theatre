@@ -58,8 +58,8 @@ type IDotThemeValues = {
   isSelected: AggregateKeyframePositionIsSelected | undefined
   flag: PresenceFlag | undefined
 }
-const SELECTED_COLOR = '#F2C95C'
-const DEFAULT_PRIMARY_COLOR = '#40AAA4'
+const SELECTED_COLOR = 'var(--theatre-ui-keyframe-selected, #F2C95C)'
+const DEFAULT_PRIMARY_COLOR = 'var(--theatre-ui-accent, #40AAA4)'
 const DEFAULT_SECONDARY_COLOR = '#45747C'
 const selectionColorAll = (theme: IDotThemeValues) =>
   theme.isSelected === AggregateKeyframePositionIsSelected.AllSelected
@@ -89,7 +89,7 @@ const AggregateDotAllHereSvg = (theme: IDotThemeValues) => (
       width="5"
       height="5"
       transform="rotate(-45 4.46443 10.0078)"
-      fill="#212327" // background knockout fill
+      fill="var(--theatre-ui-recessed, #212327)" // background knockout fill
       stroke={selectionColorSome(theme)}
     />
     <rect
@@ -99,7 +99,11 @@ const AggregateDotAllHereSvg = (theme: IDotThemeValues) => (
       height="6"
       transform="rotate(-45 3.75732 6.01953)"
       fill={selectionColorAll(theme)}
-      stroke={theme.flag === PresenceFlag.Primary ? 'white' : undefined}
+      stroke={
+        theme.flag === PresenceFlag.Primary
+          ? 'var(--theatre-ui-text, white)'
+          : undefined
+      }
       strokeWidth={theme.flag === PresenceFlag.Primary ? '2px' : undefined}
     />
   </svg>
@@ -119,9 +123,11 @@ const AggregateDotSomeHereSvg = (theme: IDotThemeValues) => (
       width="5"
       height="5"
       transform="rotate(-45 4.46443 8)"
-      fill="#23262B"
+      fill="var(--theatre-ui-recessed, #23262B)"
       stroke={
-        theme.flag === PresenceFlag.Primary ? 'white' : selectionColorAll(theme)
+        theme.flag === PresenceFlag.Primary
+          ? 'var(--theatre-ui-text, white)'
+          : selectionColorAll(theme)
       }
       strokeWidth={theme.flag === PresenceFlag.Primary ? '2px' : undefined}
     />

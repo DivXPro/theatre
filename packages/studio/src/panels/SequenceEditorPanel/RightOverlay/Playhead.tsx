@@ -76,7 +76,7 @@ const Thumb = styled.div`
   left: -2px;
   z-index: 11;
   cursor: ew-resize;
-  --sunblock-color: #1f2b2b;
+  --sunblock-color: var(--theatre-ui-recessed, #1f2b2b);
 
   ${pointerEventsAutoInNormalMode};
 
@@ -93,7 +93,7 @@ const Thumb = styled.div`
 
   ${Container}.playheadattachedtofocusrange > & {
     top: -8px;
-    --sunblock-color: #005662;
+    --sunblock-color: var(--theatre-ui-accent, #005662);
     &:before,
     &:after {
       border-bottom-width: 8px;

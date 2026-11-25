@@ -49,6 +49,13 @@ describe('studio theming tokens', () => {
     }
   })
 
+  it('applies the shared light palette only to a Studio host opting into light mode', () => {
+    const css = read('css.tsx')
+    expect(css).toMatch(
+      /:host\(\[data-theme='light'\]\)[^{]*\{\s*\$\{lightThemeVariables\}/,
+    )
+  })
+
   it('host link underline colors use text tokens', () => {
     const css = read('css.tsx')
     // base state of external links

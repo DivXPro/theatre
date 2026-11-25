@@ -18,8 +18,8 @@ const Container = styled.div`
   border-radius: 4px;
   box-shadow: rgb(0 0 0 / 25%) 0px 2px 4px;
   backdrop-filter: blur(8px) saturate(300%) contrast(65%) brightness(55%);
-  background-color: rgb(45 46 66 / 50%);
-  border: 0.5px solid rgb(86 100 110 / 46%);
+  background-color: var(--theatre-ui-raised, rgb(45 46 66 / 50%));
+  border: 0.5px solid var(--theatre-ui-border, rgb(86 100 110 / 46%));
   z-index: 10000;
   padding: 8px 8px;
   font-size: 10px;

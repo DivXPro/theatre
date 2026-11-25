@@ -16,13 +16,13 @@ const Container = styled.div`
   margin-left: 13px;
 
   border-radius: 3px;
-  background: rgba(47, 50, 53, 0.88);
+  background: var(--theatre-ui-surface, rgba(47, 50, 53, 0.88));
   box-shadow: 0px 4px 4px -1px rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(10px);
 `
 
 const Separator = styled.div`
-  background: rgba(0, 0, 0, 0.24);
+  background: var(--theatre-ui-recessed, rgba(0, 0, 0, 0.24));
   width: 1px;
   height: 100%;
 `

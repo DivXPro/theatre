@@ -24,15 +24,15 @@ const Wrapper = styled.div<{$isSelected: boolean}>`
   ${({$isSelected}) =>
     $isSelected &&
     css`
-      background-color: #383d42;
+      background-color: var(--theatre-ui-hover, #383d42);
     `}
 
   &:hover {
-    background-color: #31353a;
+    background-color: var(--theatre-ui-selected, #31353a);
   }
 
   &:focus {
-    background-color: #383d42;
+    background-color: var(--theatre-ui-hover, #383d42);
   }
 `
 

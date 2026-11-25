@@ -4,7 +4,10 @@ import React, {forwardRef, useState} from 'react'
 import ToolbarIconButton from '@dreamerbird/studio/uiComponents/toolbar/ToolbarIconButton'
 
 const Container = styled(ToolbarIconButton)<{$pinned?: boolean}>`
-  color: ${({$pinned}) => ($pinned ? 'rgba(255, 255, 255, 0.8)' : '#A8A8A9')};
+  color: ${({$pinned}) =>
+    $pinned
+      ? 'var(--theatre-ui-text, rgba(255, 255, 255, 0.8))'
+      : 'var(--theatre-ui-secondary, #A8A8A9)'};
 
   border-bottom: 1px solid
     ${({$pinned}) =>

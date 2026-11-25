@@ -9,7 +9,7 @@ import useOnClickOutside from '@dreamerbird/studio/uiComponents/useOnClickOutsid
 const Input = styled.input.attrs({type: 'text'})`
   background: transparent;
   border: 1px solid transparent;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--theatre-ui-text, rgba(255, 255, 255, 0.9));
   padding: 1px 6px;
   font: inherit;
   outline: none;
@@ -22,15 +22,15 @@ const Input = styled.input.attrs({type: 'text'})`
   box-sizing: border-box;
 
   &:hover {
-    background-color: #10101042;
-    border-color: #00000059;
+    background-color: var(--theatre-ui-input, #10101042);
+    border-color: var(--theatre-ui-border, #00000059);
   }
 
   &:hover,
   &:focus {
     cursor: text;
-    background-color: #10101042;
-    border-color: #00000059;
+    background-color: var(--theatre-ui-input, #10101042);
+    border-color: var(--theatre-ui-border, #00000059);
   }
 
   &.invalid {

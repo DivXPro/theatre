@@ -34,8 +34,8 @@ const Container = styled.div`
   &.dragging,
   &.editingViaKeyboard {
     &:after {
-      background-color: #10101042;
-      border-color: #00000059;
+      background-color: var(--theatre-ui-input, #10101042);
+      border-color: var(--theatre-ui-border, #00000059);
     }
   }
 `
@@ -43,7 +43,7 @@ const Container = styled.div`
 const Input = styled.input`
   background: transparent;
   border: 1px solid transparent;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--theatre-ui-text, rgba(255, 255, 255, 0.9));
   padding: 1px 6px;
   font: inherit;
   outline: none;
@@ -63,13 +63,13 @@ const FillIndicator = styled.div`
   inset: 3px 2px 4px;
   transform: scale(var(--percentage), 1);
   transform-origin: top left;
-  background-color: #2d5561;
+  background-color: var(--theatre-ui-selected, #2d5561);
   z-index: -1;
   border-radius: 2px;
   pointer-events: none;
 
   ${Container}.dragging &, ${Container}.noFocus:hover & {
-    background-color: #338198;
+    background-color: var(--theatre-ui-selected-border, #338198);
   }
 `
 

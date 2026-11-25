@@ -18,21 +18,21 @@ export const Container = styled.button<{
 
   color: ${({disabled, $primary}) =>
     disabled === true
-      ? '#919191'
+      ? 'var(--theatre-ui-muted, #919191)'
       : $primary === true
-        ? 'var(--theatre-text-primary)'
-        : '#a8a8a9'};
+        ? 'var(--theatre-ui-on-accent, var(--theatre-text-primary))'
+        : 'var(--theatre-ui-secondary, #a8a8a9)'};
 
   background: ${({disabled, $primary}) =>
     disabled === true
-      ? 'rgba(64, 67, 71, 0.8)'
+      ? 'var(--theatre-ui-recessed, rgba(64, 67, 71, 0.8))'
       : $primary === true
-        ? 'rgb(41 110 120 / 60%)'
+        ? 'var(--theatre-ui-accent, rgb(41 110 120 / 60%))'
         : 'var(--theatre-panel-bg-80)'};
 
   backdrop-filter: blur(14px);
   border: none;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--theatre-ui-border, rgba(255, 255, 255, 0.08));
   border-radius: 3px;
   box-shadow: 0px 4px 4px -1px rgba(0, 0, 0, 0.48);
 
@@ -43,14 +43,17 @@ export const Container = styled.button<{
   &:hover {
     background: ${({disabled, $primary}) =>
       disabled === true
-        ? 'rgba(64, 67, 71, 0.8)'
+        ? 'var(--theatre-ui-recessed, rgba(64, 67, 71, 0.8))'
         : $primary === true
-          ? 'rgba(50, 155, 169, 0.80)'
-          : 'rgba(59, 63, 69, 0.8)'};
+          ? 'var(--theatre-ui-accent-hover, rgba(50, 155, 169, 0.80))'
+          : 'var(--theatre-ui-hover, rgba(59, 63, 69, 0.8))'};
   }
 
   &:active {
-    background: rgba(82, 88, 96, 0.8);
+    background: ${({$primary}) =>
+      $primary === true
+        ? 'var(--theatre-ui-accent-hover, rgba(82, 88, 96, 0.8))'
+        : 'var(--theatre-ui-selected, rgba(82, 88, 96, 0.8))'};
   }
 `
 

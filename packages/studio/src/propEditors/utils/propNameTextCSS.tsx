@@ -10,6 +10,10 @@ export const propNameTextCSS: RuleSet<$IntentionalAny> = css<{
 }>`
   font-weight: 300;
   font-size: 11px;
-  color: ${(props) => (props.$isHighlighted === 'self' ? '#CCC' : '#919191')};
-  text-shadow: 0.5px 0.5px 2px rgba(0, 0, 0, 0.3);
+  color: ${(props) =>
+    props.$isHighlighted === 'self'
+      ? 'var(--theatre-ui-text, #CCC)'
+      : 'var(--theatre-ui-secondary, #919191)'};
+  text-shadow: 0.5px 0.5px 2px
+    var(--theatre-ui-label-shadow, rgba(0, 0, 0, 0.3));
 `

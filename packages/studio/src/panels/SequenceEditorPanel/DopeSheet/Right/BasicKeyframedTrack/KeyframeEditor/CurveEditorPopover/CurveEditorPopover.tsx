@@ -66,7 +66,7 @@ const SearchBox = styled.input.attrs({type: 'text'})`
   background-color: ${COLOR_BASE};
   border: none;
   border-radius: 2px;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--theatre-ui-text, rgba(255, 255, 255, 0.8));
   padding: 6px;
   font-size: 12px;
   outline: none;
@@ -79,11 +79,11 @@ const SearchBox = styled.input.attrs({type: 'text'})`
   grid-area: search;
 
   &:hover {
-    background-color: #212121;
+    background-color: var(--theatre-ui-recessed, #212121);
   }
 
   &:focus {
-    background-color: rgba(16, 16, 16, 0.26);
+    background-color: var(--theatre-ui-input, rgba(16, 16, 16, 0.26));
     outline: 1px solid rgba(0, 0, 0, 0.35);
   }
 `

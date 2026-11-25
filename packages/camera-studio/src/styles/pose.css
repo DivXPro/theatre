@@ -24,8 +24,8 @@
   @apply cursor-pointer;
   &:hover:not(:disabled),
   &:focus-visible {
-    background: #ffffff14;
-    border-color: #ffffff26;
+    background: var(--cs-theme-hover-background, #ffffff14);
+    border-color: var(--cs-theme-border, #ffffff26);
   }
   &:disabled {
     opacity: 0.45;

@@ -116,12 +116,12 @@ const NotificationMain = styled.div`
 `
 
 const NotificationMessage = styled.div`
-  color: #b4b4b4;
+  color: var(--theatre-ui-secondary, #b4b4b4);
   font-size: 12px;
   line-height: 1.4;
 
   a {
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--theatre-ui-text, rgba(255, 255, 255, 0.9));
   }
 
   em {
@@ -130,7 +130,7 @@ const NotificationMessage = styled.div`
 
   strong {
     font-weight: bold;
-    color: #d5d5d5;
+    color: var(--theatre-ui-text, #d5d5d5);
   }
 
   p {
@@ -160,7 +160,7 @@ const NotificationMessage = styled.div`
 `
 
 const DismissButton = styled.button`
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--theatre-ui-text, rgba(255, 255, 255, 0.9));
   font-weight: 500;
   display: flex;
   align-items: center;
@@ -343,7 +343,7 @@ const EmptyState = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
-  color: #b4b4b4;
+  color: var(--theatre-ui-secondary, #b4b4b4);
   font-size: 12px;
   line-height: 1.4;
 `

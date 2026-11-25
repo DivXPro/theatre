@@ -84,13 +84,13 @@ const Axis = styled.span`
   font: 10px monospace;
 
   &[data-axis='x'] {
-    color: #d9a39c;
+    color: var(--theatre-ui-axis-x, #d9a39c);
   }
   &[data-axis='y'] {
-    color: #a9c8a2;
+    color: var(--theatre-ui-axis-y, #a9c8a2);
   }
   &[data-axis='z'] {
-    color: #a3b8d6;
+    color: var(--theatre-ui-axis-z, #a3b8d6);
   }
 `
 

@@ -33,17 +33,17 @@ const PrimitivePropRowHead = styled(BaseHeader)<{
   padding-left: ${(props) => sequenceRowPaddingLeft(props.$depth)}px;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.026);
+    background: var(--theatre-ui-hover, rgba(255, 255, 255, 0.026));
   }
 
   ${(props) =>
     props.$isSelected &&
     `
-      background: rgba(64, 170, 164, 0.13);
+      background: var(--theatre-ui-selected, rgba(64, 170, 164, 0.13));
       box-shadow: inset 2px 0 0 var(--theatre-accent);
 
       &:hover {
-        background: rgba(64, 170, 164, 0.17);
+        background: var(--theatre-ui-selected, rgba(64, 170, 164, 0.17));
       }
     `}
 `
@@ -71,7 +71,7 @@ const PrimitivePropRowIconContainer = styled.button<{
 
   &:not([disabled]):hover {
     color: var(--theatre-text-primary);
-    background: rgba(255, 255, 255, 0.055);
+    background: var(--theatre-ui-hover, rgba(255, 255, 255, 0.055));
   }
 
   &:focus-visible {

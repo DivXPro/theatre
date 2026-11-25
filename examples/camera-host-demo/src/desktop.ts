@@ -5,12 +5,17 @@ import {
 } from '@dreamerbird/camera-studio'
 import hostMessages from './hostMessages.json'
 
+type HostTheme = 'light' | 'dark'
+type HostLocale = keyof typeof hostMessages
+
 type DesktopCommand =
   | {type: 'open' | 'close' | 'quit'}
-  | {type: 'locale'; locale: keyof typeof hostMessages}
+  | {type: 'theme'; theme: HostTheme}
 
 type DesktopIpc = CameraStudioDesktopHost & {
-  loadScene(): Promise<CameraStudioDesktopScene>
+  loadScene(): Promise<
+    CameraStudioDesktopScene & {locale: HostLocale; theme: HostTheme}
+  >
   finishQuit(): void
   onCommand(listener: (command: DesktopCommand) => void): () => void
 }
@@ -44,7 +49,6 @@ const editor = mountCameraStudioDesktop(
   {
     storage: {namespace: 'camera-host-desktop'},
     assets: {baseUrl: 'app://camera-studio/catalog/'},
-    ui: {locale: 'zh-CN'},
     onError: ({message}) => showError(message),
   },
 )
@@ -58,7 +62,15 @@ function openScene(): Promise<void> {
   openButton.disabled = true
   opening = host
     .loadScene()
-    .then((scene) => editor.openScene(scene))
+    .then(({locale, theme, ...scene}) => {
+      const messages = hostMessages[locale]
+      document.documentElement.lang = locale
+      document.title = messages.desktopTitle
+      document.body.dataset.theme ??= theme
+      openButton.textContent = messages.openLocal
+      editor.setLocale(locale)
+      return editor.openScene(scene)
+    })
     .then(() => {
       home.hidden = true
     })
@@ -78,11 +90,8 @@ async function handleCommand(command: DesktopCommand) {
       await opening
       await editor.closeScene()
       break
-    case 'locale':
-      document.documentElement.lang = command.locale
-      document.title = hostMessages[command.locale].desktopTitle
-      openButton.textContent = hostMessages[command.locale].openLocal
-      editor.setLocale(command.locale)
+    case 'theme':
+      document.body.dataset.theme = command.theme
       break
     case 'quit':
       await opening?.catch(() => {})

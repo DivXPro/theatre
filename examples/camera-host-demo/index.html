@@ -8,9 +8,10 @@
       /* 页面底色是宿主的视觉决定(库不替宿主页面着色) */
       html,
       body {
+        min-height: 100vh;
         margin: 0;
         padding: 0;
-        background: #171717;
+        background: var(--camera-host-background, #171717);
       }
     </style>
   </head>

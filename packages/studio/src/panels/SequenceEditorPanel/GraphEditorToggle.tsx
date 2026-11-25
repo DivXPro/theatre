@@ -10,8 +10,8 @@ import {includeLockFrameStampAttrs} from './FrameStampPositionProvider'
 
 const Container = styled.button`
   outline: none;
-  background-color: #1c1d21;
-  border: 1px solid #191919;
+  background-color: var(--theatre-ui-input, #1c1d21);
+  border: 1px solid var(--theatre-ui-border, #191919);
   border-radius: 2px;
   display: flex;
   bottom: 14px;
@@ -21,7 +21,7 @@ const Container = styled.button`
 
   padding: 4px 8px;
   display: flex;
-  color: #656d77;
+  color: var(--theatre-ui-muted, #656d77);
   line-height: 20px;
   font-size: 10px;
 

@@ -21,18 +21,18 @@ const ActionButton = styled.button`
   outline: none;
   border-radius: 2px;
 
-  color: #a8a8a9;
-  background: rgba(255, 255, 255, 0.1);
+  color: var(--theatre-ui-secondary, #a8a8a9);
+  background: var(--theatre-ui-input, rgba(255, 255, 255, 0.1));
 
   border: none;
   height: 28px;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.15);
+    background: var(--theatre-ui-hover, rgba(255, 255, 255, 0.15));
   }
 
   &:active {
-    background: rgba(255, 255, 255, 0.2);
+    background: var(--theatre-ui-selected, rgba(255, 255, 255, 0.2));
   }
 `
 

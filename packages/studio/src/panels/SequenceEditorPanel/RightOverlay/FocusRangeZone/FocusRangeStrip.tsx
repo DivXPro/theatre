@@ -16,20 +16,20 @@ import {useLockFrameStampPosition} from '@dreamerbird/studio/panels/SequenceEdit
 
 export const focusRangeStripTheme = {
   enabled: {
-    backgroundColor: '#2C2F34',
-    stroke: '#646568',
+    backgroundColor: 'var(--theatre-ui-recessed, #2C2F34)',
+    stroke: 'var(--theatre-ui-muted, #646568)',
   },
   disabled: {
-    backgroundColor: '#282a2cc5',
-    stroke: '#595a5d',
+    backgroundColor: 'var(--theatre-ui-raised, #282a2cc5)',
+    stroke: 'var(--theatre-ui-muted, #595a5d)',
   },
   hover: {
-    backgroundColor: '#34373D',
-    stroke: '#C8CAC0',
+    backgroundColor: 'var(--theatre-ui-hover, #34373D)',
+    stroke: 'var(--theatre-ui-secondary, #C8CAC0)',
   },
   dragging: {
-    backgroundColor: '#3F444A',
-    stroke: '#C8CAC0',
+    backgroundColor: 'var(--theatre-ui-selected, #3F444A)',
+    stroke: 'var(--theatre-ui-secondary, #C8CAC0)',
   },
   thumbWidth: 9,
   hitZoneWidth: 26,

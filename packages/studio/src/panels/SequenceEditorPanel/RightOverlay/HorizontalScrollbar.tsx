@@ -13,8 +13,8 @@ import useDrag from '@dreamerbird/studio/uiComponents/useDrag'
 
 const Container = styled.div`
   --threadHeight: 6px;
-  --bg-inactive: #32353b;
-  --bg-active: #5b5c5d;
+  --bg-inactive: var(--theatre-ui-scrollbar, #32353b);
+  --bg-active: var(--theatre-ui-muted, #5b5c5d);
   position: absolute;
   height: 0;
   width: 100%;
@@ -99,7 +99,7 @@ const Tooltip = styled.div<{$active: boolean}>`
   left: 4px;
   padding: 0 4px;
   transform: translateX(-50%);
-  background: #131d1f;
+  background: var(--theatre-ui-recessed, #131d1f);
   border-radius: 4px;
   color: var(--theatre-text-primary);
   font-size: 10px;

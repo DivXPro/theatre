@@ -434,8 +434,8 @@ namespace utils {
 
 const SelectionRectangleDiv = styled.div`
   position: absolute;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px dashed rgba(255, 255, 255, 0.4);
+  background: var(--theatre-ui-selected, rgba(255, 255, 255, 0.1));
+  border: 1px dashed var(--theatre-ui-selected-border, rgba(255, 255, 255, 0.4));
   box-sizing: border-box;
 `
 

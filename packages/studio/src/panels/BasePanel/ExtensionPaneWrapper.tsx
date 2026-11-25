@@ -68,7 +68,7 @@ const ClosePanelButton = styled.button`
   font-size: 11px;
   height: 10px;
   width: 18px;
-  color: #adadadb3;
+  color: var(--theatre-ui-muted, #adadadb3);
   background: transparent;
   border: none;
   cursor: pointer;
@@ -106,13 +106,13 @@ const ErrorContainer = styled.div`
   padding: 12px;
 
   & > pre {
-    border: 1px solid #ff62624f;
-    background-color: rgb(255 0 0 / 5%);
+    border: 1px solid var(--theatre-ui-danger, #ff62624f);
+    background-color: var(--theatre-ui-danger-surface, rgb(255 0 0 / 5%));
     margin: 8px 0;
     padding: 8px;
     font-family: monospace;
     overflow: scroll;
-    color: #ff9896;
+    color: var(--theatre-ui-danger, #ff9896);
   }
 `
 

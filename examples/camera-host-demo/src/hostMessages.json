@@ -1,10 +1,7 @@
 {
   "zh-CN": {
-    "name": "中文",
     "webTitle": "Camera Studio 宿主集成示例",
     "desktopTitle": "Camera Studio 桌面示例",
-    "language": "语言",
-    "interfaceLanguage": "界面语言",
     "scene": "场景",
     "openLocal": "打开本地场景",
     "closeScene": "关闭场景",
@@ -22,11 +19,8 @@
     "close": "关闭"
   },
   "en": {
-    "name": "English",
     "webTitle": "Camera Studio Integration Demo",
     "desktopTitle": "Camera Studio Desktop Demo",
-    "language": "Language",
-    "interfaceLanguage": "Interface language",
     "scene": "Scene",
     "openLocal": "Open local scene",
     "closeScene": "Close scene",
@@ -44,11 +38,8 @@
     "close": "Close"
   },
   "ja": {
-    "name": "日本語",
     "webTitle": "Camera Studio ホスト統合デモ",
     "desktopTitle": "Camera Studio デスクトップデモ",
-    "language": "言語",
-    "interfaceLanguage": "表示言語",
     "scene": "シーン",
     "openLocal": "ローカルシーンを開く",
     "closeScene": "シーンを閉じる",
@@ -66,11 +57,8 @@
     "close": "閉じる"
   },
   "ko": {
-    "name": "한국어",
     "webTitle": "Camera Studio 호스트 통합 데모",
     "desktopTitle": "Camera Studio 데스크톱 데모",
-    "language": "언어",
-    "interfaceLanguage": "인터페이스 언어",
     "scene": "장면",
     "openLocal": "로컬 장면 열기",
     "closeScene": "장면 닫기",
@@ -88,11 +76,8 @@
     "close": "닫기"
   },
   "ru": {
-    "name": "Русский",
     "webTitle": "Демонстрация интеграции Camera Studio",
     "desktopTitle": "Демонстрация Camera Studio для ПК",
-    "language": "Язык",
-    "interfaceLanguage": "Язык интерфейса",
     "scene": "Сцена",
     "openLocal": "Открыть локальную сцену",
     "closeScene": "Закрыть сцену",
@@ -110,11 +95,8 @@
     "close": "Закрыть"
   },
   "de": {
-    "name": "Deutsch",
     "webTitle": "Camera Studio Integrationsdemo",
     "desktopTitle": "Camera Studio Desktop-Demo",
-    "language": "Sprache",
-    "interfaceLanguage": "Oberflächensprache",
     "scene": "Szene",
     "openLocal": "Lokale Szene öffnen",
     "closeScene": "Szene schließen",
@@ -132,11 +114,8 @@
     "close": "Schließen"
   },
   "es": {
-    "name": "Español",
     "webTitle": "Demo de integración de Camera Studio",
     "desktopTitle": "Demo de escritorio de Camera Studio",
-    "language": "Idioma",
-    "interfaceLanguage": "Idioma de la interfaz",
     "scene": "Escena",
     "openLocal": "Abrir escena local",
     "closeScene": "Cerrar escena",
@@ -154,11 +133,8 @@
     "close": "Cerrar"
   },
   "pt": {
-    "name": "Português (Brasil)",
     "webTitle": "Demonstração de integração do Camera Studio",
     "desktopTitle": "Demonstração do Camera Studio para desktop",
-    "language": "Idioma",
-    "interfaceLanguage": "Idioma da interface",
     "scene": "Cena",
     "openLocal": "Abrir cena local",
     "closeScene": "Fechar cena",
@@ -176,11 +152,8 @@
     "close": "Fechar"
   },
   "fr": {
-    "name": "Français",
     "webTitle": "Démo d’intégration de Camera Studio",
     "desktopTitle": "Démo de bureau de Camera Studio",
-    "language": "Langue",
-    "interfaceLanguage": "Langue de l’interface",
     "scene": "Scène",
     "openLocal": "Ouvrir la scène locale",
     "closeScene": "Fermer la scène",

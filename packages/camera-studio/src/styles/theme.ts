@@ -2,7 +2,7 @@ import cameraStyles from './cameraStyles.generated'
 
 /**
  * Optional CSS values for the embedded Camera Studio UI. Omitted tokens use
- * the built-in dark theme. These values don't affect the scene renderer.
+ * the active built-in theme. These values don't affect the scene renderer.
  */
 export interface CameraStudioTheme {
   surface?: string
@@ -41,6 +41,23 @@ const themeProperties: Record<keyof CameraStudioTheme, string> = {
 }
 
 const stylesAttribute = 'data-camera-studio-styles'
+
+/** Apply the host's theme to the editor and to overlays mounted outside it. */
+export function observeCameraColorMode(source: HTMLElement): () => void {
+  const root = source.ownerDocument.documentElement
+  const sync = () => {
+    root.dataset.cameraStudioColorMode =
+      source.dataset.theme === 'light' ? 'light' : 'dark'
+  }
+  const observer = new MutationObserver(sync)
+  observer.observe(source, {attributes: true, attributeFilter: ['data-theme']})
+  sync()
+
+  return () => {
+    observer.disconnect()
+    delete root.dataset.cameraStudioColorMode
+  }
+}
 
 export function installCameraStyles(target: HTMLElement | ShadowRoot): void {
   const selector = `style[${stylesAttribute}]`

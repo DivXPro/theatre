@@ -34,7 +34,7 @@ const SingleKeyframePropLabel = styled.div`
 
   width: 40%;
 
-  color: #919191;
+  color: var(--theatre-ui-secondary, #919191);
 
   overflow: hidden;
 `

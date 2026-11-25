@@ -119,7 +119,10 @@ const GraphEditorDotNonScalar: React.FC<IProps> = (props) => {
           // @ts-ignore
           cx: `calc(var(--unitSpaceToScaledSpaceMultiplier) * ${cur.position} * 1px)`,
           cy: `calc((var(--graphEditorVerticalSpace) - var(--graphEditorVerticalSpace) * ${cyInExtremumSpace}) * 1px)`,
-          fill: presence.flag === PresenceFlag.Primary ? 'white' : undefined,
+          fill:
+            presence.flag === PresenceFlag.Primary
+              ? 'var(--theatre-ui-text, white)'
+              : undefined,
         }}
       />
       {inlineEditorPopover.node}

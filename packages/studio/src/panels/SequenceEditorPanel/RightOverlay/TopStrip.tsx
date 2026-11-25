@@ -11,8 +11,8 @@ import FocusRangeZone from './FocusRangeZone/FocusRangeZone'
 export const topStripHeight = 18
 
 export const topStripTheme = {
-  backgroundColor: `#1f2120eb`,
-  borderColor: `#1c1e21`,
+  backgroundColor: `var(--theatre-ui-raised, #1f2120eb)`,
+  borderColor: `var(--theatre-ui-border, #1c1e21)`,
 }
 
 const Container = styled.div`

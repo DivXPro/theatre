@@ -19,7 +19,7 @@ const Container = styled.div<{$clickable: boolean}>`
   position: relative;
   &:hover {
     --chevron-down: 1;
-    background: rgba(255, 255, 255, 0.08);
+    background: var(--theatre-ui-hover, rgba(255, 255, 255, 0.08));
   }
 
   :host([data-camera-workspace]) & {
@@ -30,14 +30,14 @@ const Container = styled.div<{$clickable: boolean}>`
 `
 
 const Team = styled.span`
-  color: rgba(255, 255, 255, 0.38);
+  color: var(--theatre-ui-muted, rgba(255, 255, 255, 0.38));
 
   :host([data-camera-workspace]) & {
     color: var(--theatre-text-muted);
   }
 `
 const Separator = styled.span`
-  color: rgba(255, 255, 255, 0.38);
+  color: var(--theatre-ui-muted, rgba(255, 255, 255, 0.38));
 `
 const WorkspaceName = styled.span`
   :host([data-camera-workspace]) & {
@@ -79,11 +79,11 @@ const MenuItem = styled.li`
   padding: 4px 8px;
   border-radius: 2px;
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--theatre-ui-text, rgba(255, 255, 255, 0.9));
   white-space: nowrap;
 
   &:hover {
-    background: rgba(59, 63, 69, 0.9);
+    background: var(--theatre-ui-hover, rgba(59, 63, 69, 0.9));
   }
 `
 

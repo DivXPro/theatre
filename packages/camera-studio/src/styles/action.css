@@ -11,6 +11,7 @@
 
 .cs-action-panel {
   @apply grid;
+  color-scheme: var(--cs-color-scheme, inherit);
   gap: 10px;
   @apply min-w-0;
   padding: 12px;
@@ -94,7 +95,7 @@
     @apply relative;
     height: 24px;
     margin-inline: 10px;
-    background: #30333a;
+    background: var(--cs-theme-raised-surface, #30333a);
     border-radius: var(--cs-theme-radius, 3px);
   }
   .ae-ruler {
@@ -107,7 +108,7 @@
     left: var(--ae-time);
     transform: translateX(-50%);
     font-variant-numeric: tabular-nums;
-    color: #b5bdcd;
+    color: var(--cs-theme-secondary-text, #b5bdcd);
     @apply pointer-events-none;
   }
   .ae-tick:first-child {
@@ -119,7 +120,7 @@
   .ae-clip-window {
     @apply absolute;
     inset-block: 0;
-    background: #9cc1ff16;
+    background: var(--cs-theme-selected-background, #9cc1ff16);
     @apply pointer-events-none;
   }
   .ae-playhead,
@@ -172,15 +173,16 @@
     @apply w-full min-w-0;
   }
   .ae-apply {
-    border-color: #82b0fe;
-    background: #4267a4;
+    border-color: var(--cs-theme-selected-border, #82b0fe);
+    background: var(--cs-theme-selected-background, #4267a4);
+    color: var(--cs-theme-accent, inherit);
   }
   .ae-pose-tools {
     @apply flex flex-wrap;
     gap: 6px;
   }
   [role='alert'] {
-    color: #ffbaa7;
+    color: var(--theatre-ui-danger, #ffbaa7);
   }
 }
 

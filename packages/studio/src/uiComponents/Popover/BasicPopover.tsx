@@ -4,13 +4,13 @@ import React from 'react'
 import styled from 'styled-components'
 import PopoverArrow from './PopoverArrow'
 
-export const popoverBackgroundColor = `rgb(51 45 66 / 40%)`
+export const popoverBackgroundColor = `var(--theatre-ui-raised, rgb(51 45 66 / 40%))`
 
 const Container = styled.div`
   position: absolute;
   --popover-bg: ${popoverBackgroundColor};
-  --popover-inner-stroke: #505159;
-  --popover-outer-stroke: rgb(86 100 110 / 46%);
+  --popover-inner-stroke: var(--theatre-ui-border, #505159);
+  --popover-outer-stroke: var(--theatre-ui-border, rgb(86 100 110 / 46%));
 
   border-radius: 4px;
   box-shadow: rgb(0 0 0 / 25%) 0px 2px 4px;

@@ -57,8 +57,8 @@ const TransportButton = styled.button`
   }
 
   &:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.08);
-    color: #fff;
+    background: var(--theatre-ui-hover, rgba(255, 255, 255, 0.08));
+    color: var(--theatre-ui-text, #fff);
   }
 
   &:disabled {
@@ -87,8 +87,8 @@ const LengthValue = styled.span`
   padding: 1px 3px;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.08);
-    color: #fff;
+    background: var(--theatre-ui-hover, rgba(255, 255, 255, 0.08));
+    color: var(--theatre-ui-text, #fff);
   }
 `
 
@@ -96,10 +96,10 @@ const LengthValue = styled.span`
 const LengthInput = styled.input`
   width: 52px;
   padding: 1px 3px;
-  border: 1px solid #4a4d52;
+  border: 1px solid var(--theatre-ui-border, #4a4d52);
   border-radius: 3px;
-  background: #1a1c1f;
-  color: #fff;
+  background: var(--theatre-ui-input, #1a1c1f);
+  color: var(--theatre-ui-text, #fff);
   font-size: 10px;
   font-weight: 500;
   font-variant-numeric: tabular-nums;

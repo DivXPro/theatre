@@ -129,7 +129,7 @@ const BasicKeyframedTrack: React.FC<BasicKeyframedTracksProps> = React.memo(
       <Container
         ref={containerRef}
         style={{
-          background: isOpen ? '#444850 ' : 'unset',
+          background: isOpen ? 'var(--theatre-ui-selected, #444850)' : 'unset',
         }}
       >
         {keyframeEditors}

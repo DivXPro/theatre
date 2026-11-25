@@ -1063,9 +1063,9 @@ export function PathEditBar({
   const btn = (disabled: boolean): React.CSSProperties => ({
     padding: '3px 10px',
     borderRadius: 4,
-    border: '1px solid #555',
+    border: '1px solid var(--cs-theme-border, #555)',
     background: 'transparent',
-    color: disabled ? '#777' : '#eee',
+    color: disabled ? 'var(--cs-theme-muted-text, #777)' : 'inherit',
     cursor: disabled ? 'default' : 'pointer',
     fontSize: 12,
   })
@@ -1081,11 +1081,11 @@ export function PathEditBar({
         alignItems: 'center',
         gap: 8,
         padding: '6px 12px',
-        background: '#272730',
-        border: '1px solid #444',
+        background: 'var(--cs-theme-raised-surface, #272730)',
+        border: '1px solid var(--cs-theme-border, #444)',
         borderRadius: 6,
         fontSize: 12,
-        color: '#eee',
+        color: 'var(--cs-theme-text, #eee)',
       }}
     >
       <button
@@ -1186,14 +1186,14 @@ export function PathPointEditor({
         alignItems: 'center',
         gap: 8,
         padding: '6px 12px',
-        background: '#272730',
-        border: '1px solid #444',
+        background: 'var(--cs-theme-raised-surface, #272730)',
+        border: '1px solid var(--cs-theme-border, #444)',
         borderRadius: 6,
         fontSize: 12,
-        color: '#eee',
+        color: 'var(--cs-theme-text, #eee)',
       }}
     >
-      <span style={{color: '#999'}}>
+      <span style={{color: 'var(--cs-theme-muted-text, #999)'}}>
         {pathLabel(metaKey)} · {pointKey}
       </span>
       {(['x', 'y', 'z'] as const).map((axis) => (
@@ -1236,9 +1236,9 @@ export function PathPointEditor({
           title={t('pg.pathEdit.autoHint')}
           style={{
             background: 'transparent',
-            border: '1px solid #555',
+            border: '1px solid var(--cs-theme-border, #555)',
             borderRadius: 4,
-            color: '#bbb',
+            color: 'var(--cs-theme-secondary-text, #bbb)',
             cursor: 'pointer',
             fontSize: 11,
             padding: '2px 6px',
@@ -1252,10 +1252,10 @@ export function PathPointEditor({
           onClick={() => onPinAtPlayhead(uEffective)}
           title={t('pg.pathEdit.pinHint')}
           style={{
-            background: '#3a4a66',
-            border: '1px solid #557',
+            background: 'var(--cs-theme-selected-background, #3a4a66)',
+            border: '1px solid var(--cs-theme-selected-border, #557)',
             borderRadius: 4,
-            color: '#cfe1ff',
+            color: 'var(--cs-theme-accent, #cfe1ff)',
             cursor: 'pointer',
             fontSize: 11,
             padding: '2px 8px',
@@ -1265,7 +1265,7 @@ export function PathPointEditor({
         </button>
       )}
       {pinnedTimes.length > 0 && (
-        <span style={{color: '#9fb8dd'}}>
+        <span style={{color: 'var(--cs-theme-accent, #9fb8dd)'}}>
           {t('pg.pathEdit.pinned', {
             times: pinnedTimes
               .map((time) => `t=${time.toFixed(2)}s`)
@@ -1329,7 +1329,14 @@ function NumberInput({
       title={title}
       style={{display: 'flex', alignItems: 'center', gap: 4}}
     >
-      <span style={{color: '#999', textTransform: 'uppercase'}}>{label}</span>
+      <span
+        style={{
+          color: 'var(--cs-theme-muted-text, #999)',
+          textTransform: 'uppercase',
+        }}
+      >
+        {label}
+      </span>
       <input
         type="number"
         step={step}
@@ -1342,10 +1349,11 @@ function NumberInput({
         }}
         style={{
           width,
-          background: '#1b1b22',
-          border: '1px solid #444',
+          background: 'var(--cs-theme-input-background, #1b1b22)',
+          border: '1px solid var(--cs-theme-border, #444)',
           borderRadius: 4,
-          color: '#eee',
+          color: 'var(--cs-theme-text, #eee)',
+          colorScheme: 'var(--cs-color-scheme, normal)',
           fontSize: 12,
           padding: '3px 6px',
         }}

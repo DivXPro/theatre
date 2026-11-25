@@ -23,8 +23,8 @@ import BasicPopover from '@dreamerbird/studio/uiComponents/Popover/BasicPopover'
 const coverWidth = 1000
 
 const colors = {
-  stripNormal: `#0000006c`,
-  stripActive: `#000000`,
+  stripNormal: `var(--theatre-ui-recessed, #0000006c)`,
+  stripActive: `var(--theatre-ui-hover, #000000)`,
 }
 
 const Strip = styled.div`
@@ -74,8 +74,8 @@ const Tooltip = styled.div`
   border-radius: 2px;
   ${pointerEventsAutoInNormalMode};
   cursor: ew-resize;
-  color: #464646;
-  background-color: #0000004d;
+  color: var(--theatre-ui-secondary, #464646);
+  background-color: var(--theatre-ui-input, #0000004d);
   display: none;
 
   ${Strip}:hover &, ${Strip}.dragging & {
@@ -94,8 +94,8 @@ const Tumb = styled.div`
   justify-content: center;
   align-items: center;
   cursor: ew-resize;
-  color: #5d5d5d;
-  background-color: #191919;
+  color: var(--theatre-ui-secondary, #5d5d5d);
+  background-color: var(--theatre-ui-input, #191919);
 
   ${Strip}:hover &, ${Strip}.dragging & {
     color: var(--theatre-text-primary);
@@ -115,13 +115,13 @@ const Cover = styled.div`
   position: absolute;
   top: 0;
   left: 0;
-  background-color: rgb(23 23 23 / 43%);
+  background-color: var(--theatre-ui-recessed, rgb(23 23 23 / 43%));
   width: ${coverWidth}px;
   z-index: ${() => zIndexes.lengthIndicatorCover};
   transform-origin: left top;
 
   ${Strip}.dragging ~ &, ${Strip}:hover ~ & {
-    background-color: rgb(23 23 23 / 60%);
+    background-color: var(--theatre-ui-hover, rgb(23 23 23 / 60%));
   }
 `
 

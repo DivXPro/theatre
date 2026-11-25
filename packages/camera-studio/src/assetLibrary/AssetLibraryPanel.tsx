@@ -405,7 +405,8 @@ export function AssetLibraryPanel({
           bottom: 24,
           left: 6,
           fontSize: 10,
-          color: 'var(--theatre-text-muted, #888888)',
+          color:
+            'var(--cs-theme-muted-text, var(--theatre-text-muted, #888888))',
         }}
       >
         {entry.duration.toFixed(2)}s
@@ -698,7 +699,8 @@ export function AssetLibraryPanel({
                   <div
                     style={{
                       marginBottom: 4,
-                      color: 'var(--theatre-text-primary, #ffffff)',
+                      color:
+                        'var(--cs-theme-text, var(--theatre-text-primary, #ffffff))',
                     }}
                   >
                     {t('pg.lib.similar.desc', {

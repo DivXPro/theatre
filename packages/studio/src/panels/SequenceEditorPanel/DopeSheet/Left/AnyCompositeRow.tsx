@@ -30,7 +30,8 @@ export const BaseHeader = styled.div<{$isEven: boolean}>`
   align-items: center;
   min-width: 0;
   box-sizing: border-box;
-  border-bottom: 1px solid rgba(118, 149, 183, 0.04);
+  border-bottom: 1px solid
+    var(--theatre-ui-grid-line, rgba(118, 149, 183, 0.04));
   background: ${(props) =>
     props.$isEven ? 'rgba(255, 255, 255, 0.012)' : 'transparent'};
 `
@@ -78,8 +79,8 @@ export const SequenceRowButton = styled.button`
 
   &:hover:not(:disabled) {
     color: var(--theatre-text-secondary);
-    background: rgba(255, 255, 255, 0.055);
-    border-color: rgba(255, 255, 255, 0.075);
+    background: var(--theatre-ui-hover, rgba(255, 255, 255, 0.055));
+    border-color: var(--theatre-ui-border, rgba(255, 255, 255, 0.075));
   }
 
   &:focus-visible {
@@ -120,17 +121,17 @@ const LeftRowHeader = styled(BaseHeader)<{
   cursor: ${(props) => (props.$isSelectable ? 'pointer' : 'default')};
 
   &:hover {
-    background: rgba(255, 255, 255, 0.026);
+    background: var(--theatre-ui-hover, rgba(255, 255, 255, 0.026));
   }
 
   ${(props) =>
     props.$isSelected &&
     css`
-      background: rgba(64, 170, 164, 0.13);
+      background: var(--theatre-ui-selected, rgba(64, 170, 164, 0.13));
       box-shadow: inset 2px 0 0 var(--theatre-accent);
 
       &:hover {
-        background: rgba(64, 170, 164, 0.17);
+        background: var(--theatre-ui-selected, rgba(64, 170, 164, 0.17));
       }
     `}
 `
@@ -182,7 +183,7 @@ const LeftRowHead_Icon = styled.button<{$isCollapsed: boolean}>`
 
   &:hover {
     color: var(--theatre-text-secondary);
-    background: rgba(255, 255, 255, 0.055);
+    background: var(--theatre-ui-hover, rgba(255, 255, 255, 0.055));
   }
 
   &:focus-visible {

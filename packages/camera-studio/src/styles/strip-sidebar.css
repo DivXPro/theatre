@@ -25,7 +25,7 @@
 
   .eyebrow,
   .track {
-    color: #919191;
+    color: var(--cs-theme-muted-text, #919191);
     font-size: 10px;
     line-height: 1.2;
   }
@@ -44,13 +44,13 @@
     width: 22px;
     height: 22px;
     @apply p-0;
-    color: #919191;
+    color: var(--cs-theme-muted-text, #919191);
     @apply bg-transparent;
     border: 0;
   }
 
   .hint {
-    color: #919191;
+    color: var(--cs-theme-muted-text, #919191);
     font-size: 10px;
     line-height: 1.35;
   }
@@ -65,7 +65,7 @@
   legend {
     margin-bottom: 3px;
     @apply p-0;
-    color: #b8b8b8;
+    color: var(--cs-theme-secondary-text, #b8b8b8);
     font-size: 10px;
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -94,7 +94,7 @@
 
   footer output {
     @apply flex-1;
-    color: #919191;
+    color: var(--cs-theme-muted-text, #919191);
   }
 
   footer button {

@@ -4,6 +4,7 @@ const {
   dialog,
   ipcMain,
   Menu,
+  nativeTheme,
   net,
   protocol,
 } = require('electron')
@@ -20,7 +21,6 @@ const {
 const {pathToFileURL} = require('node:url')
 const hostMessages = require('../src/hostMessages.json')
 
-const defaultLocale = 'zh-CN'
 const projectId = 'Desktop Scene'
 const entry = 'app://camera-studio/desktop.html'
 const dist = resolve(__dirname, '../dist')
@@ -53,9 +53,16 @@ function serveBundle(request) {
 }
 
 function createWindow() {
-  let locale = defaultLocale
+  const language = app.getLocale().split('-')[0].toLowerCase()
+  const locale =
+    language === 'zh'
+      ? 'zh-CN'
+      : Object.hasOwn(hostMessages, language)
+        ? language
+        : 'en'
+  const messages = hostMessages[locale]
   const window = new BrowserWindow({
-    title: hostMessages[locale].desktopTitle,
+    title: messages.desktopTitle,
     width: 1280,
     height: 800,
     webPreferences: {
@@ -90,6 +97,10 @@ function createWindow() {
     if (connected) window.webContents.send('camera-studio:command', command)
   }
 
+  const hostTheme = () => (nativeTheme.shouldUseDarkColors ? 'dark' : 'light')
+  const onThemeChanged = () => send({type: 'theme', theme: hostTheme()})
+  nativeTheme.on('updated', onThemeChanged)
+
   handle('load-scene', async () => {
     connected = true
     let initialState
@@ -98,8 +109,7 @@ function createWindow() {
     } catch (error) {
       if (error.code !== 'ENOENT') throw error
     }
-    send({type: 'locale', locale})
-    return {projectId, initialState}
+    return {projectId, initialState, locale, theme: hostTheme()}
   })
   handle('save-scene', async ({projectId: id, state}) => {
     if (id !== projectId) throw new Error('Unknown scene')
@@ -140,7 +150,7 @@ function createWindow() {
   )
   handle('scene-closed', ({projectId: id}) => {
     if (id !== projectId) throw new Error('Unknown scene')
-    window.setTitle(`${title} · 场景已关闭`)
+    window.setTitle(`${messages.desktopTitle} · ${messages.closeScene}`)
   })
 
   const finishQuit = (event) => {
@@ -155,46 +165,29 @@ function createWindow() {
     send({type: 'quit'})
   })
   window.on('closed', () => {
+    nativeTheme.removeListener('updated', onThemeChanged)
     for (const channel of channels) ipcMain.removeHandler(channel)
     ipcMain.removeListener('camera-studio:finish-quit', finishQuit)
   })
   window.webContents.setWindowOpenHandler(() => ({action: 'deny'}))
   window.webContents.on('will-navigate', (event) => event.preventDefault())
 
-  function updateMenu() {
-    const messages = hostMessages[locale]
-    window.setTitle(messages.desktopTitle)
-    Menu.setApplicationMenu(
-      Menu.buildFromTemplate([
-        {
-          label: messages.scene,
-          submenu: [
-            {label: messages.openLocal, click: () => send({type: 'open'})},
-            {label: messages.closeScene, click: () => send({type: 'close'})},
-            {
-              label: messages.quit,
-              accelerator: 'CommandOrControl+Q',
-              click: () => window.close(),
-            },
-          ],
-        },
-        {
-          label: messages.language,
-          submenu: Object.entries(hostMessages).map(([code, {name}]) => ({
-            label: name,
-            type: 'radio',
-            checked: locale === code,
-            click: () => {
-              locale = code
-              send({type: 'locale', locale})
-              updateMenu()
-            },
-          })),
-        },
-      ]),
-    )
-  }
-  updateMenu()
+  Menu.setApplicationMenu(
+    Menu.buildFromTemplate([
+      {
+        label: messages.scene,
+        submenu: [
+          {label: messages.openLocal, click: () => send({type: 'open'})},
+          {label: messages.closeScene, click: () => send({type: 'close'})},
+          {
+            label: messages.quit,
+            accelerator: 'CommandOrControl+Q',
+            click: () => window.close(),
+          },
+        ],
+      },
+    ]),
+  )
   void window.loadURL(entry)
 }
 

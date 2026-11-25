@@ -36,9 +36,9 @@ const DOT_HOVER_SIZE_PX = DOT_SIZE_PX + 2
 
 const dotTheme = {
   normalColor: 'var(--theatre-accent)',
-  selectedColor: '#F2C95C',
-  inlineEditorOpenColor: '#FCF3DC',
-  selectedAndInlineEditorOpenColor: '#CBEBEA',
+  selectedColor: 'var(--theatre-ui-keyframe-selected, #F2C95C)',
+  inlineEditorOpenColor: 'var(--theatre-ui-accent, #FCF3DC)',
+  selectedAndInlineEditorOpenColor: 'var(--theatre-ui-accent-hover, #CBEBEA)',
 }
 
 const selectBackgroundForDiamond = ({
@@ -71,7 +71,9 @@ const Diamond = styled.div<IDiamond>`
   transform: rotateZ(45deg);
 
   ${(props) =>
-    props.$flag === PresenceFlag.Primary ? 'outline: 2px solid white;' : ''};
+    props.$flag === PresenceFlag.Primary
+      ? 'outline: 2px solid var(--theatre-ui-text, white);'
+      : ''};
 
   z-index: 1;
   pointer-events: none;
@@ -84,7 +86,9 @@ const Square = styled.div<IDiamond>`
   background: ${(props) => selectBackgroundForDiamond(props)};
 
   ${(props) =>
-    props.$flag === PresenceFlag.Primary ? 'outline: 2px solid white;' : ''};
+    props.$flag === PresenceFlag.Primary
+      ? 'outline: 2px solid var(--theatre-ui-text, white);'
+      : ''};
 
   z-index: 1;
   pointer-events: none;

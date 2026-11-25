@@ -15,6 +15,7 @@
   border: 1px solid var(--cs-theme-border, var(--theatre-panel-border, #555));
   border-radius: var(--cs-theme-radius, 6px);
   box-shadow: 0 6px 24px rgb(0 0 0 / 35%);
+  color-scheme: var(--cs-color-scheme, inherit);
   font-size: 11px;
   @apply cursor-default;
 
@@ -69,7 +70,7 @@
   }
 
   [role='alert'] {
-    color: #ff9c92;
+    color: var(--theatre-ui-danger, #ff9c92);
     margin: 8px 0;
   }
 }

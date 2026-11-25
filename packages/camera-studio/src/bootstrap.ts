@@ -43,6 +43,7 @@ import {isWritableSource} from './assetLibrary/source'
 import type {LibrarySource} from './assetLibrary/source'
 import {cleanupLegacySeeds} from './assetLibrary/legacySeedCleanup'
 import {setUiConfig} from './uiConfig'
+import {observeCameraColorMode} from './styles/theme'
 import {mountStudioRootWhenReady} from './studioRoot'
 import {
   DefaultPosePropEditor,
@@ -512,6 +513,13 @@ function acquireSession(ctx: BootCtx): void {
       ctx.notifyStateChange,
     )
   }
+  const themeSource =
+    ctx.config.ui?.portalContainer ??
+    (typeof document === 'undefined' ? undefined : document.body)
+  const stopObservingTheme =
+    themeSource && typeof MutationObserver !== 'undefined'
+      ? observeCameraColorMode(themeSource)
+      : undefined
   // 上次 dispose 隐去的 studio UI 随重挂恢复;仅在确实隐去时调 restore——
   // restore 带一次 render + 事务,首挂(本就可见)不白跑
   withStudioUi((ui) => {
@@ -520,6 +528,7 @@ function acquireSession(ctx: BootCtx): void {
 
   sessionTeardown = async () => {
     sessionTeardown = undefined
+    stopObservingTheme?.()
     // 先关桥接客户端(停止重连、退订任务事件、拒绝新执行),再拆 API
     // 代次——顺序不可换:dispose 硬取消在途任务会发 job 事件,客户端
     // 必须先退订,否则往已关闭的连接发报文
