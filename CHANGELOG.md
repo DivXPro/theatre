@@ -1,5 +1,11 @@
 # Theatre.js changelog
 
+## 1.3.0
+
+- Camera Studio 新增 `assets.saveModel`。Agent 可以把多个程序生成的静态网格保存为一个可复用的模型资产，再通过 `models.create` 放进场景。示例宿主使用 IndexedDB 保存资产。调用示例见 [Agent HTTP 接口指南](docs/guides/camera-studio-agent-http.md#保存生成的网格)。
+- 新增日语、韩语、俄语、德语、西班牙语、巴西葡萄牙语和法语界面。
+- Studio 的右键菜单改用 shadcn/ui 的 Radix Context Menu，支持键盘导航。对象树的右键菜单直接显示操作项，重命名时高亮边框只围住名称输入区。
+
 ## 1.2.0
 
 - 新增 Camera Studio 单机桌面接入入口 `mountCameraStudioDesktop()` 和 Electron 示例。宿主可通过内部 JS API 和 IPC 加载场景、处理关闭通知、保存图片和视频、切换语言。接入步骤见 [单机桌面接入指南](docs/guides/camera-studio-embedding.md#单机桌面接入)。
