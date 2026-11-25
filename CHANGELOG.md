@@ -1,5 +1,10 @@
 # Theatre.js changelog
 
+## 1.4.0
+
+- Studio 和 Camera Studio 新增浅色主题。宿主可通过 `data-theme` 即时切换工具栏、场景树、属性面板、时间轴和浮层。主题切换期间保留场景和编辑状态。[主题接入指南](docs/guides/camera-studio-embedding.md#宿主控制工作台主题)
+- 工作台的外观和语言由宿主管理。网页和桌面示例移除了编辑器设置入口，Electron 示例在启动时读取系统语言，并实时同步系统外观。
+
 ## 1.3.0
 
 - Camera Studio 新增 `assets.saveModel`。Agent 可以把多个程序生成的静态网格保存为一个可复用的模型资产，再通过 `models.create` 放进场景。示例宿主使用 IndexedDB 保存资产。调用示例见 [Agent HTTP 接口指南](docs/guides/camera-studio-agent-http.md#保存生成的网格)。
