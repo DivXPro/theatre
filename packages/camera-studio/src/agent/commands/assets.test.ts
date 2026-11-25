@@ -99,6 +99,7 @@ const poseEntry = (id: string): PoseEntry => ({
 /** 内存可写源(importModelFile.test.ts 同款形状) */
 function memoryBackend(existing: LibraryEntry[]) {
   const entries = new Map(existing.map((e) => [e.id, e]))
+  const blobs = new Map<string, Blob>()
   return {
     id: 'mock-writable',
     listEntries: async (kind?: EntryKind) =>
@@ -106,10 +107,14 @@ function memoryBackend(existing: LibraryEntry[]) {
     getEntry: async (id: string) => entries.get(id),
     putEntry: async (e: LibraryEntry) => void entries.set(e.id, e),
     deleteEntry: async (id: string) => void entries.delete(id),
-    putBlob: async () => 'blob-' + Math.random().toString(36).slice(2),
+    putBlob: async (data: Blob) => {
+      const id = 'blob-' + Math.random().toString(36).slice(2)
+      blobs.set(id, data)
+      return id
+    },
     getBlobUrl: async () => 'blob:x',
-    deleteBlob: async () => {},
-    listBlobIds: async () => [] as string[],
+    deleteBlob: async (id: string) => void blobs.delete(id),
+    listBlobIds: async () => [...blobs.keys()],
     getRigAliases: async () => [],
     putRigAlias: async () => {},
   }
@@ -179,12 +184,14 @@ async function settleJob(
 }
 
 describe('注册与元数据', () => {
-  test('assets.* 五个命令与 jobs.* 两个命令全部注册', () => {
+  test('资产和任务命令全部注册', () => {
     const {registry} = setup()
     for (const name of [
       'assets.list',
       'assets.get',
       'assets.importModel',
+      'assets.importModels',
+      'assets.saveModel',
       'assets.rename',
       'assets.delete',
       'jobs.get',
@@ -523,6 +530,51 @@ describe('assets.importModel', () => {
     const done = await settleJob(runtime, jobId)
     expect(done.state).toBe('failed')
     expect(done.error?.code).toBe('INTERNAL_ERROR')
+  })
+})
+
+describe('assets.saveModel', () => {
+  const triangle = {
+    positions: [0, 0, 0, 1, 0, 0, 0, 0, 1],
+    indices: [0, 2, 1],
+  }
+
+  test('packs multiple meshes into one reusable model entry and stores its blob', async () => {
+    const {registry, runtime, library} = setup()
+    const accepted = (await registry.execute(
+      'assets.saveModel',
+      {
+        name: 'Roadster',
+        meshes: [
+          {...triangle, color: '#cc0000'},
+          {...triangle, position: {x: 2, y: 0, z: 0}},
+        ],
+      },
+      ctx(),
+    )) as {jobId: string}
+    expect(accepted).toEqual({jobId: expect.any(String)})
+    const done = await settleJob(runtime, accepted.jobId)
+    expect(done).toMatchObject({
+      state: 'succeeded',
+      phase: 'loaded',
+      result: {kind: 'model', name: 'Roadster', boneCount: 0, vertexCount: 6},
+    })
+    const entry = done.result as ModelEntry
+    expect(await library.listEntries('model')).toEqual([entry])
+    expect(await library.listBlobIds()).toEqual([entry.blobId])
+  })
+
+  test('rejects an out-of-range triangle index before writing to the library', async () => {
+    const {registry, library} = setup()
+    await expect(
+      registry.execute(
+        'assets.saveModel',
+        {name: 'Invalid model', meshes: [{...triangle, indices: [0, 1, 3]}]},
+        ctx(),
+      ),
+    ).rejects.toMatchObject({code: 'INVALID_ARGUMENT'})
+    expect(await library.listEntries('model')).toEqual([])
+    expect(await library.listBlobIds()).toEqual([])
   })
 })
 

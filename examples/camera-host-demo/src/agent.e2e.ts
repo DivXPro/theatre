@@ -240,6 +240,51 @@ async function bootScene(page: Page): Promise<void> {
 test.describe('agent http bridge e2e', () => {
   test.describe.configure({mode: 'serial'})
 
+  test('agent saves generated meshes and places the model after reopening the scene', async ({
+    page,
+  }) => {
+    await bootScene(page)
+    const position = {x: 0, y: 0, z: 0}
+    const jobId = await startJob('assets.saveModel', {
+      name: 'Generated prop',
+      meshes: [
+        {
+          name: 'Body',
+          positions: [0, 0, 0, 0, 0, 1, 1, 0, 0],
+          color: '#cc0000',
+        },
+        {
+          name: 'Roof',
+          positions: [0, 0, 0, 1, 0, 0, 0, 0, 1],
+          indices: [0, 2, 1],
+          position: {x: 0, y: 1, z: 0},
+          color: '#336699',
+        },
+      ],
+    })
+    const saved = await waitJob(jobId)
+    expect(saved, JSON.stringify(saved.error)).toMatchObject({
+      state: 'succeeded',
+      result: {kind: 'model', name: 'Generated prop', vertexCount: 6},
+    })
+    const assetId = saved.result.id
+    const first = await mustCommand('models.create', {assetId, position})
+    const slots = await mustCommand('materials.list', {
+      objectId: first.result.objectId,
+    })
+    expect(slots.result).toHaveLength(2)
+
+    await page.reload()
+    await waitSceneConnected()
+    const reopened = await mustCommand('assets.get', {assetId})
+    expect(reopened.result).toEqual(saved.result)
+    const second = await mustCommand('models.create', {assetId, position})
+    const model = await mustCommand('objects.get', {
+      objectId: second.result.objectId,
+    })
+    expect(model.result.mounted).toBe(true)
+  })
+
   test('agent api: 纯 HTTP 完整场景工作流', async ({page}, testInfo) => {
     await bootScene(page)
 

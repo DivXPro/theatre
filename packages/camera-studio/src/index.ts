@@ -89,6 +89,10 @@ export type {PrimitiveKind} from './primitives'
 export type {MaterialsApi} from './agent/commands/materials'
 export type {MaterialSlot, MaterialValues} from './materials/types'
 export type {AssetsApi} from './agent/commands/assets'
+export type {
+  GeneratedModelMesh,
+  SaveModelArgs,
+} from './agent/commands/generatedModel'
 export type {PosesApi, PosesSessionApi} from './agent/commands/poses'
 export type {
   AnimationsApi,

@@ -262,7 +262,7 @@ pending | running | succeeded | failed | cancelled
 | `selection` | `get`、`selectObject`、`clear` | 管理 Theatre 对象选择；清空时同时清理相关会话选择 |
 | `objects` | `list`、`get`、`update`、`delete` | 读取、静态属性更新和按类型执行完整删除清理 |
 | `models` | `create`、`retry`、`replace` | 从模型资产直接创建到指定位置；加载失败后按原条目重试或替换条目，保留对象标识与位置 |
-| `assets` | `list`、`get`、`importModel`、`rename`、`delete` | 管理模型、姿势和动画资产；不属于 Theatre undo |
+| `assets` | `list`、`get`、`importModel`、`importModels`、`saveModel`、`rename`、`delete` | 管理模型、姿势和动画资产。`saveModel` 将一组静态三角网格保存为一个模型资产，完成后可用 `models.create` 放置 |
 | `poses` | `apply`、`applyCustom`、`clear`、`saveCurrent`、`setGesture` | 库姿势、自定义骨骼姿势、清除、保存和左右手势 |
 | `poses.session` | `start`、`commit`、`cancel` | 管理需要已挂载 Rig 的 IK 姿势会话 |
 | `animations` | `apply`、`clear`、`getStatus` | 设置/清除动画资产并独立查询资源加载状态 |

@@ -423,6 +423,14 @@ const FACADE_COMMANDS: ReadonlyArray<{
     args: {files: [{name: 'm.gltf'}, {name: 'm.bin'}]},
   },
   {
+    path: 'assets.saveModel',
+    command: 'assets.saveModel',
+    args: {
+      name: 'Triangle',
+      meshes: [{positions: [0, 0, 0, 1, 0, 0, 0, 0, 1]}],
+    },
+  },
+  {
     path: 'assets.rename',
     command: 'assets.rename',
     args: {assetId: 'asset-1', name: '新名字'},

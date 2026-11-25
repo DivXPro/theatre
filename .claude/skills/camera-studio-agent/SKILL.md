@@ -26,7 +26,8 @@ Require `CAMERA_STUDIO_API_URL` and `CAMERA_STUDIO_TOKEN` from the deployer. The
 - Edit Fullbody IK: start a pose session, list its control points, set a world-space target, then commit or cancel.
 - Set manga mode, shadows, halftone, or name labels: use `view.setRendering`, then read back `view.getRendering`.
 - Import an asset: upload, `assets.importModel`, then `wait`.
-- Place a model: `models.create` after import resolves successfully.
+- Save generated triangle meshes as a single model asset: `assets.saveModel`, then `wait`.
+- Place a model: `models.create` with the ID of a saved or imported model.
 - Retry a write after transport failure: reuse the original requestId.
 - Read after writing. A job acceptance or resource loading state is not final success.
 

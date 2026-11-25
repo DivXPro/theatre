@@ -4,7 +4,7 @@
  * 运行(仓库根):pnpm --filter camera-host-demo dev
  *
  * 演示点:
- * - storage: 自定义可写存储(内存版,刷新即失;生产换 HTTP 实现);
+ * - storage: 使用独立的 IndexedDB 命名空间保存资产;
  * - assets.baseUrl: 不传 = 包内缺省 assets/(上架 CDN 的写法见指南 §4);
  * - sync: false:协作关闭(缺省即 false,这里显式写出);
  * - onError: 模块错误交给宿主自己的提示条(不内置错误条)。
@@ -34,7 +34,6 @@ import {
   type SceneSyncSnapshot,
   type SceneSyncState,
 } from '@dreamerbird/camera-studio'
-import {MemorySource} from './memorySource'
 import {createDemoSceneSyncAdapter} from './sceneSync'
 import hostMessages from './hostMessages.json'
 import './host-nav.css'
@@ -60,9 +59,8 @@ const agentBridge = bridgeConfigFromEnv()
 // 宿主视觉决定:页面底色(库不替宿主页面着色)
 document.body.style.backgroundColor = '#171717'
 
-// 存储实例放模块级:重挂页面不丢库;两个 useCameraStudio 共享同一源也行,
-// 单页单实例约束下只有一个消费者。
-const memoryStorage = new MemorySource()
+// 资产和场景状态各自保存，重新打开页面仍可放置同一资产。
+const assetStorage = {namespace: 'camera-host-demo'}
 
 function createMemorySceneAdapter(): SceneSyncAdapter {
   let snapshot: SceneSyncSnapshot | null = null
@@ -192,7 +190,7 @@ function StudioRoute({
   const {ready, error, sceneProps, flushState, hasTemporaryChanges} =
     useCameraStudio({
       project: 'Space',
-      storage: memoryStorage,
+      storage: assetStorage,
       state: sync,
       ui: {locale},
       // assets: {baseUrl: 'https://cdn.example.com/camera-assets/'} ← §4 CDN 写法

@@ -427,6 +427,12 @@ node .claude/skills/camera-studio-agent/scripts/scene-api.mjs schema \
 
 `API_DISPOSED`, `INVALID_ARGUMENT`, `INVALID_STATE`, `STORAGE_ERROR`, `NETWORK_ERROR`, `PARTIAL_FAILURE`, `INTERNAL_ERROR`
 
+## `assets.saveModel`
+
+Send `{name, meshes}` to save a static model. Each mesh requires flat XYZ `positions` in meters. Optional `indices` are zero-based triangles. Omit them to form one triangle per three sequential vertices. Meshes can include `name`, `color` in `#RRGGBB` format, and local `position`, `rotation` and `scale` vectors as `{x,y,z}`. Rotation uses XYZ Euler angles in radians.
+
+This asset job returns a `jobId`. Wait for `succeeded`, then pass the model entry's `result.id` as `assetId` to `models.create`. The same ID can be used in other scenes connected to the asset library.
+
 ## `assets.list`
 
 - Kind: `query`

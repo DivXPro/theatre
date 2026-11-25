@@ -23,6 +23,7 @@ export const EXPECTED_AGENT_COMMANDS = [
   'assets.get',
   'assets.importModel',
   'assets.importModels',
+  'assets.saveModel',
   'assets.rename',
   'assets.delete',
   'poses.apply',

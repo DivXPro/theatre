@@ -176,6 +176,29 @@ Content-Type: application/json
 - 项目写命令可选 `args.expectedRevision`(取自已读快照的 `revision`),不匹配返回
   `REVISION_CONFLICT` 且不执行写入——冲突后重新读取再改,不盲目覆盖。
 
+### 保存生成的网格
+
+将模型名称和网格数据直接传给 `POST /v1/commands`。下面是一个三角面的最小请求，多零件模型把各零件放在同一个 `meshes` 数组里。
+
+```json
+{
+  "requestId": "save-triangle-001",
+  "name": "assets.saveModel",
+  "args": {
+    "name": "Triangle",
+    "meshes": [
+      {
+        "positions": [0, 0, 0, 1, 0, 0, 0, 0, 1],
+        "indices": [0, 2, 1],
+        "color": "#336699"
+      }
+    ]
+  }
+}
+```
+
+返回 HTTP 202 后轮询 `GET /v1/jobs/<jobId>`。成功后取 `result.id`，再用 `models.create` 放置到当前场景。网格的变换和单位见 [浏览器 API](camera-studio-agent-js-api.md#保存-agent-生成的模型)。HTTP 请求沿用桥接的命令大小限制，默认 1 MiB。
+
 ## 7. 文件:fileId 上传与下载
 
 模型导入两步走(二进制不进 JSON、不经 WebSocket):
@@ -211,7 +234,7 @@ curl "$CAMERA_STUDIO_API_URL/v1/files/<fileId>" \
 
 ## 8. 任务:202、轮询与取消
 
-`assets.importModel` 与 `exports.startVideo` 是任务型命令:`POST /v1/commands` 返
+`assets.importModel`、`assets.saveModel` 与 `exports.startVideo` 是任务型命令:`POST /v1/commands` 返
 回 `202` + 初始快照(不会紧接着 404):
 
 ```json

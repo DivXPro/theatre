@@ -219,6 +219,9 @@ export type AssetsApi = {
     }): Promise<{
         jobId: string;
     }>;
+    saveModel(args: SaveModelArgs): Promise<{
+        jobId: string;
+    }>;
     rename(args: {
         assetId: string;
         name: string;
@@ -651,6 +654,17 @@ export type ExportsApi = {
     startVideo(args?: VideoExportArgs): Promise<{
         jobId: string;
     }>;
+};
+
+// @public
+export type GeneratedModelMesh = {
+    name?: string;
+    positions: number[];
+    indices?: number[];
+    color?: string;
+    position?: Vec3;
+    rotation?: Vec3;
+    scale?: Vec3;
 };
 
 // @public (undocumented)
@@ -1229,6 +1243,12 @@ export type RigAlias = {
 
 // @public
 export type RigId = string;
+
+// @public (undocumented)
+export type SaveModelArgs = {
+    name: string;
+    meshes: GeneratedModelMesh[];
+};
 
 // @public
 export type SceneApi = {

@@ -18,8 +18,12 @@
  * 但 registry validator 只收 File —— fileId→File 是桥接职责,原始
  * fileRef 不许绕过传输适配直接进入 Library。
  */
+import {exportModelGLB} from '../../assetLibrary/exportGLB'
+import {hashBytes} from '../../assetLibrary/hash'
 import {importModelFile} from '../../assetLibrary/importModelFile'
 import {importModelFiles} from '../../assetLibrary/importModelFiles'
+import {storeModelAsset} from '../../assetLibrary/importPipeline'
+import {meshStats, rigIdOf} from '../../assetLibrary/rig'
 import {LibraryError} from '../../assetLibrary/source'
 import type {Library} from '../../assetLibrary/library'
 import type {
@@ -32,6 +36,12 @@ import type {AgentCommandRegistry} from '../registry'
 import type {AgentRuntime} from '../runtime'
 import type {JsonSchema} from '../types'
 import {requireObject, requireString} from '../validation'
+import {
+  buildGeneratedModel,
+  saveModelInput,
+  validateSaveModel,
+  type SaveModelArgs,
+} from './generatedModel'
 
 /** 资产门面(Task 15 由同名命令转发实现) */
 export type AssetsApi = {
@@ -39,6 +49,7 @@ export type AssetsApi = {
   get(args: {assetId: string}): Promise<LibraryEntry>
   importModel(args: {file: File}): Promise<{jobId: string}>
   importModels(args: {files: File[]}): Promise<{jobId: string}>
+  saveModel(args: SaveModelArgs): Promise<{jobId: string}>
   rename(args: {assetId: string; name: string}): Promise<LibraryEntry>
   delete(args: {assetId: string}): Promise<{deleted: true}>
 }
@@ -59,7 +70,7 @@ const libraryEntrySchema: JsonSchema = {
   required: ['id', 'kind', 'name'],
 }
 
-/** ModelEntry 形状(importModel/importModels 的 jobResult 元素) */
+/** ModelEntry 形状(模型入库任务的结果元素) */
 const modelEntrySchema: JsonSchema = {
   type: 'object',
   properties: {
@@ -444,6 +455,55 @@ export function registerAssetCommands(
               args.files,
               error,
             )
+          }
+        },
+      })
+      return {jobId}
+    },
+  })
+
+  registry.register<SaveModelArgs, {jobId: string}>({
+    name: 'assets.saveModel',
+    kind: 'job',
+    stateDomain: 'asset',
+    undoable: 'none',
+    completion: 'loaded',
+    cancelable: false,
+    inputSchema: saveModelInput,
+    outputSchema: jobIdOutput,
+    jobResultSchema: modelEntrySchema,
+    errorCodes: [
+      'API_DISPOSED',
+      'INVALID_ARGUMENT',
+      'INVALID_STATE',
+      'STORAGE_ERROR',
+      'NETWORK_ERROR',
+      'INTERNAL_ERROR',
+    ],
+    validate: validateSaveModel,
+    execute: async ({name, meshes}) => {
+      runtime.assertActive()
+      requireWritable(runtime.library)
+      const {jobId} = runtime.jobs.start<ModelEntry>({
+        kind: 'assets.saveModel',
+        cancelable: false,
+        execute: async (controls) => {
+          try {
+            const root = buildGeneratedModel(meshes)
+            const glb = await exportModelGLB(root, 'meters')
+            runtime.assertActive()
+            const entry = await storeModelAsset(runtime.library, {
+              name,
+              glb,
+              rig: rigIdOf(root),
+              boneCount: 0,
+              vertexCount: meshStats(root).vertexCount,
+              contentHash: hashBytes(new Uint8Array(glb)),
+            })
+            controls.update({phase: 'loaded'})
+            return entry
+          } catch (error) {
+            throw mapLibraryError(error)
           }
         },
       })

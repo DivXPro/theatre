@@ -209,6 +209,12 @@ async function importPicked(file: File): Promise<void> {
 }
 ```
 
+### 保存 Agent 生成的模型
+
+`api.assets.saveModel({name, meshes})` 把多个静态三角网格写成一个 GLB 模型资产。每个网格的 `positions` 是按 XYZ 平铺的米制顶点坐标，可以从 Three.js `BufferGeometry` 的 position 属性提取。可选的 `indices` 每三个值组成一个三角面，省略时每三个连续顶点组成一个三角面。每个网格还可提供 `name`、`color`（`#RRGGBB`）及相对模型原点的 `position`、`rotation`（XYZ 欧拉角，弧度）和 `scale`。
+
+先等待 `api.jobs.get({jobId})` 返回 `succeeded`，再将结果中的 `result.id` 传给 `api.models.create({assetId, position})`，即可在当前场景放置整个模型。以后连接到使用同一资产库的场景时，也可以用这个资产 ID 再次放置。保存需要宿主配置可写资产库。
+
 ## 9. dispose / remount:会话生命周期
 
 - **卸载宿主组件**(路由切走)= 会话拆解:挂起的 `ready`、在途命令、挂载等待与
@@ -309,7 +315,7 @@ Schema 子集,供客户端校验与工具发现。未激活时抛 `API_NOT_READY
 | `models`      | `create` / `replace` / `retry`                                                                                       | 从模型资产创建到指定位置,等挂载完成(§6) |
 | `primitives` | `create` | 创建几何体 |
 | `materials` | `list` / `update` | 查询和修改实例材质 |
-| `assets`      | `list` / `get` / `importModel` / `importModels` / `rename` / `delete`                                           | 资产库管理;不可 undo(§7);导入是任务(§8) |
+| `assets`      | `list` / `get` / `importModel` / `importModels` / `saveModel` / `rename` / `delete`                                           | 资产库管理;不可 undo(§7);导入和保存网格是任务(§8) |
 | `poses`       | `apply` / `applyCustom` / `clear` / `saveCurrent` / `setGesture`                               | 库姿势、自定义骨骼姿势、清除、保存、左右手势 |
 | `poses.session` | `start` / `listIkPoints` / `setIkTarget` / `commit` / `cancel`                                                                | 需要已挂载 Rig 的 IK 姿势会话 |
 | `animations`  | `apply` / `clear` / `getStatus`                                                                | 设置/清除动画资产,独立查询资源加载状态 |

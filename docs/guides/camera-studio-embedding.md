@@ -322,7 +322,7 @@ interface WritableLibrarySource extends LibrarySource {
   flag。 `permanentUrls` 是预留 capability,当前模块未据此改变行为,标不标无实际差
   异。
 
-### 完整示例:内存版可写存储(与 examples/camera-host-demo 逐字一致)
+### 完整示例：内存版可写存储
 
 ```ts
 // src/memorySource.ts —— 演示/测试用;生产换你的 HTTP 实现

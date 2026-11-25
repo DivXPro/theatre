@@ -333,6 +333,30 @@ export class ImportItemWriteError extends Error {
   }
 }
 
+export async function storeModelAsset(
+  library: Library,
+  model: Pick<
+    ModelEntry,
+    'name' | 'rig' | 'contentHash' | 'boneCount' | 'vertexCount'
+  > & {
+    glb: ArrayBuffer
+  },
+): Promise<ModelEntry> {
+  const {glb, ...metadata} = model
+  let entry!: ModelEntry
+  await library.putBlobWithEntry(new Blob([glb]), (blobId) => {
+    entry = {
+      id: newId(),
+      kind: 'model',
+      ...metadata,
+      blobId,
+      createdAt: Date.now(),
+    }
+    return entry
+  })
+  return entry
+}
+
 /** 落库:choices 与 plan.similar 一一对应,'reuse' 丢弃对应 model 项 */
 export async function executeImport(
   plan: ImportPlan,
@@ -348,20 +372,15 @@ export async function executeImport(
     try {
       if (item.type === 'model') {
         if (drop.has(i)) continue
-        await library.putBlobWithEntry(
-          new Blob([item.glb]),
-          (blobId): ModelEntry => ({
-            id: newId(),
-            kind: 'model',
-            name: item.name,
-            rig: item.rig,
-            blobId,
-            contentHash: item.contentHash,
-            boneCount: item.boneCount,
-            vertexCount: item.vertexCount,
-            createdAt: Date.now(),
-          }),
-        )
+        const {name, rig, contentHash, boneCount, vertexCount, glb} = item
+        await storeModelAsset(library, {
+          name,
+          rig,
+          contentHash,
+          boneCount,
+          vertexCount,
+          glb,
+        })
       } else if (item.type === 'animation') {
         await library.putBlobWithEntry(
           new Blob([item.glb]),

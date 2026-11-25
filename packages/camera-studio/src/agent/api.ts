@@ -290,6 +290,7 @@ export function createCameraStudioApi(
       get: (args) => invoke('assets.get', args),
       importModel: (args) => invoke('assets.importModel', args),
       importModels: (args) => invoke('assets.importModels', args),
+      saveModel: (args) => invoke('assets.saveModel', args),
       rename: (args) => invoke('assets.rename', args),
       delete: (args) => invoke('assets.delete', args),
     },
