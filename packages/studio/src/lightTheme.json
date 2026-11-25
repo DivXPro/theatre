@@ -14,6 +14,7 @@
   "--theatre-ui-selected-border": "#719e8c",
   "--theatre-ui-grid-line": "#d8e1dd",
   "--theatre-ui-grid-filter": "brightness(0)",
+  "--theatre-ui-grid-opacity": "0.32",
   "--theatre-ui-scrollbar": "#adbdb5",
   "--theatre-ui-on-accent": "#ffffff",
   "--theatre-ui-danger": "#a52a2a",

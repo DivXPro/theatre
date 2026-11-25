@@ -21,16 +21,6 @@ export const camera = {
   'pg.toolbar.render.manga.hint':
     'Désactivé, le mode affiche le rendu d’origine. Activé, il affiche un dessin au trait.',
   'pg.toolbar.render.original': 'Original',
-  'pg.toolbar.render.shadow': 'Ombres portées',
-  'pg.toolbar.render.shadow.hint':
-    'Afficher les ombres portées dans le rendu manga',
-  'pg.toolbar.render.shading': 'Trame de demi-teintes',
-  'pg.toolbar.render.shading.off': 'Désactivée',
-  'pg.toolbar.render.shading.light': 'Trame claire',
-  'pg.toolbar.render.shading.medium': 'Trame moyenne',
-  'pg.toolbar.render.shading.dark': 'Trame sombre',
-  'pg.toolbar.render.shading.heavy': 'Trame très sombre',
-  'pg.toolbar.render.shading.layered': 'Trames superposées',
   'pg.toolbar.pip.show': 'Afficher l’aperçu du plan en bas à droite',
   'pg.toolbar.pip.hide': 'Masquer l’aperçu du plan',
   'pg.toolbar.pip.disabled': 'Ajoutez d’abord une caméra',

@@ -19,6 +19,7 @@ const TheCanvas = styled.canvas`
   position: relative;
   left: 0;
   filter: var(--theatre-ui-grid-filter, none);
+  opacity: var(--theatre-ui-grid-opacity, 0.04);
 `
 
 /**
@@ -128,9 +129,8 @@ function drawGrid(
       unitSpaceToClippedSpace(posInUnitSpace),
     )
 
-    ctx.strokeStyle = isFullSecond
-      ? 'rgba(225, 225, 225, 0.04)'
-      : 'rgba(255, 255, 255, 0.01)'
+    // CSS controls the overall contrast so switching themes also updates a paused grid.
+    ctx.strokeStyle = isFullSecond ? '#e1e1e1' : 'rgba(255, 255, 255, 0.25)'
 
     ctx.beginPath()
     ctx.moveTo(posInClippedSpace, 0)

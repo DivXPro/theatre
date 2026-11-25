@@ -1077,7 +1077,18 @@ test('宿主集成:api 首帧即稳定,ready 后挂 window,dispose 删除;Camera
   const seenApis: CameraStudioApi[] = []
   const onFlows = jest.fn()
   const host = mountHost(
-    {storage: false, agent: {exposeGlobal: true}, flows: {onFlows}},
+    {
+      storage: false,
+      agent: {exposeGlobal: true},
+      flows: {onFlows},
+      scene: {
+        viewportRendering: {
+          initialMode: 'line',
+          castShadow: true,
+          shadingPreset: 'dark',
+        },
+      },
+    },
     (handle) => {
       seenApis.push(handle.api)
     },
@@ -1098,6 +1109,12 @@ test('宿主集成:api 首帧即稳定,ready 后挂 window,dispose 删除;Camera
   await expect(api.scene.getSnapshot()).resolves.toEqual({
     revision: 1,
     objects: [],
+  })
+  await expect(api.view.getRendering()).resolves.toEqual({
+    mode: 'line',
+    castShadow: true,
+    shadingPreset: 'dark',
+    characterNamesVisible: false,
   })
   expect(
     api

@@ -21,16 +21,6 @@ export const camera = {
   'pg.toolbar.render.manga.hint':
     'Al activar el modo manga se muestran los contornos. Al desactivarlo se restaura el renderizado original.',
   'pg.toolbar.render.original': 'Original',
-  'pg.toolbar.render.shadow': 'Sombras proyectadas',
-  'pg.toolbar.render.shadow.hint':
-    'Incluir sombras proyectadas en el modo manga',
-  'pg.toolbar.render.shading': 'Sombreado de semitonos',
-  'pg.toolbar.render.shading.off': 'Desactivado',
-  'pg.toolbar.render.shading.light': 'Puntos claros',
-  'pg.toolbar.render.shading.medium': 'Puntos medios',
-  'pg.toolbar.render.shading.dark': 'Puntos oscuros',
-  'pg.toolbar.render.shading.heavy': 'Puntos densos',
-  'pg.toolbar.render.shading.layered': 'Capas de puntos',
   'pg.toolbar.pip.show':
     'Mostrar la vista previa del plano en la esquina inferior derecha',
   'pg.toolbar.pip.hide': 'Ocultar la vista previa del plano',

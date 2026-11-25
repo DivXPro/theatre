@@ -4,7 +4,7 @@
  *     右键菜单共用 useGizmoMode 的 state;选择模式下只点选不挂手柄;
  *     无选中对象时也可先设好模式)
  *   [添加模型|添加路径|添加相机|添加锚点] 各弹各的框体
- *   [漫画模式开关|投射阴影|人物名称] 视口显示
+ *   [漫画模式开关|人物名称] 视口显示
  *   [画中画|导出视频] 输出
  * 姿势/动作绑定具体物体,入口在右键模型的菜单里;物体的属性设置在各自
  * 面板(见 docs/superpowers/specs/2026-09-12-asset-library-split-design.md)。
@@ -21,7 +21,6 @@ import {
   Crosshair,
   Cube,
   Cursor,
-  DotsNine,
   Export,
   Image,
   IdentificationBadge,
@@ -35,8 +34,6 @@ import {useT} from '@dreamerbird/studio/i18n'
 import {buildExportMenuItems} from './menuModel'
 import type {ExportSink} from './videoExport/sinks'
 import type {GizmoMode} from './PlacementManager'
-import {mangaShadingPresets} from './mangaShading'
-import type {MangaShadingPreset} from './mangaShading'
 import type {ViewportRenderMode} from './mangaViewport'
 
 function ToolbarBtn({
@@ -107,10 +104,6 @@ export function TopToolbar({
   onSelectGizmoMode,
   renderMode,
   onSelectRenderMode,
-  mangaShadows,
-  onToggleMangaShadows,
-  mangaShadingPreset,
-  onSelectMangaShadingPreset,
   characterNamesVisible,
   onToggleCharacterNames,
   onToggleModelLibrary,
@@ -136,11 +129,6 @@ export function TopToolbar({
   onSelectGizmoMode: (mode: GizmoMode) => void
   renderMode: ViewportRenderMode
   onSelectRenderMode: (mode: ViewportRenderMode) => void
-  /** 漫画模式下是否用网点材质绘制真实投射阴影 */
-  mangaShadows: boolean
-  onToggleMangaShadows: () => void
-  mangaShadingPreset: MangaShadingPreset
-  onSelectMangaShadingPreset: (preset: MangaShadingPreset) => void
   characterNamesVisible: boolean
   onToggleCharacterNames: () => void
   onToggleModelLibrary: () => void
@@ -172,7 +160,6 @@ export function TopToolbar({
   )
   const [exportMenuNode, openExportMenu] = useMenu({items: exportMenuItems})
   const mangaEnabled = renderMode !== 'original'
-  const shadingLabel = t('pg.toolbar.render.shading')
   const characterNamesLabel = t('pg.toolbar.characterNames')
 
   return (
@@ -259,41 +246,6 @@ export function TopToolbar({
             >
               <BookOpenText size={18} aria-hidden />
             </ToolbarBtn>
-            {mangaEnabled && (
-              <>
-                <ToolbarBtn
-                  role="switch"
-                  aria-checked={mangaShadows}
-                  className={mangaShadows ? 'selected' : undefined}
-                  onClick={onToggleMangaShadows}
-                  tip={t('pg.toolbar.render.shadow')}
-                  hint={t('pg.toolbar.render.shadow.hint')}
-                >
-                  <DotsNine size={18} />
-                </ToolbarBtn>
-                <label className="cs-shading-label">
-                  {shadingLabel}
-                  <select
-                    className="cs-shading-select"
-                    aria-label={shadingLabel}
-                    value={mangaShadingPreset}
-                    data-active={mangaShadingPreset !== 'off'}
-                    onKeyDown={(event) => event.stopPropagation()}
-                    onChange={(event) =>
-                      onSelectMangaShadingPreset(
-                        event.currentTarget.value as MangaShadingPreset,
-                      )
-                    }
-                  >
-                    {Object.keys(mangaShadingPresets).map((preset) => (
-                      <option key={preset} value={preset}>
-                        {t(`pg.toolbar.render.shading.${preset}`)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </>
-            )}
             <ToolbarBtn
               role="switch"
               aria-checked={characterNamesVisible}
