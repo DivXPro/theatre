@@ -45,16 +45,16 @@ const Header = styled(BaseHeader)`
   }
 
   ${pointerEventsAutoInNormalMode};
-  &:not(.not-selectable):not(.selected):hover {
+  &:not(.not-selectable, .selected, [data-renaming]):hover {
     background: var(--theatre-input-bg);
   }
 
-  &:not(.not-selectable):not(.selected):active {
+  &:not(.not-selectable, .selected, [data-renaming]):active {
     background: var(--theatre-input-bg);
     border-color: var(--theatre-panel-border);
   }
 
-  &.selected {
+  &.selected:not([data-renaming]) {
     color: var(--theatre-accent);
     background: var(--theatre-selected-bg);
     border-color: var(--theatre-selected-border);
@@ -87,18 +87,18 @@ const Head_Label = styled.span`
 
 const NameInput = styled.input`
   ${outlineItemFont};
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 2px;
-  color: rgba(255, 255, 255, 0.95);
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+  color: var(--theatre-text-primary);
   height: 18px;
   padding: 0 4px;
   width: 150px;
-  outline: none;
+  outline: 1px solid var(--theatre-accent);
   box-sizing: border-box;
 
   &::placeholder {
-    color: rgba(255, 255, 255, 0.35);
+    color: var(--theatre-text-muted);
   }
 `
 
@@ -186,6 +186,7 @@ const BaseItem: React.FC<{
     >
       <Header
         className={selectionStatus}
+        data-renaming={rename?.editing || undefined}
         onClick={select ?? noop}
         data-header
         ref={headerRef}

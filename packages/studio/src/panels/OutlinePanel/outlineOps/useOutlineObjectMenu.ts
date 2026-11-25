@@ -140,7 +140,7 @@ export function useOutlineObjectMenu(sheetObject: SheetObject): {
         },
       },
     })
-    return {title: `Object: ${address.objectKey}`, items}
+    return {title: `Object: ${address.objectKey}`, menuTitle: false, items}
   }, [sheetObject, address, projectId])
 
   const {targetRef} = useChordial(optsFn)

@@ -38,6 +38,7 @@
     "@dreamerbird/saaz": "workspace:*",
     "@dreamerbird/sync-server": "workspace:*",
     "@dreamerbird/utils": "workspace:*",
+    "@radix-ui/react-context-menu": "2.4.1",
     "@react-spring/web": "^9.7.3",
     "@styled/typescript-styled-plugin": "^1.0.1",
     "@trpc/client": "^10.43.0",
