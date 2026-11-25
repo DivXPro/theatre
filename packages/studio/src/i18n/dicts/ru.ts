@@ -36,11 +36,6 @@ export const messages = {
   'workspace.lens': 'Объектив',
   'keyframes.add': 'Добавить ключевой кадр',
   'keyframes.remove': 'Удалить ключевой кадр',
-  'keyframes.track': 'Ключевые кадры свойства',
-  'keyframes.previous': 'Предыдущий ключевой кадр',
-  'keyframes.next': 'Следующий ключевой кадр',
-  'keyframes.empty':
-    'Чтобы добавить ключевой кадр, нажмите ромб рядом со свойством',
   'outline.ctx.copy': 'Копировать',
   'outline.ctx.paste': 'Вставить',
   'outline.ctx.rename': 'Переименовать',
