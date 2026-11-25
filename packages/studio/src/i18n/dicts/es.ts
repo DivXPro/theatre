@@ -36,11 +36,6 @@ export const messages = {
   'workspace.lens': 'Lente',
   'keyframes.add': 'Añadir fotograma clave',
   'keyframes.remove': 'Eliminar fotograma clave',
-  'keyframes.track': 'Fotogramas clave de la propiedad',
-  'keyframes.previous': 'Fotograma clave anterior',
-  'keyframes.next': 'Fotograma clave siguiente',
-  'keyframes.empty':
-    'Haz clic en el rombo junto a una propiedad para añadir un fotograma clave',
   'outline.ctx.copy': 'Copiar',
   'outline.ctx.paste': 'Pegar',
   'outline.ctx.rename': 'Cambiar nombre',

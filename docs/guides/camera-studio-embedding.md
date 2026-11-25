@@ -13,7 +13,7 @@
 ### npm 工程
 
 ```bash
-pnpm add @dreamerbird/camera-studio@1.4.2 @dreamerbird/core@1.4.2 @dreamerbird/studio@1.4.2 @dreamerbird/r3f@1.4.2
+pnpm add @dreamerbird/camera-studio@1.4.3 @dreamerbird/core@1.4.3 @dreamerbird/studio@1.4.3 @dreamerbird/r3f@1.4.3
 ```
 
 Theatre 的四个包使用同一个发行版本。Vite 可以直接解析发行包的入口和演示模型。
@@ -183,7 +183,7 @@ pnpm dlx --allow-build=electron electron@41 ./examples/camera-host-demo/desktop/
 
 ### 宿主控制工作台主题
 
-宿主在 `ui.portalContainer` 上设置 `data-theme="light"` 即可启用浅色界面。未配置 `ui.portalContainer` 时，在 `document.body` 上设置。场景打开期间，宿主可直接更新该属性：
+工作台从 `ui.portalContainer`（默认为 `document.body`）向上读取最近的 `data-theme`。宿主可以在页面根元素统一切换主题，也可以在容器上覆盖。场景打开期间修改属性即可即时切换。
 
 ```ts
 const themeSource = portalContainer ?? document.body

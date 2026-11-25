@@ -39,11 +39,6 @@ export const messages = {
 
   'keyframes.add': 'Keyframe hinzufügen',
   'keyframes.remove': 'Keyframe entfernen',
-  'keyframes.track': 'Keyframes der Eigenschaft',
-  'keyframes.previous': 'Vorheriger Keyframe',
-  'keyframes.next': 'Nächster Keyframe',
-  'keyframes.empty':
-    'Klicke auf die Raute neben einer Eigenschaft, um einen Keyframe hinzuzufügen',
 
   'outline.ctx.copy': 'Kopieren',
   'outline.ctx.paste': 'Einfügen',

@@ -17,7 +17,6 @@ import type {PanelPosition} from '@dreamerbird/core/types/private'
 import PanelWrapper from '@dreamerbird/studio/panels/BasePanel/PanelWrapper'
 import FrameStampPositionProvider from './FrameStampPositionProvider'
 import TransportBar, {transportBarHeight} from './TransportBar'
-import PropertyKeyframeLane, {propertyLaneHeight} from './PropertyKeyframeLane'
 import type SheetObject from '@dreamerbird/core/sheetObjects/SheetObject'
 import type Sheet from '@dreamerbird/core/sheets/Sheet'
 import GraphEditorToggle from './GraphEditorToggle'
@@ -270,14 +269,12 @@ const Content: React.FC<{
     const sidebarWidth = sidebar
       ? Math.min(280, Math.floor(dims.width * 0.45))
       : 0
-    const contentTop =
-      transportBarHeight + (selectedObject ? propertyLaneHeight : 0)
     const panelSize = prism.memo(
       'panelSize',
       (): PanelDims => {
         // 顶部让出工具条一行,其余交给原布局
         const width = dims.width - sidebarWidth
-        const height = dims.height - contentTop
+        const height = dims.height - transportBarHeight
         return {
           width: width,
           height: height,
@@ -286,10 +283,10 @@ const Content: React.FC<{
           heightWithoutBorder: Math.max(0, height - 4),
 
           screenX: dims.left,
-          screenY: dims.top + contentTop,
+          screenY: dims.top + transportBarHeight,
         }
       },
-      [dims, sidebarWidth, contentTop],
+      [dims, sidebarWidth],
     )
 
     const panelSizeP = valToAtom('panelSizeP', panelSize).pointer
@@ -330,10 +327,7 @@ const Content: React.FC<{
         }}
       >
         <TransportBar sheet={sheet} collapsed={false} onToggle={onCollapse} />
-        {selectedObject && (
-          <PropertyKeyframeLane object={selectedObject} layoutP={layoutP} />
-        )}
-        <ContentBody $sidebarWidth={sidebarWidth} $offset={contentTop}>
+        <ContentBody $sidebarWidth={sidebarWidth} $offset={transportBarHeight}>
           <TimelineArea data-sequence-editor-tracks="">
             <LeftBackground
               style={{width: `${val(layoutP.leftDims.width)}px`}}

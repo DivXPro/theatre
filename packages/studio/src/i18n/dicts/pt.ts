@@ -36,11 +36,6 @@ export const messages = {
   'workspace.lens': 'Lente',
   'keyframes.add': 'Adicionar quadro-chave',
   'keyframes.remove': 'Excluir quadro-chave',
-  'keyframes.track': 'Quadros-chave da propriedade',
-  'keyframes.previous': 'Quadro-chave anterior',
-  'keyframes.next': 'Próximo quadro-chave',
-  'keyframes.empty':
-    'Clique no losango ao lado de uma propriedade para adicionar um quadro-chave',
   'outline.ctx.copy': 'Copiar',
   'outline.ctx.paste': 'Colar',
   'outline.ctx.rename': 'Renomear',

@@ -39,11 +39,6 @@ export const messages = {
 
   'keyframes.add': 'Ajouter une image clé',
   'keyframes.remove': 'Retirer l’image clé',
-  'keyframes.track': 'Images clés de la propriété',
-  'keyframes.previous': 'Image clé précédente',
-  'keyframes.next': 'Image clé suivante',
-  'keyframes.empty':
-    'Cliquez sur le losange à côté d’une propriété pour ajouter une image clé',
 
   'outline.ctx.copy': 'Copier',
   'outline.ctx.paste': 'Coller',

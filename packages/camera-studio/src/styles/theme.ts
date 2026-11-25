@@ -46,11 +46,13 @@ const stylesAttribute = 'data-camera-studio-styles'
 export function observeCameraColorMode(source: HTMLElement): () => void {
   const root = source.ownerDocument.documentElement
   const sync = () => {
-    root.dataset.cameraStudioColorMode =
-      source.dataset.theme === 'light' ? 'light' : 'dark'
+    const theme = source.closest('[data-theme]')?.getAttribute('data-theme')
+    root.dataset.cameraStudioColorMode = theme === 'light' ? 'light' : 'dark'
   }
   const observer = new MutationObserver(sync)
-  observer.observe(source, {attributes: true, attributeFilter: ['data-theme']})
+  for (let node: HTMLElement | null = source; node; node = node.parentElement) {
+    observer.observe(node, {attributeFilter: ['data-theme']})
+  }
   sync()
 
   return () => {

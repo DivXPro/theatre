@@ -35,11 +35,6 @@ export const messages = {
   'workspace.lens': 'レンズ',
   'keyframes.add': 'キーフレームを追加',
   'keyframes.remove': 'キーフレームを削除',
-  'keyframes.track': 'プロパティのキーフレーム',
-  'keyframes.previous': '前のキーフレーム',
-  'keyframes.next': '次のキーフレーム',
-  'keyframes.empty':
-    'プロパティ横のひし形をクリックしてキーフレームを追加します',
   'outline.ctx.copy': 'コピー',
   'outline.ctx.paste': '貼り付け',
   'outline.ctx.rename': '名前を変更',
